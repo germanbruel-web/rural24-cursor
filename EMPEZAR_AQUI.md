@@ -160,14 +160,17 @@ VITE_GEMINI_API_KEY=tu_gemini_key_aqui
 
 ## 🎯 PRÓXIMOS PASOS (ESTA SEMANA)
 
-### ✅ Día 1 (HOY)
+### ✅ Día 1 (HOY - COMPLETADO)
 - [x] Crear estructura de carpetas
-- [ ] Copiar código del proyecto viejo
-- [ ] Instalar dependencias
-- [ ] Verificar que frontend funciona
-- [ ] Crear API key de Gemini
+- [x] Copiar código del proyecto viejo
+- [x] Instalar dependencias
+- [x] Verificar que frontend funciona
+- [x] Primer commit a GitHub
+- [x] Frontend corriendo en http://localhost:3000
 
-### ⏳ Día 2-3
+### ⏸️ Día 2-3 (PAUSADO - Esperando renovación Copilot Pro)
+- [ ] Diseñar arquitectura del backend
+- [ ] Decidir stack técnico
 - [ ] Setup Next.js backend
 - [ ] Primera API funcionando
 - [ ] Conectar backend con Supabase
@@ -289,5 +292,72 @@ Marca lo que ya hiciste:
 ---
 
 **Última actualización:** 29/12/2025  
-**Status:** 🏗️ Setup inicial  
-**Siguiente:** Copiar código y verificar que funciona
+**Status:** ✅ Frontend migrado y funcionando  
+**Siguiente:** Backend Next.js (cuando renueves Copilot Pro)
+
+---
+
+## 🎯 MIENTRAS TANTO (Antes de Backend)
+
+### Cosas que podés hacer sin Copilot Pro:
+
+1. **Explorar el frontend funcionando**
+   - Abrí http://localhost:3000
+   - Probá las funcionalidades existentes
+   - Anotá bugs o mejoras que veas
+
+2. **Revisar documentación técnica**
+   - `docs/BACKEND_ML_ARCHITECTURE_2026.md` - Arquitectura completa
+   - `docs/ARCHITECTURE_SUMMARY.md` - Resumen del sistema
+   - `docs/DESIGN_SYSTEM_UNIFIED.md` - Guía de diseño
+
+3. **Pensar en features prioritarias**
+   - ¿Qué funcionalidades son críticas para el backend?
+   - ¿Qué puede seguir funcionando desde el frontend?
+   - ¿Necesitás procesar pagos? (Stripe/MercadoPago)
+
+4. **Revisar base de datos Supabase**
+   - Entrá a https://supabase.com/dashboard
+   - Revisá las tablas actuales
+   - Verificá que las políticas RLS estén bien
+
+5. **Anotar dudas/ideas para el backend**
+   - Creá un archivo `BACKEND_TODO.md` con tus ideas
+   - Listá APIs que necesitás
+   - Pensá en los flujos de usuario
+
+---
+
+## 📅 CUANDO RENUEVES COPILOT PRO
+
+**Tendremos que decidir:**
+
+### 1. Responsabilidades del Backend
+- [ ] Procesamiento IA (Gemini) - proteger API key
+- [ ] Operaciones admin privilegiadas
+- [ ] Procesamiento de imágenes
+- [ ] Emails transaccionales
+- [ ] Catálogo maestro (auto-completado inteligente)
+- [ ] Webhooks de pagos
+- [ ] Otras: _____________
+
+### 2. Arquitectura
+- [ ] Opción A: Monorepo completo (apps/web, apps/api, packages/*)
+- [ ] Opción B: Backend separado (/frontend, /backend, /shared)
+
+### 3. Stack Técnico
+- [ ] ORM: Prisma vs Drizzle vs Supabase Client
+- [ ] API: tRPC vs REST vs Server Actions
+- [ ] Validación: Zod (recomendado)
+- [ ] Caché: Redis/Vercel KV (opcional)
+
+### 4. Primera Feature del Backend
+- [ ] Catálogo inteligente (marcas/modelos)
+- [ ] Procesamiento IA protegido
+- [ ] Sistema de emails
+- [ ] Otra: _____________
+
+**Preparación sugerida:**
+- Anotá respuestas a estas preguntas
+- Listá features en orden de prioridad
+- Traé ejemplos de flujos de usuario que imaginás
