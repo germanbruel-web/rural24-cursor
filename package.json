@@ -1,0 +1,30 @@
+﻿{
+  "name": "rural24",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Sistema escalable de clasificados agropecuarios",
+  "author": "German Bruel",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean && Remove-Item -Recurse -Force node_modules",
+    "migrate:from-agrobuscador": "node infrastructure/scripts/migrate-from-agrobuscador.js"
+  },
+  "devDependencies": {
+    "turbo": "latest",
+    "prettier": "^3.1.1",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

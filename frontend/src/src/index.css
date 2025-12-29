@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #cecece;
+  font-size: 16px;
+}
+
+h1 {
+  font-family: 'Raleway', sans-serif;
+  font-size: 2.5rem; /* 40px */
+  line-height: 1.2;
+}
+
+h2 {
+  font-family: 'Raleway', sans-serif;
+  font-size: 2rem; /* 32px */
+  line-height: 1.3;
+}
+
+h3 {
+  font-family: 'Raleway', sans-serif;
+  font-size: 1.5rem; /* 24px */
+  line-height: 1.4;
+}
+
+p {
+  font-size: 1.125rem; /* 18px */
+  line-height: 1.6;
+}
+
+button {
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Utility classes para tipografías */
+.font-raleway {
+  font-family: 'Raleway', sans-serif;
+}
+
+.font-roboto {
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Animación para el formulario multi-step */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Animación para el banner de registro */
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.4s ease-out;
+}
+
+/* Clases de gradiente basadas en el logo */
+.gradient-UpToDown {
+  background: linear-gradient(to bottom, #92c83e 0%, #006838 100%);
+}
+
+.gradient-DownToUp {
+  background: linear-gradient(to top, #92c83e 0%, #006838 100%);
+}
+
+.gradient-45grados {
+  background: linear-gradient(45deg, #006838 0%, #92c83e 100%);
+}
+
+.gradient-135grados {
+  background: linear-gradient(135deg, #006838 0%, #92c83e 100%);
+}
+
+/* Animación para el preview modal en móviles */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Utility para line-clamp */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

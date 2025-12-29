@@ -1,0 +1,10 @@
+// ====================================================================
+// DESIGN SYSTEM - Exports centralizados
+// ====================================================================
+
+export * from './Button';
+export * from './Input';
+export * from './Card';
+export * from './Badge';
+export * from './Container';
+export * from './Stack';

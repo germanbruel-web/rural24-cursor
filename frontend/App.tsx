@@ -1,0 +1,671 @@
+import React, { useState, useCallback, useMemo } from "react";
+import { useProducts } from "./src/hooks/useProducts";
+import type { FilterOptions, SearchFilters, Banner } from "./types";
+import { Header } from "./src/components/Header";
+import { HeroWithCarousel } from "./src/components/HeroWithCarousel";
+import { FilterSidebar } from "./src/components/FilterSidebar";
+import { ProductCard } from "./src/components/ProductCard";
+import { AdvancedSearchBar } from "./src/components/AdvancedSearchBar";
+import { CategoryCarousel } from "./src/components/sections/CategoryCarousel";
+import { smartSearch, getPremiumProducts } from "./src/services/smartSearch";
+import MyAdsPanel from "./src/components/admin/MyAdsPanel";
+import { MessagesPanel } from "./src/components/dashboard/MessagesPanel";
+import PendingAdsPanel from "./src/components/admin/PendingAdsPanel";
+import { UsersPanel } from "./src/components/admin/UsersPanel";
+import BannersPanel from "./src/components/admin/BannersPanel";
+import { CategoriasAdmin } from "./src/components/admin/CategoriasAdmin";
+import { AttributesAdmin } from "./src/components/admin/AttributesAdmin";
+import { BackendSettings } from "./src/components/admin/BackendSettings";
+import { AdDetailPage } from "./src/components/AdDetailPage";
+import { ProfilePanel } from "./src/components/dashboard/ProfilePanel";
+import { SubscriptionPanel } from "./src/components/dashboard/SubscriptionPanel";
+import { ReceivedContactsView } from "./src/components/dashboard/ReceivedContactsView";
+import { DashboardLayout } from "./src/components/layouts/DashboardLayout";
+import { FeaturedAdsSection } from "./src/components/sections/FeaturedAdsSection";
+import { FeaturedAdsPanel } from "./src/components/admin/FeaturedAdsPanel";
+import { getPremiumAds, getActiveAds } from "./src/services/adsService";
+import { getHomepageSearchBanners } from "./src/services/bannersService";
+import type { Ad } from "./types";
+import { PROVINCES } from "./src/constants/locations";
+import { ALL_CATEGORIES } from "./src/constants/categories";
+import { SearchResultsPageMinimal } from "./src/components/SearchResultsPageMinimal";
+import { HeroSearchBarClon } from "./src/components/HeroSearchBarClon";
+import { RegisterBanner } from "./src/components/RegisterBanner";
+import { HowItWorksSection } from "./src/components/sections/HowItWorksSection";
+import { HowItWorksPage } from "./src/components/pages/HowItWorksPage";
+import { EmailConfirmationPage } from "./src/components/auth/EmailConfirmationPage";
+import { HomepageSearchBanner } from "./src/components/DynamicBanner";
+import AuthModal from "./src/components/auth/AuthModal";
+import PublicarAvisoV3 from "./src/components/pages/PublicarAvisoV3";
+import { AdFinderPanel } from "./src/components/admin/AdFinderPanel";
+import { DeletedAdsPanel } from "./src/components/admin/DeletedAdsPanel";
+import { TestDynamicForm } from "./src/pages/TestDynamicForm";
+
+import { useAuth } from "./src/contexts/AuthContext";
+import { CategoryProvider } from "./src/contexts/CategoryContext";
+import { canAccessPage } from "./src/utils/rolePermissions";
+import { useCategoryPrefetch } from "./src/hooks/useCategoryPrefetch";
+import { useRealtimeCategories } from "./src/hooks/useRealtimeCategories";
+import { OfflineBanner } from "./src/hooks/useOnlineStatus";
+import { ToastProvider } from "./src/contexts/ToastContext";import { Footer } from "./src/components/Footer";import { useSiteSetting } from "./src/hooks/useSiteSetting";
+
+type Page = 'home' | 'my-ads' | 'inbox' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'ad-finder' | 'deleted-ads' | 'publicar-v2' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'pending-ads' | 'featured-ads' | 'backend-settings';
+
+/**
+ * Componente principal de AgroBuscador
+ */
+const App: React.FC = () => {
+  return (
+    <ToastProvider>
+      <CategoryProvider>
+        <OfflineBanner />
+        <AppContent />
+      </CategoryProvider>
+    </ToastProvider>
+  );
+};
+
+const AppContent: React.FC = () => {
+  // ⚡ Persistir página actual en localStorage para mantener estado al refrescar (F5)
+  const [currentPage, setCurrentPage] = useState<Page>(() => {
+    // Intentar recuperar del hash primero
+    const hash = window.location.hash;
+    
+    if (hash.startsWith('#/auth/confirm')) return 'email-confirm';
+    if (hash === '#/how-it-works') return 'how-it-works';
+    if (hash === '#/test-form') return 'test-form';
+    if (hash === '#/publicar' || hash === '#/publicar-v2' || hash.startsWith('#/publicar-v2?')) return 'publicar-v2';
+    if (hash.startsWith('#/edit/')) return 'publicar-v2';
+    if (hash.startsWith('#/ad/')) return 'ad-detail';
+    if (hash === '#/dashboard/contacts') return 'contacts';
+
+    if (hash === '#/my-ads') return 'my-ads';
+    if (hash === '#/inbox') return 'inbox';
+    if (hash === '#/pending-ads') return 'pending-ads';
+    if (hash === '#/users') return 'users';
+    if (hash === '#/banners') return 'banners';
+    if (hash === '#/featured-ads') return 'featured-ads';
+    if (hash === '#/categories-admin') return 'categories-admin';
+    if (hash === '#/attributes-admin') return 'attributes-admin';
+    if (hash === '#/backend-settings') return 'backend-settings';
+    if (hash === '#/ad-finder') return 'ad-finder';
+    if (hash === '#/deleted-ads') return 'deleted-ads';
+    if (hash === '#/profile') return 'profile';
+    if (hash === '#/subscription') return 'subscription';
+    
+    // Si no hay hash específico o es #/ (home), ir a home y limpiar localStorage
+    localStorage.removeItem('currentPage');
+    return 'home';
+  });
+  
+  const { products, isLoading, getFilterOptions, refetch } = useProducts();
+  const { profile, loading: authLoading } = useAuth();
+  
+  // ⚡ Wrapper para setCurrentPage que persiste en localStorage
+  const navigateToPage = useCallback((page: Page) => {
+    console.log('🧭 Navegando a:', page);
+    console.log('👤 Usuario actual:', profile?.email, 'Rol:', profile?.role);
+    console.log('🔐 Puede acceder a categories-admin?', canAccessPage('categories-admin', profile?.role));
+    setCurrentPage(page);
+    
+    // Guardar en localStorage para persistir al refrescar
+    if (page !== 'home') {
+      localStorage.setItem('currentPage', page);
+    } else {
+      localStorage.removeItem('currentPage');
+    }
+    
+    // Actualizar hash para que la URL refleje la página actual
+    const hashMap: Record<string, string> = {
+      'my-ads': '#/my-ads',
+      'inbox': '#/inbox',
+      'pending-ads': '#/pending-ads',
+      'users': '#/users',
+      'banners': '#/banners',
+      'featured-ads': '#/featured-ads',
+      'categories-admin': '#/categories-admin',
+      'attributes-admin': '#/attributes-admin',
+      'ad-finder': '#/ad-finder',
+      'deleted-ads': '#/deleted-ads',
+      'profile': '#/profile',
+      'subscription': '#/subscription',
+      'contacts': '#/dashboard/contacts',
+      'how-it-works': '#/how-it-works',
+      'publicar-v2': '#/publicar-v2',
+      'test-form': '#/test-form',
+      'home': '#/'
+    };
+    
+    // Solo actualizar hash si la página tiene uno asignado y no estamos ya en ese hash
+    // IMPORTANTE: No reescribir si ya estamos en la página correcta (preservar query params)
+    const currentHash = window.location.hash;
+    const targetHash = hashMap[page];
+    
+    if (targetHash && !currentHash.startsWith(targetHash)) {
+      window.history.replaceState(null, '', targetHash);
+    }
+  }, []);
+  
+  // ⚡ Prefetch inteligente de categorías populares
+  useCategoryPrefetch({
+    enabled: true,
+    popularCategories: ['maquinarias', 'ganaderia'],
+    delayMs: 2000 // Espera 2s para no bloquear carga inicial
+  });
+  
+  // 🔄 Sincronización en tiempo real (opcional, no crítico)
+  const { isConnected: realtimeConnected } = useRealtimeCategories(false); // Deshabilitado por defecto
+  
+  // Para habilitar Realtime, cambiar a: useRealtimeCategories(true)
+
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({});
+  const [searchResults, setSearchResults] = useState(products);
+  const [isSearching, setIsSearching] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({});
+  const [premiumAds, setPremiumAds] = useState<Ad[]>([]);
+  const [activeAds, setActiveAds] = useState<Ad[]>([]);
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const [currentBanner, setCurrentBanner] = useState<Banner | null>(null);
+  const [allBanners, setAllBanners] = useState<Banner[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
+  const [adToEdit, setAdToEdit] = useState<Ad | undefined>(undefined);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login');
+
+  // Hash-based routing
+  React.useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      
+      // Scroll to top cuando cambia la página
+      window.scrollTo(0, 0);
+      
+      // Routing para confirmación de email
+      if (hash.startsWith('#/auth/confirm')) {
+        navigateToPage('email-confirm');
+      }
+      // Routing para "¿Cómo funciona?"
+      else if (hash === '#/how-it-works') {
+        navigateToPage('how-it-works');
+      }
+      // Routing para publicar aviso - Nuevo formulario mobile-first
+      else if (hash === '#/publicar' || hash === '#/publicar-v2' || hash.startsWith('#/publicar-v2?')) {
+        navigateToPage('publicar-v2');
+      }
+      // Routing para editar aviso
+      else if (hash.startsWith('#/edit/')) {
+        const adId = hash.replace('#/edit/', '');
+        console.log('✏️ Navegando a editar aviso:', adId);
+        setSelectedAdId(adId);
+        navigateToPage('publicar-v2');
+      }
+      // Routing para detalle de aviso: #/ad/:id
+      else if (hash.startsWith('#/ad/')) {
+        const adId = hash.replace('#/ad/', '');
+        console.log('🔍 Navegando a detalle de aviso:', adId);
+        setSelectedAdId(adId);
+        navigateToPage('ad-detail');
+      } 
+      // Routing para páginas de admin/dashboard
+      else if (hash === '#/dashboard/contacts' || hash === '#/contacts') {
+        navigateToPage('contacts');
+      }
+      else if (hash === '#/my-ads') {
+        navigateToPage('my-ads');
+      }
+      else if (hash === '#/inbox') {
+        navigateToPage('inbox');
+      }
+      else if (hash === '#/pending-ads') {
+        navigateToPage('pending-ads');
+      }
+      else if (hash === '#/users') {
+        navigateToPage('users');
+      }
+      else if (hash === '#/banners') {
+        navigateToPage('banners');
+      }
+      else if (hash === '#/featured-ads') {
+        navigateToPage('featured-ads');
+      }
+      else if (hash === '#/categories-admin') {
+        navigateToPage('categories-admin');
+      }
+      else if (hash === '#/attributes-admin') {
+        navigateToPage('attributes-admin');
+      }
+      else if (hash === '#/ad-finder') {
+        navigateToPage('ad-finder');
+      }
+      else if (hash === '#/deleted-ads') {
+        navigateToPage('deleted-ads');
+      }
+      else if (hash === '#/profile') {
+        navigateToPage('profile');
+      }
+      else if (hash === '#/subscription') {
+        navigateToPage('subscription');
+      }
+      // Routing para dashboard - redirigir a Mis Avisos
+      else if (hash.startsWith('#/dashboard')) {
+        window.location.hash = '#/my-ads';
+        return;
+      }
+      // Si no hay hash, mantener la página actual (ya inicializada desde localStorage)
+      // Solo navegar a home si explícitamente se navega a #/ o se limpia el hash manualmente
+      else if (hash === '#/') {
+        navigateToPage('home');
+        setSelectedAdId(null);
+      }
+      // Si hash === '' (vacío), no hacer nada - mantener estado actual
+    };
+
+    // Handle initial hash
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [products]); // Agregado products como dependencia
+
+  // Mobile detection
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Cargar avisos premium y activos al montar
+  React.useEffect(() => {
+    const loadAds = async () => {
+      const [premium, active] = await Promise.all([
+        getPremiumAds(),
+        getActiveAds()
+      ]);
+      setPremiumAds(premium);
+      setActiveAds(active);
+    };
+    loadAds();
+  }, []);
+
+  // Cargar todos los banners para carousel en mobile
+  React.useEffect(() => {
+    if (!isMobile) return;
+
+    const loadAllBanners = async () => {
+      try {
+        const banners = await getHomepageSearchBanners(undefined, 'mobile');
+        setAllBanners(banners);
+      } catch (error) {
+        console.error('❌ Error loading banners for mobile carousel:', error);
+      }
+    };
+    
+    loadAllBanners();
+  }, [isMobile]);
+
+  // Listener para abrir modal de autenticación desde eventos personalizados
+  React.useEffect(() => {
+    const handleOpenAuthModal = (e: CustomEvent) => {
+      const { view } = e.detail || {};
+      if (view === 'login' || view === 'register') {
+        setAuthModalView(view);
+        setShowAuthModal(true);
+      }
+    };
+
+    window.addEventListener('openAuthModal', handleOpenAuthModal as EventListener);
+    return () => window.removeEventListener('openAuthModal', handleOpenAuthModal as EventListener);
+  }, []);
+
+  // Control de visibilidad del botón scroll to top
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Función para scroll al top
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Búsqueda inteligente con filtros avanzados
+  const handleAdvancedSearch = useCallback(
+    (filters: SearchFilters) => {
+      console.log('🔍 Búsqueda iniciada con filtros:', filters);
+      setSearchFilters(filters);
+      const filtered = smartSearch(products, filters);
+      console.log('✅ Resultados encontrados:', filtered.length);
+      setSearchResults(filtered);
+      setIsSearching(true); // Cambiar a vista de resultados
+      console.log('📄 isSearching activado');
+      // Scroll al top cuando se va a resultados
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [products]
+  );
+
+  // Búsqueda simple (compatible con SearchBar antiguo)
+  const handleSearch = useCallback(
+    (query: string) => {
+      handleAdvancedSearch({ query });
+    },
+    [handleAdvancedSearch]
+  );
+
+  const handleBackToHome = () => {
+    setIsSearching(false);
+    setSearchFilters({});
+    setSearchResults(products);
+    setActiveFilters({});
+    setAdToEdit(undefined); // Limpiar aviso a editar
+    setSelectedAdId(null); // Limpiar ID seleccionado
+  };
+
+  const filterOptions: FilterOptions = useMemo(() => getFilterOptions(), [getFilterOptions]);
+
+  // Obtener productos premium
+  const premiumProducts = useMemo(() => getPremiumProducts(products), [products]);
+
+  // Usar TODAS las categorías y provincias disponibles (no solo las de productos existentes)
+  const availableCategories = useMemo(() => ALL_CATEGORIES, []);
+  const availableProvinces = useMemo(() => [...PROVINCES], []);
+  const availableTags = useMemo(() => 
+    [...new Set(products.flatMap(p => p.tags || []))],
+    [products]
+  );
+
+  console.log('🎯 Estado actual - currentPage:', currentPage, 'isSearching:', isSearching);
+
+  // Determinar si debe usar Dashboard Layout
+  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'banners', 'settings', 'contacts', 'ad-finder', 'deleted-ads', 'categories-admin', 'attributes-admin', 'pending-ads', 'featured-ads', 'backend-settings'].includes(currentPage);
+
+  // Render con Dashboard Layout
+  if (isDashboardPage) {
+    // Verificar permisos para la página actual
+    if (!canAccessPage(currentPage, profile?.role)) {
+      // Redirigir a home si no tiene permisos
+      setTimeout(() => {
+        navigateToPage('home');
+        window.location.hash = '#/';
+      }, 0);
+      
+      return (
+        <div className="flex items-center justify-center h-screen bg-gray-50">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-2">Acceso Denegado</h2>
+            <p className="text-gray-600 mb-4">No tienes permisos para acceder a esta página.</p>
+            <button 
+              onClick={() => {
+                navigateToPage('home');
+                window.location.hash = '#/';
+              }}
+              className="px-4 py-2 bg-[#16a135] text-white rounded-lg hover:bg-[#0e7d25]"
+            >
+              Volver al Inicio
+            </button>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="h-screen overflow-hidden">
+        <DashboardLayout currentPage={currentPage} onNavigate={(page) => {
+            navigateToPage(page);
+            if (page === 'home') {
+              handleBackToHome();
+            }
+          }}>
+            {/* Mostrar loading mientras se carga el perfil para páginas protegidas */}
+            {authLoading && (currentPage === 'categories-admin' || currentPage === 'users' || currentPage === 'featured-ads') && (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-600">Cargando perfil...</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Renderizar contenido cuando no está loading o la página no requiere auth */}
+            {!authLoading && (
+              <>
+                {console.log('🎯 APP.TSX RENDER:', { currentPage, role: profile?.role, canAccess: canAccessPage('categories-admin', profile?.role) })}
+                {currentPage === 'profile' && <ProfilePanel />}
+                {currentPage === 'subscription' && <SubscriptionPanel />}
+                {currentPage === 'contacts' && <ReceivedContactsView />}
+                {currentPage === 'users' && canAccessPage('users', profile?.role) && <UsersPanel />}
+                {currentPage === 'my-ads' && <MyAdsPanel />}
+                {currentPage === 'inbox' && <MessagesPanel />}
+                {currentPage === 'pending-ads' && canAccessPage('pending-ads', profile?.role) && <PendingAdsPanel />}
+                {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersPanel />}
+                {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <CategoriasAdmin />}
+                {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <AttributesAdmin />}
+                {currentPage === 'backend-settings' && canAccessPage('backend-settings', profile?.role) && <BackendSettings />}
+                {currentPage === 'featured-ads' && console.log('🔍 Featured Ads Check:', { currentPage, role: profile?.role, canAccess: canAccessPage('featured-ads', profile?.role) })}
+                {currentPage === 'featured-ads' && canAccessPage('featured-ads', profile?.role) && <FeaturedAdsPanel />}
+                {currentPage === 'featured-ads' && !canAccessPage('featured-ads', profile?.role) && (
+                  <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6 m-6">
+                    <h2 className="text-xl font-bold text-red-900 mb-2">⛔ Acceso Denegado - Featured Ads</h2>
+                    <p className="text-red-700">No tienes permisos para acceder a Avisos Destacados</p>
+                    <p className="text-sm text-red-600 mt-2">Tu rol: {profile?.role || 'sin rol'}</p>
+                    <p className="text-sm text-red-600">Rol requerido: superadmin</p>
+                  </div>
+                )}
+                {currentPage === 'categories-admin' && console.log('✅ Renderizando CategoriasAdmin')}
+                {/* DEBUG: Mostrar siempre qué página estamos */}
+                {currentPage === 'categories-admin' && !canAccessPage('categories-admin', profile?.role) && (
+                  <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6 m-6">
+                    <h2 className="text-xl font-bold text-red-900 mb-2">⛔ Acceso Denegado</h2>
+                    <p className="text-red-700">No tienes permisos para acceder a Categorías Admin</p>
+                    <p className="text-sm text-red-600 mt-2">Tu rol: {profile?.role || 'sin rol'}</p>
+                    <p className="text-sm text-red-600">Rol requerido: superadmin</p>
+                  </div>
+                )}
+                {currentPage === 'ad-finder' && canAccessPage('ad-finder', profile?.role) && <AdFinderPanel />}
+                {currentPage === 'deleted-ads' && canAccessPage('deleted-ads', profile?.role) && <DeletedAdsPanel />}
+                {currentPage === 'settings' && (
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="text-2xl font-bold mb-4">Configuración</h2>
+                    <p className="text-gray-600">Panel de configuración en desarrollo...</p>
+                  </div>
+                )}
+              </>
+            )}
+          </DashboardLayout>
+        </div>
+    );
+  }
+
+  // Página de confirmación de email
+  if (currentPage === 'email-confirm') {
+    return <EmailConfirmationPage />;
+  }
+
+  // Nuevo formulario de publicar/editar aviso (mobile-first)
+  if (currentPage === 'publicar-v2') {
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Header onNavigate={(page) => {
+          navigateToPage(page);
+          if (page === 'home') {
+            handleBackToHome();
+          }
+        }} />
+        <PublicarAvisoV3 />
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)}
+          initialView={authModalView}
+        />
+      </div>
+    );
+  }
+
+  // Página de prueba: Formulario Dinámico
+  if (currentPage === 'test-form') {
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Header onNavigate={(page) => {
+          navigateToPage(page);
+          if (page === 'home') {
+            handleBackToHome();
+          }
+        }} />
+        <TestDynamicForm />
+      </div>
+    );
+  }
+
+  // Página "¿Cómo funciona?"
+  if (currentPage === 'how-it-works') {
+    return (
+      <div className="flex flex-col min-h-screen bg-white">
+        <Header onNavigate={(page) => {
+          navigateToPage(page);
+          if (page === 'home') {
+            handleBackToHome();
+          } else if (page === 'how-it-works') {
+            window.location.hash = '#/how-it-works';
+          }
+        }} />
+        <HowItWorksPage />
+        <AuthModal 
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          defaultMode="signup"
+        />
+      </div>
+    );
+  }
+
+  // Render normal para home, búsqueda y detalle
+  return (
+    <div className="flex flex-col min-h-screen bg-white">
+      <Header onNavigate={(page) => {
+          navigateToPage(page);
+          if (page === 'home') {
+            handleBackToHome();
+          } else if (page === 'how-it-works') {
+            window.location.hash = '#/how-it-works';
+          }
+        }} />
+
+      {currentPage === 'ad-detail' && selectedAdId ? (
+        <AdDetailPage 
+          adId={selectedAdId} 
+          onBack={() => {
+            window.location.hash = '#/';
+          }}
+          onSearch={handleAdvancedSearch}
+        />
+      ) : isSearching ? (
+        // VISTA DE BÚSQUEDA - Página minimalista estilo Google
+        <SearchResultsPageMinimal
+          results={searchResults}
+          searchQuery={searchFilters.query}
+          onBack={handleBackToHome}
+          onSearch={handleAdvancedSearch}
+          filterOptions={filterOptions}
+          onFilter={(filters) => {
+            setActiveFilters(filters);
+            const filtered = smartSearch(products, { ...searchFilters, ...filters });
+            setSearchResults(filtered);
+          }}
+          onViewDetail={(adId) => {
+            window.location.hash = `#/ad/${adId}`;
+          }}
+        />
+      ) : (
+        // VISTA DE INICIO
+        <main className="flex-1">
+          {/* Hero con buscador avanzado y carousel de imágenes */}
+          <HeroWithCarousel>
+            <HeroSearchBarClon 
+              onSearch={handleAdvancedSearch} 
+              onCategoryHover={setHoveredCategory}
+              onBannerChange={setCurrentBanner}
+            />
+          </HeroWithCarousel>
+
+          {/* Banner Publicitario Dinámico - Posición 1 (Homepage Search) */}
+          <section id="BannersHomepage" className="relative -mt-20 z-30 px-4">
+            <div className="w-full">
+              <div className="max-w-7xl mx-auto">
+                <HomepageSearchBanner 
+                  banner={currentBanner} 
+                  allBanners={allBanners}
+                  isMobile={isMobile}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Sección Cómo Funciona */}
+          <HowItWorksSection onRegisterClick={() => setShowAuthModal(true)} />
+
+          {/* 🌟 Avisos Destacados por Categoría (Seleccionados por Superadmin) */}
+          <FeaturedAdsSection
+            onAdClick={(adId) => {
+              setSelectedAdId(adId);
+              setCurrentPage('ad-detail');
+              window.location.hash = `#/ad/${adId}`;
+            }}
+            onCategoryClick={(categorySlug) => {
+              handleAdvancedSearch({ categories: [categorySlug] });
+            }}
+            onSubcategoryClick={(catSlug, subSlug) => {
+              handleAdvancedSearch({ 
+                categories: [catSlug],
+                subcategories: [subSlug]
+              });
+            }}
+          />
+
+          {/* Sistema de avisos destacados dinámico - ya integrado arriba con FeaturedAdsSection */}
+        </main>
+      )}
+
+      {/* Botón flotante Scroll to Top */}
+      {showScrollTop && currentPage === 'home' && !isSearching && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 z-50 bg-[#16a135] hover:bg-[#138a2e] text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 group"
+          aria-label="Volver arriba"
+        >
+          <svg 
+            className="w-6 h-6 group-hover:translate-y-[-2px] transition-transform" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        </button>
+      )}
+
+      {/* Footer Principal Dinámico */}
+      <Footer onCategoryClick={(category) => handleAdvancedSearch({ categories: [category] })} />
+
+      {/* Modal de Autenticación Global */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        initialView={authModalView}
+      />
+    </div>
+  );
+};
+
+
+export default App;

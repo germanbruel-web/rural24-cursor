@@ -1,0 +1,622 @@
+import { supabase } from './supabaseClient';
+import { categoryCache, cacheKeys } from '../utils/categoryCache';
+
+// =====================================================
+// CATALOG MASTER - NUEVO SISTEMA CON CACHÉ
+// =====================================================
+
+// CATEGORÍAS
+export const getCategories = async () => {
+  // Intentar obtener del caché
+  const cacheKey = cacheKeys.categories();
+  const cached = categoryCache.get(cacheKey);
+  
+  if (cached) {
+    console.log('✅ Categorías desde caché');
+    return cached;
+  }
+
+  console.log('🔍 Cargando categorías desde BD...');
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order');
+  
+  if (error) {
+    console.error('❌ Error cargando categorías:', error);
+    throw error;
+  }
+  
+  // Guardar en caché por 30 minutos
+  categoryCache.set(cacheKey, data, 1000 * 60 * 30);
+  console.log('✅ Categorías cargadas:', data?.length || 0);
+  return data || [];
+};
+
+// SUBCATEGORÍAS
+export const getSubcategories = async (categoryId: string) => {
+  // Intentar obtener del caché
+  const cacheKey = cacheKeys.subcategories(categoryId);
+  const cached = categoryCache.get(cacheKey);
+  
+  if (cached) {
+    console.log('✅ Subcategorías desde caché');
+    return cached;
+  }
+
+  console.log('🔍 Cargando subcategorías para categoría:', categoryId);
+  const { data, error } = await supabase
+    .from('subcategories')
+    .select('*')
+    .eq('category_id', categoryId)
+    .eq('is_active', true)
+    .order('sort_order');
+  
+  if (error) {
+    console.error('❌ Error cargando subcategorías:', error);
+    throw error;
+  }
+  
+  // Guardar en caché por 20 minutos
+  categoryCache.set(cacheKey, data, 1000 * 60 * 20);
+  console.log('✅ Subcategorías cargadas:', data?.length || 0);
+  return data || [];
+};
+
+// MARCAS POR SUBCATEGORÍA
+export const getBrandsBySubcategory = async (subcategoryId: string) => {
+  // Intentar obtener del caché
+  const cacheKey = cacheKeys.brands(subcategoryId);
+  const cached = categoryCache.get(cacheKey);
+  
+  if (cached) {
+    console.log('✅ Marcas desde caché');
+    return cached;
+  }
+
+  console.log('🔍 Cargando marcas para subcategoría:', subcategoryId);
+  
+  try {
+    // Intentar con subcategory_brands (tabla M2M)
+    const { data: relations, error: relError } = await supabase
+      .from('subcategory_brands')
+      .select(`
+        brand_id,
+        brands (
+          id,
+          name,
+          display_name,
+          is_active
+        )
+      `)
+      .eq('subcategory_id', subcategoryId);
+    
+    if (!relError && relations) {
+      // Extraer brands de las relaciones
+      const brands = relations.map((rel: any) => rel.brands).filter(Boolean);
+      
+      // Guardar en caché por 20 minutos
+      categoryCache.set(cacheKey, brands, 1000 * 60 * 20);
+      console.log('✅ Marcas cargadas desde M2M:', brands.length);
+      return brands;
+    }
+    
+    console.warn('⚠️ Tabla subcategory_brands no disponible, cargando todas las marcas');
+    
+    // Fallback: cargar todas las marcas activas
+    const { data: allBrands, error: brandError } = await supabase
+      .from('brands')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_name');
+    
+    if (brandError) {
+      console.error('❌ Error cargando marcas:', brandError);
+      throw brandError;
+    }
+    
+    const brands = allBrands || [];
+    // Guardar en caché por 20 minutos
+    categoryCache.set(cacheKey, brands, 1000 * 60 * 20);
+    console.log('✅ Marcas cargadas (todas):', brands.length);
+    return brands;
+    
+  } catch (error) {
+    console.error('❌ Error en getBrandsBySubcategory:', error);
+    // Retornar array vacío en caso de error
+    return [];
+  }
+};
+
+// MODELOS POR MARCA
+export const getModels = async (brandId: string) => {
+  // Intentar obtener del caché
+  const cacheKey = cacheKeys.models(brandId);
+  const cached = categoryCache.get(cacheKey);
+  
+  if (cached) {
+    console.log('✅ Modelos desde caché');
+    return cached;
+  }
+
+  console.log('🔍 Cargando modelos para marca:', brandId);
+  const { data, error } = await supabase
+    .from('models')
+    .select('*')
+    .eq('brand_id', brandId)
+    .eq('is_active', true)
+    .order('display_name');
+  
+  if (error) {
+    console.error('❌ Error cargando modelos:', error);
+    throw error;
+  }
+  
+  // Guardar en caché por 20 minutos
+  categoryCache.set(cacheKey, data, 1000 * 60 * 20);
+  console.log('✅ Modelos cargados:', data?.length || 0);
+  return data || [];
+};
+
+// =====================================================
+// FUNCIONES LEGACY (Sistema Viejo - Mantener por compatibilidad)
+// =====================================================
+
+export const getOperationTypes = async () => {
+  const { data, error } = await supabase
+    .from('operation_types')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order');
+  
+  if (error) throw error;
+  return data;
+};
+
+export const createOperationType = async (operationType: any) => {
+  const { data, error } = await supabase
+    .from('operation_types')
+    .insert(operationType)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const updateOperationType = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('operation_types')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const deleteOperationType = async (id: string) => {
+  const { error } = await supabase
+    .from('operation_types')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+};
+
+// =====================================================
+// CATEGORÍAS PRINCIPALES - FUNCIÓN LEGACY ELIMINADA
+// Usar la función getCategories() del sistema nuevo (línea ~10)
+// =====================================================
+
+export const createCategory = async (category: any) => {
+  const { data, error } = await supabase
+    .from('categories')
+    .insert(category)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const updateCategory = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('categories')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const deleteCategory = async (id: string) => {
+  const { error } = await supabase
+    .from('categories')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+};
+
+// =====================================================
+// SUBCATEGORÍAS
+// =====================================================
+
+// SUBCATEGORÍAS - FUNCIÓN LEGACY ELIMINADA
+// Usar la función getSubcategories(categoryId) del sistema nuevo (línea ~25)
+
+export const createSubcategory = async (subcategory: any) => {
+  const { data, error } = await supabase
+    .from('subcategories')
+    .insert(subcategory)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const updateSubcategory = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('subcategories')
+    .update(updates)
+    .eq('id', id)
+    .select();
+  
+  if (error) throw error;
+  return data?.[0];
+};
+
+export const deleteSubcategory = async (id: string) => {
+  const { error } = await supabase
+    .from('subcategories')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+};
+
+// =====================================================
+// CATEGORÍAS PRINCIPALES DE SERVICIOS
+// =====================================================
+
+export const getServiceMainCategories = async (categoryId?: string) => {
+  let query = supabase
+    .from('service_main_categories')
+    .select(`
+      *,
+      category:categories(*)
+    `)
+    .eq('is_active', true)
+    .order('sort_order');
+  
+  if (categoryId) {
+    query = query.eq('category_id', categoryId);
+  }
+  
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+};
+
+export const createServiceMainCategory = async (category: any) => {
+  const { data, error } = await supabase
+    .from('service_main_categories')
+    .insert(category)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const updateServiceMainCategory = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('service_main_categories')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const deleteServiceMainCategory = async (id: string) => {
+  const { error } = await supabase
+    .from('service_main_categories')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+};
+
+// =====================================================
+// SUBCATEGORÍAS DE SERVICIOS
+// =====================================================
+
+export const getServiceSubcategories = async (serviceMainCategoryId?: string) => {
+  let query = supabase
+    .from('service_subcategories')
+    .select(`
+      *,
+      service_main_category:service_main_categories(*)
+    `)
+    .eq('is_active', true)
+    .order('sort_order');
+  
+  if (serviceMainCategoryId) {
+    query = query.eq('service_main_category_id', serviceMainCategoryId);
+  }
+  
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+};
+
+export const createServiceSubcategory = async (subcategory: any) => {
+  const { data, error } = await supabase
+    .from('service_subcategories')
+    .insert(subcategory)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const updateServiceSubcategory = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('service_subcategories')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const deleteServiceSubcategory = async (id: string) => {
+  const { error } = await supabase
+    .from('service_subcategories')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+};
+
+// =====================================================
+// MARCAS
+// =====================================================
+
+export const getBrands = async () => {
+  const { data, error } = await supabase
+    .from('brands')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order');
+  
+  if (error) throw error;
+  return data;
+};
+
+// getBrandsBySubcategory está definida arriba con caché (línea 68)
+
+export const createBrand = async (brand: any) => {
+  const { data, error } = await supabase
+    .from('brands')
+    .insert(brand)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const updateBrand = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('brands')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const deleteBrand = async (id: string) => {
+  const { error } = await supabase
+    .from('brands')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+};
+
+// Asignar marca a subcategoría
+export const assignBrandToSubcategory = async (subcategoryId: string, brandId: string, sortOrder: number = 0) => {
+  const { data, error } = await supabase
+    .from('subcategory_brands')
+    .insert({ subcategory_id: subcategoryId, brand_id: brandId, sort_order: sortOrder })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+// Desasignar marca de subcategoría
+export const removeBrandFromSubcategory = async (subcategoryId: string, brandId: string) => {
+  const { error } = await supabase
+    .from('subcategory_brands')
+    .delete()
+    .eq('subcategory_id', subcategoryId)
+    .eq('brand_id', brandId);
+  
+  if (error) throw error;
+};
+
+// =====================================================
+// MODELOS
+// =====================================================
+
+// getModels está definida arriba con caché (línea 109)
+
+export const createModel = async (model: any) => {
+  const { data, error } = await supabase
+    .from('models')
+    .insert(model)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const updateModel = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('models')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const deleteModel = async (id: string) => {
+  const { error } = await supabase
+    .from('models')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+};
+
+// =====================================================
+// FUNCIONES DE UTILIDAD
+// =====================================================
+
+// Obtener toda la jerarquía de categorías
+export const getCategoryHierarchy = async () => {
+  const { data, error } = await supabase
+    .from('operation_types')
+    .select(`
+      *,
+      categories:categories(
+        *,
+        subcategories:subcategories(*),
+        service_main_categories:service_main_categories(
+          *,
+          service_subcategories:service_subcategories(*)
+        )
+      )
+    `)
+    .eq('is_active', true)
+    .order('sort_order');
+  
+  if (error) throw error;
+  return data;
+};
+
+// Helper functions for form integration
+export const getCategoriesForForm = async () => {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('id, name, display_name')
+    .eq('is_active', true)
+    .order('sort_order');
+  
+  if (error) throw error;
+  
+  // Eliminar duplicados por display_name
+  const uniqueCategories = Array.from(
+    new Map(data.map(cat => [cat.display_name, cat])).values()
+  );
+  
+  return uniqueCategories.map(cat => cat.display_name);
+};
+
+export const getSubcategoriesForForm = async (categoryName: string) => {
+  // First get the category by display_name
+  const { data: categories, error: catError } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('display_name', categoryName)
+    .eq('is_active', true)
+    .single();
+  
+  if (catError || !categories) return [];
+  
+  // Then get subcategories
+  const { data, error } = await supabase
+    .from('subcategories')
+    .select('id, name, display_name')
+    .eq('category_id', categories.id)
+    .eq('is_active', true)
+    .order('sort_order');
+  
+  if (error) return [];
+  
+  // Eliminar duplicados por display_name
+  const uniqueSubs = Array.from(
+    new Map(data.map(sub => [sub.display_name, sub])).values()
+  );
+  
+  return uniqueSubs.map(sub => sub.display_name);
+};
+
+export const getBrandsForForm = async (subcategoryName?: string) => {
+  if (!subcategoryName) {
+    const { data, error } = await supabase
+      .from('brands')
+      .select('id, name, display_name')
+      .eq('is_active', true)
+      .order('sort_order');
+    
+    if (error) return [];
+    
+    // Eliminar duplicados por display_name
+    const uniqueBrands = Array.from(
+      new Map(data.map(brand => [brand.display_name, brand])).values()
+    );
+    
+    return uniqueBrands.map(brand => brand.display_name);
+  }
+  
+  // Get brands for specific subcategory
+  const { data: subcategories, error: subError } = await supabase
+    .from('subcategories')
+    .select('id')
+    .eq('display_name', subcategoryName)
+    .eq('is_active', true)
+    .single();
+  
+  if (subError || !subcategories) return [];
+  
+  const brands = await getBrandsBySubcategory(subcategories.id);
+  return brands.map(brand => brand.display_name);
+};
+
+export const getModelsForForm = async (brandName: string) => {
+  // Get brand by display_name
+  const { data: brands, error: brandError } = await supabase
+    .from('brands')
+    .select('id')
+    .eq('display_name', brandName)
+    .eq('is_active', true)
+    .single();
+  
+  if (brandError || !brands) return [];
+  
+  const models = await getModels(brands.id);
+  return models.map(model => model.display_name);
+};
