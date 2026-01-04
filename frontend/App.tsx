@@ -49,7 +49,7 @@ import { useRealtimeCategories } from "./src/hooks/useRealtimeCategories";
 import { OfflineBanner } from "./src/hooks/useOnlineStatus";
 import { ToastProvider } from "./src/contexts/ToastContext";import { Footer } from "./src/components/Footer";import { useSiteSetting } from "./src/hooks/useSiteSetting";
 
-type Page = 'home' | 'my-ads' | 'inbox' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'ad-finder' | 'deleted-ads' | 'publicar-v2' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'pending-ads' | 'featured-ads' | 'backend-settings';
+type Page = 'home' | 'my-ads' | 'inbox' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'ad-finder' | 'deleted-ads' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'pending-ads' | 'featured-ads' | 'backend-settings';
 
 /**
  * Componente principal de AgroBuscador
@@ -74,8 +74,8 @@ const AppContent: React.FC = () => {
     if (hash.startsWith('#/auth/confirm')) return 'email-confirm';
     if (hash === '#/how-it-works') return 'how-it-works';
     if (hash === '#/test-form') return 'test-form';
-    if (hash === '#/publicar' || hash === '#/publicar-v2' || hash.startsWith('#/publicar-v2?')) return 'publicar-v2';
-    if (hash.startsWith('#/edit/')) return 'publicar-v2';
+    if (hash === '#/publicar' || hash === '#/publicar-v3' || hash.startsWith('#/publicar-v3?')) return 'publicar-v3';
+    if (hash.startsWith('#/edit/')) return 'publicar-v3';
     if (hash.startsWith('#/ad/')) return 'ad-detail';
     if (hash === '#/dashboard/contacts') return 'contacts';
 
@@ -131,7 +131,7 @@ const AppContent: React.FC = () => {
       'subscription': '#/subscription',
       'contacts': '#/dashboard/contacts',
       'how-it-works': '#/how-it-works',
-      'publicar-v2': '#/publicar-v2',
+      'publicar-v3': '#/publicar-v3',
       'test-form': '#/test-form',
       'home': '#/'
     };
@@ -493,7 +493,7 @@ const AppContent: React.FC = () => {
   }
 
   // Nuevo formulario de publicar/editar aviso (mobile-first)
-  if (currentPage === 'publicar-v2') {
+  if (currentPage === 'publicar-v3') {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <Header onNavigate={(page) => {

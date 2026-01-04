@@ -21,7 +21,7 @@ if (!API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
 // ============================================================
 // TIPOS
@@ -104,7 +104,7 @@ export async function generateTitlesWithAI(
     return {
       suggestions,
       usedFields,
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-latest',
       timestamp: new Date().toISOString(),
     };
 
@@ -177,7 +177,7 @@ export async function generateDescriptionsWithAI(
     return {
       suggestions,
       usedFields,
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-pro',
       timestamp: new Date().toISOString(),
     };
 

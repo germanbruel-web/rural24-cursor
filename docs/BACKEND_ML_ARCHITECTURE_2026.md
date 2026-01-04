@@ -130,9 +130,7 @@ Resultado: Datos inconsistentes, búsquedas fallidas
 └──────────────────┬──────────────────────────────────────────┘
                    │
 ┌──────────────────▼──────────────────────────────────────────┐
-│                   ML/AI LAYER                                │
-│  - Google Gemini 2.0 Flash                                   │
-│  - OpenAI GPT-4o (fallback)                                  │
+│                   ML LAYER                                │
 │  - Custom ML Models (TensorFlow.js)                          │
 │  - Vector Search (Supabase pgvector)                         │
 └──────────────────┬──────────────────────────────────────────┘

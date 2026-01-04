@@ -33,9 +33,10 @@ import { PROVINCES, LOCALITIES_BY_PROVINCE } from '../../constants/locations';
 import { supabase } from '../../services/supabaseClient';
 import { uploadService } from '../../services/uploadService';
 import { notify } from '../../utils/notifications';
-import { generateTitlesWithAI, generateDescriptionsWithAI } from '../../services/aiTextGeneratorService';
 import AuthModal from '../auth/AuthModal';
 import { LivePreviewCard } from '../LivePreviewCard';
+import { adsApi } from '../../services/api';
+import { uploadsApi } from '../../services/api';
 
 // ====================================================================
 // WIZARD STEPS
@@ -416,118 +417,8 @@ export default function PublicarAvisoV3() {
   }
 
   // ====================================================================
-  // TITLE & DESCRIPTION GENERATION (AI-powered)
+  // TITLE & DESCRIPTION - Manual Input Only
   // ====================================================================
-  
-  async function generateNewTitle() {
-    const categoryObj = categories.find(c => c.id === selectedCategory);
-    const subcategoryObj = subcategories.find(s => s.id === selectedSubcategory);
-    
-    if (!categoryObj || !subcategoryObj) {
-      notify.error('Seleccioná categoría y subcategoría primero');
-      return;
-    }
-
-    const adData = {
-      category: categoryObj.name, // Nombre técnico (maquinarias, ganaderia)
-      categoryDisplayName: categoryObj.display_name, // Nombre para mostrar
-      subcategory: subcategoryObj.name,
-      subcategoryDisplayName: subcategoryObj.display_name,
-      attributes: attributeValues,
-      province,
-      locality,
-      price: price ? parseFloat(price) : undefined,
-      currency,
-    };
-    
-    notify.info('🤖 Generando títulos con IA...');
-    
-    try {
-      const result = await generateTitlesWithAI(adData, 5);
-      
-      if (result.suggestions.length > 0) {
-        setSuggestedTitles(result.suggestions);
-        setTitle(result.suggestions[0]); // Auto-seleccionar el primero
-        setSelectedTitleIndex(0);
-        notify.success(`✅ ${result.suggestions.length} títulos generados`);
-      } else {
-        notify.error('No se pudieron generar títulos');
-      }
-    } catch (error) {
-      console.error('Error generando títulos:', error);
-      notify.error('Error al generar títulos');
-    }
-  }
-
-  async function generateNewDescription() {
-    const categoryObj = categories.find(c => c.id === selectedCategory);
-    const subcategoryObj = subcategories.find(s => s.id === selectedSubcategory);
-    
-    if (!categoryObj || !subcategoryObj) {
-      notify.error('Seleccioná categoría y subcategoría primero');
-      return;
-    }
-
-    const adData = {
-      category: categoryObj.name,
-      categoryDisplayName: categoryObj.display_name,
-      subcategory: subcategoryObj.name,
-      subcategoryDisplayName: subcategoryObj.display_name,
-      attributes: attributeValues,
-      province,
-      locality,
-      price: price ? parseFloat(price) : undefined,
-      currency,
-    };
-    
-    notify.info('🤖 Generando descripciones con IA...');
-    
-    try {
-      const result = await generateDescriptionsWithAI(adData, 3);
-      
-      if (result.suggestions.length > 0) {
-        setSuggestedDescriptions(result.suggestions);
-        setDescription(result.suggestions[0]); // Auto-seleccionar la primera
-        setSelectedDescIndex(0);
-        notify.success(`✅ ${result.suggestions.length} descripciones generadas`);
-      } else {
-        notify.error('No se pudieron generar descripciones');
-      }
-    } catch (error) {
-      console.error('Error generando descripciones:', error);
-      notify.error('Error al generar descripciones');
-    }
-  }
-
-  // Ciclar entre títulos sugeridos
-  function cycleTitle() {
-    if (suggestedTitles.length === 0) {
-      generateNewTitle(); // Si no hay, generar
-      return;
-    }
-    
-    const nextIndex = selectedTitleIndex !== null 
-      ? (selectedTitleIndex + 1) % suggestedTitles.length
-      : 0;
-    
-    setTitle(suggestedTitles[nextIndex]);
-    setSelectedTitleIndex(nextIndex);
-  }
-
-  // Ciclar entre descripciones sugeridas
-  function cycleDescription() {
-    if (suggestedDescriptions.length === 0) {
-      generateNewDescription(); // Si no hay, generar
-      return;
-    }
-    
-    const nextIndex = selectedDescIndex !== null 
-      ? (selectedDescIndex + 1) % suggestedDescriptions.length
-      : 0;
-    
-    setDescription(suggestedDescriptions[nextIndex]);
-    setSelectedDescIndex(nextIndex);
-  }
 
   // Seleccionar título por índice (para futuras opciones de UI)
   function selectTitle(index: number) {
@@ -602,35 +493,38 @@ export default function PublicarAvisoV3() {
     try {
       setSubmitting(true);
 
-      // 1. Subir fotos nuevas (si hay)
-      let uploadedUrls: string[] = [];
+      // 1. Subir fotos nuevas usando el nuevo API (Cloudinary via BFF)
+      let uploadedImages: Array<{url: string, path: string}> = [];
       if (photos.length > 0) {
         setUploadingPhotos(true);
-        const results = await Promise.all(
-          photos.map(file => uploadService.uploadImage(file, 'ads'))
-        );
-        uploadedUrls = results.filter(Boolean) as string[];
-        console.log('📸 URLs nuevas subidas:', uploadedUrls);
+        try {
+          uploadedImages = await uploadsApi.uploadMultiple(photos, 'ads');
+          console.log('📸 Imágenes subidas a Cloudinary:', uploadedImages);
+        } catch (error) {
+          console.error('Error subiendo imágenes:', error);
+          notify.error('Error al subir imágenes');
+          setUploadingPhotos(false);
+          return;
+        }
         setUploadingPhotos(false);
       }
 
       // Combinar imágenes existentes + nuevas
       const finalImages = isEditMode 
-        ? [...existingImages, ...uploadedUrls]
-        : uploadedUrls;
+        ? [...existingImages.map(url => ({url, path: url})), ...uploadedImages]
+        : uploadedImages;
 
-      // 2. Preparar datos
+      // 2. Preparar datos (nota: adData solo se usa para UPDATE mode, CREATE usa estructura diferente)
       const adData = {
         category_id: selectedCategory,
         subcategory_id: selectedSubcategory,
-        // category_type_id: NO agregada - tabla category_types está vacía
         title: title.trim(),
         description: description.trim(),
         price: price ? parseFloat(price) : null,
         currency,
         location: locality || null,
         province,
-        images: finalImages,
+        images: finalImages.map(img => img.url), // Para UPDATE, mantener compatibilidad
         attributes: attributeValues,
         status: 'active',
       };
@@ -662,24 +556,26 @@ export default function PublicarAvisoV3() {
         resultId = data.id;
         notify.success('✅ Aviso actualizado exitosamente!');
       } else {
-        // MODO CREATE
-        const { data, error } = await supabase
-          .from('ads')
-          .insert({
-            ...adData,
-            user_id: profile.id,
-            approval_status: 'approved',
-            featured: false,
-          })
-          .select()
-          .single();
+        // MODO CREATE - Usar nuevo BFF API
+        const createData = {
+          user_id: profile.id,
+          category_id: selectedCategory,
+          subcategory_id: selectedSubcategory,
+          title: title.trim(),
+          description: description.trim(),
+          price: price ? parseFloat(price) : 0,
+          currency,
+          location: locality || null,
+          province,
+          images: finalImages,
+          attributes: attributeValues,
+        };
 
-        if (error) {
-          console.error('❌ Error INSERT:', error);
-          throw error;
-        }
+        console.log('📦 Enviando a BFF API:', createData);
 
-        resultId = data.id;
+        const ad = await adsApi.create(createData);
+
+        resultId = ad.id;
         notify.success('✅ Aviso publicado exitosamente!');
       }
       
@@ -1300,83 +1196,34 @@ export default function PublicarAvisoV3() {
                       <FileText className="w-5 h-5 text-green-600" />
                       Título *
                     </label>
-                    <div className="flex gap-2">
-                      {suggestedTitles.length > 0 && (
-                        <button
-                          onClick={cycleTitle}
-                          className="py-2 px-3 sm:py-3 sm:px-4 bg-blue-500 text-white text-sm sm:text-base font-bold rounded-xl hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-md"
-                        >
-                          <span>↻</span>
-                          <span className="hidden sm:inline">Otra</span>
-                          <span className="text-xs">
-                            {selectedTitleIndex !== null ? `${selectedTitleIndex + 1}/${suggestedTitles.length}` : ''}
-                          </span>
-                        </button>
-                      )}
-                      <button
-                        onClick={generateNewTitle}
-                        className="py-2 px-3 sm:py-3 sm:px-5 bg-purple-500 text-white text-sm sm:text-base font-bold rounded-xl hover:bg-purple-600 transition-colors flex items-center gap-2 shadow-md"
-                      >
-                        <span>🤖</span>
-                        <span className="hidden sm:inline">{suggestedTitles.length === 0 ? 'Generar título' : 'Regenerar'}</span>
-                        <span className="sm:hidden">AI</span>
-                      </button>
-                    </div>
                   </div>
                   
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Escribí o generá automáticamente"
+                    placeholder="Escribí un título descriptivo"
                     maxLength={100}
                     className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
                   />
                   <p className="text-xs text-gray-500 mt-2">
                     {title.length}/100 caracteres
-                    {suggestedTitles.length > 0 && selectedTitleIndex !== null && (
-                      <span className="ml-2 text-blue-600">
-                        • Opción {selectedTitleIndex + 1} de {suggestedTitles.length}
-                      </span>
-                    )}
                   </p>
                 </div>
 
                 {/* DESCRIPCIÓN */}
                 <div className="border-2 border-gray-200 rounded-xl p-5 sm:p-6 bg-white hover:border-green-400 transition-all">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="mb-4">
                     <label className="block text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
                       <FileText className="w-5 h-5 text-green-600" />
                       Descripción *
                     </label>
-                    <div className="flex gap-2">
-                      {suggestedDescriptions.length > 0 && (
-                        <button
-                          onClick={cycleDescription}
-                          className="py-2 px-3 sm:py-3 sm:px-4 bg-indigo-500 text-white text-sm sm:text-base font-bold rounded-xl hover:bg-indigo-600 transition-colors flex items-center gap-2 shadow-md"
-                        >
-                          <span>↻</span>
-                          <span className="hidden sm:inline">Otra</span>
-                          <span className="text-xs">
-                            {selectedDescIndex !== null ? `${selectedDescIndex + 1}/${suggestedDescriptions.length}` : ''}
-                          </span>
-                        </button>
-                      )}
-                      <button
-                        onClick={generateNewDescription}
-                        className="py-2 px-3 sm:py-3 sm:px-5 bg-purple-500 text-white text-sm sm:text-base font-bold rounded-xl hover:bg-purple-600 transition-colors flex items-center gap-2 shadow-md"
-                      >
-                        <span>🤖</span>
-                        <span className="hidden sm:inline">{suggestedDescriptions.length === 0 ? 'Generar descripción' : 'Regenerar'}</span>
-                        <span className="sm:hidden">AI</span>
-                      </button>
-                    </div>
                   </div>
                   
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Escribí o generá automáticamente"
+                    placeholder="Describe las características principales del producto"
                     rows={8}
                     maxLength={2000}
                     className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all resize-none"

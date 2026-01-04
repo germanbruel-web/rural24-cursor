@@ -8,7 +8,7 @@ import { canAccessPage } from '../utils/rolePermissions';
 import { useSiteSetting } from '../hooks/useSiteSetting';
 
 interface HeaderProps {
-  onNavigate: (page: 'home' | 'my-ads' | 'banners' | 'inbox' | 'profile' | 'subscription' | 'users' | 'how-it-works' | 'publicar-v2' | 'ad-finder' | 'deleted-ads' | 'test-form' | 'categories-admin') => void;
+  onNavigate: (page: 'home' | 'my-ads' | 'banners' | 'inbox' | 'profile' | 'subscription' | 'users' | 'how-it-works' | 'publicar-v3' | 'ad-finder' | 'deleted-ads' | 'test-form' | 'categories-admin') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
@@ -89,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             
             {/* Botón Publicar Aviso Gratis */}
             <button
-              onClick={() => onNavigate('publicar-v2')}
+              onClick={() => onNavigate('publicar-v3')}
               className="bg-[#16a135] hover:bg-[#138a2c] text-white px-6 py-2 rounded-lg font-bold transition-all shadow-md hover:shadow-lg transform hover:scale-105 flex items-center gap-2"
               style={{ fontFamily: 'Open Sans, sans-serif' }}
             >
