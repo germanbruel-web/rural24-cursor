@@ -1,4 +1,15 @@
 import { z } from 'zod';
+import { validateNoContactInfo } from '@/domain/shared/content-validator';
+
+// Custom refinement para validar contenido sin contactos
+const noContactInfoRefinement = (field: string) => 
+  z.string().refine(
+    (val) => validateNoContactInfo(val, field).isValid,
+    (val) => {
+      const result = validateNoContactInfo(val, field);
+      return { message: result.reason || 'Contenido no permitido' };
+    }
+  );
 
 // Schema for FormConfig
 export const FormConfigSchema = z.object({
@@ -61,12 +72,15 @@ export const AdCreateSchema = z.object({
   brand_id: z.string().uuid().optional().nullable(),
   model_id: z.string().uuid().optional().nullable(),
   
-  // Contenido
-  title: z.string().min(10, 'El título debe tener al menos 10 caracteres').max(200),
-  description: z.string().min(50, 'La descripción debe tener al menos 50 caracteres'),
+  // Contenido sin validación anti-fraude (desactivada)
+  title: z.string()
+    .min(10, 'El título debe tener al menos 10 caracteres')
+    .max(200),
+  description: z.string()
+    .min(20, 'La descripción debe tener al menos 20 caracteres'),
   
   // Precio y ubicación
-  price: z.number().positive('El precio debe ser mayor a 0'),
+  price: z.number().nonnegative('El precio no puede ser negativo').optional().nullable(),
   currency: z.enum(['ARS', 'USD']),
   province: z.string().min(1),
   city: z.string().optional().nullable(),

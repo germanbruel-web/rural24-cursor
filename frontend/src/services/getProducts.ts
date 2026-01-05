@@ -23,11 +23,41 @@ export const getProducts = async () => {
       console.log(`✅ Fetched ${ads?.length || 0} ads`);
     }
 
-    // Mapear ads al formato Product consistente
-    const mappedAds = (ads || []).map((ad: any) => ({
-      ...ad,
-      imageUrl: ad.image_urls?.[0] || ad.images?.[0],
-      imageUrls: ad.image_urls || ad.images,
+    // Mapear ads al formato Product consistente con categorías
+    const mappedAds = await Promise.all((ads || []).map(async (ad: any) => {
+      const mappedAd: any = {
+        ...ad,
+        imageUrl: ad.image_urls?.[0] || ad.images?.[0],
+        imageUrls: ad.image_urls || ad.images,
+      };
+
+      // Obtener nombre de categoría si tiene category_id
+      if (ad.category_id) {
+        const { data: catData } = await supabase
+          .from('categories')
+          .select('display_name')
+          .eq('id', ad.category_id)
+          .single();
+        
+        if (catData) {
+          mappedAd.category = catData.display_name;
+        }
+      }
+
+      // Obtener nombre de subcategoría si tiene subcategory_id
+      if (ad.subcategory_id) {
+        const { data: subData } = await supabase
+          .from('subcategories')
+          .select('display_name')
+          .eq('id', ad.subcategory_id)
+          .single();
+        
+        if (subData) {
+          mappedAd.subcategory = subData.display_name;
+        }
+      }
+
+      return mappedAd;
     }));
 
     // 2. Obtener productos legacy (si existen)

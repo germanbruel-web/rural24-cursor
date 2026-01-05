@@ -8,6 +8,7 @@ import { ProductCard } from "./src/components/ProductCard";
 import { AdvancedSearchBar } from "./src/components/AdvancedSearchBar";
 import { CategoryCarousel } from "./src/components/sections/CategoryCarousel";
 import { smartSearch, getPremiumProducts } from "./src/services/smartSearch";
+import { extractIdFromUrl } from "./src/utils/slugUtils";
 import MyAdsPanel from "./src/components/admin/MyAdsPanel";
 import { MessagesPanel } from "./src/components/dashboard/MessagesPanel";
 import PendingAdsPanel from "./src/components/admin/PendingAdsPanel";
@@ -37,7 +38,6 @@ import { EmailConfirmationPage } from "./src/components/auth/EmailConfirmationPa
 import { HomepageSearchBanner } from "./src/components/DynamicBanner";
 import AuthModal from "./src/components/auth/AuthModal";
 import PublicarAvisoV3 from "./src/components/pages/PublicarAvisoV3";
-import { AdFinderPanel } from "./src/components/admin/AdFinderPanel";
 import { DeletedAdsPanel } from "./src/components/admin/DeletedAdsPanel";
 import { TestDynamicForm } from "./src/pages/TestDynamicForm";
 
@@ -49,7 +49,7 @@ import { useRealtimeCategories } from "./src/hooks/useRealtimeCategories";
 import { OfflineBanner } from "./src/hooks/useOnlineStatus";
 import { ToastProvider } from "./src/contexts/ToastContext";import { Footer } from "./src/components/Footer";import { useSiteSetting } from "./src/hooks/useSiteSetting";
 
-type Page = 'home' | 'my-ads' | 'inbox' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'ad-finder' | 'deleted-ads' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'pending-ads' | 'featured-ads' | 'backend-settings';
+type Page = 'home' | 'my-ads' | 'inbox' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'deleted-ads' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'pending-ads' | 'featured-ads' | 'backend-settings';
 
 /**
  * Componente principal de AgroBuscador
@@ -88,7 +88,6 @@ const AppContent: React.FC = () => {
     if (hash === '#/categories-admin') return 'categories-admin';
     if (hash === '#/attributes-admin') return 'attributes-admin';
     if (hash === '#/backend-settings') return 'backend-settings';
-    if (hash === '#/ad-finder') return 'ad-finder';
     if (hash === '#/deleted-ads') return 'deleted-ads';
     if (hash === '#/profile') return 'profile';
     if (hash === '#/subscription') return 'subscription';
@@ -125,7 +124,6 @@ const AppContent: React.FC = () => {
       'featured-ads': '#/featured-ads',
       'categories-admin': '#/categories-admin',
       'attributes-admin': '#/attributes-admin',
-      'ad-finder': '#/ad-finder',
       'deleted-ads': '#/deleted-ads',
       'profile': '#/profile',
       'subscription': '#/subscription',
@@ -201,10 +199,11 @@ const AppContent: React.FC = () => {
         setSelectedAdId(adId);
         navigateToPage('publicar-v2');
       }
-      // Routing para detalle de aviso: #/ad/:id
+      // Routing para detalle de aviso: #/ad/:id o #/ad/:slug
       else if (hash.startsWith('#/ad/')) {
-        const adId = hash.replace('#/ad/', '');
-        console.log('🔍 Navegando a detalle de aviso:', adId);
+        const slugOrId = hash.replace('#/ad/', '');
+        const adId = extractIdFromUrl(slugOrId); // Extrae ID desde slug o UUID
+        console.log('🔍 Navegando a detalle de aviso:', { slugOrId, extractedId: adId });
         setSelectedAdId(adId);
         navigateToPage('ad-detail');
       } 
@@ -235,9 +234,6 @@ const AppContent: React.FC = () => {
       }
       else if (hash === '#/attributes-admin') {
         navigateToPage('attributes-admin');
-      }
-      else if (hash === '#/ad-finder') {
-        navigateToPage('ad-finder');
       }
       else if (hash === '#/deleted-ads') {
         navigateToPage('deleted-ads');
@@ -388,7 +384,7 @@ const AppContent: React.FC = () => {
   console.log('🎯 Estado actual - currentPage:', currentPage, 'isSearching:', isSearching);
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'banners', 'settings', 'contacts', 'ad-finder', 'deleted-ads', 'categories-admin', 'attributes-admin', 'pending-ads', 'featured-ads', 'backend-settings'].includes(currentPage);
+  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'banners', 'settings', 'contacts', 'deleted-ads', 'categories-admin', 'attributes-admin', 'pending-ads', 'featured-ads', 'backend-settings'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
@@ -472,7 +468,6 @@ const AppContent: React.FC = () => {
                     <p className="text-sm text-red-600">Rol requerido: superadmin</p>
                   </div>
                 )}
-                {currentPage === 'ad-finder' && canAccessPage('ad-finder', profile?.role) && <AdFinderPanel />}
                 {currentPage === 'deleted-ads' && canAccessPage('deleted-ads', profile?.role) && <DeletedAdsPanel />}
                 {currentPage === 'settings' && (
                   <div className="bg-white rounded-lg shadow p-6">

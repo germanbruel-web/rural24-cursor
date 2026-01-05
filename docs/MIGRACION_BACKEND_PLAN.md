@@ -136,13 +136,15 @@ Cuando vayas a deployar a producción:
 
 ## 🔑 CREDENCIALES QUE SÍ NECESITAS CREAR AHORA
 
-### 1. Google AI (Gemini)
-**Cuándo:** AHORA (es gratis para desarrollo)
-**URL:** https://aistudio.google.com/app/apikey
+### 2. Cloudinary (Imágenes)
+**Cuándo:** AHORA (free tier: 25 créditos/mes)
+**URL:** https://cloudinary.com/users/register/free
 
 ```bash
 # Agregar a .env.local
-VITE_GEMINI_API_KEY=tu_key_aqui
+VITE_CLOUDINARY_CLOUD_NAME=tu_cloud_name
+VITE_CLOUDINARY_API_KEY=tu_api_key
+VITE_CLOUDINARY_API_SECRET=tu_api_secret
 ```
 
 ### 2. Supabase (ya tienes)
@@ -154,7 +156,7 @@ VITE_SUPABASE_URL=tu_url
 VITE_SUPABASE_KEY=tu_key
 ```
 
-### 3. Redis (opcional ahora)
+### 4. Redis (opcional más adelante)
 **Cuándo:** Semana 9-10 para caching
 **Opción gratuita:** Upstash Redis
 
@@ -230,7 +232,7 @@ npx create-next-app@latest . --typescript --tailwind --app
 ```bash
 cd backend
 npm install @supabase/supabase-js
-npm install @google/generative-ai
+npm install cloudinary
 npm install @trpc/server @trpc/client
 npm install zod
 ```
@@ -300,7 +302,7 @@ A: No! La migración es transparente. Solo verán mejoras.
 
 **Q: ¿Cuánto cuesta todo esto?**  
 A: $0 en desarrollo:
-- Gemini API: Free tier (2M tokens/mes)
+- Cloudinary: Free tier (25 créditos/mes)
 - Supabase: Ya lo tienes
 - Next.js: Gratis
 - Cloudflare: Free tier (cuando lo uses)
@@ -318,9 +320,9 @@ A: Tienes backups y el sistema actual sigue funcionando. Zero risk.
    - Dashboard → Database → Backups → Create manual backup
    - Exportar también schema en SQL
 
-2. **Crear API key de Gemini**
-   - https://aistudio.google.com/app/apikey
-   - Guardar en `.env.local`
+2. **Crear cuenta en Cloudinary**
+   - https://cloudinary.com/users/register/free
+   - Guardar credenciales en `.env.local`
 
 3. **Crear branch backend-v2**
    ```bash

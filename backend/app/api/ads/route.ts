@@ -15,6 +15,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    console.log('📦 Body recibido:', JSON.stringify(body, null, 2));
+
     // Validar schema básico con Zod
     const validationResult = AdCreateSchema.safeParse(body);
 
@@ -24,6 +26,8 @@ export async function POST(request: NextRequest) {
         acc[field] = err.message;
         return acc;
       }, {} as Record<string, string>);
+
+      console.error('❌ Validation errors:', errors);
 
       return NextResponse.json(
         {

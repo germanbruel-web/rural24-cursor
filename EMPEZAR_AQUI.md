@@ -139,17 +139,19 @@ VITE_SUPABASE_URL=tu_url_aqui
 VITE_SUPABASE_KEY=tu_key_aqui
 ```
 
-### 2. Google Gemini (CREAR AHORA)
+### 2. Cloudinary (CREAR AHORA)
 
 **Paso a paso:**
 
-1. Ir a: https://aistudio.google.com/app/apikey
-2. Click "Create API Key"
-3. Copiar la key
+1. Ir a: https://cloudinary.com/users/register/free
+2. Crear cuenta gratuita
+3. En Dashboard, copiar las credenciales
 4. Agregar a `frontend/.env.local`:
 
 ```bash
-VITE_GEMINI_API_KEY=tu_gemini_key_aqui
+VITE_CLOUDINARY_CLOUD_NAME=tu_cloud_name
+VITE_CLOUDINARY_API_KEY=tu_api_key
+VITE_CLOUDINARY_API_SECRET=tu_api_secret
 ```
 
 ### 3. Cloudflare (MÁS ADELANTE)
@@ -160,25 +162,36 @@ VITE_GEMINI_API_KEY=tu_gemini_key_aqui
 
 ## 🎯 PRÓXIMOS PASOS (ESTA SEMANA)
 
-### ✅ Día 1 (HOY - COMPLETADO)
+### ✅ Día 1 (29 diciembre - COMPLETADO)
 - [x] Crear estructura de carpetas
 - [x] Copiar código del proyecto viejo
 - [x] Instalar dependencias
 - [x] Verificar que frontend funciona
 - [x] Primer commit a GitHub
-- [x] Frontend corriendo en http://localhost:3000
+- [x] Backend inicializado (Next.js)
 
-### ⏸️ Día 2-3 (PAUSADO - Esperando renovación Copilot Pro)
-- [ ] Diseñar arquitectura del backend
-- [ ] Decidir stack técnico
-- [ ] Setup Next.js backend
-- [ ] Primera API funcionando
-- [ ] Conectar backend con Supabase
+### ✅ Día 2-4 (4-5 enero - COMPLETADO)
+- [x] Arquitectura backend BFF definida
+- [x] Estructura de carpetas backend
+- [x] Supabase client configurado
+- [x] Health check endpoint
+- [x] CORS configurado
+- [x] Decisiones de stack: Sin Gemini, Cloudinary para imágenes
 
-### ⏳ Día 4-5
-- [ ] Migrar schema BD (nuevas tablas)
-- [ ] CRUD básico de categorías
-- [ ] Testing
+### 🔄 Semana 1 (6-11 enero - EN PROGRESO)
+- [ ] Crear cuenta Cloudinary y configurar
+- [ ] Actualizar variables de entorno
+- [ ] Ejecutar migración de schema BD
+- [ ] Implementar GET /api/config/categories
+- [ ] Testing con Postman
+- [ ] Cloudinary upload test
+
+### ⏳ Semana 2 (12-18 enero)
+- [ ] Admin Panel - CRUD de Categorías
+- [ ] Admin Panel - CRUD de Marcas
+- [ ] Admin Panel - CRUD de Modelos (con Cloudinary)
+- [ ] Cargar 5 modelos de prueba al catálogo
+- [ ] Testing E2E
 
 ---
 

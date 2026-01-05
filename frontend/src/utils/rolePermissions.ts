@@ -21,7 +21,6 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   inbox: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
   
   // Solo SuperAdmin
-  'ad-finder': ['superadmin'],
   'pending-ads': ['superadmin'],
   users: ['superadmin'],
   banners: ['superadmin'],
@@ -105,11 +104,6 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'pending-ads',
     label: 'Avisos Pendientes',
-    allowedRoles: ['superadmin'],
-  },
-  {
-    id: 'ad-finder',
-    label: 'Buscador de Avisos',
     allowedRoles: ['superadmin'],
   },
   {

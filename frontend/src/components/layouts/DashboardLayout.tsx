@@ -64,7 +64,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     'my-ads': <Package className="w-5 h-5" />,
     inbox: <MessageSquare className="w-5 h-5" />,
     'pending-ads': <Clock className="w-5 h-5" />,
-    'ad-finder': <Search className="w-5 h-5" />,
     'deleted-ads': <Clock className="w-5 h-5" />,
     users: <Users className="w-5 h-5" />,
     banners: <ImageIcon className="w-5 h-5" />,
@@ -135,10 +134,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
           {!sidebarCollapsed && (
             <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg flex items-center justify-center text-white font-bold">
-                C
-              </div>
-              <span className="font-bold text-gray-900">Clasify</span>
+              <img 
+                src="/images/logos/rural24-dark.webp" 
+                alt="RURAL24" 
+                className="h-8 w-auto"
+              />
             </button>
           )}
           <button

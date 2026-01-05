@@ -1,6 +1,6 @@
 // src/components/SearchResultsPageMinimal.tsx
 // Página de resultados con layout de 3 columnas y filtros laterales
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X } from 'lucide-react';
 import type { Product, FilterOptions, SearchFilters } from '../../types';
 import { HeroSearchBarClon } from './HeroSearchBarClon';
@@ -31,17 +31,57 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
   const [activeFilters, setActiveFilters] = useState<any>({
     category: currentCategory || undefined
   });
+  const [pendingFilters, setPendingFilters] = useState<any>({
+    category: currentCategory || undefined
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const RESULTS_PER_PAGE = 20;
+  
+  // Obtener subcategorías únicas de los resultados filtrados por categoría
+  const availableSubcategories = useMemo(() => {
+    const subs = new Set<string>();
+    results.forEach(product => {
+      if (pendingFilters.category && product.category === pendingFilters.category && product.subcategory) {
+        subs.add(product.subcategory);
+      } else if (!pendingFilters.category && product.subcategory) {
+        subs.add(product.subcategory);
+      }
+    });
+    return Array.from(subs).sort();
+  }, [results, pendingFilters.category]);
+  
+  // Obtener condiciones únicas disponibles
+  const availableConditions = useMemo(() => {
+    const conds = new Set<string>();
+    results.forEach(product => {
+      if ((product as any).condicion) {
+        conds.add((product as any).condicion);
+      }
+    });
+    return Array.from(conds).sort();
+  }, [results]);
 
   const handleFilterChange = (key: string, value: any) => {
-    const newFilters = { ...activeFilters, [key]: value };
-    setActiveFilters(newFilters);
-    setCurrentPage(1); // Reset a página 1 al filtrar
+    const newFilters = { ...pendingFilters, [key]: value };
+    
+    // Si cambia la categoría, resetear subcategoría
+    if (key === 'category') {
+      newFilters.subcategory = undefined;
+    }
+    
+    setPendingFilters(newFilters);
+  };
+  
+  const applyFilters = () => {
+    console.log('🔍 Aplicando filtros:', pendingFilters);
+    setActiveFilters(pendingFilters);
+    setCurrentPage(1); // Reset a página 1 al aplicar filtros
   };
 
   const clearFilters = () => {
-    setActiveFilters({ category: currentCategory || undefined });
+    const resetFilters = { category: currentCategory || undefined };
+    setActiveFilters(resetFilters);
+    setPendingFilters(resetFilters);
     setCurrentPage(1);
   };
 
@@ -52,18 +92,28 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
       return false;
     }
     
+    // Filtro por subcategoría
+    if (activeFilters.subcategory && product.subcategory !== activeFilters.subcategory) {
+      return false;
+    }
+    
     // Filtro por provincia
-    if (activeFilters.province && product.location) {
-      // Buscar provincia en el campo location (ej: "Buenos Aires", "Córdoba, Argentina")
-      const locationLower = product.location.toLowerCase();
-      const provinceLower = activeFilters.province.toLowerCase();
-      if (!locationLower.includes(provinceLower)) {
+    if (activeFilters.province) {
+      // Usar campo province directo
+      if (!product.province || product.province !== activeFilters.province) {
         return false;
       }
     }
     
+    // Filtro por condición (Nuevo/Usado)
+    if (activeFilters.condicion && (product as any).condicion !== activeFilters.condicion) {
+      return false;
+    }
+    
     return true;
   });
+  
+  console.log(`📊 Filtros aplicados: ${filteredResults.length} de ${results.length} avisos`);
 
   // JERARQUÍA DE AVISOS:
   // 1. Avisos Destacados (featured: true)
@@ -144,7 +194,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
               <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-gray-900">Filtros</h3>
-                  {(activeFilters.province || (activeFilters.category && activeFilters.category !== currentCategory)) && (
+                  {(activeFilters.province || activeFilters.subcategory || activeFilters.condicion || (activeFilters.category && activeFilters.category !== currentCategory)) && (
                     <button
                       onClick={clearFilters}
                       className="text-xs text-[#16a135] hover:text-[#138a2c] flex items-center gap-1"
@@ -161,7 +211,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                     Provincia
                   </label>
                   <select
-                    value={activeFilters.province || ''}
+                    value={pendingFilters.province || ''}
                     onChange={(e) => handleFilterChange('province', e.target.value || undefined)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
                   >
@@ -180,7 +230,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                     Categoría
                   </label>
                   <select
-                    value={activeFilters.category || ''}
+                    value={pendingFilters.category || ''}
                     onChange={(e) => handleFilterChange('category', e.target.value || undefined)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
                   >
@@ -192,9 +242,62 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                     ))}
                   </select>
                 </div>
+                
+                {/* Filtro por Subcategoría - Dinámico según categoría */}
+                {availableSubcategories.length > 0 && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subcategoría
+                    </label>
+                    <select
+                      value={pendingFilters.subcategory || ''}
+                      onChange={(e) => handleFilterChange('subcategory', e.target.value || undefined)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+                    >
+                      <option value="">Todas las subcategorías</option>
+                      {availableSubcategories.map((sub) => (
+                        <option key={sub} value={sub}>
+                          {sub}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {/* Filtro por Condición (Nuevo/Usado) */}
+                {availableConditions.length > 0 && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Condición
+                    </label>
+                    <select
+                      value={pendingFilters.condicion || ''}
+                      onChange={(e) => handleFilterChange('condicion', e.target.value || undefined)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+                    >
+                      <option value="">Todas</option>
+                      {availableConditions.map((cond) => (
+                        <option key={cond} value={cond}>
+                          {cond}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {/* Botón APLICAR */}
+                <button
+                  onClick={applyFilters}
+                  className="w-full bg-[#16a135] hover:bg-[#138a2c] text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  APLICAR FILTROS
+                </button>
 
                 {/* Contador de resultados filtrados */}
-                <div className="pt-3 border-t border-gray-200">
+                <div className="pt-3 border-t border-gray-200 mt-4">
                   <p className="text-xs text-gray-500">
                     {filteredResults.length} {filteredResults.length === 1 ? 'aviso' : 'avisos'}
                   </p>
@@ -260,57 +363,16 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                     Mostrando {startIndex + 1}-{Math.min(endIndex, sortedResults.length)} de {sortedResults.length} resultados
                   </div>
                   
-                  {/* SECCIÓN 1: Avisos Destacados */}
-                  {featuredAds.length > 0 && startIndex < featuredAds.length && (
-                    <div className="mb-10">
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-xl shadow-lg">
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                          <span className="font-bold text-sm">Avisos Destacados</span>
-                        </div>
-                        <div className="flex-1 h-px bg-gradient-to-r from-gray-300 to-transparent"></div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {paginatedResults.filter(ad => ad.featured).map((product) => (
-                          <UnifiedAdCard
-                            key={product.id}
-                            product={product}
-                            onViewDetail={onViewDetail}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* SECCIÓN 2: Avisos Manuales por Fecha */}
-                  {manualAds.length > 0 && (startIndex < featuredAds.length + manualAds.length) && (
-                    <div className="mb-10">
-                      {featuredAds.length > 0 && startIndex < featuredAds.length && (
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className="flex items-center gap-2 bg-gradient-to-r from-[#16a135] to-[#138a2c] text-white px-4 py-2 rounded-xl shadow-lg">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                            </svg>
-                            <span className="font-bold text-sm">Resultados de la búsqueda</span>
-                          </div>
-                          <div className="flex-1 h-px bg-gradient-to-r from-gray-300 to-transparent"></div>
-                        </div>
-                      )}
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {paginatedResults.filter(ad => !ad.featured).map((product) => (
-                          <UnifiedAdCard
-                            key={product.id}
-                            product={product}
-                            onViewDetail={onViewDetail}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {/* Grid unificado de todos los avisos - sin separación por destacados */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {paginatedResults.map((product) => (
+                      <UnifiedAdCard
+                        key={product.id}
+                        product={product}
+                        onViewDetail={onViewDetail}
+                      />
+                    ))}
+                  </div>
 
                   {/* Paginación funcional */}
                   {totalPages > 1 && (

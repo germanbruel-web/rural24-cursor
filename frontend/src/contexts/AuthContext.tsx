@@ -88,7 +88,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await createDefaultProfile(userId);
         }
       } else {
-        console.log('✅ Perfil cargado:', data);
+        console.log('✅ Perfil cargado completo:', JSON.stringify(data, null, 2));
+        console.log('📝 full_name:', data.full_name);
+        console.log('📝 email:', data.email);
+        console.log('📝 role:', data.role);
         setProfile(data);
       }
     } catch (error) {
@@ -280,6 +283,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   } : profile;
+
+  // DEBUG: Log para ver qué profile se está usando
+  useEffect(() => {
+    console.log('👤 AuthContext - Estado efectivo:', {
+      isDevMode,
+      hasDevUser: !!devUser,
+      devUserName: devUser?.full_name,
+      hasRealProfile: !!profile,
+      realProfileName: profile?.full_name,
+      effectiveName: effectiveProfile?.full_name,
+      effectiveEmail: effectiveProfile?.email
+    });
+  }, [isDevMode, devUser, profile, effectiveProfile]);
 
   // En modo desarrollo, crear un usuario fake para devUser
   const effectiveUser = isDevMode && devUser ? {

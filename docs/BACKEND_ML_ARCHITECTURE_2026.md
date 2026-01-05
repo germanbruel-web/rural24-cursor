@@ -1,7 +1,7 @@
-# 🚀 ARQUITECTURA BACKEND PROFESIONAL CON ML - AGROBUSCADOR 2026
+# 🚀 ARQUITECTURA BACKEND PROFESIONAL - RURAL24 2026
 
-**Fecha:** 16 de diciembre, 2025  
-**Objetivo:** Sistema backend inteligente que sincroniza categorías, automatiza formularios y optimiza UX con Machine Learning
+**Fecha:** 5 de enero, 2026  
+**Objetivo:** Sistema backend escalable que sincroniza categorías, centraliza datos y optimiza UX con catálogo maestro estructurado
 
 ---
 
@@ -76,7 +76,7 @@ Validaciones en frontend                Validaciones en metadata JSONB
 
 **Impacto:** Mantener 2 fuentes de verdad causa inconsistencias.
 
-### 🚨 Problema 3: SIN INTELIGENCIA
+### 🚨 Problema 3: INCONSISTENCIA DE DATOS
 ```
 Usuario escribe: "Tractor Jhon Dere 5075"
                       ↓
@@ -85,9 +85,9 @@ Sistema guarda:  "Jhon Dere" (error tipográfico)
 Resultado: Datos inconsistentes, búsquedas fallidas
 ```
 
-**Impacto:** Sin ML, la calidad de datos depende 100% del usuario.
+**Impacto:** Sin datos estructurados, la calidad depende 100% del usuario.
 
-### 🚨 Problema 4: PROCESO MANUAL
+### 🚨 Problema 4: PROCESO MANUAL LARGO
 ```
 1. Usuario selecciona: Categoría → Subcategoría → Tipo
 2. Usuario completa: 20+ campos manualmente

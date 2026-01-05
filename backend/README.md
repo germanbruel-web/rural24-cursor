@@ -1,6 +1,6 @@
 # 🏗️ RURAL24 BACKEND - BFF (Backend for Frontend)
 
-**Arquitectura:** Next.js 16 + Supabase + Cloudflare R2  
+**Arquitectura:** Next.js 16 + Supabase + Cloudinary  
 **Fase:** 1 - Fundación (Semana 1-2)  
 **Status:** ✅ En desarrollo
 
@@ -26,7 +26,7 @@ backend/
 ├── infrastructure/             # ADAPTADORES EXTERNOS
 │   ├── supabase/
 │   │   └── client.ts           # ✅ Supabase client singleton
-│   └── r2/                     # (próximo) Cloudflare R2
+│   └── cloudinary/             # (próximo) Cloudinary client
 │
 ├── types/                      # Type definitions compartidos
 │
@@ -158,6 +158,6 @@ GET /api/catalog/models        → Modelos
 
 ---
 
-**Última actualización:** 4 de enero, 2026  
+**Última actualización:** 5 de enero, 2026  
 **Autor:** German Bruel  
 **Fase:** Semana 1 - Fundación

@@ -384,8 +384,8 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                     <button
                       onClick={() => {
                         console.log('🔵 Click Editar - Ad ID:', ad.id);
-                        console.log('🔵 Nueva URL:', `#/publicar-v2?edit=${ad.id}`);
-                        window.location.hash = `#/publicar-v2?edit=${ad.id}`;
+                        console.log('🔵 Nueva URL:', `#/edit/${ad.id}`);
+                        window.location.hash = `#/edit/${ad.id}`;
                         console.log('🔵 URL actual después del cambio:', window.location.hash);
                       }}
                       className="flex-1 py-2 text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg transition-colors flex items-center justify-center gap-1 font-medium"

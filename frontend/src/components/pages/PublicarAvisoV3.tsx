@@ -37,6 +37,9 @@ import AuthModal from '../auth/AuthModal';
 import { LivePreviewCard } from '../LivePreviewCard';
 import { adsApi } from '../../services/api';
 import { uploadsApi } from '../../services/api';
+import { DragDropUploader, UploadedImage } from '../DragDropUploader/DragDropUploader';
+import { validateTitle, validateDescription } from '../../utils/contentValidator';
+import type { ValidationResult } from '../../utils/contentValidator';
 
 // ====================================================================
 // WIZARD STEPS
@@ -93,10 +96,8 @@ export default function PublicarAvisoV3() {
   const [province, setProvince] = useState('');
   const [locality, setLocality] = useState('');
 
-  // Step 4: Fotos
-  const [photos, setPhotos] = useState<File[]>([]);
-  const [photosPreviews, setPhotosPreviews] = useState<string[]>([]);
-  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  // Step 4: Fotos - NUEVO: usando DragDropUploader
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
 
   // Step 5: Información (título/descripción generados)
   const [title, setTitle] = useState('');
@@ -107,7 +108,47 @@ export default function PublicarAvisoV3() {
   const [suggestedDescriptions, setSuggestedDescriptions] = useState<string[]>([]);
   const [selectedTitleIndex, setSelectedTitleIndex] = useState<number | null>(null);
   const [selectedDescIndex, setSelectedDescIndex] = useState<number | null>(null);
+  
+  // Estados para validación anti-fraude en tiempo real
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [descriptionError, setDescriptionError] = useState<string | null>(null);
+  const [titleDebounceTimer, setTitleDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [descDebounceTimer, setDescDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
+  // ====================================================================
+  // VALIDACIÓN ANTI-FRAUDE EN TIEMPO REAL
+  // ====================================================================
+  
+  const handleTitleChange = (value: string) => {
+    setTitle(value);
+    
+    // Limpiar timer anterior
+    if (titleDebounceTimer) clearTimeout(titleDebounceTimer);
+    
+    // Validación con debounce de 400ms
+    const timer = setTimeout(() => {
+      const result = validateTitle(value);
+      setTitleError(result.isValid ? null : result.error || null);
+    }, 400);
+    
+    setTitleDebounceTimer(timer);
+  };
+  
+  const handleDescriptionChange = (value: string) => {
+    setDescription(value);
+    
+    // Limpiar timer anterior
+    if (descDebounceTimer) clearTimeout(descDebounceTimer);
+    
+    // Validación con debounce de 400ms
+    const timer = setTimeout(() => {
+      const result = validateDescription(value);
+      setDescriptionError(result.isValid ? null : result.error || null);
+    }, 400);
+    
+    setDescDebounceTimer(timer);
+  };
+  
   // ====================================================================
   // FUNCIONES DE VALIDACIÓN DE GRUPOS (100% DINÁMICO)
   // ====================================================================
@@ -177,8 +218,20 @@ export default function PublicarAvisoV3() {
 
   // Detectar si estamos en modo edición
   async function detectEditMode() {
-    const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
-    const editId = urlParams.get('edit');
+    // Detectar desde hash: #/edit/:id
+    const hash = window.location.hash;
+    const editMatch = hash.match(/^#\/edit\/([a-f0-9-]+)$/);
+    
+    let editId: string | null = null;
+    
+    if (editMatch) {
+      // Formato nuevo: #/edit/:id
+      editId = editMatch[1];
+    } else {
+      // Formato legacy: ?edit=:id
+      const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
+      editId = urlParams.get('edit');
+    }
     
     if (editId) {
       setIsEditMode(true);
@@ -220,10 +273,16 @@ export default function PublicarAvisoV3() {
       setProvince(ad.province || '');
       setLocality(ad.location || '');
       
-      // Pre-llenar Step 4: Fotos existentes
+      // Pre-llenar Step 4: Fotos existentes (convertir a formato UploadedImage)
       if (ad.images && ad.images.length > 0) {
-        setExistingImages(ad.images);
-        setPhotosPreviews(ad.images);
+        const existingUploaded: UploadedImage[] = ad.images.map((img: any, index: number) => ({
+          id: `existing-${index}`,
+          file: null,
+          url: typeof img === 'string' ? img : img.url,
+          status: 'success' as const,
+          progress: 100
+        }));
+        setUploadedImages(existingUploaded);
       }
       
       // Pre-llenar Step 5: Información
@@ -339,50 +398,18 @@ export default function PublicarAvisoV3() {
   }
 
   // ====================================================================
-  // PHOTO HANDLING
+  // PHOTO HANDLING - Usando DragDropUploader component
   // ====================================================================
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    // Validar tamaño (5MB por archivo)
-    const validFiles = files.filter(file => {
-      if (file.size > 5 * 1024 * 1024) {
-        notify.error(`${file.name} es muy grande (máx 5MB)`);
-        return false;
-      }
-      return true;
-    });
-
-    // Limitar a 10 fotos total
-    const remainingSlots = 10 - photos.length;
-    const filesToAdd = validFiles.slice(0, remainingSlots);
-
-    if (validFiles.length > remainingSlots) {
-      notify.warning(`Solo puedes subir ${remainingSlots} fotos más (máx 10)`);
-    }
-
-    // Crear previews
-    filesToAdd.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPhotosPreviews(prev => [...prev, e.target?.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
-
-    setPhotos(prev => [...prev, ...filesToAdd]);
-  }
-
-  function removePhoto(index: number) {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
-    setPhotosPreviews(prev => prev.filter((_, i) => i !== index));
-  }
-
-  function removeExistingImage(index: number) {
-    setExistingImages(prev => prev.filter((_, i) => i !== index));
-    setPhotosPreviews(prev => prev.filter((_, i) => i !== index));
-    notify.success('Imagen eliminada (se guardará al actualizar)');
+  function handleImagesChange(images: UploadedImage[]) {
+    console.log(`[PublicarAviso] 📸 handleImagesChange called with ${images.length} images`);
+    console.log('[PublicarAviso] 📦 Images received:', images.map(img => ({
+      url: img.url,
+      status: img.status,
+      hasPath: !!img.path
+    })));
+    
+    setUploadedImages(images);
+    console.log(`[PublicarAviso] ✅ uploadedImages state updated to ${images.length} images`);
   }
 
   // ====================================================================
@@ -471,6 +498,12 @@ export default function PublicarAvisoV3() {
         notify.error('Completa título y descripción');
         return;
       }
+      
+      // 🔥 VALIDACIÓN ANTI-FRAUDE: Bloquear avance si hay errores
+      if (titleError || descriptionError) {
+        notify.error('⚠️ Corrige los errores en título o descripción antes de continuar');
+        return;
+      }
     }
 
     setCurrentStep(prev => Math.min(prev + 1, STEPS.length));
@@ -493,26 +526,28 @@ export default function PublicarAvisoV3() {
     try {
       setSubmitting(true);
 
-      // 1. Subir fotos nuevas usando el nuevo API (Cloudinary via BFF)
-      let uploadedImages: Array<{url: string, path: string}> = [];
-      if (photos.length > 0) {
-        setUploadingPhotos(true);
-        try {
-          uploadedImages = await uploadsApi.uploadMultiple(photos, 'ads');
-          console.log('📸 Imágenes subidas a Cloudinary:', uploadedImages);
-        } catch (error) {
-          console.error('Error subiendo imágenes:', error);
-          notify.error('Error al subir imágenes');
-          setUploadingPhotos(false);
-          return;
-        }
-        setUploadingPhotos(false);
-      }
+      console.log('=====================================================');
+      console.log('[PublicarAviso] 🚀 INICIANDO SUBMIT');
+      console.log('=====================================================');
+      
+      // 1. Las imágenes YA están subidas desde DragDropUploader
+      // Solo tomamos las que tienen status 'success'
+      console.log(`[PublicarAviso] 📸 uploadedImages.length: ${uploadedImages.length}`);
+      console.log('[PublicarAviso] 📸 uploadedImages full state:', uploadedImages);
+      
+      const finalImages = uploadedImages
+        .filter(img => img.status === 'success')
+        .map(img => ({ url: img.url, path: img.path }));
 
-      // Combinar imágenes existentes + nuevas
-      const finalImages = isEditMode 
-        ? [...existingImages.map(url => ({url, path: url})), ...uploadedImages]
-        : uploadedImages;
+      console.log(`[PublicarAviso] ✅ Images with success status: ${finalImages.length}`);
+      console.log('[PublicarAviso] 📦 finalImages array:', finalImages);
+
+      if (finalImages.length === 0) {
+        console.error('[PublicarAviso] ❌ NO IMAGES FOUND - Aborting submit');
+        console.error('[PublicarAviso] 🔍 uploadedImages state at time of check:', uploadedImages);
+        notify.error('❌ Debes subir al menos una imagen');
+        return;
+      }
 
       // 2. Preparar datos (nota: adData solo se usa para UPDATE mode, CREATE usa estructura diferente)
       const adData = {
@@ -1090,153 +1125,130 @@ export default function PublicarAvisoV3() {
                     Agregá fotos
                   </h2>
                   <p className="text-base sm:text-lg text-gray-600">
-                    Las fotos ayudan a vender más rápido (hasta 10 fotos)
+                    Las fotos ayudan a vender más rápido. Máximo 8 fotos horizontales (16:9 o 4:3)
                   </p>
                 </div>
 
-                {/* Upload Area - Card style */}
-                <div className="border-2 border-gray-200 rounded-xl bg-white hover:border-green-400 transition-all overflow-hidden">
-                  <input
-                    type="file"
-                    id="photo-upload"
-                    multiple
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="photo-upload"
-                    className="cursor-pointer flex flex-col items-center gap-4 py-12 px-6"
-                  >
-                    <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 transition-all">
-                      <Upload className="w-10 h-10 text-white" />
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                        Subir fotos o tomar con la cámara
-                      </p>
-                      <p className="text-base sm:text-lg text-gray-600">
-                        JPG, PNG o WEBP hasta 5MB cada una
-                      </p>
-                      <p className="text-sm text-green-600 font-semibold mt-3">
-                        📸 En móviles: abre la cámara directamente
-                      </p>
-                    </div>
-                  </label>
-                </div>
+                {/* Drag & Drop Uploader Component */}
+                <DragDropUploader
+                  maxFiles={8}
+                  folder="ads"
+                  onImagesChange={handleImagesChange}
+                  existingImages={uploadedImages}
+                />
 
-                {/* Photo Previews */}
-                {photosPreviews.length > 0 && (
-                  <div className="border-2 border-gray-200 rounded-xl p-5 sm:p-6 bg-white">
-                    <p className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <Camera className="w-5 h-5 text-green-600" />
-                      {photosPreviews.length} foto{photosPreviews.length !== 1 ? 's' : ''}{' '}
-                      seleccionada{photosPreviews.length !== 1 ? 's' : ''}
-                    </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                      {photosPreviews.map((preview, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={preview}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-xl border-2 border-gray-200"
-                          />
-                          <button
-                            onClick={() => removePhoto(index)}
-                            className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:bg-red-600"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                          {index === 0 && (
-                            <div className="absolute bottom-2 left-2 px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded">
-                              Principal
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-3">
-                      La primera foto será la principal. Arrastra para reordenar.
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex items-start gap-3 p-5 sm:p-6 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
-                  <Camera className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm sm:text-base text-yellow-900">
-                    <p className="font-bold mb-2">Consejos para mejores fotos</p>
-                    <ul className="list-disc list-inside space-y-1 text-yellow-800">
-                      <li>Usa buena iluminación natural</li>
-                      <li>Muestra diferentes ángulos</li>
-                      <li>Incluye detalles importantes</li>
-                      <li>Evita marcas de agua o logos</li>
+                <div className="flex items-start gap-3 p-5 sm:p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                  <Camera className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-gray-900 mb-1">📸 Tips para mejores fotos:</p>
+                    <ul className="text-sm text-gray-700 space-y-1">
+                      <li>• <strong>📱 GIRA TU CELULAR HORIZONTALMENTE</strong> (modo paisaje)</li>
+                      <li>• Usá buena luz natural (evita fotos oscuras)</li>
+                      <li>• Mostrá el producto completo y detalles importantes</li>
+                      <li>• La primera foto será la portada de tu aviso</li>
+                      <li>• Podés arrastrar para reordenar las fotos</li>
+                      <li>• Máximo 8 fotos por aviso</li>
                     </ul>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* STEP 5: INFORMACIÓN (Título y Descripción - UX Minimalista) */}
+            {/* STEP 5: INFORMACIÓN */}
             {currentStep === 5 && (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 <div>
                   <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-                    Título y descripción
+                    Información del aviso
                   </h2>
                   <p className="text-base sm:text-lg text-gray-600">
-                    Generá automáticamente o escribí manualmente
+                    Título, descripción y precio
                   </p>
                 </div>
 
-                {/* TÍTULO */}
-                <div className="border-2 border-gray-200 rounded-xl p-5 sm:p-6 bg-white hover:border-green-400 transition-all">
-                  <div className="flex items-center justify-between mb-4">
-                    <label className="block text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-green-600" />
-                      Título *
-                    </label>
-                  </div>
-                  
+                {/* Título */}
+                <div className="space-y-2">
+                  <label className="block text-lg font-bold text-gray-900">
+                    Título del aviso <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Escribí un título descriptivo"
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    placeholder="Ej: Tractor John Deere 5070E con pala frontal"
                     maxLength={100}
-                    className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+                    className={`w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 transition-all ${
+                      titleError
+                        ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-100 bg-red-50'
+                        : 'border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100'
+                    }`}
                   />
-                  <p className="text-xs text-gray-500 mt-2">
-                    {title.length}/100 caracteres
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-500">
+                      {title.length}/100 caracteres
+                    </p>
+                    {titleError && (
+                      <p className="text-sm font-semibold text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        Validando...
+                      </p>
+                    )}
+                  </div>
+                  {titleError ? (
+                    <div className="flex items-start gap-2 p-3 bg-red-50 border-2 border-red-300 rounded-lg">
+                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm font-medium text-red-700">{titleError}</p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500 flex items-start gap-1.5">
+                      <span>✅ Números y años permitidos. ❌ Teléfonos, emails y sitios web NO permitidos</span>
+                    </p>
+                  )}
                 </div>
 
-                {/* DESCRIPCIÓN */}
-                <div className="border-2 border-gray-200 rounded-xl p-5 sm:p-6 bg-white hover:border-green-400 transition-all">
-                  <div className="mb-4">
-                    <label className="block text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-green-600" />
-                      Descripción *
-                    </label>
-                  </div>
-                  
+                {/* Descripción */}
+                <div className="space-y-2">
+                  <label className="block text-lg font-bold text-gray-900">
+                    Descripción <span className="text-red-500">*</span>
+                  </label>
                   <textarea
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe las características principales del producto"
-                    rows={8}
+                    onChange={(e) => handleDescriptionChange(e.target.value)}
+                    placeholder="Describe tu producto con el mayor detalle posible. Incluye características, estado, año, etc."
+                    rows={6}
                     maxLength={2000}
-                    className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all resize-none"
+                    className={`w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 transition-all resize-none ${
+                      descriptionError
+                        ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-100 bg-red-50'
+                        : 'border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100'
+                    }`}
                   />
-                  <p className="text-xs text-gray-500 mt-2">
-                    {description.length}/2000 caracteres
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-500">
+                      {description.length}/2000 caracteres
+                    </p>
+                    {descriptionError && (
+                      <p className="text-sm font-semibold text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        Validando...
+                      </p>
+                    )}
+                  </div>
+                  {descriptionError ? (
+                    <div className="flex items-start gap-2 p-3 bg-red-50 border-2 border-red-300 rounded-lg">
+                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm font-medium text-red-700">{descriptionError}</p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500 flex items-start gap-1.5">
+                      <span>✅ Números y años permitidos. ❌ Teléfonos, emails y sitios web NO permitidos</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Precio */}
-                <div className="border-2 border-gray-200 rounded-xl p-5 sm:p-6 bg-white hover:border-green-400 transition-all">
-                  <label className="block text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-green-600" />
+                <div className="space-y-2">
+                  <label className="block text-lg font-bold text-gray-900">
                     Precio (opcional)
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1266,10 +1278,10 @@ export default function PublicarAvisoV3() {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 p-5 sm:p-6 bg-purple-50 border-2 border-purple-200 rounded-xl">
-                  <AlertCircle className="w-6 h-6 text-purple-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm sm:text-base text-purple-900">
-                    Los textos generados destacan beneficios para atraer compradores. Las specs técnicas se muestran en la ficha completa.
+                <div className="flex items-start gap-3 p-5 sm:p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                  <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm sm:text-base text-blue-900">
+                    Escribí un título claro y una descripción detallada para atraer más compradores.
                   </p>
                 </div>
               </div>
@@ -1358,24 +1370,24 @@ export default function PublicarAvisoV3() {
                   </div>
 
                   {/* Fotos */}
-                  {photosPreviews.length > 0 && (
+                  {uploadedImages.length > 0 && (
                     <div className="p-4 bg-gray-50 rounded-xl">
                       <p className="text-sm font-semibold text-gray-600 mb-3">
-                        Fotos ({photosPreviews.length})
+                        Fotos ({uploadedImages.length})
                       </p>
                       <div className="grid grid-cols-4 gap-2">
-                        {photosPreviews.slice(0, 4).map((preview, index) => (
+                        {uploadedImages.slice(0, 4).map((img, index) => (
                           <img
-                            key={index}
-                            src={preview}
+                            key={img.id}
+                            src={img.url || ''}
                             alt={`Foto ${index + 1}`}
                             className="w-full h-20 object-cover rounded-lg"
                           />
                         ))}
-                        {photosPreviews.length > 4 && (
+                        {uploadedImages.length > 4 && (
                           <div className="w-full h-20 bg-gray-200 rounded-lg flex items-center justify-center">
                             <p className="text-sm font-semibold text-gray-600">
-                              +{photosPreviews.length - 4}
+                              +{uploadedImages.length - 4}
                             </p>
                           </div>
                         )}
@@ -1424,7 +1436,7 @@ export default function PublicarAvisoV3() {
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
               }}
-              disabled={submitting || uploadingPhotos}
+              disabled={submitting}
               className={`flex items-center gap-2 px-10 py-5 text-base sm:text-lg rounded-xl font-bold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
                 currentStep === 6
                   ? 'bg-green-500 text-white hover:bg-green-600 shadow-green-200 scale-105'
@@ -1435,11 +1447,6 @@ export default function PublicarAvisoV3() {
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>{isEditMode ? 'Actualizando...' : 'Publicando...'}</span>
-                </>
-              ) : uploadingPhotos ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Subiendo fotos...</span>
                 </>
               ) : currentStep === 6 ? (
                 <>
@@ -1471,7 +1478,9 @@ export default function PublicarAvisoV3() {
                 currency,
                 province,
                 locality,
-                photos: photosPreviews,
+                photos: uploadedImages
+                  .filter(img => img.status === 'success')
+                  .map(img => img.url),
                 attributes: attributeValues,
                 category: categories.find(c => c.id === selectedCategory),
                 subcategory: subcategories.find(s => s.id === selectedSubcategory),
@@ -1519,7 +1528,9 @@ export default function PublicarAvisoV3() {
               currency,
               province,
               locality,
-              photos: photosPreviews,
+              photos: uploadedImages
+                .filter(img => img.status === 'success')
+                .map(img => img.url),
               attributes: attributeValues,
               category: categories.find(c => c.id === selectedCategory),
               subcategory: subcategories.find(s => s.id === selectedSubcategory),

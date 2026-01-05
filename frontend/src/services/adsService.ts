@@ -195,6 +195,7 @@ export async function getPremiumAds(): Promise<Ad[]> {
 
 /**
  * Obtener un aviso por ID con información del vendedor
+ * Soporta buscar por UUID completo o por los últimos 6 caracteres (shortId)
  */
 export async function getAdById(id: string): Promise<Ad | null> {
   try {
@@ -202,11 +203,40 @@ export async function getAdById(id: string): Promise<Ad | null> {
     console.log('   Tipo:', typeof id);
     
     // Obtener el aviso básico primero
-    const { data: basicData, error: basicError } = await supabase
+    let basicData: any = null;
+    let basicError: any = null;
+    
+    // Intentar buscar por UUID completo primero
+    const result = await supabase
       .from('ads')
       .select('*')
       .eq('id', id)
       .single();
+    
+    basicData = result.data;
+    basicError = result.error;
+
+    // Si no se encontró y el ID es corto (6 chars), buscar por coincidencia de final de UUID
+    if (basicError && id.length === 6) {
+      console.log('🔍 ID corto detectado, buscando por coincidencia de final de UUID...');
+      const { data: allAds, error: searchError } = await supabase
+        .from('ads')
+        .select('*');
+      
+      if (searchError) {
+        console.error('❌ Error buscando por shortId:', searchError);
+        return null;
+      }
+      
+      // Buscar UUID que termine con el shortId
+      const matchingAd = allAds?.find(ad => ad.id.endsWith(id));
+      
+      if (matchingAd) {
+        basicData = matchingAd;
+        basicError = null;
+        console.log('✅ Aviso encontrado por shortId:', matchingAd.id);
+      }
+    }
 
     if (basicError) {
       console.error('❌ Error en query básica:', basicError);

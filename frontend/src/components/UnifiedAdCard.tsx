@@ -2,6 +2,7 @@ import React from 'react';
 import { MapPin } from 'lucide-react';
 import type { Product } from '../../types';
 import { getCardLabel } from '../utils/cardLabelHelpers';
+import { getAdDetailUrl } from '../utils/slugUtils';
 
 interface UnifiedAdCardProps {
   product: Product;
@@ -40,9 +41,14 @@ export const UnifiedAdCard: React.FC<UnifiedAdCardProps> = ({ product, onViewDet
       hasOnViewDetail: !!onViewDetail
     });
     
-    // Navegar internamente al detalle del aviso
-    if (onViewDetail && product.id) {
-      console.log('🔗 Navegando a aviso ID:', product.id);
+    // Navegar con slug amigable
+    if (product.id && product.title) {
+      const url = getAdDetailUrl(product.title, product.id);
+      console.log('🔗 Navegando con slug:', url);
+      window.location.hash = url;
+    } else if (onViewDetail && product.id) {
+      // Fallback: usar callback si existe
+      console.log('🔗 Navegando a aviso ID (fallback):', product.id);
       onViewDetail(product.id);
     } else {
       console.warn('⚠️ No se pudo manejar click:', { hasOnViewDetail: !!onViewDetail, hasId: !!product.id });
@@ -77,7 +83,8 @@ export const UnifiedAdCard: React.FC<UnifiedAdCardProps> = ({ product, onViewDet
       if (typeof first === 'object' && first?.url) return first.url;
     }
     
-    // Solo usar preview si realmente no hay imagen
+    // 5. Fallback a foto genérica (foto-portada por categoría en el futuro)
+    // Por ahora usar imagen genérica estándar
     return '/images/preview-image.webp';
   };
   

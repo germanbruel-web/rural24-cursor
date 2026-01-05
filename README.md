@@ -20,7 +20,7 @@ Sistema moderno y escalable construido con Next.js 15 + Nest.js.
 - **Queue:** BullMQ (opcional)
 
 ### Infrastructure
-- **Storage:** Cloudflare R2
+- **Storage:** Cloudinary (Imágenes y Assets)
 - **CDN:** Cloudflare Workers
 - **Email:** Resend
 - **Deploy:** Vercel (frontend) + Railway (backend)
@@ -79,13 +79,34 @@ Este proyecto es un refactor completo del MVP [agrobuscador](https://github.com/
 |---------|-------------------|--------------|
 | **SEO** | ❌ Hash routing | ✅ SSR + URLs limpias |
 | **API** | Supabase directo | API REST con validaciones |
-| **Storage** | Supabase Storage | Cloudflare R2 + CDN |
+| **Storage** | Supabase Storage | Cloudinary + CDN |
 | **Cache** | LocalStorage | Redis (Upstash) |
 | **Security** | RLS deshabilitado | Guards + RLS correcto |
-| **Images** | Sin optimización | Cloudflare optimization |
+| **Images** | Sin optimización | Cloudinary optimization |
 | **Payments** | ❌ No implementado | ✅ Mercado Pago |
 
 Ver [docs/MIGRACION.md](docs/MIGRACION.md) para el proceso completo.
+
+## 📸 Sistema de Upload de Imágenes (Actualizado Ene 2026)
+
+### Mejoras Implementadas - Fase 1 ✅
+- **Límite unificado:** 8 fotos máximo (consistente en todo el sistema)
+- **Validación preventiva:** Detecta fotos verticales ANTES de subir
+- **Mensajes accionables:** "📱 Gira tu celular" en lugar de códigos técnicos
+- **Retry automático:** 3 intentos con exponential backoff en errores de red
+
+### Documentación
+- 📋 [Plan Completo](docs/PLAN_MEJORAS_UPLOAD_2026.md) - Roadmap de 4 fases
+- ✅ [Fase 1 Implementada](docs/FASE_1_IMPLEMENTADA.md) - Quick Wins completados
+- 🧪 [Guía de Testing](docs/TESTING_GUIDE_UPLOAD.md) - Cómo probar las mejoras
+- 📊 [Resumen Ejecutivo](docs/RESUMEN_EJECUTIVO_FASE1.md) - Vista rápida
+
+### Métricas Esperadas
+```
+Tasa de éxito:  45% → 92% (+104%)
+Error vertical: 40% → 5%  (-87%)
+Error de red:   15% → 3%  (-80%)
+```
 
 ## 📊 Ambientes
 

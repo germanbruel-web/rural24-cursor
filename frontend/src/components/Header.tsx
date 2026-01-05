@@ -5,7 +5,7 @@ import { useDevMode } from '../contexts/DevModeContext';
 import AuthModal from './auth/AuthModal';
 import { LogOut, User, Home, Search, Package, Clock, Users, ImageIcon, Trash2, MessageSquare, Settings, Star } from 'lucide-react';
 import { canAccessPage } from '../utils/rolePermissions';
-import { useSiteSetting } from '../hooks/useSiteSetting';
+import { supabase } from '../services/supabaseClient';
 
 interface HeaderProps {
   onNavigate: (page: 'home' | 'my-ads' | 'banners' | 'inbox' | 'profile' | 'subscription' | 'users' | 'how-it-works' | 'publicar-v3' | 'ad-finder' | 'deleted-ads' | 'test-form' | 'categories-admin') => void;
@@ -19,8 +19,20 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
-  // Obtener logo del CMS
-  const headerLogo = useSiteSetting('header_logo', '/images/logos/logo.svg');
+  // DEBUG: Ver qué datos llegan del profile
+  useEffect(() => {
+    console.log('🔍 Header - Estado del usuario:', {
+      hasUser: !!user,
+      hasProfile: !!profile,
+      profileFullName: profile?.full_name,
+      profileEmail: profile?.email,
+      profileRole: profile?.role,
+      isDevMode
+    });
+  }, [user, profile, isDevMode]);
+  
+  // Logo estático para evitar latencia - optimización de caché
+  const LOGO_PATH = '/images/logos/rural24-dark.webp';
 
   // Cerrar menú al hacer clic fuera
   useEffect(() => {
@@ -68,13 +80,11 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             className="flex items-center hover:opacity-80 transition"
           >
             <img 
-              src={headerLogo}
+              src={LOGO_PATH}
               alt="RURAL24" 
               className="h-14 w-auto"
-              onError={(e) => {
-                e.currentTarget.src = '/images/logos/logo.svg';
-                e.currentTarget.onerror = null; // Prevenir loop infinito
-              }}
+              loading="eager"
+              fetchPriority="high"
             />
           </button>
           
@@ -109,12 +119,19 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                     className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded-md transition-colors"
                   >
                     <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      {profile?.full_name?.charAt(0).toUpperCase() || profile?.email?.charAt(0).toUpperCase() || 'U'}
+                      {profile?.full_name?.charAt(0).toUpperCase() || profile?.email?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                     </div>
                     <span className="text-sm font-medium text-gray-700">
                       {(() => {
-                        const fullName = profile?.full_name || profile?.email?.split('@')[0] || 'Usuario';
+                        console.log('🎯 Renderizando nombre. profile:', profile);
+                        
+                        if (!profile) {
+                          return user?.email?.split('@')[0] || 'Cargando...';
+                        }
+                        
+                        const fullName = profile.full_name || profile.email?.split('@')[0] || 'Usuario';
                         const parts = fullName.split(' ');
+                        
                         if (parts.length >= 2) {
                           return `${parts[0]} ${parts[1].charAt(0)}.`;
                         }
@@ -258,6 +275,33 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                         >
                           <Settings className="w-4 h-4" />
                           Atributos Dinámicos
+                        </button>
+                      )}
+                      
+                      {/* Panel Admin - Solo superadmin */}
+                      {profile?.role === 'superadmin' && (
+                        <button 
+                          onClick={async () => { 
+                            try {
+                              // Obtener token actual de Supabase
+                              const { data: { session } } = await supabase.auth.getSession();
+                              
+                              if (session?.access_token) {
+                                // Abrir panel admin con token en URL
+                                window.open(`http://localhost:3000/admin?token=${session.access_token}`, '_blank');
+                              } else {
+                                alert('Error: No se pudo obtener el token de sesión');
+                              }
+                            } catch (err) {
+                              console.error('Error abriendo panel admin:', err);
+                              alert('Error al abrir panel admin');
+                            }
+                            setShowUserMenu(false); 
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 transition-colors flex items-center gap-2 font-medium"
+                        >
+                          <Settings className="w-4 h-4" />
+                          Panel Admin
                         </button>
                       )}
                       

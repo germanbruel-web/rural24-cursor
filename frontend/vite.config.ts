@@ -10,7 +10,11 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       host: '0.0.0.0',
-      strictPort: false,
+      strictPort: true, // FORZAR puerto 5173 - falla si está ocupado
+      headers: {
+        // Cache para assets estáticos (logos, imágenes)
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
     },
     plugins: [react()],
     define: {
