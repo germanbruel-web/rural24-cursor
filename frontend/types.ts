@@ -9,7 +9,9 @@ export interface Product {
   currency: string;
   location: string;
   province?: string;
-  imageUrl: string;
+  imageUrl: string; // Primera imagen para thumbnail
+  imageUrls?: string[]; // Array completo para galería
+  image_urls?: string[]; // Alias alternativo (legacy)
   sourceUrl: string;
   category: string;
   subcategory?: string;

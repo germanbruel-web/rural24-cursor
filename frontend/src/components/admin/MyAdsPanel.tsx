@@ -1,21 +1,36 @@
 import { useState, useEffect } from 'react';
 import {
   getMyAds,
-  getAllAdsByRole,
   deleteAd,
-  toggleAdStatus,
-  toggleFeatured,
   getUserAdLimit,
 } from '../../services/adsService';
 import type { Ad } from '../../../types';
-import { Edit, Trash2, Eye, EyeOff, ExternalLink, Plus, Image as ImageIcon } from 'lucide-react';
+import { Edit, Trash2, Eye, Plus, Package, X, Star } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import { useAuth } from '../../contexts/AuthContext';
-import { isSuperAdmin as checkIsSuperAdmin, isFreeUser as checkIsFreeUser } from '../../utils/rolePermissions';
-import { getFirstImage } from '../../utils/imageHelpers';
+import { isSuperAdmin as checkIsSuperAdmin } from '../../utils/rolePermissions';
+import { supabase } from '../../services/supabaseClient';
+
+/**
+ * Extraer public_id de Cloudinary URL para borrado
+ * https://res.cloudinary.com/xxx/image/upload/.../rural24/ads/abc123.jpg → rural24/ads/abc123
+ */
+function extractCloudinaryPublicId(url: string): string | null {
+  try {
+    const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.\w+$/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
 
 interface MyAdsPanelProps {
   onNavigate?: (page: string) => void;
+}
+
+interface Category {
+  id: string;
+  display_name: string;
 }
 
 export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
@@ -23,54 +38,48 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [adLimit, setAdLimit] = useState({ limit: 0, current: 0 });
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedAdForView, setSelectedAdForView] = useState<Ad | null>(null);
+  const [selectedAdForEdit, setSelectedAdForEdit] = useState<Ad | null>(null);
+  const [selectedAdForDelete, setSelectedAdForDelete] = useState<Ad | null>(null);
   
   // Determinar permisos según rol
   const isSuperAdmin = checkIsSuperAdmin(profile?.role);
-  const isFreeUser = checkIsFreeUser(profile?.role);
-  // Todos los usuarios pueden pausar/activar sus propios avisos
-  const canManageAdStatus = true;
   
-  const [previewAd, setPreviewAd] = useState<Ad | null>(null);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused' | 'expired'>('all');
-  
-  // Sistema de pestañas para SuperAdmin (FREE vs Premium vs Propios)
-  const [activeTab, setActiveTab] = useState<'mine' | 'free' | 'premium'>('mine');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused'>('all');
   
   useEffect(() => {
     loadData();
-  }, [profile, activeTab]);
+    loadCategories();
+  }, [profile]);
+
+  const loadCategories = async () => {
+    try {
+      const { data } = await supabase
+        .from('categories')
+        .select('id, display_name')
+        .eq('is_active', true)
+        .order('display_name');
+      
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
     try {
-      let adsData: Ad[];
-      
-      if (isSuperAdmin) {
-        if (activeTab === 'mine') {
-          // SuperAdmin: Sus propios avisos
-          adsData = await getMyAds();
-          console.log('📋 Mis avisos (SuperAdmin):', adsData.length);
-        } else {
-          // SuperAdmin: Cargar avisos según la pestaña activa (free o premium)
-          adsData = await getAllAdsByRole({ userRole: activeTab });
-          console.log(`📋 Avisos ${activeTab.toUpperCase()} cargados en MyAdsPanel:`, adsData.length);
-        }
-      } else {
-        // Usuario Free/Normal: Solo sus propios avisos (máximo 10)
-        adsData = await getMyAds();
-        console.log('📋 Mis avisos personales:', adsData);
-        console.log('🔍 Primer aviso approval_status:', adsData[0]?.approval_status);
-        console.log('🖼️ Primer aviso images:', adsData[0]?.images);
-        console.log('🖼️ Primer aviso tipo images:', typeof adsData[0]?.images, Array.isArray(adsData[0]?.images));
-      }
-      
+      // Solo cargar avisos propios del usuario actual
+      const adsData = await getMyAds();
+      console.log('🔍 [MyAdsPanel] Avisos cargados:', adsData.length, adsData);
       setAds(adsData);
       
       // Get user limits
       const limit = await getUserAdLimit(profile?.id);
       setAdLimit(limit);
       
-      console.log(`📊 Límite de avisos: ${limit.current}/${limit.limit}`);
+      console.log(`📊 Mis avisos: ${adsData.length} | Límite: ${limit.current}/${limit.limit}`);
     } catch (error) {
       console.error('Error loading ads:', error);
       notify.error('Error al cargar avisos');
@@ -79,57 +88,112 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     }
   };
 
-  const handleToggleStatus = async (id: string) => {
+  const handleSaveEdit = async (updatedData: Partial<Ad>) => {
+    if (!selectedAdForEdit) return;
+
     try {
-      const { error } = await toggleAdStatus(id);
-      if (error) throw new Error(error.message);
-      notify.success('Estado del aviso actualizado');
+      const { error } = await supabase
+        .from('ads')
+        .update(updatedData)
+        .eq('id', selectedAdForEdit.id);
+
+      if (error) throw error;
+
+      notify.success('Aviso actualizado correctamente');
+      setSelectedAdForEdit(null);
       loadData();
-    } catch (error: any) {
-      notify.error(error.message || 'Error al cambiar estado');
+    } catch (error) {
+      console.error('Error updating ad:', error);
+      notify.error('Error al actualizar aviso');
     }
   };
 
-  const handleToggleFeatured = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!selectedAdForDelete) return;
+
     try {
-      const { error } = await toggleFeatured(id);
-      if (error) throw new Error(error.message);
-      notify.success('Estado de destacado actualizado');
+      const adId = selectedAdForDelete.id;
+      
+      // PASO 1: Obtener todas las imágenes asociadas (soporta ambos sistemas)
+      const imageUrls: string[] = [];
+      
+      // Sistema nuevo: tabla ad_images
+      const { data: adImages } = await supabase
+        .from('ad_images')
+        .select('url')
+        .eq('ad_id', adId);
+      
+      if (adImages && adImages.length > 0) {
+        imageUrls.push(...adImages.map(img => img.url));
+      }
+      
+      // Sistema antiguo: campo images[] en ads
+      const { data: adData } = await supabase
+        .from('ads')
+        .select('images')
+        .eq('id', adId)
+        .single();
+      
+      if (adData?.images && Array.isArray(adData.images)) {
+        imageUrls.push(...adData.images);
+      }
+      
+      // PASO 2: Eliminar imágenes de Cloudinary (si existen)
+      if (imageUrls.length > 0) {
+        const publicIds = imageUrls
+          .map(extractCloudinaryPublicId)
+          .filter(Boolean) as string[];
+        
+        if (publicIds.length > 0) {
+          try {
+            // Llamar al backend API para eliminar de Cloudinary
+            const response = await fetch('http://localhost:3001/api/uploads/delete', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ urls: imageUrls })
+            });
+            
+            if (!response.ok) {
+              console.warn('⚠️ Error al eliminar imágenes de Cloudinary:', await response.text());
+            } else {
+              const result = await response.json();
+              console.log(`✅ Cloudinary cleanup: ${result.success}/${publicIds.length} imágenes eliminadas`);
+            }
+          } catch (cloudinaryError) {
+            console.warn('⚠️ No se pudieron eliminar las imágenes de Cloudinary:', cloudinaryError);
+            // Continuamos con el delete del aviso aunque falle Cloudinary
+          }
+        }
+      }
+      
+      // PASO 3: Hard delete del aviso en Supabase (CASCADE eliminará ad_images automáticamente)
+      const { error: deleteError } = await supabase
+        .from('ads')
+        .delete()
+        .eq('id', adId);
+      
+      if (deleteError) throw deleteError;
+
+      notify.success('Aviso e imágenes eliminados correctamente');
+      setSelectedAdForDelete(null);
       loadData();
     } catch (error: any) {
-      notify.error(error.message || 'Error al cambiar featured');
+      console.error('Error deleting ad:', error);
+      notify.error('Error al eliminar aviso');
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este aviso? Esta acción no se puede deshacer.')) return;
-    
-    try {
-      const { error } = await deleteAd(id);
-      if (error) throw new Error(error.message);
-      notify.success('Aviso eliminado correctamente');
-      loadData();
-    } catch (error: any) {
-      notify.error(error.message || 'Error al eliminar aviso');
-    }
-  };
 
   // Filter ads by status
   const filteredAds = filterStatus === 'all' 
     ? ads 
-    : ads.filter(ad => {
-        if (filterStatus === 'expired') {
-          return ad.expires_at && new Date(ad.expires_at) < new Date();
-        }
-        return ad.status === filterStatus;
-      });
+    : ads.filter(ad => ad.status === filterStatus);
 
   // Stats
   const stats = {
     total: ads.length,
     active: ads.filter(a => a.status === 'active').length,
     paused: ads.filter(a => a.status === 'paused').length,
-    expired: ads.filter(a => a.expires_at && new Date(a.expires_at) < new Date()).length,
   };
 
   if (loading) {
@@ -145,14 +209,10 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
 
   return (
     <div className="space-y-6">
-      {/* Header con título simple */}
+      {/* Header simple */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-[#1b2f23]">
-            {isSuperAdmin && activeTab !== 'mine' 
-              ? `Avisos de usuarios ${activeTab === 'free' ? 'Free' : 'Premium'}`
-              : 'Mis Avisos'}
-          </h2>
+          <h2 className="text-2xl font-bold text-[#1b2f23]">Mis Avisos</h2>
           {!isSuperAdmin && (
             <p className="text-sm text-gray-600 mt-1">
               Estás usando <span className="font-bold text-[#16a135]">{adLimit.current}</span> de{' '}
@@ -160,60 +220,22 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
             </p>
           )}
         </div>
-        {(activeTab === 'mine' || !isSuperAdmin) && (
-          <button
-            onClick={() => window.location.hash = '#/publicar-v2'}
-            disabled={!isSuperAdmin && adLimit.current >= adLimit.limit}
-            className="bg-gradient-to-r from-[#16a135] to-[#138a2c] hover:from-[#138a2c] hover:to-[#0e7d25] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          >
-            <Plus className="w-6 h-6" />
-            Crear Nuevo Aviso
-          </button>
-        )}
+        <button
+          onClick={() => window.location.hash = '#/publicar-v2'}
+          disabled={!isSuperAdmin && adLimit.current >= adLimit.limit}
+          className="bg-gradient-to-r from-[#16a135] to-[#138a2c] hover:from-[#138a2c] hover:to-[#0e7d25] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+        >
+          <Plus className="w-5 h-5" />
+          Crear Nuevo Aviso
+        </button>
       </div>
 
-      {/* Tabs para SuperAdmin */}
-      {isSuperAdmin && (
-        <div className="bg-white rounded-lg p-1 inline-flex gap-1">
-          <button
-            onClick={() => setActiveTab('mine')}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-              activeTab === 'mine'
-                ? 'bg-[#16a135] text-white'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            Mis Avisos
-          </button>
-          <button
-            onClick={() => setActiveTab('free')}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-              activeTab === 'free'
-                ? 'bg-[#16a135] text-white'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            Avisos Free
-          </button>
-          <button
-            onClick={() => setActiveTab('premium')}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-              activeTab === 'premium'
-                ? 'bg-[#16a135] text-white'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            Avisos Premium
-          </button>
-        </div>
-      )}
-
-      {/* Limit Warning (Solo para usuarios no-admin) */}
+      {/* Limit Warning */}
       {!isSuperAdmin && adLimit.current >= adLimit.limit && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-800 font-medium">
             ⚠️ Has alcanzado el límite de avisos de tu plan. Para publicar más avisos, 
-            elimina o pausa algunos existentes, o actualiza tu plan.
+            elimina o pausa algunos existentes.
           </p>
         </div>
       )}
@@ -237,11 +259,11 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         ))}
       </div>
 
-      {/* Ads Grid - Catálogo de cards */}
+      {/* Tabla compacta SIN fotos (optimizado para performance) */}
       {filteredAds.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
           <div className="text-gray-400 mb-4">
-            <ImageIcon className="w-16 h-16 mx-auto" />
+            <Package className="w-16 h-16 mx-auto" />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">
             No tienes avisos {filterStatus !== 'all' ? filterStatus : ''}
@@ -262,299 +284,172 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredAds.map((ad) => {
-            const isExpired = ad.expires_at && new Date(ad.expires_at) < new Date();
-            
-            return (
-              <div
-                key={ad.id}
-                className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col h-full"
-              >
-                {/* Imagen - mismo diseño que UnifiedAdCard */}
-                <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-100">
-                  <img
-                    src={getFirstImage(ad.images)}
-                    alt={ad.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/images/preview-image.webp';
-                    }}
-                  />
-                  
-                  {/* Badge de categoría en esquina superior izquierda - igual que frontend */}
-                  {ad.category && (
-                    <div className="absolute top-3 left-3">
-                      <span className="bg-black text-white text-[10px] font-bold px-3 py-1 rounded uppercase tracking-wide">
-                        {ad.category}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vistas</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredAds.map((ad) => (
+                  <tr key={ad.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900 line-clamp-2">{ad.title}</div>
+                      {ad.location && (
+                        <div className="text-xs text-gray-500 mt-1">{ad.location}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {ad.category}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="font-bold text-[#16a135]">
+                        {ad.currency} {ad.price?.toLocaleString() || '0'}
                       </span>
-                    </div>
-                  )}
-
-                  {/* Status Badge - superpuesto en esquina superior derecha */}
-                  <div className="absolute top-3 right-3">
-                    {ad.approval_status === 'pending' && ad.status !== 'active' && (
-                      <span className="px-2 py-1 bg-orange-500 text-white text-[10px] font-bold rounded shadow">
-                        En Revisión
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        ad.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {ad.status === 'active' ? 'Activo' : 'Pausado'}
                       </span>
-                    )}
-                    {ad.approval_status === 'rejected' && (
-                      <span className="px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded shadow">
-                        Rechazado
-                      </span>
-                    )}
-                    {(ad.approval_status !== 'pending' || ad.status === 'active') && ad.approval_status !== 'rejected' && (
-                      <>
-                        {ad.status === 'active' && !isExpired && (
-                          <span className="px-2 py-1 bg-green-500 text-white text-[10px] font-bold rounded shadow">
-                            Activo
-                          </span>
-                        )}
-                        {ad.status === 'paused' && (
-                          <span className="px-2 py-1 bg-yellow-500 text-white text-[10px] font-bold rounded shadow">
-                            Pausado
-                          </span>
-                        )}
-                        {isExpired && (
-                          <span className="px-2 py-1 bg-gray-500 text-white text-[10px] font-bold rounded shadow">
-                            Expirado
-                          </span>
-                        )}
-                      </>
-                    )}
-                    {ad.featured && (
-                      <span className="ml-1 px-2 py-1 bg-[#f0bf43] text-white text-[10px] font-bold rounded shadow">
-                        🏆
-                      </span>
-                    )}
-                  </div>
-                </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      👁️ {ad.views_count || 0}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        {/* Ver Detalle */}
+                        <button
+                          onClick={() => setSelectedAdForView(ad)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Ver detalle"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
 
-                {/* Content - mismo estilo que UnifiedAdCard */}
-                <div className="p-4 flex flex-col flex-grow">
-                  {/* Título */}
-                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 text-base leading-tight">
-                    {ad.title}
-                  </h3>
+                        {/* Editar */}
+                        <button
+                          onClick={() => setSelectedAdForEdit(ad)}
+                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Editar"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
 
-                  {/* Ubicación */}
-                  {ad.location && (
-                    <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
-                      <svg className="w-4 h-4 text-[#16a135]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="line-clamp-1">{ad.location}{ad.province ? `, ${ad.province}` : ''}</span>
-                    </div>
-                  )}
-
-                  {/* Descripción */}
-                  {ad.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2 flex-grow">
-                      {ad.description}
-                    </p>
-                  )}
-
-                  {/* Precio */}
-                  <div className="mb-3">
-                    <p className="text-2xl font-bold text-[#16a135]">
-                      {ad.currency} {ad.price?.toLocaleString() || '0'}
-                    </p>
-                    {ad.views_count !== undefined && (
-                      <div className="text-xs text-gray-400 mt-1">
-                        <span>👁️ {ad.views_count}</span>
+                        {/* Eliminar */}
+                        <button
+                          onClick={() => setSelectedAdForDelete(ad)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-                    )}
-                  </div>
-
-                  {/* Action buttons - todos en una fila */}
-                  <div className="flex gap-2">
-                    {/* Ver Detalle Completo */}
-                    <button
-                      onClick={() => window.location.hash = `#/ad/${ad.id}`}
-                      className="flex-1 py-2 text-xs bg-green-100 text-green-700 hover:bg-green-200 rounded-lg transition-colors flex items-center justify-center gap-1 font-medium"
-                      title="Ver detalle completo con atributos dinámicos"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      Detalle
-                    </button>
-
-                    {/* Editar */}
-                    <button
-                      onClick={() => {
-                        console.log('🔵 Click Editar - Ad ID:', ad.id);
-                        console.log('🔵 Nueva URL:', `#/edit/${ad.id}`);
-                        window.location.hash = `#/edit/${ad.id}`;
-                        console.log('🔵 URL actual después del cambio:', window.location.hash);
-                      }}
-                      className="flex-1 py-2 text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg transition-colors flex items-center justify-center gap-1 font-medium"
-                      title="Editar"
-                    >
-                      <Edit className="w-3.5 h-3.5" />
-                      Editar
-                    </button>
-
-                    {/* Pausar/Publicar */}
-                    {canManageAdStatus && (
-                      <button
-                        onClick={() => handleToggleStatus(ad.id)}
-                        className={`flex-1 py-2 text-xs rounded-lg transition-colors flex items-center justify-center gap-1 font-medium ${
-                          ad.status === 'active'
-                            ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                            : 'bg-green-100 text-green-700 hover:bg-green-200'
-                        }`}
-                        title={ad.status === 'active' ? 'Pausar' : 'Publicar'}
-                      >
-                        {ad.status === 'active' ? (
-                          <>
-                            <EyeOff className="w-3.5 h-3.5" />
-                            Pausar
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="w-3.5 h-3.5" />
-                            Publicar
-                          </>
-                        )}
-                      </button>
-                    )}
-
-                    {/* Borrar */}
-                    <button
-                      onClick={() => handleDelete(ad.id)}
-                      className="flex-1 py-2 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded-lg transition-colors flex items-center justify-center gap-1 font-medium"
-                      title="Borrar"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Borrar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {/* Edición movida a página completa */}
-
-      {/* Preview Modal */}
-      {previewAd && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-4xl w-full my-8">
-            <div className="p-6 border-b">
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-gray-900">Vista Previa del Aviso</h3>
-                <button
-                  onClick={() => setPreviewAd(null)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 max-h-[70vh] overflow-y-auto">
-              {/* Images */}
-              <div className="mb-6">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                  {previewAd.images && previewAd.images.length > 0 ? (
-                    previewAd.images.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={`${previewAd.title} - ${idx + 1}`}
-                        className="w-full h-48 object-cover rounded-lg"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/images/preview-image.webp';
-                        }}
-                      />
-                    ))
-                  ) : (
-                    <img
-                      src="/images/preview-image.webp"
-                      alt={previewAd.title}
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                  )}
-                </div>
-              </div>
-
-              <h2 className="text-3xl font-bold mb-4">{previewAd.title}</h2>
-              
-              {previewAd.price && (
-                <div className="text-3xl font-bold text-[#16a135] mb-4">
-                  {previewAd.currency} {previewAd.price.toLocaleString()}
-                </div>
-              )}
-
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Categoría:</span>
-                    <span className="ml-2 font-medium">{previewAd.category}</span>
-                  </div>
-                  {previewAd.subcategory && (
-                    <div>
-                      <span className="text-gray-600">Subcategoría:</span>
-                      <span className="ml-2 font-medium">{previewAd.subcategory}</span>
-                    </div>
-                  )}
-                  {previewAd.location && (
-                    <div>
-                      <span className="text-gray-600">Ubicación:</span>
-                      <span className="ml-2 font-medium">{previewAd.location}</span>
-                    </div>
-                  )}
-                  {previewAd.province && (
-                    <div>
-                      <span className="text-gray-600">Provincia:</span>
-                      <span className="ml-2 font-medium">{previewAd.province}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <h4 className="text-lg font-semibold mb-2">Descripción</h4>
-                <p className="text-gray-700 whitespace-pre-wrap">{previewAd.description}</p>
-              </div>
-
-              {previewAd.tags && previewAd.tags.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-lg font-semibold mb-2">Etiquetas</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {previewAd.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {(previewAd.contact_phone || previewAd.contact_email) && (
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <h4 className="text-lg font-semibold mb-2">Contacto</h4>
-                  {previewAd.contact_phone && (
-                    <p className="text-gray-700">📱 {previewAd.contact_phone}</p>
-                  )}
-                  {previewAd.contact_email && (
-                    <p className="text-gray-700">✉️ {previewAd.contact_email}</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="p-6 border-t">
+      {/* Modal Ver Detalle */}
+      {selectedAdForView && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-gray-900">Detalle del Aviso</h3>
               <button
-                onClick={() => setPreviewAd(null)}
-                className="w-full px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+                onClick={() => setSelectedAdForView(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">ID</label>
+                  <p className="text-gray-900">{selectedAdForView.id}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Estado</label>
+                  <p>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      selectedAdForView.status === 'active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {selectedAdForView.status === 'active' ? 'Activo' : 'Pausado'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-500">Título</label>
+                <p className="text-gray-900 font-medium">{selectedAdForView.title}</p>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-500">Descripción</label>
+                <p className="text-gray-900 whitespace-pre-wrap">{selectedAdForView.description}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Precio</label>
+                  <p className="font-bold text-[#16a135]">
+                    {selectedAdForView.currency} {selectedAdForView.price?.toLocaleString() || '0'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Provincia</label>
+                  <p className="text-gray-900">{selectedAdForView.province || 'N/A'}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Categoría</label>
+                  <p className="text-gray-900">{selectedAdForView.category_name || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Subcategoría</label>
+                  <p className="text-gray-900">{selectedAdForView.subcategory_name || 'N/A'}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Visitas</label>
+                  <p className="text-gray-900">👁️ {selectedAdForView.views_count || 0}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Creado</label>
+                  <p className="text-gray-900">
+                    {new Date(selectedAdForView.created_at).toLocaleDateString('es-AR')}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border-t px-6 py-4 flex justify-end">
+              <button
+                onClick={() => setSelectedAdForView(null)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
               >
                 Cerrar
               </button>
@@ -562,7 +457,117 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           </div>
         </div>
       )}
-      {/* Ya no se usa modal AdForm, se navega a #/publicar-v2 */}
+
+      {/* Modal Editar */}
+      {selectedAdForEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-gray-900">Editar Aviso Completo</h3>
+              <button
+                onClick={() => setSelectedAdForEdit(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <p className="text-blue-900 text-sm">
+                    ℹ️ <strong>Modo Edición Completa:</strong> Puedes modificar todos los campos del aviso, 
+                    incluyendo categoría, atributos dinámicos, imágenes, título y descripción. 
+                    Los cambios se guardarán inmediatamente.
+                  </p>
+                </div>
+                
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <p className="text-center text-gray-600">
+                    Redirigiendo al editor completo...
+                  </p>
+                  <p className="text-center text-sm text-gray-500 mt-2">
+                    ID del aviso: <code className="bg-gray-100 px-2 py-1 rounded">{selectedAdForEdit.id}</code>
+                  </p>
+                  <div className="mt-6 flex justify-center gap-3">
+                    <button
+                      onClick={() => {
+                        const adId = selectedAdForEdit.id;
+                        console.log('🚀 Navegando a editor completo, adId:', adId);
+                        
+                        // Cerrar modal primero
+                        setSelectedAdForEdit(null);
+                        
+                        // Pequeño delay para asegurar que el modal se cierra
+                        setTimeout(() => {
+                          // Abrir PublicarAvisoV3 en modo edit
+                          const newHash = `#/publicar-v3?edit=${adId}`;
+                          console.log('📍 Cambiando hash a:', newHash);
+                          window.location.hash = newHash;
+                        }, 100);
+                      }}
+                      className="px-6 py-3 bg-[#16a135] hover:bg-[#138a2c] text-white rounded-lg transition-colors font-medium"
+                    >
+                      Ir al Editor Completo →
+                    </button>
+                    <button
+                      onClick={() => setSelectedAdForEdit(null)}
+                      className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Confirmar Eliminación */}
+      {selectedAdForDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              
+              <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
+                ¿Eliminar aviso?
+              </h3>
+              
+              <p className="text-gray-600 text-center mb-1">
+                Estás por eliminar el aviso:
+              </p>
+              <p className="text-gray-900 font-medium text-center mb-4">
+                "{selectedAdForDelete.title}"
+              </p>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+                <p className="text-red-800 text-sm text-center font-medium">
+                  ⚠️ Esta acción es PERMANENTE y no se puede deshacer
+                </p>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setSelectedAdForDelete(null)}
+                  className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  Sí, Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

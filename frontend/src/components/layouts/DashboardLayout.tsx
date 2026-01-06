@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMenuItems } from '../../utils/rolePermissions';
+// import { RLSDebugBanner } from '../common/RLSDebugBanner'; // Comentado - RLS ya está configurado correctamente
 import {
   LayoutDashboard,
   Package,
@@ -63,15 +64,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     home: <Home className="w-5 h-5" />,
     'my-ads': <Package className="w-5 h-5" />,
     inbox: <MessageSquare className="w-5 h-5" />,
-    'pending-ads': <Clock className="w-5 h-5" />,
-    'deleted-ads': <Clock className="w-5 h-5" />,
+    profile: <User className="w-5 h-5" />,
     users: <Users className="w-5 h-5" />,
+    'all-ads': <Search className="w-5 h-5" />,
     banners: <ImageIcon className="w-5 h-5" />,
     'categories-admin': <SettingsIcon className="w-5 h-5" />,
     'attributes-admin': <Edit3 className="w-5 h-5" />,
     'backend-settings': <SettingsIcon className="w-5 h-5" />,
-    'featured-ads': <Star className="w-5 h-5" />,
-    profile: <User className="w-5 h-5" />,
   };
 
   // Construir menú dinámico según rol
@@ -123,13 +122,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar Desktop */}
-      <aside
-        className={`hidden lg:flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
-          sidebarCollapsed ? 'w-20' : 'w-64'
-        }`}
-      >
+    <>
+      {/* RLS Debug Warning Banner - Comentado: RLS configurado correctamente con política SuperAdmin */}
+      {/* <RLSDebugBanner /> */}
+      
+      <div className="flex h-screen bg-gray-50">
+        {/* Sidebar Desktop */}
+        <aside
+          className={`hidden lg:flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
+            sidebarCollapsed ? 'w-20' : 'w-64'
+          }`}
+        >
         {/* Logo / Brand */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
           {!sidebarCollapsed && (
@@ -155,30 +158,25 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
         {/* User Info */}
         <div className={`p-4 border-b border-gray-200 ${sidebarCollapsed ? 'flex justify-center' : ''}`}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-              {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
-            </div>
-            {!sidebarCollapsed && (
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 truncate text-sm">
-                  {profile?.full_name || 'Usuario'}
-                </div>
-                <div className="flex gap-1 mt-1">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                    profile?.role === 'superadmin'
-                      ? 'bg-purple-100 text-purple-800'
-                      : profile?.role === 'adminscrap'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {profile?.role === 'superadmin' ? '👑 SuperAdmin' : 
-                     profile?.role === 'adminscrap' ? '🔍 Scraping' : '👤 Free'}
-                  </span>
-                </div>
+          {!sidebarCollapsed && (
+            <div className="flex-1">
+              <div className="font-medium text-gray-900 truncate text-sm mb-2">
+                {profile?.full_name || 'Usuario'}
               </div>
-            )}
-          </div>
+              <div className="flex gap-1">
+                <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                  profile?.role === 'superadmin'
+                    ? 'bg-green-100 text-green-800'
+                    : profile?.role === 'adminscrap'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {profile?.role === 'superadmin' ? 'SuperAdmin' : 
+                   profile?.role === 'adminscrap' ? 'Scraping' : 'Free'}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Navigation Menu */}
@@ -238,26 +236,21 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
           {/* User Info */}
           <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
-                {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
+            <div className="flex-1">
+              <div className="font-medium text-gray-900 truncate text-sm mb-2">
+                {profile?.full_name || 'Usuario'}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 truncate text-sm">
-                  {profile?.full_name || 'Usuario'}
-                </div>
-                <div className="flex gap-1 mt-1">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                    profile?.role === 'superadmin'
-                      ? 'bg-purple-100 text-purple-800'
-                      : profile?.role === 'adminscrap'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {profile?.role === 'superadmin' ? '👑 SuperAdmin' : 
-                     profile?.role === 'adminscrap' ? '🔍 Scraping' : '👤 Free'}
-                  </span>
-                </div>
+              <div className="flex gap-1">
+                <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                  profile?.role === 'superadmin'
+                    ? 'bg-green-100 text-green-800'
+                    : profile?.role === 'adminscrap'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {profile?.role === 'superadmin' ? 'SuperAdmin' : 
+                   profile?.role === 'adminscrap' ? 'Scraping' : 'Free'}
+                </span>
               </div>
             </div>
           </div>
@@ -285,32 +278,33 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </aside>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar Mobile */}
-        <header className="lg:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4">
-          <button
-            onClick={() => setMobileMenuOpen(true)}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <Menu className="w-6 h-6 text-gray-600" />
-          </button>
-          <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg flex items-center justify-center text-white font-bold">
-              R
-            </div>
-            <span className="font-bold text-gray-900">RURAL24</span>
-          </button>
-          <div className="w-10" /> {/* Spacer for centering */}
-        </header>
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Top Bar Mobile */}
+          <header className="lg:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <Menu className="w-6 h-6 text-gray-600" />
+            </button>
+            <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg flex items-center justify-center text-white font-bold">
+                R
+              </div>
+              <span className="font-bold text-gray-900">RURAL24</span>
+            </button>
+            <div className="w-10" /> {/* Spacer for centering */}
+          </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-8">
-            {children}
-          </div>
-        </main>
+          {/* Page Content */}
+          <main className="flex-1 overflow-y-auto">
+            <div className="p-4 lg:p-8">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 };

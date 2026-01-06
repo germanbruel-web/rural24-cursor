@@ -62,6 +62,8 @@ export default function PublicarAvisoV3() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  console.log('🎨 PublicarAvisoV3 renderizado, hash:', window.location.hash);
+
   // Modal de autenticación
   const [showAuthModal, setShowAuthModal] = useState(false);
   
@@ -214,12 +216,25 @@ export default function PublicarAvisoV3() {
   useEffect(() => {
     loadCategories();
     detectEditMode();
+    
+    // Escuchar cambios en el hash para detectar modo edit
+    const handleHashChange = () => {
+      detectEditMode();
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
 
   // Detectar si estamos en modo edición
   async function detectEditMode() {
     // Detectar desde hash: #/edit/:id
     const hash = window.location.hash;
+    console.log('🔍 detectEditMode - hash actual:', hash);
+    
     const editMatch = hash.match(/^#\/edit\/([a-f0-9-]+)$/);
     
     let editId: string | null = null;
@@ -227,16 +242,25 @@ export default function PublicarAvisoV3() {
     if (editMatch) {
       // Formato nuevo: #/edit/:id
       editId = editMatch[1];
+      console.log('✅ Detectado modo edit (formato #/edit/:id):', editId);
     } else {
       // Formato legacy: ?edit=:id
-      const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
-      editId = urlParams.get('edit');
+      const hashParts = hash.split('?');
+      if (hashParts.length > 1) {
+        const urlParams = new URLSearchParams(hashParts[1]);
+        editId = urlParams.get('edit');
+        if (editId) {
+          console.log('✅ Detectado modo edit (formato ?edit=:id):', editId);
+        }
+      }
     }
     
     if (editId) {
       setIsEditMode(true);
       setEditAdId(editId);
       await loadAdForEdit(editId);
+    } else {
+      console.log('ℹ️ No se detectó modo edit - modo creación');
     }
   }
 

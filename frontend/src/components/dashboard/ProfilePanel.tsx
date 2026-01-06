@@ -28,7 +28,6 @@ interface ProfileFormData {
   company_cuit?: string;
   company_address?: string;
   company_website?: string;
-  bio?: string;
 }
 
 export const ProfilePanel: React.FC = () => {
@@ -45,7 +44,6 @@ export const ProfilePanel: React.FC = () => {
     company_cuit: '',
     company_address: '',
     company_website: '',
-    bio: '',
   });
   const [saving, setSaving] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -72,7 +70,6 @@ export const ProfilePanel: React.FC = () => {
         company_cuit: '',
         company_address: '',
         company_website: '',
-        bio: '',
       });
     }
   }, [profile]);
@@ -117,7 +114,6 @@ export const ProfilePanel: React.FC = () => {
       company_cuit: '',
       company_address: '',
       company_website: '',
-      bio: '',
     });
   };
 
@@ -144,11 +140,8 @@ export const ProfilePanel: React.FC = () => {
         {/* Profile Card */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
-            {/* Avatar */}
+            {/* User Info */}
             <div className="text-center mb-6">
-              <div className="w-32 h-32 mx-auto bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-full flex items-center justify-center text-white text-4xl font-bold mb-4">
-                {profile?.full_name?.charAt(0).toUpperCase() || profile?.email?.charAt(0).toUpperCase()}
-              </div>
               <h2 className="text-xl font-bold text-gray-900">{profile?.full_name || 'Sin nombre'}</h2>
               <p className="text-sm text-gray-600 mb-3">{profile?.email}</p>
               
@@ -369,26 +362,6 @@ export const ProfilePanel: React.FC = () => {
                 )}
               </div>
             </div>
-
-            {/* Bio */}
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Biografía
-              </label>
-              {isEditing ? (
-                <textarea
-                  value={formData.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  rows={4}
-                  placeholder="Cuéntanos sobre ti..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                />
-              ) : (
-                <div className="px-4 py-2 bg-gray-50 rounded-lg text-gray-900 min-h-[100px]">
-                  {formData.bio || 'Sin biografía'}
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Company Information (Solo para Premium Empresa) */}
@@ -522,16 +495,6 @@ export const ProfilePanel: React.FC = () => {
                     Verificar
                   </button>
                 )}
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium text-gray-900">Autenticación de Dos Factores</div>
-                  <div className="text-sm text-gray-600">No activada</div>
-                </div>
-                <button className="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg hover:bg-gray-400 transition-colors text-sm font-medium">
-                  Activar
-                </button>
               </div>
             </div>
           </div>

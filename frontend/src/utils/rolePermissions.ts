@@ -21,15 +21,13 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   inbox: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
   
   // Solo SuperAdmin
-  'pending-ads': ['superadmin'],
   users: ['superadmin'],
+  'all-ads': ['superadmin'], // Nuevo panel unificado de gestión
   banners: ['superadmin'],
-  'deleted-ads': ['superadmin'],
   settings: ['superadmin'],
-  'featured-ads': ['superadmin'], // Gestión de avisos destacados
-  'categories-admin': ['superadmin'], // Solo superadmin puede gestionar categorías
-  'attributes-admin': ['superadmin'], // Solo superadmin puede gestionar atributos dinámicos
-  'backend-settings': ['superadmin'], // CMS para gestionar contenidos del sitio (logos, placeholders, etc)
+  'categories-admin': ['superadmin'],
+  'attributes-admin': ['superadmin'],
+  'backend-settings': ['superadmin'],
 };
 
 /**
@@ -80,6 +78,7 @@ export interface MenuItem {
 }
 
 export const MENU_STRUCTURE: MenuItem[] = [
+  // SECCIÓN: GENERAL
   {
     id: 'home',
     label: 'Inicio',
@@ -96,20 +95,17 @@ export const MENU_STRUCTURE: MenuItem[] = [
     allowedRoles: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
   },
   {
+    id: 'profile',
+    label: 'Mi Perfil',
+    allowedRoles: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
+  },
+  
+  // SECCIÓN: ADMINISTRADOR (solo SuperAdmin)
+  {
     id: 'divider-admin',
-    label: '--- ADMIN ---',
+    label: '--- ADMINISTRADOR ---',
     allowedRoles: ['superadmin'],
     divider: true,
-  },
-  {
-    id: 'pending-ads',
-    label: 'Avisos Pendientes',
-    allowedRoles: ['superadmin'],
-  },
-  {
-    id: 'deleted-ads',
-    label: 'Avisos Eliminados',
-    allowedRoles: ['superadmin'],
   },
   {
     id: 'users',
@@ -117,13 +113,13 @@ export const MENU_STRUCTURE: MenuItem[] = [
     allowedRoles: ['superadmin'],
   },
   {
-    id: 'banners',
-    label: 'Banners',
+    id: 'all-ads',
+    label: 'Avisos',
     allowedRoles: ['superadmin'],
   },
   {
-    id: 'featured-ads',
-    label: 'Avisos Destacados',
+    id: 'banners',
+    label: 'Banners',
     allowedRoles: ['superadmin'],
   },
   {
@@ -140,17 +136,6 @@ export const MENU_STRUCTURE: MenuItem[] = [
     id: 'backend-settings',
     label: 'Backend CMS',
     allowedRoles: ['superadmin'],
-  },
-  {
-    id: 'divider-profile',
-    label: '',
-    allowedRoles: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
-    divider: true,
-  },
-  {
-    id: 'profile',
-    label: 'Mi Perfil',
-    allowedRoles: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
   },
 ];
 

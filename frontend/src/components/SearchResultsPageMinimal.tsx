@@ -41,13 +41,21 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
   const availableSubcategories = useMemo(() => {
     const subs = new Set<string>();
     results.forEach(product => {
-      if (pendingFilters.category && product.category === pendingFilters.category && product.subcategory) {
-        subs.add(product.subcategory);
-      } else if (!pendingFilters.category && product.subcategory) {
-        subs.add(product.subcategory);
+      // Si hay categoría seleccionada, filtrar subcategorías de esa categoría
+      if (pendingFilters.category) {
+        if (product.category === pendingFilters.category && product.subcategory) {
+          subs.add(product.subcategory);
+        }
+      } else {
+        // Sin categoría, mostrar todas las subcategorías disponibles
+        if (product.subcategory) {
+          subs.add(product.subcategory);
+        }
       }
     });
-    return Array.from(subs).sort();
+    const sorted = Array.from(subs).sort();
+    console.log('🔍 Available subcategories for category:', pendingFilters.category, sorted);
+    return sorted;
   }, [results, pendingFilters.category]);
   
   // Obtener condiciones únicas disponibles
@@ -99,7 +107,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
     
     // Filtro por provincia
     if (activeFilters.province) {
-      // Usar campo province directo
+      // Usar campo province directo con manejo defensivo
       if (!product.province || product.province !== activeFilters.province) {
         return false;
       }
@@ -111,6 +119,20 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
     }
     
     return true;
+  });
+  
+  // DEBUG: Log detallado de filtros
+  console.log('🔍 FILTER DEBUG:', {
+    totalResults: results.length,
+    filteredResults: filteredResults.length,
+    activeFilters,
+    sampleProduct: results[0] ? {
+      id: results[0].id,
+      title: results[0].title,
+      category: results[0].category,
+      subcategory: results[0].subcategory,
+      province: results[0].province,
+    } : null,
   });
   
   console.log(`📊 Filtros aplicados: ${filteredResults.length} de ${results.length} avisos`);

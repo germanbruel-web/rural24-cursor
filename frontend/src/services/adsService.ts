@@ -1,6 +1,52 @@
 // src/services/adsService.ts
 import { supabase } from './supabaseClient';
 import type { Ad, CreateAdInput, UpdateAdInput } from '../../types';
+import type { Product } from '../../types';
+
+/**
+ * Transformar Ad (de Supabase) a Product (para UI)
+ * Normaliza campos de imágenes y asegura compatibilidad
+ */
+export function transformAdToProduct(ad: Ad): Product {
+  // Extraer primera imagen desde múltiples posibles campos
+  let imageUrl = '/images/preview-image.webp'; // Fallback
+  let imageUrls: string[] = [];
+
+  // Prioridad: images > image_urls > imageUrl directo
+  if (ad.images && ad.images.length > 0) {
+    imageUrls = ad.images.filter(Boolean); // Filtrar nulls
+    imageUrl = imageUrls[0] || imageUrl;
+  } else if (ad.image_urls && ad.image_urls.length > 0) {
+    imageUrls = ad.image_urls.filter(Boolean);
+    imageUrl = imageUrls[0] || imageUrl;
+  }
+
+  return {
+    id: ad.id,
+    title: ad.title,
+    description: ad.description,
+    price: ad.price,
+    currency: ad.currency || 'ARS',
+    location: ad.location || ad.province || 'Sin ubicación',
+    province: ad.province,
+    imageUrl, // Primera imagen
+    imageUrls, // Array completo para galería
+    sourceUrl: `/ad/${ad.id}`,
+    category: ad.category || 'Sin categoría',
+    subcategory: ad.subcategory,
+    isSponsored: false,
+    isPremium: ad.featured || false,
+    featured: ad.featured || false,
+    tags: ad.tags || [],
+    createdAt: ad.created_at,
+    updatedAt: ad.updated_at,
+    attributes: (ad as any).attributes || {},
+    brand: ad.brand,
+    model: ad.model,
+    user_id: ad.user_id,
+    seller: ad.seller,
+  };
+}
 
 /**
  * Obtener límite de avisos según el rol del usuario
@@ -126,7 +172,7 @@ export async function getAds(filters?: {
       query = query.eq('status', filters.status);
     }
     if (filters?.category) {
-      query = query.eq('category', filters.category);
+      query = query.eq('category_id', filters.category);
     }
     if (filters?.province) {
       query = query.eq('province', filters.province);
@@ -135,11 +181,37 @@ export async function getAds(filters?: {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching ads:', error);
+      console.error('❌ [getAds] Error fetching ads:', error);
       return [];
     }
 
-    return data as Ad[];
+    console.log('📊 [getAds] Datos raw de Supabase:', data?.length, data);
+
+    // Cargar categorías para mapeo manual
+    const categoryIds = [...new Set(data?.map((ad: any) => ad.category_id).filter(Boolean))];
+    let categoriesMap: Record<string, string> = {};
+
+    if (categoryIds.length > 0) {
+      const { data: catsData } = await supabase
+        .from('categories')
+        .select('id, display_name')
+        .in('id', categoryIds);
+      
+      if (catsData) {
+        categoriesMap = Object.fromEntries(
+          catsData.map((c: any) => [c.id, c.display_name])
+        );
+      }
+    }
+
+    // Transformar datos para agregar category como string
+    const adsWithCategories = (data || []).map((ad: any) => ({
+      ...ad,
+      category: categoriesMap[ad.category_id] || 'Sin categoría',
+    }));
+
+    console.log('✅ [getAds] Avisos transformados:', adsWithCategories.length);
+    return adsWithCategories as Ad[];
   } catch (error) {
     console.error('Error fetching ads:', error);
     return [];
@@ -149,7 +221,7 @@ export async function getAds(filters?: {
 /**
  * Obtener avisos activos públicos
  */
-export async function getActiveAds(): Promise<Ad[]> {
+export async function getActiveAds(): Promise<Product[]> {
   try {
     const { data, error } = await supabase
       .from('ads')
@@ -159,7 +231,17 @@ export async function getActiveAds(): Promise<Ad[]> {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as Ad[];
+    
+    console.log('📊 [getActiveAds] Raw data:', data?.length, 'avisos');
+    console.log('🖼️ [getActiveAds] Primer aviso images:', data?.[0]?.images);
+    
+    // Transformar Ad[] a Product[] con normalización de imágenes
+    const products = (data || []).map(ad => transformAdToProduct(ad as Ad));
+    
+    console.log('✅ [getActiveAds] Products transformados:', products.length);
+    console.log('🖼️ [getActiveAds] Primer product imageUrl:', products[0]?.imageUrl);
+    
+    return products;
   } catch (error) {
     console.error('Error fetching active ads:', error);
     return [];
@@ -170,7 +252,7 @@ export async function getActiveAds(): Promise<Ad[]> {
  * Obtener avisos premium activos DESTACADOS para el carrusel principal
  * Solo trae avisos con featured: true, aprobados y activos
  */
-export async function getPremiumAds(): Promise<Ad[]> {
+export async function getPremiumAds(): Promise<Product[]> {
   try {
     const { data, error } = await supabase
       .from('ads')
@@ -186,7 +268,10 @@ export async function getPremiumAds(): Promise<Ad[]> {
     
     console.log(`🏆 Avisos destacados para carrusel: ${data?.length || 0}`);
     
-    return data as Ad[];
+    // Transformar a Product[] con imágenes normalizadas
+    const products = (data || []).map(ad => transformAdToProduct(ad as Ad));
+    
+    return products;
   } catch (error) {
     console.error('Error fetching premium ads:', error);
     return [];
@@ -488,12 +573,16 @@ export async function getMyAds(devUserId?: string): Promise<Ad[]> {
     // Modo normal: obtener usuario de Supabase Auth
     const { data: { user } } = await supabase.auth.getUser();
     
+    console.log('👤 Usuario autenticado:', user?.id, user?.email);
+    
     if (!user) {
-      console.log('Sin usuario autenticado');
+      console.log('❌ Sin usuario autenticado');
       return [];
     }
 
-    return await getAds({ userId: user.id });
+    const ads = await getAds({ userId: user.id });
+    console.log('📋 Avisos del usuario:', ads.length, ads);
+    return ads;
   } catch (error) {
     console.error('Error fetching my ads:', error);
     return [];

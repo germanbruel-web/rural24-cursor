@@ -34,6 +34,8 @@ export const UsersPanel: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<'all' | UserRole>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [showUserMenu, setShowUserMenu] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 20;
 
   useEffect(() => {
     loadUsers();
@@ -77,6 +79,13 @@ export const UsersPanel: React.FC = () => {
     
     return matchesSearch && matchesRole && matchesStatus;
   });
+
+  // Paginación
+  const totalRecords = filteredUsers.length;
+  const totalPages = Math.ceil(totalRecords / recordsPerPage);
+  const startIndex = (currentPage - 1) * recordsPerPage;
+  const endIndex = startIndex + recordsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
   // Estadísticas
   const stats = {
@@ -315,7 +324,7 @@ export const UsersPanel: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
+              {paginatedUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -410,7 +419,7 @@ export const UsersPanel: React.FC = () => {
                       </button>
 
                       {showUserMenu === user.id && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
+                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                           {!user.email_verified && (
                             <button
                               onClick={() => {
@@ -487,6 +496,34 @@ export const UsersPanel: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Paginación */}
+        {totalRecords > recordsPerPage && (
+          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Mostrando {startIndex + 1} - {Math.min(endIndex, totalRecords)} de {totalRecords} usuarios
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1 || loading}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              <span className="px-4 py-2 text-sm text-gray-700">
+                Página {currentPage} de {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage >= totalPages || loading}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
 
         {filteredUsers.length === 0 && (
           <div className="p-12 text-center">
