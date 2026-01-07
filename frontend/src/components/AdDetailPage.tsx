@@ -8,7 +8,7 @@ import { VerifiedBadge } from './UserBadges';
 import PremiumBadge from './PremiumBadge';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './auth/AuthModal';
-import { UnifiedAdCard } from './UnifiedAdCard';
+import { ProductCard } from './organisms/ProductCard';
 import { supabase } from '../services/supabaseClient';
 import { AdDetailDynamic } from './AdDetailDynamic';
 import { getAttributes } from '../services/v2/attributesService';
@@ -499,7 +499,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                                 
                                 return (
                                   <div key={attr.slug} className="flex flex-col">
-                                    <span className="text-base font-bold text-gray-600 uppercase tracking-wide">
+                                    <span className="text-gray-600">
                                       {attr.name}
                                     </span>
                                     {isArray && attr.value.length > 0 ? (
@@ -543,7 +543,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                           
                           return (
                             <div key={key} className="flex flex-col">
-                              <span className="text-base font-bold text-gray-600 uppercase tracking-wide">
+                              <span className="text-gray-600">
                                 {key.replace(/_/g, ' ')}
                               </span>
                               {isArray && value.length > 0 ? (
@@ -577,49 +577,49 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
                           {ad.category && (
                             <div className="flex flex-col">
-                              <span className="text-base font-bold text-gray-600 uppercase tracking-wide">Categoría</span>
+                              <span className="text-gray-600">Categoría</span>
                               <span className="text-base font-bold text-gray-900 mt-1">{ad.category}</span>
                             </div>
                           )}
                           
                           {ad.subcategory && (
                             <div className="flex flex-col">
-                              <span className="text-base font-bold text-gray-600 uppercase tracking-wide">{TEXTS.adDetail.subcategory}</span>
+                              <span className="text-gray-600">{TEXTS.adDetail.subcategory}</span>
                               <span className="text-base font-bold text-gray-900 mt-1">{ad.subcategory}</span>
                             </div>
                           )}
                           
                           {ad.brand && (
                             <div className="flex flex-col">
-                              <span className="text-base font-bold text-gray-600 uppercase tracking-wide">{TEXTS.adDetail.brand}</span>
+                              <span className="text-gray-600">{TEXTS.adDetail.brand}</span>
                               <span className="text-base font-bold text-gray-900 mt-1">{ad.brand}</span>
                             </div>
                           )}
                           
                           {ad.model && (
                             <div className="flex flex-col">
-                              <span className="text-base font-bold text-gray-600 uppercase tracking-wide">{TEXTS.adDetail.model}</span>
+                              <span className="text-gray-600">{TEXTS.adDetail.model}</span>
                               <span className="text-base font-bold text-gray-900 mt-1">{ad.model}</span>
                             </div>
                           )}
                           
                           {ad.year && (
                             <div className="flex flex-col">
-                              <span className="text-base font-bold text-gray-600 uppercase tracking-wide">{TEXTS.adDetail.year}</span>
+                              <span className="text-gray-600">{TEXTS.adDetail.year}</span>
                               <span className="text-base font-bold text-gray-900 mt-1">{ad.year}</span>
                             </div>
                           )}
                           
                           {ad.condition && (
                             <div className="flex flex-col">
-                              <span className="text-base font-bold text-gray-600 uppercase tracking-wide">{TEXTS.adDetail.condition}</span>
+                              <span className="text-gray-600">{TEXTS.adDetail.condition}</span>
                               <span className="text-base font-bold text-green-700 mt-1">{ad.condition}</span>
                             </div>
                           )}
                           
                           {ad.province && (
                             <div className="flex flex-col">
-                              <span className="text-base font-bold text-gray-600 uppercase tracking-wide">{TEXTS.adDetail.location}</span>
+                              <span className="text-gray-600">{TEXTS.adDetail.location}</span>
                               <span className="text-base font-bold text-gray-900 mt-1">{ad.province}</span>
                             </div>
                           )}
@@ -683,7 +683,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
           {/* Columna derecha - Info del vendedor y contacto */}
           <div id="ad-right-column" className="space-y-6">
             {/* Precio destacado */}
-            <div id="price-card" className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 p-6 sticky top-24">
+            <div id="price-card" className="bg-white rounded-2xl shadow-md p-6 sticky top-24">
               <div className="mb-6">
                 <p className="text-base text-gray-500 font-medium mb-2">{TEXTS.adDetail.price}</p>
                 <div className="text-4xl sm:text-5xl font-black text-gray-900">
@@ -692,27 +692,33 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
               </div>
 
               {/* Info del vendedor - SIEMPRE VISIBLE */}
-              <div className="mb-6 p-4 rounded-lg bg-gray-100">
+              <div className="mb-6 p-4 rounded-lg bg-gray-50">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <User className="w-4 h-4" />
+                  <User className="w-5 h-5 text-green-600" />
                   {TEXTS.adDetail.seller}
                 </h3>
                 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {/* Mostrar nombre del vendedor si existe, sino mensaje genérico */}
                   {ad.seller?.full_name ? (
-                    <div className="text-base text-gray-700 font-medium">
-                      {ad.seller.full_name}
+                    <div className="text-base text-gray-900 font-semibold">
+                      {(() => {
+                        const names = ad.seller.full_name.split(' ');
+                        if (names.length >= 2) {
+                          return `${names[0]} ${names[names.length - 1].charAt(0)}.`;
+                        }
+                        return ad.seller.full_name;
+                      })()}
                     </div>
                   ) : (
-                    <div className="text-base text-gray-700">
-                      Vendedor registrado
+                    <div className="text-base text-gray-900 font-semibold">
+                      Vendedor Anónimo
                     </div>
                   )}
                   
                   {/* Badge verificado solo si existe seller */}
                   {ad.seller && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center">
                       <VerifiedBadge 
                         verified={ad.seller.email_verified} 
                         size="sm"
@@ -721,10 +727,24 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     </div>
                   )}
 
+                  {/* Fecha de registro del usuario */}
+                  {ad.seller?.created_at && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Calendar className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <span>
+                        Registrado desde {new Date(ad.seller.created_at).toLocaleDateString('es-AR', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                  )}
+
                   {/* Ubicación */}
                   {(ad.province || ad.location) && (
-                    <div className="flex items-start gap-2 text-base text-gray-600 pt-2 border-t border-gray-200">
-                      <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-2 text-sm text-gray-600 pt-2 border-t border-gray-200">
+                      <MapPin className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                       <div>
                         {ad.province && <span className="font-medium">{ad.province}</span>}
                         {ad.province && ad.location && <span className="text-gray-400"> • </span>}
@@ -735,8 +755,8 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
 
                   {/* Fecha de publicación */}
                   {ad.created_at && (
-                    <div className="flex items-center gap-2 text-base text-gray-600">
-                      <Calendar className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Calendar className="w-4 h-4 text-green-600 flex-shrink-0" />
                       <span>
                         Publicado el {new Date(ad.created_at).toLocaleDateString('es-AR', {
                           year: 'numeric',
@@ -983,9 +1003,10 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
           ) : sellerOtherAds.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {sellerOtherAds.map((otherAd) => (
-                <UnifiedAdCard 
+                <ProductCard 
                   key={otherAd.id} 
                   product={otherAd}
+                  variant="compact"
                   onViewDetail={(adId) => {
                     window.location.hash = `#/ad/${adId}`;
                   }}

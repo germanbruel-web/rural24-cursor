@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
 import { notify } from '../../utils/notifications';
+import { Button } from '../atoms/Button';
+import { FormField } from '../molecules/FormField';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -73,69 +75,62 @@ export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSw
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            Email
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-              placeholder="tu@email.com"
-            />
-          </div>
-        </div>
+        <FormField
+          label="Email"
+          name="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          placeholder="tu@email.com"
+          leftIcon={<Mail size={18} />}
+        />
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-            Contraseña
-          </label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-              placeholder="••••••••"
-            />
-          </div>
-        </div>
+        <FormField
+          label="Contraseña"
+          name="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          placeholder="••••••••"
+          leftIcon={<Lock size={18} />}
+        />
 
-        <button
+        <Button
           type="button"
+          variant="link"
+          size="sm"
           onClick={onSwitchToReset}
-          className="text-sm text-[#16a135] hover:underline"
+          className="-mt-2"
         >
           ¿Olvidaste tu contraseña?
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="submit"
-          disabled={loading}
-          className="w-full py-3 bg-[#16a135] text-white rounded-lg font-medium hover:bg-[#1b2f23] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="primary"
+          size="lg"
+          loading={loading}
+          className="w-full"
+          leftIcon={<LogIn size={18} />}
         >
           {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-        </button>
+        </Button>
       </form>
 
       <div className="mt-6 text-center">
-        <p className="text-gray-600">
-          ¿No tienes cuenta?{' '}
-          <button
-            onClick={onSwitchToRegister}
-            className="text-[#16a135] font-medium hover:underline"
-          >
-            Regístrate aquí
-          </button>
+        <p className="text-gray-600 text-sm mb-3">
+          ¿No tienes cuenta?
         </p>
+        <Button
+          variant="outline"
+          size="md"
+          onClick={onSwitchToRegister}
+          className="w-full"
+        >
+          Regístrate aquí
+        </Button>
       </div>
     </div>
   );

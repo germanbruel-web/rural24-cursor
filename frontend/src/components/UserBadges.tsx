@@ -1,4 +1,5 @@
 import React from 'react';
+import { CheckBadgeIcon } from '@heroicons/react/24/solid';
 
 interface VerifiedBadgeProps {
   verified: boolean;
@@ -12,55 +13,31 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
   showLabel = true,
 }) => {
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5',
-    md: 'text-sm px-2.5 py-1',
-    lg: 'text-base px-3 py-1.5',
+    sm: 'text-xs gap-1',
+    md: 'text-sm gap-1.5',
+    lg: 'text-base gap-2',
   };
 
   const iconSizes = {
-    sm: 'w-3 h-3',
-    md: 'w-4 h-4',
-    lg: 'w-5 h-5',
+    sm: 'w-4 h-4',
+    md: 'w-5 h-5',
+    lg: 'w-6 h-6',
   };
 
   if (verified) {
     return (
-      <span
-        className={`inline-flex items-center gap-1 ${sizeClasses[size]} bg-green-100 text-green-800 rounded-full font-medium`}
-      >
-        <svg
-          className={iconSizes[size]}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path
-            fillRule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-            clipRule="evenodd"
-          />
-        </svg>
-        {showLabel && <span>Usuario Verificado</span>}
-      </span>
+      <div className={`inline-flex items-center ${sizeClasses[size]}`}>
+        <CheckBadgeIcon className={`${iconSizes[size]} text-green-600`} />
+        {showLabel && <span className="text-gray-700 font-medium">Usuario Verificado</span>}
+      </div>
     );
   }
 
   return (
-    <span
-      className={`inline-flex items-center gap-1 ${sizeClasses[size]} bg-gray-100 text-gray-600 rounded-full font-medium`}
-    >
-      <svg
-        className={iconSizes[size]}
-        fill="currentColor"
-        viewBox="0 0 20 20"
-      >
-        <path
-          fillRule="evenodd"
-          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-          clipRule="evenodd"
-        />
-      </svg>
-      {showLabel && <span>Usuario No Verificado</span>}
-    </span>
+    <div className={`inline-flex items-center ${sizeClasses[size]}`}>
+      <CheckBadgeIcon className={`${iconSizes[size]} text-gray-400`} />
+      {showLabel && <span className="text-gray-500">Usuario No Verificado</span>}
+    </div>
   );
 };
 

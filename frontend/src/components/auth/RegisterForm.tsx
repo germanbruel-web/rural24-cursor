@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { UserPlus, Mail, Lock, User, AlertCircle, Phone, Building2, FileText } from 'lucide-react';
 import { registerPersona, registerEmpresa, formatCUIT, type RegisterPersonaInput, type RegisterEmpresaInput } from '../../services/authService';
+import { Button } from '../atoms/Button';
+import FormField from '../molecules/FormField';
 
 interface RegisterFormProps {
   onSuccess?: () => void;
@@ -183,15 +185,17 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
               <span className="text-xs">Una cuenta verificada demuestra más confianza frente al mercado de agronegocios y te permite acceder a todas las funcionalidades de la plataforma.</span>
             </p>
           </div>
-          <button
+          <Button
             onClick={() => {
               onClose?.();
               onSwitchToLogin?.();
             }}
-            className="w-full bg-[#16a135] hover:bg-[#0e7d28] text-white py-3 rounded-lg transition-colors font-semibold"
+            variant="primary"
+            size="lg"
+            fullWidth
           >
             Ir a Iniciar Sesión
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -333,218 +337,150 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Nombre y Apellido */}
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Nombre *
-            </label>
-            <div className="relative">
-              <User className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                id="firstName"
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                required
-                className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                placeholder="Juan"
-              />
-            </div>
-          </div>
-          <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Apellido *
-            </label>
-            <div className="relative">
-              <User className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                id="lastName"
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                required
-                className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                placeholder="Pérez"
-              />
-            </div>
-          </div>
+          <FormField
+            label="Nombre"
+            name="firstName"
+            type="text"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            leftIcon={<User size={18} />}
+            placeholder="Juan"
+            required
+          />
+          <FormField
+            label="Apellido"
+            name="lastName"
+            type="text"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            leftIcon={<User size={18} />}
+            placeholder="Pérez"
+            required
+          />
         </div>
 
         {/* 🏢 CAMPOS EMPRESA */}
         {accountType === 'empresa' && (
           <>
-            <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Nombre de la Empresa *
-              </label>
-              <div className="relative">
-                <Building2 className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  id="companyName"
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                  placeholder="Ej: Agropecuaria San José S.A."
-                />
-              </div>
-            </div>
+            <FormField
+              label="Nombre de la Empresa"
+              name="companyName"
+              type="text"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              leftIcon={<Building2 size={18} />}
+              placeholder="Ej: Agropecuaria San José S.A."
+              required
+            />
 
-            <div>
-              <label htmlFor="cuit" className="block text-sm font-medium text-gray-700 mb-1.5">
-                CUIT *
-              </label>
-              <div className="relative">
-                <FileText className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  id="cuit"
-                  type="text"
-                  value={cuit.length === 11 ? formatCUIT(cuit) : cuit}
-                  onChange={(e) => handleCuitChange(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                  placeholder="20-12345678-9"
-                  maxLength={13}
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Formato: XX-XXXXXXXX-X (11 dígitos)</p>
-            </div>
+            <FormField
+              label="CUIT"
+              name="cuit"
+              type="text"
+              value={cuit.length === 11 ? formatCUIT(cuit) : cuit}
+              onChange={(e) => handleCuitChange(e.target.value)}
+              leftIcon={<FileText size={18} />}
+              placeholder="20-12345678-9"
+              helperText="Formato: XX-XXXXXXXX-X (11 dígitos)"
+              maxLength={13}
+              required
+            />
 
-            <div>
-              <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Sitio Web (opcional)
-              </label>
-              <div className="relative">
-                <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                </svg>
-                <input
-                  id="website"
-                  type="url"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                  placeholder="https://www.ejemplo.com"
-                />
-              </div>
-            </div>
+            <FormField
+              label="Sitio Web"
+              name="website"
+              type="url"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              leftIcon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>}
+              placeholder="https://www.ejemplo.com"
+              helperText="Opcional"
+            />
           </>
         )}
 
         {/* Email */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-            Email *
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-              placeholder="tu@email.com"
-            />
-          </div>
-        </div>
+        <FormField
+          label="Email"
+          name="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          leftIcon={<Mail size={18} />}
+          placeholder="tu@email.com"
+          required
+        />
 
         {/* Teléfonos */}
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="mobile" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Celular
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                id="mobile"
-                type="tel"
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
-                className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                placeholder="+54 9 11 1234-5678"
-              />
-            </div>
-          </div>
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Teléfono Fijo
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                id="phone"
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                placeholder="011 1234-5678"
-              />
-            </div>
-          </div>
+          <FormField
+            label="Celular"
+            name="mobile"
+            type="tel"
+            value={mobile}
+            onChange={(e) => setMobile(e.target.value)}
+            leftIcon={<Phone size={18} />}
+            placeholder="+54 9 11 1234-5678"
+          />
+          <FormField
+            label="Teléfono Fijo"
+            name="phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            leftIcon={<Phone size={18} />}
+            placeholder="011 1234-5678"
+          />
         </div>
 
         {/* Contraseña */}
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
-            Contraseña *
-          </label>
-          <div className="relative">
-            <Lock className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-              placeholder="••••••••"
-            />
-          </div>
-          <p className="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
-        </div>
+        <FormField
+          label="Contraseña"
+          name="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          leftIcon={<Lock size={18} />}
+          placeholder="••••••••"
+          helperText="Mínimo 6 caracteres"
+          minLength={6}
+          required
+        />
 
         {/* Confirmar Contraseña */}
-        <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
-            Confirmar Contraseña *
-          </label>
-          <div className="relative">
-            <Lock className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-              placeholder="••••••••"
-            />
-          </div>
-        </div>
+        <FormField
+          label="Confirmar Contraseña"
+          name="confirmPassword"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          leftIcon={<Lock size={18} />}
+          placeholder="••••••••"
+          required
+        />
 
         {/* Botón de envío */}
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          size="lg"
+          fullWidth
           disabled={loading}
-          className="w-full py-3 bg-[#16a135] text-white text-base rounded-lg font-semibold hover:bg-[#0e7d28] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+          loading={loading}
         >
-          {loading ? 'Creando cuenta...' : 'CREAR CUENTA'}
-        </button>
+          CREAR CUENTA
+        </Button>
       </form>
 
       <div className="mt-6 text-center">
         <p className="text-gray-600">
           ¿Ya tienes cuenta?{' '}
-          <button
+          <Button
             onClick={onSwitchToLogin}
-            className="text-[#16a135] font-medium hover:underline"
+            variant="link"
           >
             Inicia sesión aquí
-          </button>
+          </Button>
         </p>
       </div>
     </div>

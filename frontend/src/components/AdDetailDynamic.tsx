@@ -134,7 +134,7 @@ export const AdDetailDynamic: React.FC<AdDetailDynamicProps> = ({ attributes, sc
           </div>
         )}
         <div className="flex flex-col gap-2">
-          <span className="text-sm font-bold text-gray-600 uppercase tracking-wide">
+          <span className="text-gray-600">
             {attr.name}
           </span>
           <span className={`text-lg font-bold ${isFeatured ? 'text-green-900' : 'text-gray-900'}`}>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Product, Ad } from '../../../types';
-import { UnifiedAdCard } from '../UnifiedAdCard';
+import { ProductCard } from '../organisms/ProductCard';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { SUBCATEGORIES } from '../../constants/categories';
 
@@ -444,9 +444,10 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
           {/* Grid de 4 columnas con cards mejorados */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
             {visibleProducts.map((product) => (
-              <UnifiedAdCard
+              <ProductCard
                 key={product.id}
                 product={product}
+                variant="featured"
                 onViewDetail={onViewDetail}
               />
             ))}

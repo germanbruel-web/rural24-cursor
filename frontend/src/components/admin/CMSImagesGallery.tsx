@@ -10,6 +10,7 @@ import { Trash2, RefreshCw, Loader, AlertCircle, Image as ImageIcon } from 'luci
 import { listCMSImages, deleteCMSImage } from '../../services/siteSettingsService';
 import { useToastHelpers } from '../../contexts/ToastContext';
 import { formatFileSize } from '../../utils/fileValidation';
+import { DEFAULT_PLACEHOLDER_IMAGE } from '../../constants/defaultImages';
 
 interface CMSImage {
   name: string;
@@ -129,7 +130,7 @@ export const CMSImagesGallery: React.FC = () => {
                   alt={image.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.currentTarget.src = '/images/preview-image.webp';
+                    e.currentTarget.src = DEFAULT_PLACEHOLDER_IMAGE;
                   }}
                 />
                 

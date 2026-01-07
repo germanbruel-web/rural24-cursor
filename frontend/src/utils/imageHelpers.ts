@@ -6,6 +6,8 @@
 // - ad_images (tabla relacional)
 // - Objetos {url, sort_order}
 
+import { DEFAULT_PLACEHOLDER_IMAGE, LOCAL_PLACEHOLDER_IMAGE } from '../constants/defaultImages';
+
 export interface NormalizedImage {
   url: string;
   sort_order: number;
@@ -61,7 +63,7 @@ export function normalizeImages(images: any): NormalizedImage[] {
  */
 export function getFirstImage(images: any): string {
   const normalized = normalizeImages(images);
-  return normalized[0]?.url || '/images/preview-image.webp';
+  return normalized[0]?.url || DEFAULT_PLACEHOLDER_IMAGE;
 }
 
 /**
@@ -77,7 +79,11 @@ export function getImageUrls(images: any): string[] {
 export function isValidImageUrl(url: any): boolean {
   if (typeof url !== 'string') return false;
   if (url.length === 0) return false;
-  if (url === '/images/preview-image.webp') return false;
+  
+  // No validar placeholders como URLs inválidas
+  if (url === DEFAULT_PLACEHOLDER_IMAGE || url === LOCAL_PLACEHOLDER_IMAGE) {
+    return true;
+  }
   
   // Validar que sea una URL válida
   try {

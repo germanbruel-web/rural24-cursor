@@ -2,6 +2,7 @@
 import { supabase } from './supabaseClient';
 import type { Ad, CreateAdInput, UpdateAdInput } from '../../types';
 import type { Product } from '../../types';
+import { DEFAULT_PLACEHOLDER_IMAGE } from '../constants/defaultImages';
 
 /**
  * Transformar Ad (de Supabase) a Product (para UI)
@@ -9,16 +10,35 @@ import type { Product } from '../../types';
  */
 export function transformAdToProduct(ad: Ad): Product {
   // Extraer primera imagen desde múltiples posibles campos
-  let imageUrl = '/images/preview-image.webp'; // Fallback
+  let imageUrl = DEFAULT_PLACEHOLDER_IMAGE; // Fallback Cloudinary
   let imageUrls: string[] = [];
 
   // Prioridad: images > image_urls > imageUrl directo
   if (ad.images && ad.images.length > 0) {
-    imageUrls = ad.images.filter(Boolean); // Filtrar nulls
+    // Si images es array de objetos {url, path}, extraer URLs
+    imageUrls = ad.images
+      .map(img => {
+        if (typeof img === 'string') return img;
+        if (typeof img === 'object' && img && 'url' in img) return (img as any).url;
+        return null;
+      })
+      .filter(Boolean) as string[];
     imageUrl = imageUrls[0] || imageUrl;
   } else if (ad.image_urls && ad.image_urls.length > 0) {
     imageUrls = ad.image_urls.filter(Boolean);
     imageUrl = imageUrls[0] || imageUrl;
+  }
+
+  // Extraer nombre de categoría si es objeto con name
+  let categoryName = ad.category || 'Sin categoría';
+  if (typeof ad.category === 'object' && ad.category !== null && 'name' in ad.category) {
+    categoryName = (ad.category as any).name;
+  }
+  
+  // Extraer nombre de subcategoría si es objeto con name
+  let subcategoryName = ad.subcategory;
+  if (typeof ad.subcategory === 'object' && ad.subcategory !== null && 'name' in ad.subcategory) {
+    subcategoryName = (ad.subcategory as any).name;
   }
 
   return {
@@ -32,8 +52,8 @@ export function transformAdToProduct(ad: Ad): Product {
     imageUrl, // Primera imagen
     imageUrls, // Array completo para galería
     sourceUrl: `/ad/${ad.id}`,
-    category: ad.category || 'Sin categoría',
-    subcategory: ad.subcategory,
+    category: categoryName,
+    subcategory: subcategoryName,
     isSponsored: false,
     isPremium: ad.featured || false,
     featured: ad.featured || false,

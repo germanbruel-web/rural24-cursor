@@ -10,9 +10,10 @@ import { MapPin, Phone, Mail, Twitter, Facebook, Instagram, Youtube, MessageCirc
 import { useFooterConfig, useFooterCategories } from '../hooks/useFooterConfig';
 import { useSiteSetting } from '../hooks/useSiteSetting';
 import type { ContactItem, FooterLinkItem, SocialLinkItem } from '../types/footer';
+import { Button } from './atoms/Button';
 
 interface FooterProps {
-  onCategoryClick: (category: string) => void;
+  onCategoryClick?: (category: string) => void;
 }
 
 // Mapeo de íconos
@@ -118,12 +119,17 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
               {column2.items.sort((a, b) => a.order - b.order).map(link => (
                 <li key={link.id}>
                   <a 
-                    href={link.url} 
-                    className="hover:text-white transition-colors"
+                    href={link.url}
                     target={link.openNewTab ? '_blank' : undefined}
                     rel={link.openNewTab ? 'noopener noreferrer' : undefined}
+                    className="inline-block"
                   >
-                    {link.label}
+                    <Button
+                      variant="link"
+                      className="text-gray-300 hover:text-white p-0 h-auto"
+                    >
+                      {link.label}
+                    </Button>
                   </a>
                 </li>
               ))}
@@ -138,12 +144,13 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
                 // Categorías dinámicas desde BD
                 categoriesToShow.map(cat => (
                   <li key={cat.id}>
-                    <button 
+                    <Button
                       onClick={() => onCategoryClick(cat.name)}
-                      className="hover:text-white transition-colors text-left"
+                      variant="link"
+                      className="text-gray-300 hover:text-white p-0 h-auto"
                     >
                       {cat.display_name || cat.name}
-                    </button>
+                    </Button>
                   </li>
                 ))
               ) : (
@@ -152,11 +159,16 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
                   <li key={link.id}>
                     <a 
                       href={link.url}
-                      className="hover:text-white transition-colors"
                       target={link.openNewTab ? '_blank' : undefined}
                       rel={link.openNewTab ? 'noopener noreferrer' : undefined}
+                      className="inline-block"
                     >
-                      {link.label}
+                      <Button
+                        variant="link"
+                        className="text-gray-300 hover:text-white p-0 h-auto"
+                      >
+                        {link.label}
+                      </Button>
                     </a>
                   </li>
                 ))
@@ -174,11 +186,16 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
                 <li key={link.id}>
                   <a 
                     href={link.url}
-                    className="hover:text-white transition-colors"
                     target={link.openNewTab ? '_blank' : undefined}
                     rel={link.openNewTab ? 'noopener noreferrer' : undefined}
+                    className="inline-block"
                   >
-                    {link.label}
+                    <Button
+                      variant="link"
+                      className="text-gray-300 hover:text-white p-0 h-auto"
+                    >
+                      {link.label}
+                    </Button>
                   </a>
                 </li>
               ))}

@@ -6,6 +6,7 @@ import AuthModal from './auth/AuthModal';
 import { LogOut, User, Home, Search, Package, Clock, Users, ImageIcon, Trash2, MessageSquare, Settings, Star } from 'lucide-react';
 import { canAccessPage } from '../utils/rolePermissions';
 import { supabase } from '../services/supabaseClient';
+import { Button } from './atoms/Button';
 
 interface HeaderProps {
   onNavigate: (page: 'home' | 'my-ads' | 'banners' | 'inbox' | 'profile' | 'subscription' | 'users' | 'how-it-works' | 'publicar-v3' | 'ad-finder' | 'deleted-ads' | 'test-form' | 'categories-admin' | 'pricing') => void;
@@ -89,33 +90,30 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           </button>
           
           {/* Menu Links */}
-          <nav className="hidden md:flex flex-1 items-center justify-end gap-4 ml-8">
-            <button
+          <nav className="hidden md:flex flex-1 items-center justify-end gap-2 ml-8">
+            <Button
+              variant="ghost"
               onClick={() => onNavigate('how-it-works')}
-              className="text-gray-700 hover:text-[#16a135] px-4 py-2 font-medium transition-colors"
-              style={{ fontFamily: 'Lato, sans-serif' }}
             >
               ¿Cómo funciona?
-            </button>
+            </Button>
             
-            <button
+            <Button
+              variant="ghost"
               onClick={() => onNavigate('pricing')}
-              className="text-gray-700 hover:text-[#16a135] px-4 py-2 font-medium transition-colors"
-              style={{ fontFamily: 'Lato, sans-serif' }}
             >
               Ver Planes
-            </button>
+            </Button>
             
             {/* Botón Publicar Aviso Gratis */}
-            <button
+            <Button
+              variant="primary"
+              size="lg"
               onClick={() => onNavigate('publicar-v3')}
-              className="bg-[#16a135] hover:bg-[#138a2c] text-white px-6 py-2.5 font-semibold transition-all shadow-sm hover:shadow-md flex items-center gap-2"
-              style={{ fontFamily: 'Lato, sans-serif', borderRadius: '50px' }}
+              leftIcon={<Package size={16} />}
             >
-              <Package className="w-4 h-4" />
               Publicar Aviso Gratis
-            </button>
-            
+            </Button>
           </nav>
 
           <div className="hidden md:block">
@@ -151,13 +149,18 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                   {showUserMenu && (
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                       {/* Dashboard - Todos los usuarios */}
-                      <button 
-                        onClick={() => { onNavigate('my-ads'); setShowUserMenu(false); }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                      >
-                        <Home className="w-4 h-4" />
-                        Dashboard
-                      </button>
+                      <div className="px-2">
+                        <Button
+                          onClick={() => { onNavigate('my-ads'); setShowUserMenu(false); }}
+                          variant="ghost"
+                          size="sm"
+                          fullWidth
+                          leftIcon={<Home size={16} />}
+                          className="justify-start"
+                        >
+                          Dashboard
+                        </Button>
+                      </div>
 
                       {/* GRUPO 1: AVISOS */}
                       {canAccessPage('deleted-ads', profile?.role) && (
@@ -170,22 +173,32 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                       )}
                       
                       {/* Mis Avisos - Todos los usuarios */}
-                      <button 
-                        onClick={() => { onNavigate('my-ads'); setShowUserMenu(false); }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                      >
-                        <Package className="w-4 h-4" />
-                        Mis Avisos
-                      </button>
+                      <div className="px-2">
+                        <Button
+                          onClick={() => { onNavigate('my-ads'); setShowUserMenu(false); }}
+                          variant="ghost"
+                          size="sm"
+                          fullWidth
+                          leftIcon={<Package size={16} />}
+                          className="justify-start"
+                        >
+                          Mis Avisos
+                        </Button>
+                      </div>
                       
                       {canAccessPage('deleted-ads', profile?.role) && (
-                        <button 
-                          onClick={() => { onNavigate('deleted-ads'); setShowUserMenu(false); }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                        >
-                          <Clock className="w-4 h-4" />
-                          Avisos Eliminados
-                        </button>
+                        <div className="px-2">
+                          <Button
+                            onClick={() => { onNavigate('deleted-ads'); setShowUserMenu(false); }}
+                            variant="ghost"
+                            size="sm"
+                            fullWidth
+                            leftIcon={<Clock size={16} />}
+                            className="justify-start"
+                          >
+                            Avisos Eliminados
+                          </Button>
+                        </div>
                       )}
 
                       {/* GRUPO 2: MENSAJES */}
@@ -196,13 +209,18 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                       
                       {/* Inbox - Todos los usuarios */}
                       {canAccessPage('inbox', profile?.role) && (
-                        <button 
-                          onClick={() => { onNavigate('inbox'); setShowUserMenu(false); }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                        >
-                          <MessageSquare className="w-4 h-4" />
-                          Mensajes <span className="text-xs text-gray-400">(en construcción)</span>
-                        </button>
+                        <div className="px-2">
+                          <Button
+                            onClick={() => { onNavigate('inbox'); setShowUserMenu(false); }}
+                            variant="ghost"
+                            size="sm"
+                            fullWidth
+                            leftIcon={<MessageSquare size={16} />}
+                            className="justify-start"
+                          >
+                            Mensajes <span className="text-xs text-gray-400 ml-1">(en construcción)</span>
+                          </Button>
+                        </div>
                       )}
 
                       {/* GRUPO 3: USUARIOS */}
@@ -212,13 +230,18 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                           <div className="px-4 py-1 text-xs font-semibold text-gray-500 uppercase">
                             Usuarios
                           </div>
-                          <button 
-                            onClick={() => { onNavigate('users'); setShowUserMenu(false); }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                          >
-                            <Users className="w-4 h-4" />
-                            Usuarios
-                          </button>
+                          <div className="px-2">
+                            <Button
+                              onClick={() => { onNavigate('users'); setShowUserMenu(false); }}
+                              variant="ghost"
+                              size="sm"
+                              fullWidth
+                              leftIcon={<Users size={16} />}
+                              className="justify-start"
+                            >
+                              Usuarios
+                            </Button>
+                          </div>
                         </>
                       )}
 
@@ -233,75 +256,110 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                       )}
 
                       {canAccessPage('ad-finder', profile?.role) && (
-                        <button 
-                          onClick={() => { onNavigate('ad-finder'); setShowUserMenu(false); }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                        >
-                          <Search className="w-4 h-4" />
-                          Buscador de Avisos
-                        </button>
+                        <div className="px-2">
+                          <Button
+                            onClick={() => { onNavigate('ad-finder'); setShowUserMenu(false); }}
+                            variant="ghost"
+                            size="sm"
+                            fullWidth
+                            leftIcon={<Search size={16} />}
+                            className="justify-start"
+                          >
+                            Buscador de Avisos
+                          </Button>
+                        </div>
                       )}
                       
                       {canAccessPage('banners', profile?.role) && (
-                        <button 
-                          onClick={() => { onNavigate('banners'); setShowUserMenu(false); }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                        >
-                          <ImageIcon className="w-4 h-4" />
-                          Banners
-                        </button>
+                        <div className="px-2">
+                          <Button
+                            onClick={() => { onNavigate('banners'); setShowUserMenu(false); }}
+                            variant="ghost"
+                            size="sm"
+                            fullWidth
+                            leftIcon={<ImageIcon size={16} />}
+                            className="justify-start"
+                          >
+                            Banners
+                          </Button>
+                        </div>
                       )}
                       
                       {canAccessPage('featured-ads', profile?.role) && (
-                        <button 
-                          onClick={() => { onNavigate('featured-ads'); setShowUserMenu(false); }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                        >
-                          <Star className="w-4 h-4" />
-                          Avisos Destacados
-                        </button>
+                        <div className="px-2">
+                          <Button
+                            onClick={() => { onNavigate('featured-ads'); setShowUserMenu(false); }}
+                            variant="ghost"
+                            size="sm"
+                            fullWidth
+                            leftIcon={<Star size={16} />}
+                            className="justify-start"
+                          >
+                            Avisos Destacados
+                          </Button>
+                        </div>
                       )}
                       
                       {canAccessPage('categories-admin', profile?.role) && (
-                        <button 
-                          onClick={() => { onNavigate('categories-admin'); setShowUserMenu(false); }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                        >
-                          <Settings className="w-4 h-4" />
-                          Categorías
-                        </button>
+                        <div className="px-2">
+                          <Button
+                            onClick={() => { onNavigate('categories-admin'); setShowUserMenu(false); }}
+                            variant="ghost"
+                            size="sm"
+                            fullWidth
+                            leftIcon={<Settings size={16} />}
+                            className="justify-start"
+                          >
+                            Categorías
+                          </Button>
+                        </div>
                       )}
                       
                       {canAccessPage('attributes-admin', profile?.role) && (
-                        <button 
-                          onClick={() => { onNavigate('attributes-admin'); setShowUserMenu(false); }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                        >
-                          <Settings className="w-4 h-4" />
-                          Atributos Dinámicos
-                        </button>
+                        <div className="px-2">
+                          <Button
+                            onClick={() => { onNavigate('attributes-admin'); setShowUserMenu(false); }}
+                            variant="ghost"
+                            size="sm"
+                            fullWidth
+                            leftIcon={<Settings size={16} />}
+                            className="justify-start"
+                          >
+                            Atributos Dinámicos
+                          </Button>
+                        </div>
                       )}
                       
                       <hr className="my-2 border-gray-200" />
                       
                       {/* Mi Perfil - Todos los usuarios */}
-                      <button 
-                        onClick={() => { onNavigate('profile'); setShowUserMenu(false); }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                      >
-                        <User className="w-4 h-4" />
-                        Mi Perfil
-                      </button>
+                      <div className="px-2">
+                        <Button
+                          onClick={() => { onNavigate('profile'); setShowUserMenu(false); }}
+                          variant="ghost"
+                          size="sm"
+                          fullWidth
+                          leftIcon={<User size={16} />}
+                          className="justify-start"
+                        >
+                          Mi Perfil
+                        </Button>
+                      </div>
                       
                       {/* Salir - Todos los usuarios */}
-                      <button 
-                        onClick={handleLogout}
-                        disabled={isLoggingOut}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        {isLoggingOut ? 'Cerrando sesión...' : 'Salir'}
-                      </button>
+                      <div className="px-2">
+                        <Button
+                          onClick={handleLogout}
+                          disabled={isLoggingOut}
+                          variant="ghost"
+                          size="sm"
+                          fullWidth
+                          leftIcon={<LogOut size={16} />}
+                          className="justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          {isLoggingOut ? 'Cerrando sesión...' : 'Salir'}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -309,12 +367,14 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
 
               {/* Botón para mostrar login/registro cuando no hay usuario Y NO está en modo dev */}
               {!user && !isDevMode && (
-                <button
+                <Button
                   onClick={() => setShowAuthModal(true)}
-                  className="bg-black text-white px-6 py-2 rounded-xl font-medium hover:bg-gray-800 transition-colors"
+                  variant="primary"
+                  size="lg"
+                  className="bg-black hover:bg-gray-800"
                 >
                   Ingresar
-                </button>
+                </Button>
               )}
             </div>
           </div>

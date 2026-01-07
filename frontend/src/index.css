@@ -2,50 +2,315 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Lato', sans-serif;
-  background-color: #cecece;
-  font-size: 16px;
+/* ====================================================================
+   DESIGN TOKENS - Variables CSS (Light Mode)
+   ==================================================================== */
+:root {
+  /* BRAND COLORS (Verde Agro) */
+  --color-brand-50: 240 253 244;
+  --color-brand-100: 220 252 231;
+  --color-brand-200: 187 247 208;
+  --color-brand-300: 134 239 172;
+  --color-brand-400: 74 222 128;
+  --color-brand-500: 22 161 53;    /* Principal */
+  --color-brand-600: 19 138 44;
+  --color-brand-700: 15 112 35;
+  --color-brand-800: 12 90 28;
+  --color-brand-900: 9 69 21;
+  --color-brand-950: 5 45 13;
+  
+  /* SECONDARY COLORS (Tierra/Amber) */
+  --color-secondary-50: 254 243 199;
+  --color-secondary-100: 253 230 138;
+  --color-secondary-200: 252 211 77;
+  --color-secondary-300: 251 191 36;
+  --color-secondary-400: 245 158 11;
+  --color-secondary-500: 217 119 6;
+  --color-secondary-600: 180 83 9;
+  --color-secondary-700: 146 64 14;
+  --color-secondary-800: 120 53 15;
+  --color-secondary-900: 69 26 3;
+  --color-secondary-950: 45 17 2;
+  
+  /* ACCENT COLORS (Azul) */
+  --color-accent-50: 239 246 255;
+  --color-accent-100: 219 234 254;
+  --color-accent-200: 191 219 254;
+  --color-accent-300: 147 197 253;
+  --color-accent-400: 96 165 250;
+  --color-accent-500: 59 130 246;
+  --color-accent-600: 37 99 235;
+  --color-accent-700: 29 78 216;
+  --color-accent-800: 30 64 175;
+  --color-accent-900: 30 58 138;
+  --color-accent-950: 23 37 84;
+  
+  /* SUCCESS COLORS */
+  --color-success-50: 240 253 244;
+  --color-success-100: 220 252 231;
+  --color-success-500: 22 161 53;
+  --color-success-600: 19 138 44;
+  --color-success-700: 15 112 35;
+  
+  /* WARNING COLORS */
+  --color-warning-50: 254 243 199;
+  --color-warning-100: 253 230 138;
+  --color-warning-500: 245 158 11;
+  --color-warning-600: 217 119 6;
+  --color-warning-700: 180 83 9;
+  
+  /* ERROR COLORS */
+  --color-error-50: 254 242 242;
+  --color-error-100: 254 226 226;
+  --color-error-500: 220 38 38;
+  --color-error-600: 185 28 28;
+  --color-error-700: 153 27 27;
+  
+  /* INFO COLORS */
+  --color-info-50: 239 246 255;
+  --color-info-100: 219 234 254;
+  --color-info-500: 59 130 246;
+  --color-info-600: 37 99 235;
+  --color-info-700: 29 78 216;
+  
+  /* NEUTRAL COLORS (Light Mode) */
+  --color-neutral-50: 249 250 251;
+  --color-neutral-100: 243 244 246;
+  --color-neutral-200: 229 231 235;
+  --color-neutral-300: 209 213 219;
+  --color-neutral-400: 156 163 175;
+  --color-neutral-500: 107 114 128;
+  --color-neutral-600: 75 85 99;
+  --color-neutral-700: 55 65 81;
+  --color-neutral-800: 31 41 55;
+  --color-neutral-900: 17 24 39;
+  --color-neutral-950: 3 7 18;
+  
+  /* BACKGROUND & SURFACE */
+  --bg-primary: 255 255 255;
+  --bg-secondary: 249 250 251;
+  --bg-tertiary: 243 244 246;
+  --surface: 255 255 255;
+  
+  /* TEXT COLORS */
+  --text-primary: 17 24 39;
+  --text-secondary: 75 85 99;
+  --text-tertiary: 156 163 175;
+  --text-inverse: 255 255 255;
+  
+  /* BORDERS */
+  --border-primary: 229 231 235;
+  --border-secondary: 209 213 219;
+  --border-focus: 59 130 246;
 }
 
-h1 {
-  font-family: 'Lato', sans-serif;
-  font-size: 2.5rem; /* 40px */
-  line-height: 1.2;
+/* ====================================================================
+   DARK MODE - Variables CSS Override
+   ==================================================================== */
+.dark {
+  /* NEUTRAL COLORS (Dark Mode - Invertidos) */
+  --color-neutral-50: 3 7 18;
+  --color-neutral-100: 17 24 39;
+  --color-neutral-200: 31 41 55;
+  --color-neutral-300: 55 65 81;
+  --color-neutral-400: 107 114 128;
+  --color-neutral-500: 156 163 175;
+  --color-neutral-600: 209 213 219;
+  --color-neutral-700: 229 231 235;
+  --color-neutral-800: 243 244 246;
+  --color-neutral-900: 249 250 251;
+  --color-neutral-950: 255 255 255;
+  
+  /* BACKGROUND & SURFACE (Dark Mode) */
+  --bg-primary: 17 24 39;
+  --bg-secondary: 31 41 55;
+  --bg-tertiary: 55 65 81;
+  --surface: 31 41 55;
+  
+  /* TEXT COLORS (Dark Mode) */
+  --text-primary: 249 250 251;
+  --text-secondary: 209 213 219;
+  --text-tertiary: 156 163 175;
+  --text-inverse: 17 24 39;
+  
+  /* BORDERS (Dark Mode) */
+  --border-primary: 55 65 81;
+  --border-secondary: 75 85 99;
+  --border-focus: 96 165 250;
 }
 
-h2 {
-  font-family: 'Lato', sans-serif;
-  font-size: 2rem; /* 32px */
-  line-height: 1.3;
+/* ====================================================================
+   BASE STYLES - Configuración global profesional
+   ==================================================================== */
+@layer base {
+  * {
+    @apply border-neutral-200 dark:border-neutral-700;
+  }
+  
+  html {
+    @apply antialiased scroll-smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    @apply font-sans text-base;
+    @apply bg-neutral-50 dark:bg-neutral-900;
+    @apply text-neutral-900 dark:text-neutral-50;
+    @apply transition-colors duration-300;
+  }
+  
+  /* TIPOGRAFÍA PROFESIONAL */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold;
+    @apply text-neutral-900 dark:text-neutral-50;
+  }
+  
+  h1 {
+    @apply text-4xl md:text-5xl leading-tight tracking-tight;
+  }
+  
+  h2 {
+    @apply text-3xl md:text-4xl leading-tight tracking-tight;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl leading-snug;
+  }
+  
+  h4 {
+    @apply text-xl md:text-2xl leading-snug;
+  }
+  
+  h5 {
+    @apply text-lg md:text-xl leading-normal;
+  }
+  
+  h6 {
+    @apply text-base md:text-lg leading-normal;
+  }
+  
+  p {
+    @apply text-base leading-relaxed;
+    @apply text-neutral-700 dark:text-neutral-300;
+  }
+  
+  a {
+    @apply text-brand-600 dark:text-brand-400;
+    @apply hover:text-brand-700 dark:hover:text-brand-300;
+    @apply transition-colors duration-200;
+  }
+  
+  /* FORMULARIOS BASE */
+  input, textarea, select {
+    @apply bg-white dark:bg-neutral-800;
+    @apply text-neutral-900 dark:text-neutral-100;
+    @apply border border-neutral-300 dark:border-neutral-600;
+    @apply focus:ring-2 focus:ring-brand-500 focus:border-transparent;
+    @apply transition-all duration-200;
+  }
+  
+  input::placeholder, textarea::placeholder {
+    @apply text-neutral-400 dark:text-neutral-500;
+  }
+  
+  /* SCROLLBAR PERSONALIZADO */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-neutral-100 dark:bg-neutral-800;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neutral-300 dark:bg-neutral-600 rounded-full;
+    @apply hover:bg-neutral-400 dark:hover:bg-neutral-500;
+  }
 }
 
-h3 {
-  font-family: 'Lato', sans-serif;
-  font-size: 1.5rem; /* 24px */
-  line-height: 1.4;
+/* ====================================================================
+   UTILITY COMPONENTS - Clases reutilizables
+   ==================================================================== */
+@layer components {
+  /* CONTENEDORES */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* CARDS */
+  .card {
+    @apply bg-white dark:bg-neutral-800;
+    @apply border border-neutral-200 dark:border-neutral-700;
+    @apply rounded-xl shadow-sm;
+    @apply transition-all duration-200;
+  }
+  
+  .card-hover {
+    @apply card hover:shadow-md hover:-translate-y-0.5;
+  }
+  
+  /* BOTONES BASE (compatibilidad) */
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-4 py-2 rounded-lg;
+    @apply font-medium transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  /* BADGES */
+  .badge {
+    @apply inline-flex items-center gap-1;
+    @apply px-2.5 py-0.5 rounded-full;
+    @apply text-xs font-medium;
+  }
+  
+  /* INPUTS */
+  .input {
+    @apply w-full px-4 py-2.5 rounded-lg;
+    @apply bg-white dark:bg-neutral-800;
+    @apply border border-neutral-300 dark:border-neutral-600;
+    @apply text-neutral-900 dark:text-neutral-100;
+    @apply placeholder:text-neutral-400 dark:placeholder:text-neutral-500;
+    @apply focus:ring-2 focus:ring-brand-500 focus:border-transparent;
+    @apply transition-all duration-200;
+  }
+  
+  /* GLASS EFFECT */
+  .glass {
+    @apply bg-white/80 dark:bg-neutral-900/80;
+    @apply backdrop-blur-lg backdrop-saturate-150;
+    @apply border border-white/20 dark:border-neutral-700/50;
+  }
 }
 
-p {
-  font-size: 1.125rem; /* 18px */
-  line-height: 1.6;
-}
-
-button {
-  font-family: 'Lato', sans-serif;
-}
-
-/* Utility classes para tipografías */
-.font-lato {
-  font-family: 'Lato', sans-serif;
-}
-
-.font-raleway {
-  font-family: 'Raleway', sans-serif;
-}
-
-.font-roboto {
-  font-family: 'Roboto', sans-serif;
+/* ====================================================================
+   UTILIDADES CUSTOM
+   ==================================================================== */
+@layer utilities {
+  /* TEXT BALANCE */
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* ANIMACIÓN DE GRADIENTE */
+  .gradient-brand {
+    @apply bg-gradient-to-r from-brand-600 to-brand-500;
+  }
+  
+  .gradient-secondary {
+    @apply bg-gradient-to-r from-secondary-600 to-secondary-500;
+  }
+  
+  /* GLOW EFFECTS */
+  .glow-brand {
+    box-shadow: 0 0 20px rgb(var(--color-brand-500) / 0.3);
+  }
+  
+  .glow-accent {
+    box-shadow: 0 0 20px rgb(var(--color-accent-500) / 0.3);
+  }
 }
 
 /* Animación para el formulario multi-step */

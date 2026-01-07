@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { X } from 'lucide-react';
 import type { Product, FilterOptions, SearchFilters } from '../../types';
 import { HeroSearchBarClon } from './HeroSearchBarClon';
-import { UnifiedAdCard } from './UnifiedAdCard';
+import { ProductCard } from './organisms/ProductCard';
 
 interface SearchResultsPageMinimalProps {
   results: Product[];
@@ -385,12 +385,16 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                     Mostrando {startIndex + 1}-{Math.min(endIndex, sortedResults.length)} de {sortedResults.length} resultados
                   </div>
                   
-                  {/* Grid unificado de todos los avisos - sin separación por destacados */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {/* Grid Responsive: Mobile 1, Tablet 2, Desktop 4 - Variante Compact */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     {paginatedResults.map((product) => (
-                      <UnifiedAdCard
+                      <ProductCard
                         key={product.id}
                         product={product}
+                        variant="compact"
+                        showBadges={false}
+                        showLocation={true}
+                        showShareButton={true}
                         onViewDetail={onViewDetail}
                       />
                     ))}

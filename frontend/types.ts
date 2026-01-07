@@ -114,6 +114,7 @@ export interface Ad {
     full_name?: string;
     role: UserRole;
     email_verified: boolean;
+    created_at?: string;
   };
 }
 

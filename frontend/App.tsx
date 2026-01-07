@@ -39,6 +39,9 @@ import AuthModal from "./src/components/auth/AuthModal";
 import PublicarAvisoV3 from "./src/components/pages/PublicarAvisoV3";
 import { TestDynamicForm } from "./src/pages/TestDynamicForm";
 import { PricingPage } from "./src/components/pages/PricingPage";
+import { DesignSystemShowcase } from "./src/components/DesignSystemShowcase";
+import { DesignSystemShowcaseSimple } from "./src/components/DesignSystemShowcaseSimple";
+import { ExampleMigratedPage } from "./src/components/pages/ExampleMigratedPage";
 
 import { useAuth } from "./src/contexts/AuthContext";
 import { CategoryProvider } from "./src/contexts/CategoryContext";
@@ -48,7 +51,7 @@ import { useRealtimeCategories } from "./src/hooks/useRealtimeCategories";
 import { OfflineBanner } from "./src/hooks/useOnlineStatus";
 import { ToastProvider } from "./src/contexts/ToastContext";import { Footer } from "./src/components/Footer";import { useSiteSetting } from "./src/hooks/useSiteSetting";
 
-type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'backend-settings' | 'pricing';
+type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'backend-settings' | 'pricing' | 'design-showcase' | 'example-migration';
 
 /**
  * Componente principal de AgroBuscador
@@ -72,6 +75,8 @@ const AppContent: React.FC = () => {
     
     if (hash.startsWith('#/auth/confirm')) return 'email-confirm';
     if (hash === '#/how-it-works') return 'how-it-works';
+    if (hash === '#/design-showcase') return 'design-showcase';
+    if (hash === '#/example-migration') return 'example-migration';
     if (hash === '#/pricing' || hash === '#/planes') return 'pricing';
     if (hash === '#/test-form') return 'test-form';
     if (hash === '#/publicar' || hash === '#/publicar-v3' || hash.startsWith('#/publicar-v3?') || hash.startsWith('#/publicar?')) return 'publicar-v3';
@@ -466,6 +471,36 @@ const AppContent: React.FC = () => {
   // Página de confirmación de email
   if (currentPage === 'email-confirm') {
     return <EmailConfirmationPage />;
+  }
+
+  // Página de Design System Showcase
+  if (currentPage === 'design-showcase') {
+    return (
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        <Header onNavigate={(page) => {
+          navigateToPage(page);
+          if (page === 'home') {
+            handleBackToHome();
+          }
+        }} />
+        <DesignSystemShowcaseSimple />
+        <Footer />
+      </div>
+    );
+  }
+
+  // Página de Ejemplo de Migración
+  if (currentPage === 'example-migration') {
+    return (
+      <ExampleMigratedPage 
+        onNavigate={(page) => {
+          navigateToPage(page);
+          if (page === 'home') {
+            handleBackToHome();
+          }
+        }} 
+      />
+    );
   }
 
   // Página de Planes/Pricing

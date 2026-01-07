@@ -18,10 +18,14 @@ import {
   Save, 
   Loader,
   RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  X,
   FileImage,
   CheckCircle2,
   AlertTriangle
 } from 'lucide-react';
+import { DEFAULT_PLACEHOLDER_IMAGE } from '../../constants/defaultImages';
 import {
   getAllSettings,
   updateSetting,
@@ -312,7 +316,7 @@ export const BackendSettings: React.FC = () => {
                 alt={setting.description || ''} 
                 className="h-32 w-auto object-contain bg-gray-50 rounded-lg p-3 border border-gray-200 group-hover:border-purple-300 transition-colors"
                 onError={(e) => {
-                  e.currentTarget.src = '/images/preview-image.webp';
+                  e.currentTarget.src = DEFAULT_PLACEHOLDER_IMAGE;
                 }}
               />
               {previewUrl && (

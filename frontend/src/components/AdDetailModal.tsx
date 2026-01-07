@@ -99,7 +99,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
   };
 
   const images = ad?.images || [];
-  const currentImage = images[currentImageIndex] || '/images/preview-image.webp';
+  const currentImage = images[currentImageIndex] || DEFAULT_PLACEHOLDER_IMAGE;
 
   return (
     <>
@@ -132,7 +132,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = '/images/preview-image.webp';
+                      target.src = DEFAULT_PLACEHOLDER_IMAGE;
                     }}
                   />
                   

@@ -6,7 +6,8 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { getFeaturedAdsByCategories, type FeaturedAdsByCategory } from '../../services/featuredAdsService';
-import { UnifiedAdCard } from '../UnifiedAdCard';
+import { ProductCard } from '../organisms/ProductCard';
+import { Button } from '../atoms/Button';
 
 interface Props {
   onAdClick?: (adId: string) => void;
@@ -118,46 +119,35 @@ export const FeaturedAdsSection: React.FC<Props> = ({
                   {catData.category_name}
                 </h3>
                 
-                <button 
+                <Button 
+                  variant="link"
                   onClick={() => onCategoryClick?.(catData.category_slug)}
-                  className="text-green-600 hover:text-green-700 font-semibold flex items-center gap-2 transition-colors"
+                  rightIcon={<ArrowRight className="w-5 h-5" />}
+                  className="text-green-600 hover:text-green-700 font-semibold"
                 >
                   Ver todos
-                  <ArrowRight className="w-5 h-5" />
-                </button>
+                </Button>
               </div>
             )}
 
-            {/* Grid de 4 columnas - 8 avisos */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {catData.ads.map((ad) => {
-                // Extraer imagen real (puede ser string o {url, sort_order})
-                let imageUrl = '';
-                if (ad.images?.length > 0) {
-                  const first = ad.images[0];
-                  imageUrl = typeof first === 'string' ? first : (first as any)?.url || '';
-                  console.log('🖼️ Image from ad.images:', { adId: ad.id, type: typeof first, imageUrl });
-                } else if (ad.image_urls?.length > 0) {
-                  const first = ad.image_urls[0];
-                  imageUrl = typeof first === 'string' ? first : (first as any)?.url || '';
-                  console.log('🖼️ Image from ad.image_urls:', { adId: ad.id, type: typeof first, imageUrl });
-                } else {
-                  console.warn('⚠️ No images found for ad:', { adId: ad.id, title: ad.title });
-                }
-                
-                return (
-                  <UnifiedAdCard 
-                    key={ad.id} 
-                    product={{
-                      ...ad,
-                      imageUrl,
-                      sourceUrl: '',
-                      isSponsored: false,
-                    }}
-                    onViewDetail={() => onAdClick?.(ad.id)}
-                  />
-                );
-              })}
+            {/* Grid Responsive: Mobile 1, Tablet 2, Desktop 4 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+              {catData.ads.map((ad) => (
+                <ProductCard
+                  key={ad.id}
+                  product={{
+                    ...ad,
+                    imageUrl: ad.images?.[0] || ad.image_urls?.[0] || '',
+                    sourceUrl: '',
+                    isSponsored: ad.is_premium || false,
+                  }}
+                  variant="featured"
+                  showBadges={true}
+                  showLocation={true}
+                  showShareButton={true}
+                  onViewDetail={() => onAdClick?.(ad.id)}
+                />
+              ))}
             </div>
 
             {/* Footer: Links a Subcategorías */}
@@ -168,13 +158,14 @@ export const FeaturedAdsSection: React.FC<Props> = ({
                 </h4>
                 <div className="flex flex-wrap gap-3">
                   {catData.subcategories.map((subcat) => (
-                    <button
+                    <Button
                       key={subcat.id}
+                      variant="outline"
+                      size="sm"
                       onClick={() => onSubcategoryClick?.(catData.category_slug, subcat.slug)}
-                      className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-green-600 hover:text-green-600 transition-colors"
                     >
                       {subcat.name}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
