@@ -142,3 +142,84 @@ export type AdImageDTO = z.infer<typeof AdImageSchema>;
 export type AdCreateDTO = z.infer<typeof AdCreateSchema>;
 export type AdUpdateDTO = z.infer<typeof AdUpdateSchema>;
 export type AdFiltersDTO = z.infer<typeof AdFiltersSchema>;
+
+// ========================================
+// CATALOG SCHEMAS (Brands & Models)
+// ========================================
+
+export const BrandSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  logo_url: z.string().url().nullable(),
+  country: z.string().nullable(),
+  description: z.string().nullable(),
+  is_active: z.boolean(),
+  sort_order: z.number(),
+});
+
+export const ModelSchema = z.object({
+  id: z.string().uuid(),
+  brand_id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  year_from: z.number().nullable(),
+  year_to: z.number().nullable(),
+  is_current_production: z.boolean(),
+  specifications: z.record(z.any()),
+  features: z.array(z.string()),
+  short_description: z.string().nullable(),
+  main_image_url: z.string().url().nullable(),
+  is_active: z.boolean(),
+});
+
+export const BrandsResponseSchema = z.object({
+  brands: z.array(BrandSchema),
+  timestamp: z.string(),
+});
+
+export const ModelsResponseSchema = z.object({
+  models: z.array(ModelSchema),
+  timestamp: z.string(),
+});
+
+export type BrandDTO = z.infer<typeof BrandSchema>;
+export type ModelDTO = z.infer<typeof ModelSchema>;
+export type BrandsResponseDTO = z.infer<typeof BrandsResponseSchema>;
+export type ModelsResponseDTO = z.infer<typeof ModelsResponseSchema>;
+
+// ========================================
+// FORM CONFIG SCHEMAS
+// ========================================
+
+export const DynamicAttributeSchema = z.object({
+  id: z.string().uuid(),
+  field_name: z.string(),
+  field_label: z.string(),
+  field_type: z.enum(['text', 'number', 'select', 'textarea', 'checkbox', 'date']),
+  field_group: z.string(),
+  field_options: z.array(z.string()),
+  is_required: z.boolean(),
+  min_value: z.number().nullable(),
+  max_value: z.number().nullable(),
+  validation_regex: z.string().nullable(),
+  placeholder: z.string().nullable(),
+  help_text: z.string().nullable(),
+  prefix: z.string().nullable(),
+  suffix: z.string().nullable(),
+  sort_order: z.number(),
+});
+
+export const FormConfigResponseSchema = z.object({
+  subcategory_id: z.string().uuid(),
+  subcategory_name: z.string(),
+  requires_brand: z.boolean(),
+  requires_model: z.boolean(),
+  requires_year: z.boolean(),
+  requires_condition: z.boolean(),
+  dynamic_attributes: z.array(DynamicAttributeSchema),
+  timestamp: z.string(),
+});
+
+export type DynamicAttributeDTO = z.infer<typeof DynamicAttributeSchema>;
+export type FormConfigResponseDTO = z.infer<typeof FormConfigResponseSchema>;
