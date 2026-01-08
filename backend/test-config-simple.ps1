@@ -20,7 +20,8 @@ try {
     $script:testSubcategoryName = $firstSub.display_name
     
     Write-Host "  Test subcategory: $testSubcategoryName" -ForegroundColor Cyan
-} catch {
+}
+catch {
     Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red
 }
 Write-Host ""
@@ -37,10 +38,12 @@ if ($testSubcategoryId) {
             $script:testBrandName = $response.brands[0].name
             Write-Host "  Test brand: $testBrandName" -ForegroundColor Cyan
         }
-    } catch {
+    }
+    catch {
         Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red
     }
-} else {
+}
+else {
     Write-Host "  SKIPPED" -ForegroundColor Gray
 }
 Write-Host ""
@@ -51,10 +54,12 @@ if ($testBrandId) {
     try {
         $response = Invoke-RestMethod -Uri "$baseUrl/models?brandId=$testBrandId" -Method Get
         Write-Host "  SUCCESS: Found $($response.models.Count) models" -ForegroundColor Green
-    } catch {
+    }
+    catch {
         Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red
     }
-} else {
+}
+else {
     Write-Host "  SKIPPED" -ForegroundColor Gray
 }
 Write-Host ""
@@ -68,10 +73,12 @@ if ($testSubcategoryId) {
         Write-Host "    - Requires Brand: $($response.requires_brand)"
         Write-Host "    - Requires Model: $($response.requires_model)"
         Write-Host "    - Dynamic Attributes: $($response.dynamic_attributes.Count)"
-    } catch {
+    }
+    catch {
         Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red
     }
-} else {
+}
+else {
     Write-Host "  SKIPPED" -ForegroundColor Gray
 }
 Write-Host ""

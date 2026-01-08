@@ -78,7 +78,7 @@ export interface AdCreate {
   description: string;
   
   // Precio y ubicación
-  price: number;
+  price?: number | null;
   currency: 'ARS' | 'USD';
   province: string;
   city?: string | null;

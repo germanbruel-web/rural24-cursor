@@ -34,7 +34,12 @@ export class CatalogService {
     return this.repository.getDynamicAttributesBySubcategory(subcategoryId);
   }
 
-  async getFormConfigForSubcategory(subcategoryId: string) {
+  async getFormConfigForSubcategory(subcategoryId: string): Promise<Result<{
+    attributes: Record<string, DynamicAttribute[]>;
+    brands: Brand[];
+    total_fields: number;
+    required_fields: number;
+  }, DatabaseError | ValidationError>> {
     const attributesResult = await this.getDynamicAttributesBySubcategory(subcategoryId);
     const brandsResult = await this.getBrandsBySubcategory(subcategoryId);
 

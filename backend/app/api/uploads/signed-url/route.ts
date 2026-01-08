@@ -73,7 +73,6 @@ export async function POST(request: NextRequest) {
             signature,
             folder,
           },
-          cloudName,
         },
       },
       { status: 200 }

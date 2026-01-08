@@ -61,7 +61,7 @@ export class AdsRepository {
 
       const { data: ad, error } = await this.supabase
         .from('ads')
-        .insert(adData)
+        .insert(adData as any)
         .select()
         .single();
 
@@ -90,7 +90,7 @@ export class AdsRepository {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          return Result.fail(new NotFoundError('Ad', id));
+          return Result.fail(new NotFoundError(`Ad with id ${id} not found`));
         }
         return Result.fail(new DatabaseError(`Error fetching ad: ${error.message}`));
       }
@@ -198,14 +198,14 @@ export class AdsRepository {
 
       const { data: ad, error } = await this.supabase
         .from('ads')
-        .update(updateData)
+        .update(updateData as never)
         .eq('id', id)
         .select()
         .single();
 
       if (error) {
         if (error.code === 'PGRST116') {
-          return Result.fail(new NotFoundError('Ad', id));
+          return Result.fail(new NotFoundError(`Ad with id ${id} not found (update)`));
         }
         return Result.fail(new DatabaseError(`Error updating ad: ${error.message}`));
       }
@@ -223,12 +223,12 @@ export class AdsRepository {
     try {
       const { error } = await this.supabase
         .from('ads')
-        .update({ status: 'deleted', updated_at: new Date().toISOString() })
+        .update({ status: 'deleted', updated_at: new Date().toISOString() } as never)
         .eq('id', id);
 
       if (error) {
         if (error.code === 'PGRST116') {
-          return Result.fail(new NotFoundError('Ad', id));
+          return Result.fail(new NotFoundError(`Ad with id ${id} not found (delete)`));
         }
         return Result.fail(new DatabaseError(`Error deleting ad: ${error.message}`));
       }
@@ -244,7 +244,7 @@ export class AdsRepository {
    */
   async incrementViews(id: string): Promise<Result<void, DatabaseError>> {
     try {
-      const { error } = await this.supabase.rpc('increment_ad_views', { ad_id: id });
+      const { error } = await (this.supabase.rpc as any)('increment_ad_views', { ad_id: id });
 
       if (error) {
         return Result.fail(new DatabaseError(`Error incrementing views: ${error.message}`));

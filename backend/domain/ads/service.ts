@@ -37,7 +37,7 @@ export class AdsService {
     if (!data.title || data.title.trim().length < 10) {
       return Result.fail(
         new ValidationError('El título debe tener al menos 10 caracteres', {
-          title: 'Título muy corto',
+          title: ['Título muy corto'],
         })
       );
     }
@@ -46,16 +46,16 @@ export class AdsService {
     if (!data.description || data.description.trim().length < 50) {
       return Result.fail(
         new ValidationError('La descripción debe tener al menos 50 caracteres', {
-          description: 'Descripción muy corta',
+          description: ['Descripción muy corta'],
         })
       );
     }
 
     // Validar precio
-    if (data.price <= 0) {
+    if (data.price && data.price <= 0) {
       return Result.fail(
         new ValidationError('El precio debe ser mayor a 0', {
-          price: 'Precio inválido',
+          price: ['Precio inválido'],
         })
       );
     }
@@ -64,7 +64,7 @@ export class AdsService {
     if (!data.images || data.images.length === 0) {
       return Result.fail(
         new ValidationError('Debe incluir al menos una imagen', {
-          images: 'Sin imágenes',
+          images: ['Sin imágenes'],
         })
       );
     }
@@ -86,18 +86,18 @@ export class AdsService {
     if (attributesResult.isFailure) {
       return Result.fail(
         new ValidationError('No se pudo obtener configuración de atributos', {
-          subcategory_id: 'Subcategoría inválida',
+          subcategory_id: ['Subcategoría inválida'],
         })
       );
     }
 
     const dynamicAttributes = attributesResult.value;
-    const errors: Record<string, string> = {};
+    const errors: Record<string, string[]> = {};
 
     // Validar cada atributo requerido
     for (const attr of dynamicAttributes) {
       if (attr.is_required && !attributes[attr.field_name]) {
-        errors[attr.field_name] = `${attr.field_label} es obligatorio`;
+        errors[attr.field_name] = [`${attr.field_label} es obligatorio`];
       }
 
       const value = attributes[attr.field_name];
@@ -107,13 +107,13 @@ export class AdsService {
       switch (attr.field_type) {
         case 'number':
           if (typeof value !== 'number' || isNaN(value)) {
-            errors[attr.field_name] = `${attr.field_label} debe ser un número`;
+            errors[attr.field_name] = [`${attr.field_label} debe ser un número`];
           } else {
             if (attr.min_value !== null && value < attr.min_value) {
-              errors[attr.field_name] = `${attr.field_label} debe ser mayor o igual a ${attr.min_value}`;
+              errors[attr.field_name] = [`${attr.field_label} debe ser mayor o igual a ${attr.min_value}`];
             }
             if (attr.max_value !== null && value > attr.max_value) {
-              errors[attr.field_name] = `${attr.field_label} debe ser menor o igual a ${attr.max_value}`;
+              errors[attr.field_name] = [`${attr.field_label} debe ser menor o igual a ${attr.max_value}`];
             }
           }
           break;
@@ -121,25 +121,14 @@ export class AdsService {
         case 'select':
           if (attr.field_options && attr.field_options.length > 0) {
             if (!attr.field_options.includes(value)) {
-              errors[attr.field_name] = `${attr.field_label} debe ser una opción válida`;
-            }
-          }
-          break;
-
-        case 'multiselect':
-          if (!Array.isArray(value)) {
-            errors[attr.field_name] = `${attr.field_label} debe ser un array`;
-          } else if (attr.field_options && attr.field_options.length > 0) {
-            const invalidOptions = value.filter((v) => !attr.field_options!.includes(v));
-            if (invalidOptions.length > 0) {
-              errors[attr.field_name] = `${attr.field_label} contiene opciones inválidas`;
+              errors[attr.field_name] = [`${attr.field_label} debe ser una opción válida`];
             }
           }
           break;
 
         case 'text':
           if (typeof value !== 'string') {
-            errors[attr.field_name] = `${attr.field_label} debe ser texto`;
+            errors[attr.field_name] = [`${attr.field_label} debe ser texto`];
           }
           break;
       }
@@ -148,7 +137,7 @@ export class AdsService {
       if (attr.validation_regex && typeof value === 'string') {
         const regex = new RegExp(attr.validation_regex);
         if (!regex.test(value)) {
-          errors[attr.field_name] = `${attr.field_label} no cumple el formato requerido`;
+          errors[attr.field_name] = [`${attr.field_label} no cumple el formato requerido`];
         }
       }
     }
@@ -203,7 +192,7 @@ export class AdsService {
     if (data.title && data.title.trim().length < 10) {
       return Result.fail(
         new ValidationError('El título debe tener al menos 10 caracteres', {
-          title: 'Título muy corto',
+          title: ['Título muy corto'],
         })
       );
     }
@@ -211,7 +200,7 @@ export class AdsService {
     if (data.description && data.description.trim().length < 50) {
       return Result.fail(
         new ValidationError('La descripción debe tener al menos 50 caracteres', {
-          description: 'Descripción muy corta',
+          description: ['Descripción muy corta'],
         })
       );
     }
@@ -219,7 +208,7 @@ export class AdsService {
     if (data.price !== undefined && data.price <= 0) {
       return Result.fail(
         new ValidationError('El precio debe ser mayor a 0', {
-          price: 'Precio inválido',
+          price: ['Precio inválido'],
         })
       );
     }

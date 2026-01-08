@@ -32,7 +32,12 @@ export async function GET(request: NextRequest) {
       .from('users')
       .select('id, email, role, full_name')
       .eq('id', user.id)
-      .maybeSingle();
+      .maybeSingle<{
+        id: string;
+        email: string;
+        role: string;
+        full_name: string;
+      }>();
 
     if (profileError || !profile) {
       return NextResponse.json(

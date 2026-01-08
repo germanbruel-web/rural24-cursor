@@ -34,7 +34,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        ...result.value,
+        attributes: (result.value as any).attributes,
+        brands: (result.value as any).brands,
+        total_fields: (result.value as any).total_fields,
+        required_fields: (result.value as any).required_fields,
         timestamp: new Date().toISOString(),
       },
       {
