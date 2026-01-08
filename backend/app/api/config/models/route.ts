@@ -1,9 +1,20 @@
+/**
+ * API Route - /api/config/models
+ * Obtener modelos filtrados por marca
+ * 
+ * Runtime: Edge ✅ (filtrado simple de catálogo)
+ * Cache: 1 hora por marca
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/infrastructure/supabase/client';
 import { CatalogRepository } from '@/domain/catalog/repository';
 import { CatalogService } from '@/domain/catalog/service';
 import { ModelsResponseSchema } from '@/types/schemas';
 import { z } from 'zod';
+
+export const runtime = 'edge';
+export const revalidate = 3600; // Cache 1 hora
 
 /**
  * GET /api/config/models?brandId=<uuid>

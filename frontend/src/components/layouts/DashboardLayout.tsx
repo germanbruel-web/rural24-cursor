@@ -20,6 +20,9 @@ import {
   Edit3,
   Settings as SettingsIcon,
   Star,
+  Microscope,
+  Palette,
+  FileCode,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -71,6 +74,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     'categories-admin': <SettingsIcon className="w-5 h-5" />,
     'attributes-admin': <Edit3 className="w-5 h-5" />,
     'backend-settings': <SettingsIcon className="w-5 h-5" />,
+    'diagnostics': <Microscope className="w-5 h-5" />,
+    'design-showcase': <Palette className="w-5 h-5" />,
+    'example-migration': <FileCode className="w-5 h-5" />,
   };
 
   // Construir menú dinámico según rol

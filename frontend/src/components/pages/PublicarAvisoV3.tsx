@@ -3,7 +3,7 @@
 // Mobile First + UX Profesional + Steps Intuitivos
 // ====================================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -21,6 +21,12 @@ import {
   DollarSign,
   Lock,
   CheckCircle,
+  Smartphone,
+  Sun,
+  Image as ImageIcon,
+  Layers,
+  Move,
+  Hash,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getCategories, getSubcategories, getCategoryTypes } from '../../services/v2/formsService';
@@ -34,12 +40,20 @@ import { supabase } from '../../services/supabaseClient';
 import { uploadService } from '../../services/uploadService';
 import { notify } from '../../utils/notifications';
 import AuthModal from '../auth/AuthModal';
-import { LivePreviewCard } from '../LivePreviewCard';
 import { adsApi } from '../../services/api';
 import { uploadsApi } from '../../services/api';
-import { DragDropUploader, UploadedImage } from '../DragDropUploader/DragDropUploader';
+import { SimpleImageUploader, UploadedImage } from '../SimpleImageUploader/SimpleImageUploader';
 import { validateTitle, validateDescription } from '../../utils/contentValidator';
 import type { ValidationResult } from '../../utils/contentValidator';
+
+// Design System Components
+import { Button } from '../../design-system/components/Button';
+import { Card } from '../molecules/Card';
+import { Input } from '../../design-system/components/Input';
+import { AdPreviewCard } from '../shared/AdPreviewCard';
+import type { AdPreviewData } from '../shared/AdPreviewCard';
+import InfoBox from '../molecules/InfoBox/InfoBox';
+import TipsCard from '../molecules/TipsCard/TipsCard';
 
 // ====================================================================
 // WIZARD STEPS
@@ -66,9 +80,6 @@ export default function PublicarAvisoV3() {
 
   // Modal de autenticación
   const [showAuthModal, setShowAuthModal] = useState(false);
-  
-  // Preview modal (mobile)
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
   
   // Categoría expandida (para accordion)
   const [expandedCategory, setExpandedCategory] = useState<string>('');
@@ -98,8 +109,9 @@ export default function PublicarAvisoV3() {
   const [province, setProvince] = useState('');
   const [locality, setLocality] = useState('');
 
-  // Step 4: Fotos - NUEVO: usando DragDropUploader
+  // Step 4: Fotos - NUEVO: usando SimpleImageUploader
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const uploadedImagesRef = useRef<UploadedImage[]>([]);
 
   // Step 5: Información (título/descripción generados)
   const [title, setTitle] = useState('');
@@ -216,6 +228,11 @@ export default function PublicarAvisoV3() {
   useEffect(() => {
     loadCategories();
     detectEditMode();
+    
+    // Establecer provincia por defecto
+    if (!province && PROVINCES.length > 0) {
+      setProvince(PROVINCES[0]);
+    }
     
     // Escuchar cambios en el hash para detectar modo edit
     const handleHashChange = () => {
@@ -359,6 +376,12 @@ export default function PublicarAvisoV3() {
     try {
       const data = await getCategories();
       setCategories(data);
+      
+      // Seleccionar primera categoría por defecto si existe
+      if (data.length > 0 && !selectedCategory) {
+        setSelectedCategory(data[0].id);
+        setExpandedCategory(data[0].id);
+      }
     } catch (error) {
       console.error('Error cargando categorías:', error);
       notify.error('Error cargando categorías');
@@ -369,6 +392,11 @@ export default function PublicarAvisoV3() {
     try {
       const data = await getSubcategories(categoryId);
       setSubcategories(data);
+      
+      // Seleccionar primera subcategoría por defecto si existe
+      if (data.length > 0 && !selectedSubcategory) {
+        setSelectedSubcategory(data[0].id);
+      }
     } catch (error) {
       console.error('Error cargando subcategorías:', error);
     }
@@ -422,18 +450,32 @@ export default function PublicarAvisoV3() {
   }
 
   // ====================================================================
-  // PHOTO HANDLING - Usando DragDropUploader component
+  // PHOTO HANDLING - Usando SimpleImageUploader component
   // ====================================================================
   function handleImagesChange(images: UploadedImage[]) {
-    console.log(`[PublicarAviso] 📸 handleImagesChange called with ${images.length} images`);
-    console.log('[PublicarAviso] 📦 Images received:', images.map(img => ({
-      url: img.url,
-      status: img.status,
-      hasPath: !!img.path
-    })));
+    console.log('🚨🚨🚨 ====================================== 🚨🚨🚨');
+    console.log(`[PublicarAviso] 📸 handleImagesChange CALLED`);
+    console.log('🚨🚨🚨 ====================================== 🚨🚨🚨');
+    console.log(`📊 Cantidad: ${images.length} images`);
+    console.log('📦 Todas las imágenes recibidas:');
+    images.forEach((img, idx) => {
+      console.log(`  [${idx}]:`);
+      console.log(`    ✓ URL: ${img.url}`);
+      console.log(`    ✓ PATH: ${img.path}`);
+      console.log(`    ✓ STATUS: ${img.status}`);
+      console.log(`    ✓ PROGRESS: ${img.progress}%`);
+    });
     
+    console.log('🔄 Actualizando states...');
     setUploadedImages(images);
-    console.log(`[PublicarAviso] ✅ uploadedImages state updated to ${images.length} images`);
+    uploadedImagesRef.current = images;
+    
+    console.log(`✅ STATE actualizado: ${images.length} images`);
+    console.log(`✅ REF actualizado: ${uploadedImagesRef.current.length} images`);
+    
+    const successCount = images.filter(img => img.status === 'success').length;
+    console.log(`🎯 Images con SUCCESS status: ${successCount}`);
+    console.log('🚨🚨🚨 ====================================== 🚨🚨🚨');
   }
 
   // ====================================================================
@@ -517,6 +559,16 @@ export default function PublicarAvisoV3() {
       }
     }
 
+    if (currentStep === 4) {
+      // Validar que haya al menos 1 imagen subida con éxito
+      const successImages = uploadedImagesRef.current.filter(img => img.status === 'success');
+      if (successImages.length === 0) {
+        notify.error('Debes subir al menos 1 foto para continuar');
+        return;
+      }
+      console.log(`[PublicarAviso] ✅ Step 4 validación OK: ${successImages.length} imagen(es) lista(s)`);
+    }
+
     if (currentStep === 5) {
       if (!title.trim() || !description.trim()) {
         notify.error('Completa título y descripción');
@@ -525,7 +577,7 @@ export default function PublicarAvisoV3() {
       
       // 🔥 VALIDACIÓN ANTI-FRAUDE: Bloquear avance si hay errores
       if (titleError || descriptionError) {
-        notify.error('⚠️ Corrige los errores en título o descripción antes de continuar');
+        notify.error('Corrige los errores en título o descripción antes de continuar');
         return;
       }
     }
@@ -543,7 +595,7 @@ export default function PublicarAvisoV3() {
   async function handleSubmit() {
     if (!profile) {
       setShowAuthModal(true);
-      notify.warning('⚠️ Debes iniciar sesión para publicar');
+      notify.warning('Debes iniciar sesión para publicar');
       return;
     }
 
@@ -554,22 +606,55 @@ export default function PublicarAvisoV3() {
       console.log('[PublicarAviso] 🚀 INICIANDO SUBMIT');
       console.log('=====================================================');
       
-      // 1. Las imágenes YA están subidas desde DragDropUploader
-      // Solo tomamos las que tienen status 'success'
-      console.log(`[PublicarAviso] 📸 uploadedImages.length: ${uploadedImages.length}`);
-      console.log('[PublicarAviso] 📸 uploadedImages full state:', uploadedImages);
+      // 1. Las imágenes YA están subidas desde SimpleImageUploader
+      // Leer desde el ref para evitar problemas de timing con el estado
+      const currentImages = uploadedImagesRef.current;
+      console.log(`[PublicarAviso] 📸 uploadedImagesRef.current.length: ${currentImages.length}`);
+      console.log('[PublicarAviso] 📸 Images from ref:', JSON.stringify(currentImages, null, 2));
       
-      const finalImages = uploadedImages
-        .filter(img => img.status === 'success')
-        .map(img => ({ url: img.url, path: img.path }));
+      // Validar estructura de imágenes ANTES de filtrar
+      if (currentImages.length > 0) {
+        console.log('[PublicarAviso] 🔍 Validando estructura de imágenes:');
+        currentImages.forEach((img, index) => {
+          console.log(`  Imagen ${index}:`, {
+            hasUrl: !!img.url,
+            hasPath: !!img.path,
+            hasStatus: !!img.status,
+            status: img.status,
+            urlPreview: img.url?.substring(0, 50) + '...'
+          });
+        });
+      }
+      
+      const finalImages = currentImages
+        .filter(img => {
+          const isSuccess = img.status === 'success';
+          if (!isSuccess) {
+            console.warn(`[PublicarAviso] ⚠️ Imagen filtrada (status: ${img.status}):`, img);
+          }
+          return isSuccess;
+        })
+        .map(img => {
+          if (!img.url || !img.path) {
+            console.error('[PublicarAviso] ❌ Imagen sin url o path:', img);
+          }
+          return { url: img.url, path: img.path };
+        });
 
       console.log(`[PublicarAviso] ✅ Images with success status: ${finalImages.length}`);
-      console.log('[PublicarAviso] 📦 finalImages array:', finalImages);
+      console.log('[PublicarAviso] 📦 finalImages array:', JSON.stringify(finalImages, null, 2));
 
       if (finalImages.length === 0) {
         console.error('[PublicarAviso] ❌ NO IMAGES FOUND - Aborting submit');
-        console.error('[PublicarAviso] 🔍 uploadedImages state at time of check:', uploadedImages);
-        notify.error('❌ Debes subir al menos una imagen');
+        console.error('[PublicarAviso] 🔍 Images from ref at time of check:', currentImages);
+        
+        if (currentImages.length > 0) {
+          // Hay imágenes pero ninguna con status success
+          const statuses = currentImages.map(img => img.status);
+          notify.error(`Las imágenes no se subieron correctamente. Estados: ${statuses.join(', ')}`);
+        } else {
+          notify.error('Debes subir al menos una imagen');
+        }
         return;
       }
 
@@ -613,7 +698,7 @@ export default function PublicarAvisoV3() {
         }
 
         resultId = data.id;
-        notify.success('✅ Aviso actualizado exitosamente!');
+        notify.success('Aviso actualizado exitosamente!');
       } else {
         // MODO CREATE - Usar nuevo BFF API
         const createData = {
@@ -622,20 +707,25 @@ export default function PublicarAvisoV3() {
           subcategory_id: selectedSubcategory,
           title: title.trim(),
           description: description.trim(),
-          price: price ? parseFloat(price) : 0,
+          price: price ? parseFloat(price) : null,
           currency,
-          location: locality || null,
+          city: locality || null,
           province,
           images: finalImages,
           attributes: attributeValues,
+          contact_phone: null,
+          contact_email: null,
         };
 
-        console.log('📦 Enviando a BFF API:', createData);
+        console.log('📦 Enviando a BFF API:', JSON.stringify(createData, null, 2));
+        console.log('📦 Tipo de images:', typeof createData.images);
+        console.log('📦 Es array?:', Array.isArray(createData.images));
+        console.log('📦 Primer elemento images:', createData.images[0]);
 
         const ad = await adsApi.create(createData);
 
         resultId = ad.id;
-        notify.success('✅ Aviso publicado exitosamente!');
+        notify.success('Aviso publicado exitosamente!');
       }
       
       // Redirigir al detalle
@@ -791,10 +881,9 @@ export default function PublicarAvisoV3() {
           </div>
         )}
 
-        {/* Layout: 2 columnas en desktop */}
-        <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-          {/* Columna formulario */}
-          <div className="lg:col-span-7">
+        {/* Layout: Full width sin preview lateral */}
+        <div className="max-w-4xl mx-auto">
+          <div>
             <div className="bg-gray-100 rounded-2xl shadow-xl border-2 border-gray-300 overflow-hidden">
               <div className="p-6 sm:p-10 lg:p-12">
                 {/* STEP 1: CATEGORÍA (OPTIMIZADO - ACCORDION INLINE) */}
@@ -1063,20 +1152,20 @@ export default function PublicarAvisoV3() {
 
             {/* STEP 3: UBICACIÓN */}
             {currentStep === 3 && (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
                     ¿Dónde está ubicado?
                   </h2>
-                  <p className="text-base sm:text-lg text-gray-600">
+                  <p className="text-gray-600">
                     Indicá la ubicación para que los compradores te encuentren
                   </p>
                 </div>
 
-                <div className="space-y-5">
+                <div className="space-y-4">
                   {/* Provincia */}
-                  <div className="border-2 border-gray-200 rounded-xl p-5 sm:p-6 bg-white hover:border-green-400 transition-all">
-                    <label className="block text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Card variant="default" padding="md">
+                    <label className="block text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                       <MapPin className="w-5 h-5 text-green-600" />
                       Provincia *
                     </label>
@@ -1086,7 +1175,7 @@ export default function PublicarAvisoV3() {
                         setProvince(e.target.value);
                         setLocality('');
                       }}
-                      className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white"
+                      className="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all bg-white"
                     >
                       <option value="">Seleccionar provincia</option>
                       {PROVINCES.map((prov) => (
@@ -1095,15 +1184,11 @@ export default function PublicarAvisoV3() {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </Card>
 
                   {/* Localidad */}
-                  <div className={`border-2 rounded-xl p-5 sm:p-6 transition-all ${
-                    province 
-                      ? 'border-gray-200 bg-white hover:border-green-400' 
-                      : 'border-gray-200 bg-gray-50'
-                  }`}>
-                    <label className="block text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Card variant="default" padding="md">
+                    <label className="block text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                       <MapPin className="w-5 h-5 text-green-600" />
                       Localidad {province && '*'}
                     </label>
@@ -1125,7 +1210,7 @@ export default function PublicarAvisoV3() {
                         Selecciona primero una provincia
                       </div>
                     )}
-                  </div>
+                  </Card>
                 </div>
 
                 <div className="flex items-start gap-3 p-5 sm:p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
@@ -1151,30 +1236,47 @@ export default function PublicarAvisoV3() {
                   <p className="text-base sm:text-lg text-gray-600">
                     Las fotos ayudan a vender más rápido. Máximo 8 fotos horizontales (16:9 o 4:3)
                   </p>
+                  
+                  {/* Contador de imágenes subidas */}
+                  {uploadedImages.length > 0 && (
+                    <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-50 border-2 border-green-200 rounded-lg">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span className="font-semibold text-green-900">
+                        {uploadedImages.filter(img => img.status === 'success').length} foto{uploadedImages.filter(img => img.status === 'success').length !== 1 ? 's' : ''} lista{uploadedImages.filter(img => img.status === 'success').length !== 1 ? 's' : ''} para publicar
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Drag & Drop Uploader Component */}
-                <DragDropUploader
+                {/* Tips antes del uploader */}
+                <TipsCard icon={Camera} title="Tips para mejores fotos" variant="blue">
+                  <TipsCard.Item icon={Smartphone} strong>
+                    GIRA TU CELULAR HORIZONTALMENTE (modo paisaje)
+                  </TipsCard.Item>
+                  <TipsCard.Item icon={Sun}>
+                    Usá buena luz natural (evita fotos oscuras)
+                  </TipsCard.Item>
+                  <TipsCard.Item icon={ImageIcon}>
+                    Mostrá el producto completo y detalles importantes
+                  </TipsCard.Item>
+                  <TipsCard.Item icon={Layers}>
+                    La primera foto será la portada de tu aviso
+                  </TipsCard.Item>
+                  <TipsCard.Item icon={Move}>
+                    Podés arrastrar para reordenar las fotos
+                  </TipsCard.Item>
+                  <TipsCard.Item icon={Hash}>
+                    Máximo 8 fotos por aviso
+                  </TipsCard.Item>
+                </TipsCard>
+
+                {/* Simple Image Uploader Component */}
+                <SimpleImageUploader
                   maxFiles={8}
                   folder="ads"
                   onImagesChange={handleImagesChange}
                   existingImages={uploadedImages}
                 />
-
-                <div className="flex items-start gap-3 p-5 sm:p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                  <Camera className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-bold text-gray-900 mb-1">📸 Tips para mejores fotos:</p>
-                    <ul className="text-sm text-gray-700 space-y-1">
-                      <li>• <strong>📱 GIRA TU CELULAR HORIZONTALMENTE</strong> (modo paisaje)</li>
-                      <li>• Usá buena luz natural (evita fotos oscuras)</li>
-                      <li>• Mostrá el producto completo y detalles importantes</li>
-                      <li>• La primera foto será la portada de tu aviso</li>
-                      <li>• Podés arrastrar para reordenar las fotos</li>
-                      <li>• Máximo 8 fotos por aviso</li>
-                    </ul>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -1224,9 +1326,10 @@ export default function PublicarAvisoV3() {
                       <p className="text-sm font-medium text-red-700">{titleError}</p>
                     </div>
                   ) : (
-                    <p className="text-xs text-gray-500 flex items-start gap-1.5">
-                      <span>✅ Números y años permitidos. ❌ Teléfonos, emails y sitios web NO permitidos</span>
-                    </p>
+                    <InfoBox variant="info" size="sm">
+                      <strong>Permitido:</strong> Números y años.
+                      <strong className="ml-2">NO permitido:</strong> Teléfonos, emails y sitios web.
+                    </InfoBox>
                   )}
                 </div>
 
@@ -1264,9 +1367,10 @@ export default function PublicarAvisoV3() {
                       <p className="text-sm font-medium text-red-700">{descriptionError}</p>
                     </div>
                   ) : (
-                    <p className="text-xs text-gray-500 flex items-start gap-1.5">
-                      <span>✅ Números y años permitidos. ❌ Teléfonos, emails y sitios web NO permitidos</span>
-                    </p>
+                    <InfoBox variant="info" size="sm">
+                      <strong>Permitido:</strong> Números y años.
+                      <strong className="ml-2">NO permitido:</strong> Teléfonos, emails y sitios web.
+                    </InfoBox>
                   )}
                 </div>
 
@@ -1311,147 +1415,96 @@ export default function PublicarAvisoV3() {
               </div>
             )}
 
-            {/* STEP 6: REVISAR */}
-            {currentStep === 6 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                    Revisar información
-                  </h2>
-                  <p className="text-gray-600">
-                    Verifica que todo esté correcto antes de ver el preview
-                  </p>
-                </div>
-
-                {/* Resumen */}
-                <div className="space-y-4">
-                  {/* Categoría */}
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">
-                      Categoría
-                    </p>
-                    <p className="text-gray-900">
-                      {categories.find(c => c.id === selectedCategory)?.display_name}
-                      {' > '}
-                      {subcategories.find(s => s.id === selectedSubcategory)?.display_name}
-                    </p>
-                  </div>
-
-                  {/* Información */}
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">
-                      Información
-                    </p>
-                    <p className="font-semibold text-gray-900 mb-2">{title}</p>
-                    <p className="text-gray-700 text-sm mb-2">{description}</p>
-                    {price && (
-                      <p className="font-bold text-green-600 text-lg">
-                        {currency} ${parseFloat(price).toLocaleString('es-AR')}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Características */}
-                  {Object.keys(attributeValues).length > 0 && (
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <p className="text-sm font-semibold text-gray-600 mb-3">
-                        Características
-                      </p>
-                      <div className="grid grid-cols-2 gap-3">
-                        {Object.entries(attributeValues).map(([key, value]) => {
-                          const attr = attributes.find(a => a.slug === key);
-                          if (!attr || !value) return null;
-
-                          let displayValue = value;
-                          if (Array.isArray(value)) {
-                            displayValue = value.join(', ');
-                          } else if (typeof value === 'boolean') {
-                            displayValue = value ? 'Sí' : 'No';
-                          }
-
-                          return (
-                            <div key={key}>
-                              <p className="text-xs text-gray-600">{attr.name}</p>
-                              <p className="text-sm font-medium text-gray-900">
-                                {displayValue}
-                              </p>
-                            </div>
-                          );
-                        })}
+            {/* STEP 6: PREVIEW FINAL - Vista exacta de cómo quedará publicado */}
+            {currentStep === 6 && (() => {
+              // 🔍 SUPER DEBUG MODE - Ver TODO lo que tenemos
+              console.log('🚨🚨🚨 ======================================');
+              console.log('🎬 STEP 6 - SUPER DEBUG PREVIEW');
+              console.log('🚨🚨🚨 ======================================');
+              console.log('📦 uploadedImagesRef.current:', uploadedImagesRef.current);
+              console.log('📦 uploadedImages state:', uploadedImages);
+              console.log('📊 Longitudes - Ref:', uploadedImagesRef.current.length, '| State:', uploadedImages.length);
+              
+              // Mostrar TODAS las imágenes con su info completa
+              uploadedImagesRef.current.forEach((img, idx) => {
+                console.log(`📸 [${idx}] STATUS: ${img.status} | URL: ${img.url?.substring(0, 80)} | PATH: ${img.path}`);
+              });
+              
+              const successImages = uploadedImagesRef.current.filter(img => img.status === 'success');
+              console.log('✅ Success images FILTRADAS:', successImages.length);
+              console.log('🖼️ Images para preview:', successImages.map(img => ({
+                url: img.url?.substring(0, 60),
+                hasUrl: !!img.url,
+                hasPath: !!img.path,
+                status: img.status
+              })));
+              console.log('======================================');
+              
+              return (
+                <div className="space-y-6">
+                  {/* Debug info - Solo en desarrollo */}
+                  {successImages.length === 0 && (
+                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                        <div>
+                          <p className="font-bold text-red-900 mb-2">⚠️ Debug: Sin imágenes detectadas</p>
+                          <ul className="text-sm text-red-800 space-y-1">
+                            <li>• uploadedImagesRef: {uploadedImagesRef.current.length} imágenes</li>
+                            <li>• uploadedImages state: {uploadedImages.length} imágenes</li>
+                            <li>• Con status success: {successImages.length}</li>
+                            <li>• Estados: {uploadedImagesRef.current.map(img => img.status).join(', ') || 'ninguno'}</li>
+                          </ul>
+                          <p className="text-sm text-red-700 mt-3">
+                            <strong>Solución:</strong> Vuelve al Step 4 y asegúrate de que las imágenes tengan el check verde ✓
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
-
-                  {/* Ubicación */}
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">
-                      Ubicación
-                    </p>
-                    <p className="text-gray-900">
-                      {province}
-                      {locality && `, ${locality}`}
-                    </p>
-                  </div>
-
-                  {/* Fotos */}
-                  {uploadedImages.length > 0 && (
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <p className="text-sm font-semibold text-gray-600 mb-3">
-                        Fotos ({uploadedImages.length})
-                      </p>
-                      <div className="grid grid-cols-4 gap-2">
-                        {uploadedImages.slice(0, 4).map((img, index) => (
-                          <img
-                            key={img.id}
-                            src={img.url || ''}
-                            alt={`Foto ${index + 1}`}
-                            className="w-full h-20 object-cover rounded-lg"
-                          />
-                        ))}
-                        {uploadedImages.length > 4 && (
-                          <div className="w-full h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <p className="text-sm font-semibold text-gray-600">
-                              +{uploadedImages.length - 4}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  
+                  <AdPreviewCard
+                    data={{
+                      title,
+                      description,
+                      price: price ? parseFloat(price) : null,
+                      currency,
+                      province,
+                      city: locality || null,
+                      images: successImages.map(img => ({ url: img.url, path: img.path })),
+                      category: categories.find(c => c.id === selectedCategory),
+                      subcategory: subcategories.find(s => s.id === selectedSubcategory),
+                      attributes: attributeValues,
+                    }}
+                  />
                 </div>
-
-                <div className="flex items-start gap-3 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-green-900">
-                    <p className="font-semibold mb-1">¿Todo se ve bien?</p>
-                    <p>
-                      Haz clic en "PUBLICAR AVISO" para que tu aviso sea visible al público.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           {/* Actions */}
           <div className="px-6 sm:px-10 lg:px-12 py-6 bg-gray-50 border-t-2 border-gray-200 flex items-center justify-between gap-4">
             {/* Back */}
             {currentStep > 1 && (
-              <button
+              <Button
+                variant="outline"
+                size="lg"
                 onClick={() => {
                   goBack();
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 disabled={submitting}
-                className="flex items-center gap-2 px-6 py-5 text-base sm:text-lg bg-white border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                leftIcon={<ChevronLeft className="w-5 h-5" />}
               >
-                <ChevronLeft className="w-5 h-5" />
                 <span className="hidden sm:inline">Atrás</span>
-              </button>
+              </Button>
             )}
 
             {/* Next / Submit */}
-            <button
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth={currentStep === 1}
               onClick={() => {
                 if (currentStep === 6) {
                   handleSubmit();
@@ -1461,112 +1514,24 @@ export default function PublicarAvisoV3() {
                 }
               }}
               disabled={submitting}
-              className={`flex items-center gap-2 px-10 py-5 text-base sm:text-lg rounded-xl font-bold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
-                currentStep === 6
-                  ? 'bg-green-500 text-white hover:bg-green-600 shadow-green-200 scale-105'
-                  : 'bg-green-500 text-white hover:bg-green-600 shadow-green-200'
-              } ${currentStep === 1 ? 'ml-auto' : ''}`}
+              loading={submitting}
+              leftIcon={currentStep === 6 ? <CheckCircle2 className="w-6 h-6" /> : undefined}
+              rightIcon={currentStep !== 6 ? <ChevronRight className="w-5 h-5" /> : undefined}
+              className={currentStep === 1 ? 'ml-auto' : ''}
             >
-              {submitting ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>{isEditMode ? 'Actualizando...' : 'Publicando...'}</span>
-                </>
-              ) : currentStep === 6 ? (
-                <>
-                  <CheckCircle2 className="w-6 h-6" />
-                  <span className="text-lg">
-                    {isEditMode ? 'ACTUALIZAR AVISO' : 'PUBLICAR AVISO'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span>Continuar</span>
-                  <ChevronRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
+              {submitting 
+                ? (isEditMode ? 'Actualizando...' : 'Publicando...')
+                : currentStep === 6 
+                  ? (isEditMode ? 'ACTUALIZAR AVISO' : 'PUBLICAR AVISO')
+                  : 'Continuar'
+              }
+            </Button>
           </div>
         </div>
       </div>
-      
-      {/* Columna Preview Desktop - Sticky (solo steps 2-5) */}
-      {currentStep >= 2 && currentStep <= 5 && (
-        <div className="hidden lg:block lg:col-span-5">
-          <div className="sticky top-24">
-            <LivePreviewCard
-              formData={{
-                title,
-                description,
-                price,
-                currency,
-                province,
-                locality,
-                photos: uploadedImages
-                  .filter(img => img.status === 'success')
-                  .map(img => img.url),
-                attributes: attributeValues,
-                category: categories.find(c => c.id === selectedCategory),
-                subcategory: subcategories.find(s => s.id === selectedSubcategory),
-              }}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
 
-  {/* Botón flotante Preview Mobile (solo steps 2-5) */}
-  {currentStep >= 2 && currentStep <= 5 && (
-    <button
-      onClick={() => setShowPreviewModal(true)}
-      className="lg:hidden fixed bottom-24 right-6 z-40 bg-green-500 hover:bg-green-600 text-white px-6 py-4 rounded-full shadow-2xl transition-all flex items-center gap-2 font-bold"
-    >
-      <Eye className="w-6 h-6" />
-      <span>Preview</span>
-    </button>
-  )}
-
-  {/* Modal Preview Mobile */}
-  {showPreviewModal && (
-    <div className="lg:hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        {/* Header Modal */}
-        <div className="sticky top-0 bg-white border-b-2 border-gray-200 px-5 py-4 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-gray-900">Vista Previa</h3>
-          <button
-            onClick={() => setShowPreviewModal(false)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X className="w-6 h-6 text-gray-600" />
-          </button>
-        </div>
-        
-        {/* Content */}
-        <div className="p-5">
-          <LivePreviewCard
-            formData={{
-              title,
-              description,
-              price,
-              currency,
-              province,
-              locality,
-              photos: uploadedImages
-                .filter(img => img.status === 'success')
-                .map(img => img.url),
-              attributes: attributeValues,
-              category: categories.find(c => c.id === selectedCategory),
-              subcategory: subcategories.find(s => s.id === selectedSubcategory),
-            }}
-          />
-        </div>
-      </div>
-    </div>
-  )}
-
-  {/* Modal de Autenticación */}
-  <AuthModal 
+      {/* Modal de Autenticación */}
+      <AuthModal 
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         initialView="login"

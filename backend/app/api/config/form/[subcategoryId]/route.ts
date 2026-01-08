@@ -1,3 +1,11 @@
+/**
+ * API Route - /api/config/form/[subcategoryId]
+ * Obtener configuración dinámica del formulario según subcategoría
+ * 
+ * Runtime: Edge ✅ (lectura de configuración + atributos)
+ * Cache: 1 hora por subcategoría
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/infrastructure/supabase/client';
 import { CatalogRepository } from '@/domain/catalog/repository';
@@ -5,12 +13,14 @@ import { CatalogService } from '@/domain/catalog/service';
 import { FormConfigResponseSchema } from '@/types/schemas';
 import { z } from 'zod';
 
+export const runtime = 'edge';
+export const revalidate = 3600; // Cache 1 hora
+
 /**
  * GET /api/config/form/[subcategoryId]
  * Retorna la configuración completa del formulario para una subcategoría:
  * - form_config (requires_brand, requires_model, requires_year, requires_condition)
  * - dynamic_attributes agrupados por field_group
- * Cache: 1 hora (la configuración no cambia frecuentemente)
  */
 export async function GET(
   request: NextRequest,

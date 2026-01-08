@@ -1,6 +1,16 @@
+/**
+ * API Route - /api/admin/verify
+ * Verificar autenticación y autorización de superadmin
+ * 
+ * Runtime: Node.js ⚠️ (requiere Supabase Admin + validación sesión)
+ * Seguridad: Bearer token + role verification
+ */
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getSupabaseClient } from '@/infrastructure/supabase/client';
+
+// NO usar Edge Runtime - requiere validación compleja de sesión
 
 export async function GET(request: NextRequest) {
   try {

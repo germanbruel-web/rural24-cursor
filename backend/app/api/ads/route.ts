@@ -1,12 +1,17 @@
 /**
  * API Route - /api/ads
  * Crear y listar anuncios clasificados
+ * 
+ * Runtime: Node.js ⚠️ (requiere Cloudinary SDK + validación compleja)
+ * NO usar Edge Runtime - Cloudinary no es compatible
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AdsService } from '@/domain/ads/service';
 import { AdCreateSchema, AdFiltersSchema } from '@/types/schemas';
 import { ValidationError } from '@/domain/shared/errors';
+
+// NO declarar runtime = 'edge' - Cloudinary requiere Node.js
 
 /**
  * POST /api/ads - Crear nuevo anuncio

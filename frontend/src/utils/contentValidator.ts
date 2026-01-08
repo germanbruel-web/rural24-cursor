@@ -62,11 +62,11 @@ const PATTERNS = {
  * Mensajes de error personalizados
  */
 const ERROR_MESSAGES = {
-  number: '❌ No se permiten números en este campo',
-  atSymbol: '❌ No se permite el símbolo @ (correos electrónicos)',
-  domain: '❌ No se permiten sitios web o dominios',
-  phone: '❌ No se permiten números de teléfono',
-  multiple: '❌ Se detectó información de contacto no permitida',
+  number: 'No se permiten números en este campo',
+  atSymbol: 'No se permite el símbolo @ (correos electrónicos)',
+  domain: 'No se permiten sitios web o dominios',
+  phone: 'No se permiten números de teléfono',
+  multiple: 'Se detectó información de contacto no permitida',
 };
 
 /**

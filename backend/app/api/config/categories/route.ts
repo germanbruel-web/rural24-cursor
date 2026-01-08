@@ -1,8 +1,19 @@
+/**
+ * API Route - /api/config/categories
+ * Obtener catálogo completo de categorías y subcategorías
+ * 
+ * Runtime: Edge ✅ (lectura simple, sin librerías Node)
+ * Cache: 1 hora (datos de configuración estáticos)
+ */
+
 import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/infrastructure/supabase/client';
 import { CategoryRepository } from '@/domain/categories/repository';
 import { CategoryService } from '@/domain/categories/service';
 import { CategoriesResponseSchema } from '@/types/schemas';
+
+export const runtime = 'edge';
+export const revalidate = 3600; // Cache 1 hora
 
 export async function GET() {
   try {

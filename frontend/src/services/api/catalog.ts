@@ -63,7 +63,7 @@ export const catalogApi = {
    */
   async getBrandsBySubcategory(subcategoryId: string): Promise<Brand[]> {
     const response = await fetchApi<ApiResponse<{ brands: Brand[]; count: number }>>(
-      `/api/catalog/brands?subcategory_id=${subcategoryId}`
+      `/api/config/brands?subcategoryId=${subcategoryId}`
     );
     return response.data!.brands;
   },
@@ -73,7 +73,7 @@ export const catalogApi = {
    */
   async getModelsByBrand(brandId: string): Promise<Model[]> {
     const response = await fetchApi<ApiResponse<{ models: Model[]; count: number }>>(
-      `/api/catalog/models?brand_id=${brandId}`
+      `/api/config/models?brandId=${brandId}`
     );
     return response.data!.models;
   },
@@ -83,7 +83,7 @@ export const catalogApi = {
    */
   async getFormConfig(subcategoryId: string): Promise<FormConfigResponse> {
     const response = await fetchApi<ApiResponse<FormConfigResponse>>(
-      `/api/catalog/form-config?subcategory_id=${subcategoryId}`
+      `/api/config/form/${subcategoryId}`
     );
     return response.data!;
   },

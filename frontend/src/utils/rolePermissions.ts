@@ -137,6 +137,29 @@ export const MENU_STRUCTURE: MenuItem[] = [
     label: 'Backend CMS',
     allowedRoles: ['superadmin'],
   },
+  
+  // SECCIÓN: HERRAMIENTAS DE DESARROLLO
+  {
+    id: 'divider-dev',
+    label: '--- DEV TOOLS ---',
+    allowedRoles: ['superadmin'],
+    divider: true,
+  },
+  {
+    id: 'diagnostics',
+    label: '🔬 Diagnósticos',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'design-showcase',
+    label: '🎨 Design System',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'example-migration',
+    label: '📦 Migration Guide',
+    allowedRoles: ['superadmin'],
+  },
 ];
 
 /**

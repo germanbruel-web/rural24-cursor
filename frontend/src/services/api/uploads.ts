@@ -55,11 +55,22 @@ export const uploadsApi = {
 
     const data = await response.json();
 
+    console.log('[uploadsApi] 🔍 RAW Response data:', data);
+    console.log('[uploadsApi] 🔍 Object.keys(data):', Object.keys(data));
+    console.log('[uploadsApi] 🔍 data.url:', data.url);
+    console.log('[uploadsApi] 🔍 data.path:', data.path);
+    console.log('[uploadsApi] 🔍 data.secure_url:', data.secure_url);
+    console.log('[uploadsApi] 🔍 data.public_id:', data.public_id);
     console.log('[uploadsApi] ✅ Upload successful:', {
       url: data.url,
       path: data.path,
       width: data.width,
       height: data.height
+    });
+
+    console.log('[uploadsApi] 🎯 Returning:', {
+      url: data.url,
+      path: data.path
     });
 
     return {

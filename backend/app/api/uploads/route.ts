@@ -184,16 +184,23 @@ export async function POST(request: NextRequest) {
     rateLimiter.record(clientIP);
 
     const duration = Date.now() - startTime;
-    console.log(`[SUCCESS] Upload completed in ${duration}ms - URL: ${result.url}`);
+    console.log(`[SUCCESS] Upload completed in ${duration}ms`);
+    console.log(`[SUCCESS] Result from Cloudinary:`, result);
+    console.log(`[SUCCESS] result.url:`, result.url);
+    console.log(`[SUCCESS] result.path:`, result.path);
 
-    return NextResponse.json({
+    const responseData = {
       url: result.url,
       path: result.path,
       format: result.format,
       width: result.width,
       height: result.height,
       bytes: result.bytes
-    }, {
+    };
+
+    console.log(`[SUCCESS] Sending response:`, responseData);
+
+    return NextResponse.json(responseData, {
       headers: {
         'X-RateLimit-Remaining': rateLimitCheck.remaining.toString()
       }

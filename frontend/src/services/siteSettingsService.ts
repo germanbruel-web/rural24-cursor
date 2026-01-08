@@ -276,7 +276,7 @@ export async function updateImageSetting(
     // 4. Eliminar imagen anterior (si existe y no es placeholder)
     if (oldImageUrl && 
         oldImageUrl.includes('/cms-images/') && 
-        !oldImageUrl.includes('preview-image')) {
+        !oldImageUrl.includes('image-preview')) {
       try {
         await deleteCMSImage(oldImageUrl);
         console.log('🗑️ Imagen anterior eliminada');

@@ -1,3 +1,11 @@
+/**
+ * API Route - /api/config/brands
+ * Obtener marcas filtradas por subcategoría
+ * 
+ * Runtime: Edge ✅ (filtrado simple de catálogo)
+ * Cache: 1 hora por subcategoría
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/infrastructure/supabase/client';
 import { CatalogRepository } from '@/domain/catalog/repository';
@@ -5,10 +13,12 @@ import { CatalogService } from '@/domain/catalog/service';
 import { BrandsResponseSchema } from '@/types/schemas';
 import { z } from 'zod';
 
+export const runtime = 'edge';
+export const revalidate = 3600; // Cache 1 hora
+
 /**
  * GET /api/config/brands?subcategoryId=<uuid>
  * Retorna marcas filtradas por subcategoría
- * Cache: 1 hora (las marcas no cambian frecuentemente)
  */
 export async function GET(request: NextRequest) {
   try {

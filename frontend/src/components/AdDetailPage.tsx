@@ -15,6 +15,7 @@ import { getAttributes } from '../services/v2/attributesService';
 import type { DynamicAttributeDB } from '../services/v2/attributesService';
 import type { DynamicAttribute } from '../services/catalogService';
 import { normalizeImages, getFirstImage } from '../utils/imageHelpers';
+import { DEFAULT_PLACEHOLDER_IMAGE } from '../constants/defaultImages';
 import { TEXTS } from '../constants/texts';
 import { formatPrice, formatBoolean } from '../utils/currency';
 import { separateValues, formatAttributeLabel } from '../utils/textProcessing';
@@ -99,8 +100,28 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
       hasData: !!data,
       isManual: data && !data.sourceUrl,
       isScraped: data && !!data.sourceUrl,
-      hasAttributes: data && !!data.attributes
+      hasAttributes: data && !!data.attributes,
+      images: data?.images,
+      imagesType: typeof data?.images,
+      imagesIsArray: Array.isArray(data?.images)
     });
+    
+    // 🔍 DEBUG: Verificar URLs de imágenes
+    if (data?.images) {
+      console.log('🖼️ DEBUG - Imágenes detectadas:', data.images);
+      if (Array.isArray(data.images)) {
+        data.images.forEach((img: any, idx: number) => {
+          console.log(`🖼️ Imagen ${idx + 1}:`, {
+            type: typeof img,
+            value: img,
+            url: img?.url || img,
+            isString: typeof img === 'string',
+            isObject: typeof img === 'object'
+          });
+        });
+      }
+    }
+    
     setAd(data);
     
     // Si tiene attributes (JSONB) y subcategory_id, cargar el esquema dinámico V2
@@ -118,7 +139,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
         
         const attributesData = await getAttributes(filters);
 
-        // Convertir DynamicAttributeDB a DynamicAttribute (mismo formato que usa PublicarAvisoV3)
+        // Convertir DynamicAttributeDB a DynamicAttribute (mismo formato que usa PublicarAviso)
         const formatted: DynamicAttribute[] = attributesData.map((attr: DynamicAttributeDB) => ({
           id: attr.id,
           slug: attr.field_name,
@@ -327,7 +348,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
       {/* Título + Breadcrumb estáticos */}
       <div className="bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-2">
-          <h1 id="ad-title" className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mb-3 pt-[10px]">
+          <h1 id="ad-title" className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mb-3 pt-[10px] break-words overflow-wrap">
             {ad.title}
           </h1>          
           {/* Breadcrumb debajo del título */}
@@ -359,7 +380,8 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     query: ad.category 
                   })}
                   disabled={!onSearch}
-                  className="text-green-600 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-green-600 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed max-w-[150px] truncate"
+                  title={ad.category}
                 >
                   {ad.category}
                 </button>
@@ -376,7 +398,8 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     query: `${ad.category} ${ad.subcategory}` 
                   })}
                   disabled={!onSearch}
-                  className="text-green-600 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-green-600 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed max-w-[150px] truncate"
+                  title={ad.subcategory}
                 >
                   {ad.subcategory}
                 </button>
@@ -393,7 +416,8 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     query: `${ad.category} ${ad.subcategory || ''} ${ad.brand}`.trim()
                   })}
                   disabled={!onSearch}
-                  className="text-green-600 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-green-600 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed max-w-[120px] truncate"
+                  title={ad.brand}
                 >
                   {ad.brand}
                 </button>
@@ -403,7 +427,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
             {ad.model && (
               <>
                 <span className="text-gray-400">/</span>
-                <span className="text-gray-700 font-semibold">{ad.model}</span>
+                <span className="text-gray-700 font-semibold max-w-[120px] truncate inline-block" title={ad.model}>{ad.model}</span>
               </>
             )}
           </nav>        </div>
@@ -422,6 +446,23 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                       src={images[currentImageIndex]?.url || images[currentImageIndex]}
                       alt={ad.title}
                       className="w-full h-full object-cover"
+                      onLoad={() => {
+                        console.log('✅ Imagen principal cargada correctamente:', images[currentImageIndex]);
+                      }}
+                      onError={(e) => {
+                        const imageUrl = images[currentImageIndex]?.url || images[currentImageIndex];
+                        console.error('❌ Error cargando imagen principal');
+                        console.error('   URL fallida:', imageUrl);
+                        console.error('   Tipo URL:', typeof imageUrl);
+                        console.error('   Longitud URL:', imageUrl?.length);
+                        console.error('   Comienza con http:', imageUrl?.startsWith('http'));
+                        const target = e.currentTarget;
+                        // Evitar bucle infinito de errores
+                        if (target.src !== DEFAULT_PLACEHOLDER_IMAGE) {
+                          console.log('🔄 Usando fallback:', DEFAULT_PLACEHOLDER_IMAGE);
+                          target.src = DEFAULT_PLACEHOLDER_IMAGE;
+                        }
+                      }}
                     />
                   </div>
                   {images.length > 1 && (
@@ -440,6 +481,13 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                             src={img?.url || img}
                             alt={`${ad.title} ${idx + 1}`}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.error('❌ Error cargando miniatura:', img);
+                              const target = e.currentTarget;
+                              if (target.src !== DEFAULT_PLACEHOLDER_IMAGE) {
+                                target.src = DEFAULT_PLACEHOLDER_IMAGE;
+                              }
+                            }}
                           />
                         </button>
                       ))}
@@ -459,7 +507,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                 <DocumentTextIcon className="w-5 h-5 text-green-600" />
                 {TEXTS.adDetail.description}
               </h3>
-              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-base">
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-base break-words overflow-wrap">
                 {ad.description}
               </p>
             </div>

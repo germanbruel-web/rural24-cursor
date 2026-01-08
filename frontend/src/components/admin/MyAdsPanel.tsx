@@ -500,7 +500,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                         
                         // Pequeño delay para asegurar que el modal se cierra
                         setTimeout(() => {
-                          // Abrir PublicarAvisoV3 en modo edit
+                          // Abrir PublicarAviso en modo edit
                           const newHash = `#/publicar-v3?edit=${adId}`;
                           console.log('📍 Cambiando hash a:', newHash);
                           window.location.hash = newHash;

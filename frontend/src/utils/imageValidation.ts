@@ -54,7 +54,7 @@ export async function validateImageBeforeUpload(file: File): Promise<ValidationR
     if (!ALLOWED_TYPES.includes(file.type.toLowerCase())) {
       return {
         valid: false,
-        message: `❌ Formato ${file.type} no permitido. Usá JPG, PNG, WebP o HEIC`,
+        message: `Formato ${file.type} no permitido. Usá JPG, PNG, WebP o HEIC`,
         canProceed: false
       };
     }
@@ -78,7 +78,7 @@ export async function validateImageBeforeUpload(file: File): Promise<ValidationR
     if (aspectRatio < 1) {
       return {
         valid: false,
-        message: '📱 FOTO VERTICAL: Gira tu celular HORIZONTALMENTE y vuelve a tomar la foto',
+        message: 'FOTO VERTICAL: Girá tu celular HORIZONTALMENTE y volvé a tomar la foto',
         canProceed: false,
         dimensions
       };
@@ -88,7 +88,7 @@ export async function validateImageBeforeUpload(file: File): Promise<ValidationR
     if (aspectRatio < 1.2) {
       return {
         valid: false,
-        message: `⚠️ Foto muy cuadrada (${aspectRatio.toFixed(2)}:1). Tomá la foto mostrando más del producto en horizontal`,
+        message: `Foto muy cuadrada (${aspectRatio.toFixed(2)}:1). Tomá la foto mostrando más del producto en horizontal`,
         canProceed: false,
         dimensions
       };
@@ -97,7 +97,7 @@ export async function validateImageBeforeUpload(file: File): Promise<ValidationR
     if (aspectRatio > 2.5) {
       return {
         valid: false,
-        message: `⚠️ Foto muy panorámica (${aspectRatio.toFixed(2)}:1). Usá formato 16:9 o 4:3`,
+        message: `Foto muy panorámica (${aspectRatio.toFixed(2)}:1). Usá formato 16:9 o 4:3`,
         canProceed: false,
         dimensions
       };
@@ -113,7 +113,7 @@ export async function validateImageBeforeUpload(file: File): Promise<ValidationR
   } catch (error: any) {
     return {
       valid: false,
-      message: `❌ Error al validar imagen: ${error.message}`,
+      message: `Error al validar imagen: ${error.message}`,
       canProceed: false
     };
   }
