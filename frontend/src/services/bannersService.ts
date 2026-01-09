@@ -1,6 +1,6 @@
 // src/services/bannersService.ts
 import { supabase } from './supabaseClient';
-import type { Banner, CreateBannerInput, UpdateBannerInput, BannerType, BannerPosition } from '../../types';
+import type { Banner, CreateBannerInput, UpdateBannerInput, BannerType } from '../../types';
 
 /**
  * Verificar si el usuario es SuperAdmin
@@ -246,6 +246,60 @@ export async function getRandomIntercalatedBanner(category?: string, deviceTarge
     return null;
   } catch (error) {
     console.error('Error fetching random intercalated banner:', error);
+    return null;
+  }
+}
+
+/**
+ * Obtener banner de header de categoría (Secciones Destacadas)
+ * Banner principal para cada categoría en homepage - 1140x120
+ * 
+ * ESTRATEGIA:
+ * 1. Buscar banner prioritario de la categoría
+ * 2. Si no hay, buscar banner genérico activo
+ */
+export async function getCategoryHeaderBanner(
+  categoryName: string, 
+  deviceTarget: 'desktop' | 'mobile' = 'desktop'
+): Promise<Banner | null> {
+  try {
+    // 1️⃣ Buscar banner prioritario de la categoría
+    const { data: priorityData, error: priorityError } = await supabase
+      .from('banners')
+      .select('*')
+      .eq('type', 'category_header')
+      .eq('category', categoryName)
+      .eq('is_active', true)
+      .eq('is_priority', true)
+      .in('device_target', [deviceTarget, 'both'])
+      .order('priority_weight', { ascending: false })
+      .limit(1);
+
+    if (!priorityError && priorityData && priorityData.length > 0) {
+      console.log(`🎯 Banner prioritario de categoría "${categoryName}":`, priorityData[0].title);
+      return priorityData[0] as Banner;
+    }
+
+    // 2️⃣ Si no hay prioritario, buscar cualquier banner activo de la categoría
+    const { data: regularData, error: regularError } = await supabase
+      .from('banners')
+      .select('*')
+      .eq('type', 'category_header')
+      .eq('category', categoryName)
+      .eq('is_active', true)
+      .in('device_target', [deviceTarget, 'both'])
+      .order('display_order')
+      .limit(1);
+
+    if (!regularError && regularData && regularData.length > 0) {
+      console.log(`📌 Banner regular de categoría "${categoryName}":`, regularData[0].title);
+      return regularData[0] as Banner;
+    }
+
+    console.log(`⚠️ No hay banner para categoría "${categoryName}"`);
+    return null;
+  } catch (error) {
+    console.error('Error fetching category header banner:', error);
     return null;
   }
 }

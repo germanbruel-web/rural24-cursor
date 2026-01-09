@@ -10,8 +10,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Upload, X, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { Upload, X, CheckCircle, AlertCircle, Loader, GripVertical, Star } from 'lucide-react';
 import { uploadsApi } from '../../services/api';
+import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Imagen predeterminada del sistema - Cloudinary oficial
 const DEFAULT_IMAGE = {
@@ -28,6 +31,8 @@ export interface UploadedImage {
   status: 'uploading' | 'success' | 'error';
   progress: number;
   error?: string;
+  sortOrder: number;      // ✅ Orden de visualización
+  isPrimary: boolean;     // ✅ Es la foto principal
 }
 
 interface Props {
@@ -46,9 +51,16 @@ export const SimpleImageUploader: React.FC<Props> = ({
   const [images, setImages] = useState<UploadedImage[]>(existingImages);
   const [uploading, setUploading] = useState(false);
 
+  // Configurar sensores para drag & drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px de movimiento antes de activar drag
+      },
+    })
+  );
+
   // Sincronizar con existingImages cuando cambie externamente
-  // FIX: Sincronizar SIEMPRE que existingImages cambie, no solo el length
-  // Comparar por propiedades relevantes (url, path, status) para evitar loops
   useEffect(() => {
     const needsSync = existingImages.length !== images.length || 
       existingImages.some((ext, idx) => {
@@ -58,12 +70,13 @@ export const SimpleImageUploader: React.FC<Props> = ({
     
     if (needsSync) {
       console.log('[SimpleUploader] 🔄 Syncing with existingImages:', existingImages.length);
-      console.log('[SimpleUploader] 🔍 Existing images:', existingImages.map(img => ({
-        status: img.status,
-        hasUrl: !!img.url,
-        hasPath: !!img.path
-      })));
-      setImages(existingImages);
+      // Asegurar sortOrder e isPrimary en sync
+      const synced = existingImages.map((img, idx) => ({
+        ...img,
+        sortOrder: img.sortOrder ?? idx,
+        isPrimary: img.isPrimary ?? (idx === 0)
+      }));
+      setImages(synced);
     }
   }, [existingImages]);
 
@@ -89,11 +102,14 @@ export const SimpleImageUploader: React.FC<Props> = ({
     setUploading(true);
 
     // Crear previews locales inmediatamente
-    const newImages: UploadedImage[] = files.map(file => ({
+    const startIndex = images.length;
+    const newImages: UploadedImage[] = files.map((file, idx) => ({
       file,
       preview: URL.createObjectURL(file),
       status: 'uploading' as const,
-      progress: 0
+      progress: 0,
+      sortOrder: startIndex + idx,
+      isPrimary: startIndex === 0 && idx === 0  // Primera imagen es principal
     }));
 
     const updatedImages = [...images, ...newImages];
@@ -165,9 +181,61 @@ export const SimpleImageUploader: React.FC<Props> = ({
 
   const removeImage = (index: number) => {
     const updated = images.filter((_, i) => i !== index);
-    setImages(updated);
     
-    // Notificar con todo el array actualizado
+    // Reordenar y actualizar isPrimary
+    const reindexed = updated.map((img, idx) => ({
+      ...img,
+      sortOrder: idx,
+      isPrimary: idx === 0
+    }));
+    
+    setImages(reindexed);
+    onImagesChange(reindexed);
+  };
+
+  // ✅ DRAG & DROP: Reordenar imágenes
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over || active.id === over.id) return;
+
+    setImages((items) => {
+      const oldIndex = items.findIndex(img => 
+        (img.path || img.preview) === active.id
+      );
+      const newIndex = items.findIndex(img => 
+        (img.path || img.preview) === over.id
+      );
+      
+      if (oldIndex === -1 || newIndex === -1) return items;
+
+      const reordered = arrayMove(items, oldIndex, newIndex);
+      
+      // Actualizar sortOrder e isPrimary
+      const updated = reordered.map((img, idx) => ({
+        ...img,
+        sortOrder: idx,
+        isPrimary: idx === 0
+      }));
+      
+      onImagesChange(updated);
+      return updated;
+    });
+  };
+
+  // ✅ Marcar imagen como principal
+  const setAsPrimary = (index: number) => {
+    const reordered = [...images];
+    const [selected] = reordered.splice(index, 1);
+    reordered.unshift(selected);
+    
+    const updated = reordered.map((img, idx) => ({
+      ...img,
+      sortOrder: idx,
+      isPrimary: idx === 0
+    }));
+    
+    setImages(updated);
     onImagesChange(updated);
   };
 
@@ -186,7 +254,9 @@ export const SimpleImageUploader: React.FC<Props> = ({
         url: DEFAULT_IMAGE.url,
         path: DEFAULT_IMAGE.path,
         status: 'success',
-        progress: 100
+        progress: 100,
+        sortOrder: images.length,
+        isPrimary: images.length === 0
       };
 
       const updated = [...images, defaultImage];
@@ -205,7 +275,9 @@ export const SimpleImageUploader: React.FC<Props> = ({
         url: DEFAULT_IMAGE.fallback,
         path: 'fallback/placeholder',
         status: 'success',
-        progress: 100
+        progress: 100,
+        sortOrder: images.length,
+        isPrimary: images.length === 0
       };
 
       const updated = [...images, defaultImage];
@@ -318,75 +390,34 @@ export const SimpleImageUploader: React.FC<Props> = ({
         </button>
       )}
 
-      {/* Grid de imágenes subidas */}
+      {/* Grid de imágenes subidas CON DRAG & DROP */}
       {images.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {images.map((image, index) => (
-            <div
-              key={index}
-              className="relative aspect-square rounded-lg overflow-hidden border-2 bg-gray-50"
-              style={{
-                borderColor: 
-                  image.status === 'success' ? '#10b981' :
-                  image.status === 'error' ? '#ef4444' :
-                  '#d1d5db'
-              }}
-            >
-              {/* Preview de imagen */}
-              <img
-                src={image.preview || image.url}
-                alt={`Imagen ${index + 1}`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  console.error('[SimpleUploader] ❌ Error cargando imagen:', image.url);
-                  // Mostrar placeholder si la imagen falla
-                  e.currentTarget.src = DEFAULT_IMAGE.fallback;
-                }}
-              />
+        <div className="space-y-4">
+          {/* Instrucciones */}
+          <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <GripVertical className="w-5 h-5 text-blue-600" />
+            <span><strong>Arrastrá las fotos</strong> para cambiar el orden. La primera será la portada.</span>
+          </div>
 
-              {/* Overlay con estado - Solo mostrar si NO es success */}
-              {image.status !== 'success' && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  {image.status === 'uploading' && (
-                    <div className="text-center text-white">
-                      <Loader className="w-8 h-8 animate-spin mx-auto mb-2" />
-                      <p className="text-sm font-semibold">Subiendo...</p>
-                    </div>
-                  )}
-
-                  {image.status === 'error' && (
-                    <div className="text-center text-white">
-                      <AlertCircle className="w-8 h-8 mx-auto mb-2 text-red-500" />
-                      <p className="text-xs">{image.error}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Badge de éxito - Esquina superior derecha */}
-              {image.status === 'success' && (
-                <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1 shadow-lg">
-                  <CheckCircle className="w-5 h-5 text-white" />
-                </div>
-              )}
-
-              {/* Botón eliminar */}
-              {image.status !== 'uploading' && (
-                <button
-                  onClick={() => removeImage(index)}
-                  className="absolute top-2 left-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 transition-all shadow-lg"
-                  aria-label="Eliminar imagen"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-
-              {/* Número de orden */}
-              <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded">
-                #{index + 1}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={images.map(img => img.path || img.preview || '')}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {images.map((image, index) => (
+                  <SortableImage
+                    key={image.path || image.preview || index}
+                    image={image}
+                    index={index}
+                    onRemove={() => removeImage(index)}
+                    onSetPrimary={() => setAsPrimary(index)}
+                  />
+                ))}
               </div>
-            </div>
-          ))}
+            </SortableContext>
+          </DndContext>
         </div>
       )}
 
@@ -395,6 +426,127 @@ export const SimpleImageUploader: React.FC<Props> = ({
         <div className="text-center text-sm text-gray-600">
           {images.filter(img => img.status === 'success').length} de {maxFiles} imágenes subidas
         </div>
+      )}
+    </div>
+  );
+};
+
+// ✅ COMPONENTE SORTABLE PARA CADA IMAGEN
+interface SortableImageProps {
+  image: UploadedImage;
+  index: number;
+  onRemove: () => void;
+  onSetPrimary: () => void;
+}
+
+const SortableImage: React.FC<SortableImageProps> = ({ image, index, onRemove, onSetPrimary }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: image.path || image.preview || '' });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative aspect-square rounded-lg overflow-hidden border-2 bg-gray-50 ${
+        isDragging ? 'shadow-2xl z-50 scale-105' : ''
+      }`}
+      style={{
+        ...style,
+        borderColor: 
+          image.isPrimary ? '#10b981' :
+          image.status === 'error' ? '#ef4444' :
+          '#d1d5db',
+        borderWidth: image.isPrimary ? '4px' : '2px'
+      }}
+    >
+      {/* Preview de imagen */}
+      <img
+        src={image.preview || image.url}
+        alt={`Imagen ${index + 1}`}
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          e.currentTarget.src = 'https://via.placeholder.com/400x400/10b981/ffffff?text=Imagen+' + (index + 1);
+        }}
+      />
+
+      {/* Drag handle - Visible siempre para táctil */}
+      {image.status === 'success' && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute top-2 right-2 bg-white/90 hover:bg-white rounded-full p-2 cursor-move shadow-lg touch-none"
+        >
+          <GripVertical className="w-5 h-5 text-gray-700" />
+        </div>
+      )}
+
+      {/* Badge PORTADA */}
+      {image.isPrimary && image.status === 'success' && (
+        <div className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+          <Star className="w-4 h-4 fill-current" />
+          PORTADA
+        </div>
+      )}
+
+      {/* Número de orden */}
+      {!image.isPrimary && image.status === 'success' && (
+        <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+          📸 {index + 1}
+        </div>
+      )}
+
+      {/* Botón: Marcar como principal */}
+      {!image.isPrimary && image.status === 'success' && (
+        <button
+          onClick={onSetPrimary}
+          className="absolute bottom-2 left-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 shadow-lg transition-all"
+          title="Marcar como portada"
+        >
+          <Star className="w-3 h-3" />
+          Portada
+        </button>
+      )}
+
+      {/* Overlay estado uploading/error */}
+      {image.status !== 'success' && (
+        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+          {image.status === 'uploading' && (
+            <div className="text-center text-white">
+              <Loader className="w-8 h-8 animate-spin mx-auto mb-2" />
+              <p className="text-sm font-semibold">Subiendo...</p>
+            </div>
+          )}
+
+          {image.status === 'error' && (
+            <div className="text-center text-white">
+              <AlertCircle className="w-8 h-8 mx-auto mb-2 text-red-500" />
+              <p className="text-xs">{image.error}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Botón eliminar */}
+      {image.status !== 'uploading' && (
+        <button
+          onClick={onRemove}
+          className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 transition-all shadow-lg"
+          aria-label="Eliminar imagen"
+        >
+          <X className="w-4 h-4" />
+        </button>
       )}
     </div>
   );

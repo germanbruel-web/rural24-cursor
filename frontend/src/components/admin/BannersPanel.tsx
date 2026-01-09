@@ -1,34 +1,33 @@
 import { useState, useEffect } from 'react';
-import { Upload, Trash2, Edit, Eye, EyeOff, Plus, Image as ImageIcon, Save, X, ArrowUp, ArrowDown, Star } from 'lucide-react';
+import { Upload, Trash2, Edit, Eye, EyeOff, Plus, Image as ImageIcon, Save, X, Star, Users, ExternalLink, ArrowUp, ArrowDown, Monitor, Smartphone, ChevronDown, ChevronUp } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import { uploadService } from '../../services/uploadService';
 import * as bannersService from '../../services/bannersService';
-import type { Banner, BannerType, BannerPosition } from '../../../types';
+import type { Banner, BannerType } from '../../../types';
 
+// Configuración de tipos de banner (solo Homepage)
 const BANNER_TYPES = {
-  homepage_search: {
-    label: 'Banner Buscador Dinámico',
-    description: 'Homepage - Posición 1 - 6 categorías',
-    dimensions: '1200x200',
-    formats: 'jpg / webp',
+  homepage_vip: {
+    code: 'BV',
+    label: 'Banner VIP Homepage',
+    description: 'Buscador dinámico - Posición principal',
+    dimensions: {
+      desktop: '1200x200px',
+      mobile: '480x100px',
+    },
+    color: 'from-purple-600 to-pink-600',
+    icon: '⭐',
   },
-  homepage_carousel: {
-    label: 'Banner Categoría Carrusel',
-    description: 'Homepage - Posición 2 - 6 categorías',
-    dimensions: '648x100',
-    formats: 'jpg / webp',
-  },
-  results_intercalated: {
-    label: 'Banner Resultados Intercalado',
-    description: 'Resultados - Posición 3 - Cada 5 resultados (Random)',
-    dimensions: '648x100',
-    formats: 'jpg / webp',
-  },
-  results_lateral: {
-    label: 'Banner Lateral Rotativo',
-    description: 'Resultados - Posición 4 - Lateral derecho A-B-C-D',
-    dimensions: 'Variable',
-    formats: 'jpg / webp',
+  homepage_category: {
+    code: 'BC',
+    label: 'Banner Categorías Homepage',
+    description: 'Carruseles por categoría - Secciones destacadas',
+    dimensions: {
+      desktop: '650x120px',
+      mobile: '480x100px',
+    },
+    color: 'from-green-600 to-emerald-600',
+    icon: '🏷️',
   },
 };
 
@@ -46,19 +45,22 @@ export default function BannersPanel() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [filterType, setFilterType] = useState<BannerType | 'all'>('all');
+  const [filterClient, setFilterClient] = useState<string>('all');
   const [uploadingImage, setUploadingImage] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
-    type: 'homepage_search' as BannerType,
+    type: 'homepage_vip' as BannerType,
+    client_name: '',
     title: '',
     image_url: '',
     link_url: '',
     category: '',
-    position: null as BannerPosition,
     device_target: 'desktop' as 'desktop' | 'mobile',
     is_active: true,
     display_order: 0,
+    is_priority: false,
+    priority_weight: 0,
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
@@ -111,14 +113,20 @@ export default function BannersPanel() {
   };
 
   const handleSubmit = async () => {
+    // Validaciones
+    if (!formData.client_name || !formData.client_name.trim()) {
+      notify.error('El nombre del cliente es obligatorio');
+      return;
+    }
+
     if (!formData.title || !formData.image_url) {
       notify.error('Completá los campos obligatorios');
       return;
     }
 
-    // Validación de posición para banners laterales
-    if (formData.type === 'results_lateral' && !formData.position) {
-      notify.error('Seleccioná una posición (A-B-C-D) para banners laterales');
+    // Validación de categoría para BC
+    if (formData.type === 'homepage_category' && !formData.category) {
+      notify.error('Seleccioná una categoría para Banner Categorías Homepage');
       return;
     }
 
@@ -126,11 +134,11 @@ export default function BannersPanel() {
       if (editingBanner) {
         const { error } = await bannersService.updateBanner(editingBanner.id, formData);
         if (error) throw error;
-        notify.success('Banner actualizado');
+        notify.success('✅ Banner actualizado correctamente');
       } else {
         const { error } = await bannersService.createBanner(formData);
         if (error) throw error;
-        notify.success('Banner creado');
+        notify.success('✅ Banner creado correctamente');
       }
       
       setShowAddModal(false);
@@ -190,16 +198,16 @@ export default function BannersPanel() {
     try {
       const newPriorityStatus = !banner.is_priority;
       
-      // Confirmar si quiere desactivar otros banners prioritarios de la misma posición
+      // Confirmar si quiere desactivar otros banners prioritarios del mismo tipo
       let deselectOthers = false;
       if (newPriorityStatus) {
         const otherPriorityCount = banners.filter(
-          b => b.position === banner.position && b.is_priority && b.id !== banner.id
+          b => b.type === banner.type && b.is_priority && b.id !== banner.id
         ).length;
 
         if (otherPriorityCount > 0) {
           deselectOthers = window.confirm(
-            `Ya hay ${otherPriorityCount} banner(s) prioritario(s) en esta posición.\n\n` +
+            `Ya hay ${otherPriorityCount} banner(s) prioritario(s) de tipo ${BANNER_TYPES[banner.type].label}.\n\n` +
             `¿Deseas desactivar los otros y dejar solo este como prioritario?\n\n` +
             `• SÍ = Solo este banner será prioritario (recomendado)\n` +
             `• NO = Múltiples banners prioritarios competirán por prioridad`
@@ -230,15 +238,17 @@ export default function BannersPanel() {
 
   const resetForm = () => {
     setFormData({
-      type: 'homepage_search',
+      type: 'homepage_vip',
+      client_name: '',
       title: '',
       image_url: '',
       link_url: '',
       category: '',
-      position: null,
       device_target: 'desktop',
       is_active: true,
       display_order: 0,
+      is_priority: false,
+      priority_weight: 0,
     });
     setSelectedFile(null);
     setPreviewUrl('');
@@ -248,22 +258,46 @@ export default function BannersPanel() {
     setEditingBanner(banner);
     setFormData({
       type: banner.type,
+      client_name: banner.client_name,
       title: banner.title,
       image_url: banner.image_url,
       link_url: banner.link_url || '',
       category: banner.category || '',
-      position: banner.position || null,
-      device_target: (banner.device_target === 'both' ? 'desktop' : banner.device_target) || 'desktop',
+      device_target: banner.device_target,
       is_active: banner.is_active,
       display_order: banner.display_order,
+      is_priority: banner.is_priority || false,
+      priority_weight: banner.priority_weight || 0,
     });
     setPreviewUrl(banner.image_url);
     setShowAddModal(true);
   };
 
-  const filteredBanners = filterType === 'all' 
-    ? banners 
-    : banners.filter(b => b.type === filterType);
+  // Obtener lista única de clientes para filtro
+  const uniqueClients = Array.from(new Set(banners.map(b => b.client_name))).sort();
+
+  // Filtrar banners
+  const filteredBanners = banners.filter(b => {
+    const matchesType = filterType === 'all' || b.type === filterType;
+    const matchesClient = filterClient === 'all' || b.client_name === filterClient;
+    return matchesType && matchesClient;
+  });
+
+  // Agrupar banners por cliente
+  const bannersByClient = filteredBanners.reduce((acc, banner) => {
+    const client = banner.client_name || 'Sin cliente';
+    if (!acc[client]) {
+      acc[client] = [];
+    }
+    acc[client].push(banner);
+    return acc;
+  }, {} as Record<string, Banner[]>);
+
+  // Obtener dimensiones requeridas según tipo y dispositivo
+  const getRequiredDimensions = () => {
+    const config = BANNER_TYPES[formData.type];
+    return config.dimensions[formData.device_target];
+  };
 
   return (
     <div className="space-y-6">
@@ -447,7 +481,7 @@ export default function BannersPanel() {
                     {BANNER_TYPES[banner.type].description}
                   </p>
                   <p className="text-xs text-gray-500">
-                    📏 {BANNER_TYPES[banner.type].dimensions} • {BANNER_TYPES[banner.type].formats}
+                    📏 Desktop: {BANNER_TYPES[banner.type].dimensions.desktop} • Mobile: {BANNER_TYPES[banner.type].dimensions.mobile}
                   </p>
                   {banner.link_url && (
                     <p className="text-xs text-gray-500 mt-1 truncate">
@@ -496,7 +530,7 @@ export default function BannersPanel() {
                 >
                   {Object.entries(BANNER_TYPES).map(([key, info]) => (
                     <option key={key} value={key}>
-                      {info.label} - {info.dimensions}
+                      {info.label}
                     </option>
                   ))}
                 </select>
@@ -517,6 +551,23 @@ export default function BannersPanel() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
                   placeholder="Nombre descriptivo del banner"
                 />
+              </div>
+
+              {/* Nombre del Cliente */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre del Cliente *
+                </label>
+                <input
+                  type="text"
+                  value={formData.client_name}
+                  onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+                  placeholder="Ej: Distribuidora Z, Auri, MFE"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Los banners se agruparán por este nombre en el dashboard
+                </p>
               </div>
 
               {/* Categoría (opcional) */}
@@ -577,7 +628,7 @@ export default function BannersPanel() {
               {/* Imagen */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Imagen * ({BANNER_TYPES[formData.type].dimensions} - {BANNER_TYPES[formData.type].formats})
+                  Imagen * (Desktop: {BANNER_TYPES[formData.type].dimensions.desktop}, Mobile: {BANNER_TYPES[formData.type].dimensions.mobile})
                 </label>
                 <div className="space-y-2">
                   <input

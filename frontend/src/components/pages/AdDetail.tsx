@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import { getFieldsForAd, FieldConfig } from '../../config/adFieldsConfig';
+import { getFieldsForSubcategory } from '../../services/formConfigService';
 import { MapPin, Phone, Calendar, DollarSign, Tag } from 'lucide-react';
 import { normalizeImages, type NormalizedImage } from '../../utils/imageHelpers';
 import { ContactVendorButton } from '../ContactVendorButton';
@@ -131,7 +132,44 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
 
     const categoryName = ad.categories.name;
     const subcategoryName = ad.subcategories.name;
-    const fields = getFieldsForAd(categoryName, subcategoryName);
+    
+    // Intenta obtener fields desde backend (nueva implementación)
+    // Si falla, usa getFieldsForAd hardcoded (fallback)
+    const [fields, setFields] = useState<FieldConfig[]>([]);
+    const [fieldsLoaded, setFieldsLoaded] = useState(false);
+
+    useEffect(() => {
+      const loadFields = async () => {
+        try {
+          // Primero intenta desde backend
+          const dynamicFields = await getFieldsForSubcategory(ad.subcategory_id);
+          setFields(dynamicFields);
+          console.log('✅ Usando configuración de formulario desde backend');
+        } catch (error) {
+          // Fallback al hardcoded
+          console.warn('⚠️ Fallback a configuración hardcoded:', error);
+          const fallbackFields = getFieldsForAd(categoryName, subcategoryName);
+          setFields(fallbackFields);
+        } finally {
+          setFieldsLoaded(true);
+        }
+      };
+      
+      loadFields();
+    }, [ad.subcategory_id, categoryName, subcategoryName]);
+
+    if (!fieldsLoaded) {
+      return (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="animate-pulse h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-12 bg-gray-100 rounded"></div>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
     // Filtrar solo los campos dinámicos que tienen valor
     const dynamicFieldsToShow = fields.filter(field => {

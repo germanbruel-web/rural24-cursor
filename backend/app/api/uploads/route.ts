@@ -145,36 +145,40 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 7. VALIDAR ASPECT RATIO (solo horizontales)
-    try {
-      const metadata = await sharp(buffer).metadata();
-      const { width = 0, height = 0 } = metadata;
+    // 7. VALIDAR ASPECT RATIO (solo para ads, NO para banners)
+    if (folder !== 'banners') {
+      try {
+        const metadata = await sharp(buffer).metadata();
+        const { width = 0, height = 0 } = metadata;
 
-      const aspectValidation = validateImageAspectRatio(width, height, {
-        min: 1.2,  // 6:5 mínimo (casi cuadrado)
-        max: 2.5   // 21:9 máximo (ultra wide)
-      });
+        const aspectValidation = validateImageAspectRatio(width, height, {
+          min: 1.2,  // 6:5 mínimo (casi cuadrado)
+          max: 2.5   // 21:9 máximo (ultra wide)
+        });
 
-      if (!aspectValidation.valid) {
-        console.warn(`[INVALID ASPECT] IP: ${clientIP} - Ratio: ${aspectValidation.ratio.toFixed(2)}:1`);
-        
+        if (!aspectValidation.valid) {
+          console.warn(`[INVALID ASPECT] IP: ${clientIP} - Ratio: ${aspectValidation.ratio.toFixed(2)}:1`);
+          
+          return NextResponse.json(
+            { 
+              error: aspectValidation.reason,
+              ratio: aspectValidation.ratio.toFixed(2),
+              dimensions: { width, height }
+            },
+            { status: 400 }
+          );
+        }
+
+        console.log(`[VALID ASPECT] ${width}x${height} - Ratio: ${aspectValidation.ratio.toFixed(2)}:1`);
+      } catch (sharpError: any) {
+        console.error(`[SHARP ERROR] Failed to process image:`, sharpError);
         return NextResponse.json(
-          { 
-            error: aspectValidation.reason,
-            ratio: aspectValidation.ratio.toFixed(2),
-            dimensions: { width, height }
-          },
+          { error: 'Failed to process image', details: sharpError.message },
           { status: 400 }
         );
       }
-
-      console.log(`[VALID ASPECT] ${width}x${height} - Ratio: ${aspectValidation.ratio.toFixed(2)}:1`);
-    } catch (sharpError: any) {
-      console.error(`[SHARP ERROR] Failed to process image:`, sharpError);
-      return NextResponse.json(
-        { error: 'Failed to process image', details: sharpError.message },
-        { status: 400 }
-      );
+    } else {
+      console.log(`[BANNER UPLOAD] Skipping aspect ratio validation for banners folder`);
     }
 
     // 8. UPLOAD A CLOUDINARY

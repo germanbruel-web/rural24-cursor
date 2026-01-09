@@ -10,8 +10,19 @@ export interface FeaturedAdsByCategory {
   category_id: string;
   category_name: string;
   category_slug: string;
-  banner_url?: string;
-  subcategories: Array<{ id: string; name: string; slug: string }>;
+  banners: Array<{
+    id: string;
+    image_url: string;
+    link_url?: string;
+    title: string;
+  }>;
+  subcategories: Array<{ 
+    id: string; 
+    name: string; 
+    slug: string; 
+    ads_count: number;
+    icon?: string;
+  }>;
   ads: Ad[];
   total_featured: number;
 }
@@ -38,7 +49,7 @@ export async function getFeaturedAdsByCategories(
     if (catError) throw catError;
     if (!categories) return [];
 
-    // 2. Por cada categoría, obtener avisos destacados
+    // 2. Por cada categoría, obtener avisos destacados, subcategorías y banner
     const results = await Promise.all(
       categories.map(async (cat) => {
         // 2a. Avisos destacados con orden manual
@@ -57,12 +68,62 @@ export async function getFeaturedAdsByCategories(
           console.error(`❌ Error fetching ads for ${cat.name}:`, adsError);
         }
 
+        // 2b. Obtener subcategorías con contadores de avisos activos
+        const { data: subcategories, error: subError } = await supabase
+          .from('subcategories')
+          .select('id, name, display_name, icon, sort_order')
+          .eq('category_id', cat.id)
+          .eq('is_active', true)
+          .order('sort_order');
+
+        if (subError) {
+          console.error(`❌ Error fetching subcategories for ${cat.name}:`, subError);
+        }
+
+        // 2b-bis. Contar avisos activos por subcategoría
+        const subcategoriesWithCounts = await Promise.all(
+          (subcategories || []).map(async (sub) => {
+            const { count, error: countError } = await supabase
+              .from('ads')
+              .select('*', { count: 'exact', head: true })
+              .eq('subcategory_id', sub.id)
+              .eq('status', 'active');
+
+            if (countError) {
+              console.error(`❌ Error counting ads for subcategory ${sub.name}:`, countError);
+            }
+
+            return {
+              id: sub.id,
+              name: sub.display_name || sub.name,
+              slug: sub.name,
+              ads_count: count || 0,
+              icon: sub.icon
+            };
+          })
+        );
+
+        // 2c. Obtener TODOS los banners activos de esta categoría (type: category_header)
+        const { data: banners, error: bannerError } = await supabase
+          .from('banners')
+          .select('id, image_url, link_url, title')
+          .eq('type', 'category_header')
+          .eq('category', cat.name)
+          .eq('is_active', true)
+          .order('is_priority', { ascending: false })
+          .order('priority_weight', { ascending: false })
+          .order('display_order');
+
+        if (bannerError) {
+          console.error(`❌ Error fetching banners for ${cat.name}:`, bannerError);
+        }
+
         return {
           category_id: cat.id,
           category_name: cat.display_name || cat.name,
           category_slug: cat.name,
-          banner_url: undefined,
-          subcategories: [],
+          banners: banners || [],
+          subcategories: subcategoriesWithCounts,
           ads: ads || [],
           total_featured: ads?.length || 0
         };

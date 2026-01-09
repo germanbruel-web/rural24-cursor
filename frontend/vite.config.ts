@@ -15,12 +15,17 @@ export default defineConfig(({ mode }) => {
         // Cache para assets estáticos (logos, imágenes)
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
+      proxy: {
+        // Proxy para API del backend Next.js
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
     plugins: [react()],
     define: {
-      // Exponer GEMINI_API_KEY si la necesitás
-      //'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),//
-      
       // Exponer Supabase
       'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
       'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),

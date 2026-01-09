@@ -539,7 +539,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                               <Cog6ToothIcon className="w-6 h-6 text-green-600" />
                               {groupTitles[groupKey as keyof typeof groupTitles] || groupKey}
                             </h3>
-                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
+                            <div className="grid grid-cols-3 gap-x-6 gap-y-3">
                               {attrs.map((attr) => {
                                 // Si el valor es un array, mostrarlo como lista
                                 const isArray = Array.isArray(attr.value);
@@ -582,7 +582,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                       <CheckBadgeIcon className="w-6 h-6 text-green-600" />
                       Características
                     </h3>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
+                    <div className="grid grid-cols-3 gap-x-6 gap-y-3">
                       {Object.entries(ad.attributes)
                         .filter(([_, value]) => value !== undefined && value !== null && value !== '')
                         .map(([key, value]) => {
@@ -622,7 +622,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                           <InformationCircleIcon className="w-5 h-5 text-green-600" />
                           Información General
                         </h3>
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
+                        <div className="grid grid-cols-3 gap-x-6 gap-y-3">
                           {ad.category && (
                             <div className="flex flex-col">
                               <span className="text-gray-600">Categoría</span>
@@ -741,15 +741,11 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
 
               {/* Info del vendedor - SIEMPRE VISIBLE */}
               <div className="mb-6 p-4 rounded-lg bg-gray-50">
-                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <User className="w-5 h-5 text-green-600" />
-                  {TEXTS.adDetail.seller}
-                </h3>
-                
                 <div className="space-y-2.5">
-                  {/* Mostrar nombre del vendedor si existe, sino mensaje genérico */}
+                  {/* Mostrar nombre del vendedor con icono adelante */}
                   {ad.seller?.full_name ? (
-                    <div className="text-base text-gray-900 font-semibold">
+                    <div className="text-base text-gray-900 font-semibold flex items-center gap-2">
+                      <User className="w-5 h-5 text-green-600 flex-shrink-0" />
                       {(() => {
                         const names = ad.seller.full_name.split(' ');
                         if (names.length >= 2) {
@@ -759,7 +755,8 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                       })()}
                     </div>
                   ) : (
-                    <div className="text-base text-gray-900 font-semibold">
+                    <div className="text-base text-gray-900 font-semibold flex items-center gap-2">
+                      <User className="w-5 h-5 text-green-600 flex-shrink-0" />
                       Vendedor Anónimo
                     </div>
                   )}

@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { MapPin, Share2, Star, Tag } from 'lucide-react';
+import { MapPin, Star, Tag } from 'lucide-react';
 import type { Product } from '../../../../types';
 import { Card } from '../../molecules/Card';
 import { Badge } from '../../atoms/Badge';
@@ -21,7 +21,6 @@ interface ProductCardProps {
   onViewDetail?: (adId: string) => void;
   showBadges?: boolean;
   showLocation?: boolean;
-  showShareButton?: boolean;
   className?: string;
 }
 
@@ -31,11 +30,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onViewDetail,
   showBadges = true,
   showLocation = true,
-  showShareButton = true,
   className,
 }) => {
   const [imageError, setImageError] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
   const imageUrl = useProductImage(product);
   const cardLabel = getProductLabel(product);
   
@@ -79,35 +76,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  // Compartir con Web Share API + fallback
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsSharing(true);
-
-    const shareData = {
-      title: product.title,
-      text: `${product.title} - ${formatPrice(product.price, product.currency)}`,
-      url: window.location.origin + '/#' + getAdDetailUrl(product.title, product.id),
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        // Fallback: copiar al clipboard
-        await navigator.clipboard.writeText(shareData.url);
-        // Mostrar toast (implementar después)
-        console.log('✅ Link copiado al portapapeles');
-      }
-    } catch (err) {
-      if ((err as Error).name !== 'AbortError') {
-        console.error('Error compartiendo:', err);
-      }
-    } finally {
-      setIsSharing(false);
-    }
-  };
-
   return (
     <Card
       variant="default"
@@ -137,27 +105,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         
         {/* Gradient overlay en hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Botón compartir flotante */}
-        {showShareButton && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              'absolute top-2 right-2',
-              'bg-white/90 hover:bg-white',
-              'backdrop-blur-sm',
-              'opacity-0 group-hover:opacity-100',
-              'transition-opacity duration-200',
-              'shadow-lg'
-            )}
-            onClick={handleShare}
-            disabled={isSharing}
-            aria-label="Compartir"
-          >
-            <Share2 size={16} className="text-gray-700" />
-          </Button>
-        )}
 
         {/* Badges destacados */}
         {showBadges && product.isSponsored && isFeatured && (

@@ -27,6 +27,8 @@ import {
   Layers,
   Move,
   Hash,
+  Sparkles,
+  Loader,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getCategories, getSubcategories, getCategoryTypes } from '../../services/v2/formsService';
@@ -120,11 +122,13 @@ export default function PublicarAviso() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [priceNegotiable, setPriceNegotiable] = useState(false);  // ✅ A Convenir
   const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [suggestedDescriptions, setSuggestedDescriptions] = useState<string[]>([]);
   const [selectedTitleIndex, setSelectedTitleIndex] = useState<number | null>(null);
   const [selectedDescIndex, setSelectedDescIndex] = useState<number | null>(null);
+  const [generatingContent, setGeneratingContent] = useState(false);  // ✅ Loading generación
   
   // Estados para validación anti-fraude en tiempo real
   const [titleError, setTitleError] = useState<string | null>(null);
@@ -167,6 +171,105 @@ export default function PublicarAviso() {
     }, 400);
     
     setDescDebounceTimer(timer);
+  };
+  
+  // ====================================================================
+  // HELPERS PARA PRECIO SIN DECIMALES
+  // ====================================================================
+  
+  /**
+   * Limpia y formatea precio: solo números enteros
+   */
+  const cleanPrice = (value: string): string => {
+    return value.replace(/[^\d]/g, '');
+  };
+  
+  /**
+   * Formatea precio con separador de miles
+   */
+  const formatPriceDisplay = (value: string): string => {
+    if (!value) return '';
+    const num = parseInt(value);
+    if (isNaN(num)) return '';
+    return num.toLocaleString('es-AR');
+  };
+  
+  /**
+   * Formatea precio con moneda
+   */
+  const formatCurrency = (amount: string, curr: 'ARS' | 'USD'): string => {
+    if (!amount) return '';
+    const num = parseInt(amount);
+    if (isNaN(num)) return '';
+    
+    if (curr === 'ARS') {
+      return `$${num.toLocaleString('es-AR')}`;
+    } else {
+      return `USD ${num.toLocaleString('en-US')}`;
+    }
+  };
+  
+  // ====================================================================
+  // GENERACIÓN DE CONTENIDO (TÍTULO + DESCRIPCIÓN)
+  // ====================================================================
+  
+  /**
+   * Genera título y descripción basado en datos del aviso
+   * Llamada a backend API (futuro: LLM con contexto de categoría)
+   */
+  const handleGenerateContent = async () => {
+    if (!selectedCategory || !selectedSubcategory) {
+      notify.error('Selecciona categoría y subcategoría primero');
+      return;
+    }
+
+    setGeneratingContent(true);
+    setSuggestedTitles([]);
+    setSuggestedDescriptions([]);
+
+    try {
+      // Construir contexto del aviso
+      const categoryName = categories.find(c => c.id === selectedCategory)?.name || '';
+      const subcategoryName = subcategories.find(s => s.id === selectedSubcategory)?.name || '';
+
+      const context = {
+        category_id: selectedCategory,
+        subcategory_id: selectedSubcategory,
+        category_name: categoryName,
+        subcategory_name: subcategoryName,
+        attributes: attributeValues,
+        province,
+        locality,
+      };
+
+      console.log('🪄 Generando contenido con contexto:', context);
+
+      // Llamada al endpoint (futuro: backend con LLM)
+      const response = await fetch('/api/ads/generate-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(context),
+      });
+
+      if (!response.ok) throw new Error('Error generando contenido');
+
+      const data = await response.json();
+
+      if (data.titles && data.titles.length > 0) {
+        setSuggestedTitles(data.titles);
+      }
+
+      if (data.description) {
+        setSuggestedDescriptions([data.description]);
+      }
+
+      notify.success('✨ Contenido generado exitosamente');
+    } catch (error: any) {
+      console.error('Error generando contenido:', error);
+      notify.error('Error al generar contenido. Intenta manualmente.');
+    } finally {
+      setGeneratingContent(false);
+    }
   };
   
   // ====================================================================
@@ -236,6 +339,7 @@ export default function PublicarAviso() {
   // ====================================================================
   useEffect(() => {
     loadCategories();
+    detectEditMode(); // ✅ Detectar modo edit al montar
     initializeOrRecoverDraft();
     cleanupOldDrafts();
     
@@ -757,7 +861,13 @@ export default function PublicarAviso() {
           if (!img.url || !img.path) {
             console.error('[PublicarAviso] ❌ Imagen sin url o path:', img);
           }
-          return { url: img.url, path: img.path };
+          // ✅ PRESERVAR sortOrder e isPrimary para que las cards muestren la imagen correcta
+          return { 
+            url: img.url, 
+            path: img.path,
+            sortOrder: img.sortOrder ?? 999,  // Fallback para compatibilidad
+            isPrimary: img.isPrimary ?? false  // Fallback para compatibilidad
+          };
         });
 
       console.log(`[PublicarAviso] ✅ Images with success status: ${finalImages.length}`);
@@ -777,22 +887,37 @@ export default function PublicarAviso() {
         return;
       }
 
-      // 2. Preparar datos (nota: adData solo se usa para UPDATE mode, CREATE usa estructura diferente)
+      // 2. Preparar datos - Enviar TODOS los atributos (incluso vacíos) para debugging
+      const cleanAttributes = attributeValues; // TEMPORAL: Enviar todo sin limpiar
+      
+      console.log('🔍 DEBUG - attributeValues RAW:', attributeValues);
+      console.log('🔍 DEBUG - cleanAttributes:', cleanAttributes);
+      
+      // NOTA: Lógica original comentada para debugging
+      // const cleanAttributes = Object.entries(attributeValues).reduce((acc, [key, value]) => {
+      //   if (value !== null && value !== undefined && value !== '') {
+      //     acc[key] = value;
+      //   }
+      //   return acc;
+      // }, {} as Record<string, any>);
+
       const adData = {
         category_id: selectedCategory,
         subcategory_id: selectedSubcategory,
         title: title.trim(),
         description: description.trim(),
-        price: price ? parseFloat(price) : null,
+        price: priceNegotiable ? null : (price ? parseInt(price) : null),  // ✅ Sin decimales
+        price_negotiable: priceNegotiable,  // ✅ Nuevo campo
         currency,
         location: locality || null,
         province,
-        images: finalImages.map(img => img.url), // Para UPDATE, mantener compatibilidad
-        attributes: attributeValues,
+        images: finalImages, // ✅ Ahora incluye sortOrder e isPrimary para mostrar correctamente en cards
+        attributes: cleanAttributes,  // ✅ Atributos limpios
         status: 'active',
       };
 
       console.log(isEditMode ? '📝 Datos a actualizar:' : '📦 Datos a insertar:', adData);
+      console.log('🔍 DEBUG - isEditMode:', isEditMode, 'editAdId:', editAdId);
       
       // Validar precio
       if (adData.price && adData.price > 9999999999) {
@@ -802,8 +927,11 @@ export default function PublicarAviso() {
 
       let resultId: string;
 
+      console.log('🔍 CHECKPOINT - Decidiendo flujo:', { isEditMode, editAdId, hasEditId: !!editAdId });
+
       if (isEditMode && editAdId) {
         // MODO UPDATE
+        console.log('✅ Entrando en flujo UPDATE con ID:', editAdId);
         const { data, error } = await supabase
           .from('ads')
           .update(adData)
@@ -820,18 +948,32 @@ export default function PublicarAviso() {
         notify.success('Aviso actualizado exitosamente!');
       } else {
         // MODO CREATE - Usar nuevo BFF API
+        console.log('✅ Entrando en flujo CREATE');
+        
+        // ⚠️ ALERTA: Si hay un editAdId pero isEditMode es false, algo está mal
+        if (editAdId && !isEditMode) {
+          console.error('⚠️ WARNING: editAdId existe pero isEditMode es false!', { editAdId, isEditMode });
+          notify.error('Error interno: modo de edición inconsistente. Recarga la página.');
+          return;
+        }
+        
+        // Usar provincia/localidad del vendedor si no se especificó
+        const finalProvince = province || profile.province || null;
+        const finalCity = locality || profile.location || null;
+
         const createData = {
           user_id: profile.id,
           category_id: selectedCategory,
           subcategory_id: selectedSubcategory,
           title: title.trim(),
           description: description.trim(),
-          price: price ? parseFloat(price) : null,
+          price: priceNegotiable ? null : (price ? parseInt(price) : null),  // ✅ Sin decimales
+          price_negotiable: priceNegotiable,  // ✅ Nuevo campo
           currency,
-          city: locality || null,
-          province,
+          city: finalCity,
+          province: finalProvince,
           images: finalImages,
-          attributes: attributeValues,
+          attributes: cleanAttributes,
           contact_phone: null,
           contact_email: null,
         };
@@ -1416,14 +1558,89 @@ export default function PublicarAviso() {
             {/* STEP 5: INFORMACIÓN */}
             {currentStep === 5 && (
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-                    Información del aviso
-                  </h2>
-                  <p className="text-base sm:text-lg text-gray-600">
-                    Título, descripción y precio
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+                      Información del aviso
+                    </h2>
+                    <p className="text-base sm:text-lg text-gray-600">
+                      Título, descripción y precio
+                    </p>
+                  </div>
+
+                  {/* Botón de generación automática - Posición superior derecha */}
+                  <Button
+                    type="button"
+                    onClick={handleGenerateContent}
+                    disabled={generatingContent || !selectedCategory}
+                    variant="secondary"
+                    className="flex items-center gap-2 whitespace-nowrap"
+                  >
+                    {generatingContent ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin" />
+                        <span className="hidden sm:inline">Generando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        <span className="hidden sm:inline">Generar Sugerencias</span>
+                        <span className="sm:hidden">IA</span>
+                      </>
+                    )}
+                  </Button>
                 </div>
+
+                {/* Sugerencias de título */}
+                {suggestedTitles.length > 0 && (
+                  <div className="space-y-3 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
+                    <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-green-600" />
+                      Títulos sugeridos (click para usar)
+                    </h4>
+                    {suggestedTitles.map((suggestion, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setTitle(suggestion);
+                          setSelectedTitleIndex(idx);
+                        }}
+                        className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                          selectedTitleIndex === idx
+                            ? 'bg-green-100 border-green-500 font-semibold'
+                            : 'bg-white border-green-200 hover:bg-green-50 hover:border-green-300'
+                        }`}
+                      >
+                        {idx + 1}. {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Sugerencia de descripción */}
+                {suggestedDescriptions.length > 0 && (
+                  <div className="space-y-3 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
+                    <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-green-600" />
+                      Descripción sugerida (editable)
+                    </h4>
+                    <div className="bg-white p-4 rounded-lg border-2 border-green-200">
+                      <p className="text-sm text-gray-700 whitespace-pre-line">{suggestedDescriptions[0]}</p>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setDescription(suggestedDescriptions[0]);
+                        setSelectedDescIndex(0);
+                      }}
+                      variant="outline"
+                      fullWidth
+                    >
+                      Usar esta descripción
+                    </Button>
+                  </div>
+                )}
 
                 {/* Título */}
                 <div className="space-y-2">
@@ -1460,8 +1677,7 @@ export default function PublicarAviso() {
                     </div>
                   ) : (
                     <InfoBox variant="info" size="sm">
-                      <strong>Permitido:</strong> Números y años.
-                      <strong className="ml-2">NO permitido:</strong> Teléfonos, emails y sitios web.
+                      Números y años permitidos. No incluir teléfonos, emails o sitios web.
                     </InfoBox>
                   )}
                 </div>
@@ -1501,49 +1717,78 @@ export default function PublicarAviso() {
                     </div>
                   ) : (
                     <InfoBox variant="info" size="sm">
-                      <strong>Permitido:</strong> Números y años.
-                      <strong className="ml-2">NO permitido:</strong> Teléfonos, emails y sitios web.
+                      Números y años permitidos. No incluir teléfonos, emails o sitios web.
                     </InfoBox>
                   )}
                 </div>
 
                 {/* Precio */}
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <label className="block text-lg font-bold text-gray-900">
-                    Precio (opcional)
+                    Precio
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="sm:col-span-2">
-                      <input
-                        type="number"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        placeholder="0"
-                        min="0"
-                        max="9999999999"
-                        step="0.01"
-                        className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
-                      />
-                    </div>
 
-                    <div>
-                      <select
-                        value={currency}
-                        onChange={(e) => setCurrency(e.target.value as 'ARS' | 'USD')}
-                        className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
-                      >
-                        <option value="ARS">ARS $</option>
-                        <option value="USD">USD $</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
+                  {/* Checkbox: A Convenir */}
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={priceNegotiable}
+                      onChange={(e) => {
+                        setPriceNegotiable(e.target.checked);
+                        if (e.target.checked) setPrice('');
+                      }}
+                      className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+                    />
+                    <span className="text-base font-semibold text-gray-700 group-hover:text-green-600 transition-colors flex items-center gap-2">
+                      <DollarSign className="w-4 h-4" />
+                      A Convenir (no especificar precio)
+                    </span>
+                  </label>
 
-                <div className="flex items-start gap-3 p-5 sm:p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                  <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm sm:text-base text-blue-900">
-                    Escribí un título claro y una descripción detallada para atraer más compradores.
-                  </p>
+                  {/* Input de precio - Solo si NO es "A Convenir" */}
+                  {!priceNegotiable && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="sm:col-span-2">
+                        <input
+                          type="text"
+                          value={formatPriceDisplay(price)}
+                          onChange={(e) => setPrice(cleanPrice(e.target.value))}
+                          placeholder="50000"
+                          className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">
+                          Solo números enteros (sin centavos)
+                        </p>
+                      </div>
+
+                      <div>
+                        <select
+                          value={currency}
+                          onChange={(e) => setCurrency(e.target.value as 'ARS' | 'USD')}
+                          className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+                        >
+                          <option value="ARS">ARS $</option>
+                          <option value="USD">USD $</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Preview del precio formateado */}
+                  {price && !priceNegotiable && (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 border-2 border-green-200 rounded-lg">
+                      <DollarSign className="w-5 h-5 text-green-600" />
+                      <span className="text-sm text-gray-700">
+                        Se publicará como: <strong className="text-green-700 text-lg">{formatCurrency(price, currency)}</strong>
+                      </span>
+                    </div>
+                  )}
+
+                  {priceNegotiable && (
+                    <InfoBox variant="info" size="sm">
+                      Se publicará como <strong>A Convenir</strong>
+                    </InfoBox>
+                  )}
                 </div>
               </div>
             )}
@@ -1600,7 +1845,8 @@ export default function PublicarAviso() {
                     data={{
                       title,
                       description,
-                      price: price ? parseFloat(price) : null,
+                      price: priceNegotiable ? null : (price ? parseInt(price) : null),  // ✅ Sin decimales
+                      price_negotiable: priceNegotiable,  // ✅ Mostrar si es "A Convenir"
                       currency,
                       province,
                       city: locality || null,

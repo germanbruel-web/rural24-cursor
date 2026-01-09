@@ -1,9 +1,10 @@
 // src/services/enrichProductData.ts
 
 /**
- * Placeholder temporal.
- * Antes usábamos Gemini para enriquecer los datos,
- * pero por ahora esta función simplemente devuelve los productos tal cual llegan.
+ * Placeholder para enriquecimiento de datos de productos.
+ * Actualmente devuelve los productos sin modificar.
+ * 
+ * FUTURO: Implementar enriquecimiento desde catálogo maestro en BD.
  */
 
 export function enrichProductData(products: any[]) {

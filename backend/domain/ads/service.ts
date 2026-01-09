@@ -75,10 +75,12 @@ export class AdsService {
 
   /**
    * Validar atributos dinámicos contra dynamic_attributes de la subcategoría
+   * @param isUpdate - Si es true, no valida atributos requeridos faltantes (permite updates parciales)
    */
   private async validateDynamicAttributes(
     subcategoryId: string,
-    attributes: Record<string, any>
+    attributes: Record<string, any>,
+    isUpdate: boolean = false
   ): Promise<Result<void, ValidationError>> {
     // Obtener configuración de atributos dinámicos
     const attributesResult = await this.catalogRepo.getDynamicAttributesBySubcategory(subcategoryId);
@@ -94,9 +96,9 @@ export class AdsService {
     const dynamicAttributes = attributesResult.value;
     const errors: Record<string, string[]> = {};
 
-    // Validar cada atributo requerido
+    // Validar cada atributo requerido (solo en CREATE, no en UPDATE)
     for (const attr of dynamicAttributes) {
-      if (attr.is_required && !attributes[attr.field_name]) {
+      if (!isUpdate && attr.is_required && !attributes[attr.field_name]) {
         errors[attr.field_name] = [`${attr.field_label} es obligatorio`];
       }
 
@@ -180,7 +182,8 @@ export class AdsService {
       const ad = adResult.value;
       const attributesValidation = await this.validateDynamicAttributes(
         ad.subcategory_id,
-        data.attributes
+        data.attributes,
+        true // isUpdate = true, permite updates parciales sin validar campos requeridos
       );
 
       if (attributesValidation.isFailure) {

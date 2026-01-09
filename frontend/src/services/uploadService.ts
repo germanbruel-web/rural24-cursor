@@ -11,10 +11,54 @@ const BUCKET_NAME = 'ads-images'; // Nombre del bucket en Supabase
 
 export const uploadService = {
   /**
-   * Sube una imagen al bucket de Supabase Storage
-   * NUEVA VERSIÓN: Comprime automáticamente a máximo 1MB
+   * Sube una imagen vía backend API (Cloudinary)
+   * @param file - Archivo a subir
+   * @param folder - Carpeta destino: 'ads' o 'banners'
    */
   async uploadImage(file: File, folder: string = 'ads'): Promise<{ url: string; path: string }> {
+    try {
+      // Validar archivo
+      const validation = ImageOptimizer.validateImageFile(file);
+      if (!validation.valid) {
+        throw new Error(validation.error);
+      }
+
+      console.log(`📦 Subiendo imagen a Cloudinary: ${file.name} (${ImageOptimizer.formatFileSize(file.size)})`);
+
+      // Crear FormData
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', folder); // 'ads' o 'banners'
+
+      // Subir vía backend API (Cloudinary)
+      const response = await fetch('http://localhost:3000/api/uploads', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${errorText}`);
+      }
+
+      const result = await response.json();
+      
+      console.log(`✅ Imagen subida a Cloudinary: ${result.url}`);
+
+      return {
+        url: result.url,
+        path: result.path || result.url,
+      };
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * LEGACY: Sube una imagen a Supabase Storage (mantener por compatibilidad)
+   */
+  async uploadImageToSupabase(file: File, folder: string = 'ads'): Promise<{ url: string; path: string }> {
     try {
       // Validar archivo
       const validation = ImageOptimizer.validateImageFile(file);

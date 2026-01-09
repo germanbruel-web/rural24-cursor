@@ -4,7 +4,6 @@ import {
   Search, 
   Filter, 
   MoreVertical,
-  Shield,
   Award,
   User as UserIcon,
   Mail,
@@ -14,7 +13,6 @@ import {
   Edit,
   Trash2,
   Plus,
-  Crown,
   AlertTriangle
 } from 'lucide-react';
 import { notify } from '../../utils/notifications';
@@ -96,47 +94,7 @@ export const UsersPanel: React.FC = () => {
     verified: users.filter(u => u.email_verified).length,
   };
 
-  const handleUpgradeToAdmin = async (userId: string) => {
-    if (!confirm('¿Convertir a este usuario en SuperAdmin? Tendrá acceso total al sistema.')) return;
-    
-    try {
-      const { error } = await updateUserRole(userId, 'superadmin');
-      
-      if (error) {
-        notify.error('Error al actualizar usuario: ' + error.message);
-        return;
-      }
-      
-      notify.success('Usuario actualizado a SuperAdmin');
-      loadUsers();
-    } catch (error) {
-      notify.error('Error al actualizar usuario');
-      console.error('Error upgrading to admin:', error);
-    }
-  };
 
-  const handleChangeRole = async (userId: string, newRole: UserRole) => {
-    try {
-      const { error } = await updateUserRole(userId, newRole);
-      
-      if (error) {
-        notify.error('Error al cambiar rol: ' + error.message);
-        return;
-      }
-      
-      const roleNames: Record<UserRole, string> = {
-        superadmin: 'SuperAdmin',
-        adminscrap: 'AdminScrap',
-        free: 'Free',
-      };
-      
-      notify.success(`Usuario actualizado a ${roleNames[newRole]}`);
-      loadUsers();
-    } catch (error) {
-      notify.error('Error al cambiar rol');
-      console.error('Error changing role:', error);
-    }
-  };
 
   const handleDeleteUser = async (userId: string) => {
     const user = users.find(u => u.id === userId);
@@ -419,63 +377,22 @@ export const UsersPanel: React.FC = () => {
                       </button>
 
                       {showUserMenu === user.id && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                           {!user.email_verified && (
-                            <button
-                              onClick={() => {
-                                handleVerifyEmail(user.id);
-                                setShowUserMenu(null);
-                              }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                              Verificar Email
-                            </button>
+                            <>
+                              <button
+                                onClick={() => {
+                                  handleVerifyEmail(user.id);
+                                  setShowUserMenu(null);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 flex items-center gap-2"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                                Verificar Email
+                              </button>
+                              <div className="border-t border-gray-200 my-2"></div>
+                            </>
                           )}
-
-                          <div className="border-t border-gray-200 my-2"></div>
-                          <div className="px-4 py-2 text-xs text-gray-500 font-semibold">Cambiar Rol</div>
-                          
-                          {user.role !== 'superadmin' && (
-                            <button
-                              onClick={() => {
-                                handleChangeRole(user.id, 'superadmin');
-                                setShowUserMenu(null);
-                              }}
-                              className="w-full text-left px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 flex items-center gap-2"
-                            >
-                              <Crown className="w-4 h-4" />
-                              Promover a SuperAdmin
-                            </button>
-                          )}
-
-                          {user.role !== 'adminscrap' && (
-                            <button
-                              onClick={() => {
-                                handleChangeRole(user.id, 'adminscrap');
-                                setShowUserMenu(null);
-                              }}
-                              className="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 flex items-center gap-2"
-                            >
-                              <Shield className="w-4 h-4" />
-                              Cambiar a AdminScrap
-                            </button>
-                          )}
-
-                          {user.role !== 'free' && (
-                            <button
-                              onClick={() => {
-                                handleChangeRole(user.id, 'free');
-                                setShowUserMenu(null);
-                              }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                            >
-                              <UserIcon className="w-4 h-4" />
-                              Cambiar a Free
-                            </button>
-                          )}
-
-                          <div className="border-t border-gray-200 my-2"></div>
 
                           <button
                             onClick={() => {

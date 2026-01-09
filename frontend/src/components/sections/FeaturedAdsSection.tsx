@@ -1,13 +1,13 @@
 /**
  * FeaturedAdsByCategory - Muestra avisos destacados agrupados por categoría
- * Diseño: Banner + 8 avisos en grid 4 columnas + Links subcategorías
+ * Diseño: Título (izq) + Carrusel Banner 650px (der) + Grid 4 columnas + Links subcategorías
  */
 
 import React, { useEffect, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
 import { getFeaturedAdsByCategories, type FeaturedAdsByCategory } from '../../services/featuredAdsService';
 import { ProductCard } from '../organisms/ProductCard';
-import { Button } from '../atoms/Button';
+import { SubcategoriesExpressBar } from './SubcategoriesExpressBar';
+import { CategoryBannerCarousel } from './CategoryBannerCarousel';
 
 interface Props {
   onAdClick?: (adId: string) => void;
@@ -92,46 +92,24 @@ export const FeaturedAdsSection: React.FC<Props> = ({
             className={`mb-16 last:mb-0 ${idx > 0 ? 'pt-8 border-t border-gray-200' : ''}`}
           >
             
-            {/* Banner de Categoría (si existe) */}
-            {catData.banner_url && (
-              <div 
-                className="relative h-32 sm:h-40 mb-8 rounded-xl overflow-hidden cursor-pointer group"
-                onClick={() => onCategoryClick?.(catData.category_slug)}
-              >
-                <img 
-                  src={catData.banner_url} 
-                  alt={catData.category_name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center px-8">
-                  <h3 className="text-3xl sm:text-4xl font-bold text-white">
-                    {catData.category_name}
-                  </h3>
-                </div>
-              </div>
-            )}
+            {/* Header: Título (izq) + Carrusel Banner 650px (der) */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+              {/* Título de la Categoría */}
+              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <span className="w-1.5 h-8 bg-green-600 rounded-full"></span>
+                {catData.category_name}
+              </h3>
 
-            {/* Header de Categoría (sin banner) */}
-            {!catData.banner_url && (
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-                  <span className="w-1.5 h-8 bg-green-600 rounded-full"></span>
-                  {catData.category_name}
-                </h3>
-                
-                <Button 
-                  variant="link"
-                  onClick={() => onCategoryClick?.(catData.category_slug)}
-                  rightIcon={<ArrowRight className="w-5 h-5" />}
-                  className="text-green-600 hover:text-green-700 font-semibold"
-                >
-                  Ver todos
-                </Button>
-              </div>
-            )}
+              {/* Carrusel de Banners - 650px alineado derecha */}
+              <CategoryBannerCarousel
+                banners={catData.banners}
+                categorySlug={catData.category_slug}
+                onCategoryClick={onCategoryClick}
+              />
+            </div>
 
             {/* Grid Responsive: Mobile 1, Tablet 2, Desktop 4 */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4">
               {catData.ads.map((ad) => (
                 <ProductCard
                   key={ad.id}
@@ -150,26 +128,12 @@ export const FeaturedAdsSection: React.FC<Props> = ({
               ))}
             </div>
 
-            {/* Footer: Links a Subcategorías */}
-            {catData.subcategories.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h4 className="text-sm font-bold text-gray-700 mb-4">
-                  Explorá por tipo:
-                </h4>
-                <div className="flex flex-wrap gap-3">
-                  {catData.subcategories.map((subcat) => (
-                    <Button
-                      key={subcat.id}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onSubcategoryClick?.(catData.category_slug, subcat.slug)}
-                    >
-                      {subcat.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Links sutiles de subcategorías debajo de las cards */}
+            <SubcategoriesExpressBar
+              categorySlug={catData.category_slug}
+              subcategories={catData.subcategories}
+              onSubcategoryClick={onSubcategoryClick}
+            />
           </div>
         ))}
       </div>

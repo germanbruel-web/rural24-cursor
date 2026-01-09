@@ -18,6 +18,8 @@ import { notify } from '../../utils/notifications';
 import { PROVINCES, LOCALITIES_BY_PROVINCE } from '../../constants/locations';
 
 interface ProfileFormData {
+  first_name: string;
+  last_name: string;
   full_name: string;
   email: string;
   phone?: string;
@@ -33,7 +35,23 @@ interface ProfileFormData {
 export const ProfilePanel: React.FC = () => {
   const { profile, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Separar full_name en first_name y last_name
+  const splitFullName = (fullName: string) => {
+    const parts = fullName.trim().split(' ');
+    if (parts.length === 1) return { first_name: parts[0], last_name: '' };
+    return {
+      first_name: parts[0],
+      last_name: parts.slice(1).join(' ')
+    };
+  };
+  
+  const { first_name: initialFirstName, last_name: initialLastName } = 
+    splitFullName(profile?.full_name || '');
+  
   const [formData, setFormData] = useState<ProfileFormData>({
+    first_name: initialFirstName,
+    last_name: initialLastName,
     full_name: profile?.full_name || '',
     email: profile?.email || '',
     phone: profile?.phone || '',
@@ -59,7 +77,10 @@ export const ProfilePanel: React.FC = () => {
   useEffect(() => {
     if (profile) {
       console.log('📋 Cargando datos del perfil en formulario:', profile);
+      const { first_name, last_name } = splitFullName(profile.full_name || '');
       setFormData({
+        first_name,
+        last_name,
         full_name: profile.full_name || '',
         email: profile.email || '',
         phone: profile.phone || '',
@@ -77,8 +98,11 @@ export const ProfilePanel: React.FC = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Combinar first_name y last_name para crear full_name
+      const fullName = `${formData.first_name.trim()} ${formData.last_name.trim()}`.trim();
+      
       const { error } = await updateProfile({
-        full_name: formData.full_name,
+        full_name: fullName,
         phone: formData.phone,
         mobile: formData.mobile,
         province: formData.province,
@@ -103,7 +127,10 @@ export const ProfilePanel: React.FC = () => {
   const handleCancel = () => {
     setIsEditing(false);
     // Reset form
+    const { first_name, last_name } = splitFullName(profile?.full_name || '');
     setFormData({
+      first_name,
+      last_name,
       full_name: profile?.full_name || '',
       email: profile?.email || '',
       phone: profile?.phone || '',
@@ -233,18 +260,39 @@ export const ProfilePanel: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <User className="w-4 h-4 inline mr-1" />
-                  Nombre Completo
+                  Nombre
                 </label>
                 {isEditing ? (
                   <input
                     type="text"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                    placeholder="Juan"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
                   />
                 ) : (
                   <div className="px-4 py-2 bg-gray-50 rounded-lg text-gray-900">
-                    {profile?.full_name || 'Sin especificar'}
+                    {formData.first_name || 'Sin especificar'}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <User className="w-4 h-4 inline mr-1" />
+                  Apellido
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={formData.last_name}
+                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                    placeholder="Pérez"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+                  />
+                ) : (
+                  <div className="px-4 py-2 bg-gray-50 rounded-lg text-gray-900">
+                    {formData.last_name || 'Sin especificar'}
                   </div>
                 )}
               </div>

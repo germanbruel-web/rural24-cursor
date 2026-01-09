@@ -152,28 +152,24 @@ export interface UpdateAdInput extends Partial<CreateAdInput> {
 }
 
 // ============================================
-// TIPOS PARA SISTEMA DE BANNERS
+// TIPOS PARA SISTEMA DE BANNERS HOMEPAGE
 // ============================================
 
 export type BannerType = 
-  | 'homepage_search'       // Banner Buscador Dinámico (Homepage - Pos 1) - 1200x200
-  | 'homepage_carousel'     // Banner Categoría Carrusel (Homepage - Pos 2) - 648x100
-  | 'results_intercalated'  // Banner Resultados Intercalado cada 5 (Pos 3) - 648x100
-  | 'results_lateral';      // Banner Lateral Rotativo A-B-C-D (Pos 4) - Variable
+  | 'homepage_vip'        // BV: Banner VIP Homepage (Buscador dinámico) - 1200x200 desktop, 480x100 mobile
+  | 'homepage_category';  // BC: Banner Categorías Homepage (Carruseles) - 648x100 desktop, 480x100 mobile
 
-export type BannerPosition = 'A' | 'B' | 'C' | 'D';
-
-export type DeviceTarget = 'desktop' | 'mobile' | 'both';
+export type DeviceTarget = 'desktop' | 'mobile';
 
 export interface Banner {
   id: string;
   type: BannerType;
+  client_name: string;  // Nombre del cliente/anunciante para agrupar
   title: string;
   image_url: string;
   link_url?: string;
-  category?: string;
-  position?: BannerPosition;  // Solo para 'results_lateral'
-  device_target: DeviceTarget;  // Dispositivo objetivo
+  category?: string;  // Solo para type: 'homepage_category'
+  device_target: DeviceTarget;
   is_active: boolean;
   display_order: number;
   is_priority?: boolean;  // ⭐ Marca si es prioritario (se muestra primero)
@@ -186,18 +182,30 @@ export interface Banner {
 
 export interface CreateBannerInput {
   type: BannerType;
+  client_name: string;
   title: string;
   image_url: string;
   link_url?: string;
   category?: string;
-  position?: BannerPosition;
-  device_target?: DeviceTarget;
+  device_target: DeviceTarget;
   is_active?: boolean;
   display_order?: number;
+  is_priority?: boolean;
+  priority_weight?: number;
 }
 
 export interface UpdateBannerInput {
   title?: string;
+  client_name?: string;
+  image_url?: string;
+  link_url?: string;
+  category?: string;
+  device_target?: DeviceTarget;
+  is_active?: boolean;
+  display_order?: number;
+  is_priority?: boolean;
+  priority_weight?: number;
+}
   image_url?: string;
   link_url?: string;
   category?: string;

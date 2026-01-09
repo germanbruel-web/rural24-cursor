@@ -10,6 +10,7 @@ import { notify } from '../../utils/notifications';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSuperAdmin as checkIsSuperAdmin } from '../../utils/rolePermissions';
 import { supabase } from '../../services/supabaseClient';
+import { QuickEditAdModal } from './QuickEditAdModal';
 
 /**
  * Extraer public_id de Cloudinary URL para borrado
@@ -458,70 +459,16 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         </div>
       )}
 
-      {/* Modal Editar */}
+      {/* Modal Quick Edit */}
       {selectedAdForEdit && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-gray-900">Editar Aviso Completo</h3>
-              <button
-                onClick={() => setSelectedAdForEdit(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="max-w-4xl mx-auto">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <p className="text-blue-900 text-sm">
-                    ℹ️ <strong>Modo Edición Completa:</strong> Puedes modificar todos los campos del aviso, 
-                    incluyendo categoría, atributos dinámicos, imágenes, título y descripción. 
-                    Los cambios se guardarán inmediatamente.
-                  </p>
-                </div>
-                
-                <div className="bg-white rounded-lg p-6 border border-gray-200">
-                  <p className="text-center text-gray-600">
-                    Redirigiendo al editor completo...
-                  </p>
-                  <p className="text-center text-sm text-gray-500 mt-2">
-                    ID del aviso: <code className="bg-gray-100 px-2 py-1 rounded">{selectedAdForEdit.id}</code>
-                  </p>
-                  <div className="mt-6 flex justify-center gap-3">
-                    <button
-                      onClick={() => {
-                        const adId = selectedAdForEdit.id;
-                        console.log('🚀 Navegando a editor completo, adId:', adId);
-                        
-                        // Cerrar modal primero
-                        setSelectedAdForEdit(null);
-                        
-                        // Pequeño delay para asegurar que el modal se cierra
-                        setTimeout(() => {
-                          // Abrir PublicarAviso en modo edit
-                          const newHash = `#/publicar-v3?edit=${adId}`;
-                          console.log('📍 Cambiando hash a:', newHash);
-                          window.location.hash = newHash;
-                        }, 100);
-                      }}
-                      className="px-6 py-3 bg-[#16a135] hover:bg-[#138a2c] text-white rounded-lg transition-colors font-medium"
-                    >
-                      Ir al Editor Completo →
-                    </button>
-                    <button
-                      onClick={() => setSelectedAdForEdit(null)}
-                      className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <QuickEditAdModal
+          adId={selectedAdForEdit.id}
+          onClose={() => setSelectedAdForEdit(null)}
+          onSuccess={() => {
+            loadData();
+            notify.success('Aviso actualizado correctamente');
+          }}
+        />
       )}
 
       {/* Modal Confirmar Eliminación */}

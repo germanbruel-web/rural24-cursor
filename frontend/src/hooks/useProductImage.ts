@@ -33,11 +33,30 @@ export const useProductImage = (product: Product): string => {
       if (typeof first === 'object' && first && 'url' in first) return (first as any).url;
     }
     
-    // 4. images array (puede ser string o {url, sort_order})
+    // 4. images array (MEJORADO: prioriza isPrimary y sortOrder)
     if ((product as any).images?.length > 0) {
-      const first = (product as any).images[0];
+      const images = (product as any).images;
+      
+      // 4a. Si hay objetos con metadatos (formato completo)
+      if (typeof images[0] === 'object' && images[0] !== null) {
+        // Buscar imagen con isPrimary = true
+        const primaryImage = images.find((img: any) => img.isPrimary === true);
+        if (primaryImage?.url) return primaryImage.url;
+        
+        // Si no hay isPrimary, ordenar por sortOrder y tomar el primero
+        const sortedImages = [...images].sort((a: any, b: any) => {
+          const orderA = a.sortOrder ?? 999;
+          const orderB = b.sortOrder ?? 999;
+          return orderA - orderB;
+        });
+        
+        const firstSorted = sortedImages[0];
+        if (firstSorted?.url) return firstSorted.url;
+      }
+      
+      // 4b. Formato simple (string[])
+      const first = images[0];
       if (typeof first === 'string' && first) return first;
-      if (typeof first === 'object' && first && 'url' in first) return first.url;
     }
     
     // 5. Fallback a Cloudinary
