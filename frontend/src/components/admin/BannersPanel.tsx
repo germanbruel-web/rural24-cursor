@@ -5,16 +5,17 @@ import { uploadService } from '../../services/uploadService';
 import * as bannersService from '../../services/bannersService';
 import type { Banner, BannerType } from '../../../types';
 
-// Configuración de tipos de banner (solo Homepage)
+// Configuración de tipos de banner (escalable para múltiples ubicaciones)
 const BANNER_TYPES = {
   homepage_vip: {
     code: 'BV',
     label: 'Banner VIP Homepage',
-    description: 'Buscador dinámico - Posición principal',
+    description: 'Hero principal - Rotación automática',
     dimensions: {
       desktop: '1200x200px',
       mobile: '480x100px',
     },
+    location: 'homepage',
     color: 'from-purple-600 to-pink-600',
     icon: '⭐',
   },
@@ -26,8 +27,33 @@ const BANNER_TYPES = {
       desktop: '650x120px',
       mobile: '480x100px',
     },
+    location: 'homepage',
     color: 'from-green-600 to-emerald-600',
     icon: '🏷️',
+  },
+  results_lateral: {
+    code: 'RL',
+    label: 'Banner Lateral Resultados',
+    description: 'Sidebar sticky - Visible durante scroll',
+    dimensions: {
+      desktop: '300x600px',
+      mobile: '320x100px',
+    },
+    location: 'results',
+    color: 'from-blue-600 to-cyan-600',
+    icon: '📌',
+  },
+  results_intercalated: {
+    code: 'RI',
+    label: 'Banner Intercalado Resultados',
+    description: 'Entre cards - Cada 8 resultados (2 filas)',
+    dimensions: {
+      desktop: '648x100px',
+      mobile: '320x100px',
+    },
+    location: 'results',
+    color: 'from-orange-600 to-red-600',
+    icon: '🔄',
   },
 };
 
@@ -44,6 +70,7 @@ export default function BannersPanel() {
   const [loading, setLoading] = useState(true);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'homepage' | 'results'>('homepage');
   const [filterType, setFilterType] = useState<BannerType | 'all'>('all');
   const [filterClient, setFilterClient] = useState<string>('all');
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -61,6 +88,7 @@ export default function BannersPanel() {
     display_order: 0,
     is_priority: false,
     priority_weight: 0,
+    is_featured: false,
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
@@ -82,6 +110,22 @@ export default function BannersPanel() {
     }
   };
 
+  // Función para extraer nombre del cliente desde filename
+  const extractClientFromFilename = (filename: string): string => {
+    // Remover extensión y limpiar caracteres especiales
+    const cleanName = filename
+      .replace(/\.[^/.]+$/, '') // Eliminar extensión
+      .replace(/[-_]/g, ' ')    // Reemplazar guiones/underscores con espacios
+      .replace(/\d+/g, '')      // Eliminar números (dimensiones, timestamps)
+      .trim()
+      .split(' ')
+      .filter(word => word.length > 2) // Eliminar palabras muy cortas
+      .slice(0, 3) // Tomar primeras 3 palabras
+      .join(' ');
+    
+    return cleanName || 'Banner sin cliente';
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -94,6 +138,12 @@ export default function BannersPanel() {
 
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
+    
+    // Auto-poblar client_name desde filename
+    const clientName = extractClientFromFilename(file.name);
+    setFormData(prev => ({ ...prev, client_name: clientName }));
+    
+    console.log('📝 Cliente extraído del filename:', clientName);
   };
 
   const handleUploadImage = async () => {
@@ -103,9 +153,27 @@ export default function BannersPanel() {
     try {
       const result = await uploadService.uploadImage(selectedFile, 'banners');
       const imageUrl = typeof result === 'string' ? result : result.url;
-      setFormData({ ...formData, image_url: imageUrl });
-      notify.success('Imagen subida correctamente');
+      console.log('📸 Imagen subida:', imageUrl);
+      
+      // Auto-generar title descriptivo: "[BV] Distribuidoraz - Desktop - 10/01/2026"
+      const bannerTypeCode = BANNER_TYPES[formData.type].code;
+      const deviceLabel = formData.device_target === 'desktop' ? 'Desktop' : 'Mobile';
+      const dimensions = BANNER_TYPES[formData.type].dimensions[formData.device_target];
+      const date = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const autoTitle = `[${bannerTypeCode}] ${formData.client_name} - ${deviceLabel} (${dimensions}) - ${date}`;
+      
+      setFormData(prev => {
+        const updated = { 
+          ...prev, 
+          image_url: imageUrl,
+          title: autoTitle // Auto-generar título
+        };
+        console.log('🔄 FormData actualizado:', updated);
+        return updated;
+      });
+      notify.success('✅ Imagen subida a Cloudinary: Home/banners/');
     } catch (error) {
+      console.error('❌ Error subiendo imagen:', error);
       notify.error('Error al subir imagen');
     } finally {
       setUploadingImage(false);
@@ -113,30 +181,74 @@ export default function BannersPanel() {
   };
 
   const handleSubmit = async () => {
-    // Validaciones
-    if (!formData.client_name || !formData.client_name.trim()) {
-      notify.error('El nombre del cliente es obligatorio');
+    // ✅ Validaciones profesionales y consistentes
+    console.log('🔍 Validando formData:', formData);
+    
+    // 1. Tipo de banner (campo requerido por sistema)
+    if (!formData.type) {
+      notify.error('❌ El tipo de banner es obligatorio');
       return;
     }
 
-    if (!formData.title || !formData.image_url) {
-      notify.error('Completá los campos obligatorios');
+    // 2. Nombre del cliente - AUTO-GENERADO (fallback si vacío)
+    const finalClientName = formData.client_name.trim() || 'Banner sin cliente';
+    
+    // 3. Título descriptivo - AUTO-GENERADO (fallback si vacío)
+    const finalTitle = formData.title.trim() || `Banner ${BANNER_TYPES[formData.type].label} - ${formData.device_target}`;
+
+    // 4. Imagen (campo obligatorio NOT NULL en DB)
+    console.log('📸 Validando image_url:', { 
+      value: formData.image_url, 
+      length: formData.image_url?.length,
+      trimmed: formData.image_url?.trim()
+    });
+    if (!formData.image_url || !formData.image_url.trim()) {
+      notify.error('❌ Debes subir una imagen para el banner');
       return;
     }
 
-    // Validación de categoría para BC
-    if (formData.type === 'homepage_category' && !formData.category) {
-      notify.error('Seleccioná una categoría para Banner Categorías Homepage');
+    // 5. Categoría OBLIGATORIA para todos los tipos
+    if (!formData.category || !formData.category.trim()) {
+      notify.error('❌ La categoría es obligatoria para todos los banners');
       return;
     }
+
+    // 7. Validar formato de URL si está presente (opcional pero debe ser válida)
+    if (formData.link_url && formData.link_url.trim()) {
+      try {
+        new URL(formData.link_url);
+      } catch {
+        notify.error('❌ La URL de destino no es válida (debe comenzar con http:// o https://)');
+        return;
+      }
+    }
+
+    // 8. Validar dimensiones según tipo y dispositivo
+    const requiredDimensions = getRequiredDimensions();
+    console.log(`📏 Dimensiones requeridas: ${requiredDimensions} para ${formData.type} (${formData.device_target})`);
+    
+    // Notificación informativa (no bloquea)
+    if (!editingBanner) {
+      notify.info(`📐 Asegúrate que la imagen tenga ${requiredDimensions}`, { duration: 5000 });
+    }
+
+    // Preparar datos finales con fallbacks
+    const finalFormData = {
+      ...formData,
+      client_name: finalClientName,
+      title: finalTitle,
+      category: formData.category || null,
+    };
+
+    console.log('📤 Datos finales a enviar:', finalFormData);
 
     try {
       if (editingBanner) {
-        const { error } = await bannersService.updateBanner(editingBanner.id, formData);
+        const { error } = await bannersService.updateBanner(editingBanner.id, finalFormData);
         if (error) throw error;
         notify.success('✅ Banner actualizado correctamente');
       } else {
-        const { error } = await bannersService.createBanner(formData);
+        const { error } = await bannersService.createBanner(finalFormData);
         if (error) throw error;
         notify.success('✅ Banner creado correctamente');
       }
@@ -276,20 +388,18 @@ export default function BannersPanel() {
   // Obtener lista única de clientes para filtro
   const uniqueClients = Array.from(new Set(banners.map(b => b.client_name))).sort();
 
-  // Filtrar banners
-  const filteredBanners = banners.filter(b => {
-    const matchesType = filterType === 'all' || b.type === filterType;
-    const matchesClient = filterClient === 'all' || b.client_name === filterClient;
-    return matchesType && matchesClient;
+  // Filtrar banners por tab activo
+  const bannersInActiveTab = banners.filter(b => {
+    const location = BANNER_TYPES[b.type]?.location;
+    return location === activeTab;
   });
 
-  // Agrupar banners por cliente
-  const bannersByClient = filteredBanners.reduce((acc, banner) => {
-    const client = banner.client_name || 'Sin cliente';
-    if (!acc[client]) {
-      acc[client] = [];
+  // Agrupar banners por tipo dentro del tab activo
+  const bannersByType = bannersInActiveTab.reduce((acc, banner) => {
+    if (!acc[banner.type]) {
+      acc[banner.type] = [];
     }
-    acc[client].push(banner);
+    acc[banner.type].push(banner);
     return acc;
   }, {} as Record<string, Banner[]>);
 
@@ -305,7 +415,7 @@ export default function BannersPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Banners</h1>
-          <p className="text-gray-600 mt-1">Administra los banners del sitio</p>
+          <p className="text-gray-600 mt-1">Administra los banners del sitio por ubicación</p>
         </div>
         <button
           onClick={() => {
@@ -319,50 +429,56 @@ export default function BannersPanel() {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Filtrar por tipo:</label>
-        <div className="flex flex-wrap gap-2">
+      {/* Tabs Navigation */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="flex border-b border-gray-200">
           <button
-            onClick={() => setFilterType('all')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filterType === 'all'
-                ? 'bg-[#16a135] text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            onClick={() => setActiveTab('homepage')}
+            className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+              activeTab === 'homepage'
+                ? 'text-[#16a135] border-b-2 border-[#16a135] bg-green-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }`}
           >
-            Todos ({banners.length})
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-xl">🏠</span>
+              <span>Homepage</span>
+              <span className="px-2 py-0.5 text-xs rounded-full bg-gray-200">
+                {banners.filter(b => BANNER_TYPES[b.type]?.location === 'homepage').length}
+              </span>
+            </div>
           </button>
-          {Object.entries(BANNER_TYPES).map(([key, info]) => (
-            <button
-              key={key}
-              onClick={() => setFilterType(key as BannerType)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filterType === key
-                  ? 'bg-[#16a135] text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {info.label} ({banners.filter(b => b.type === key).length})
-            </button>
-          ))}
+          <button
+            onClick={() => setActiveTab('results')}
+            className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+              activeTab === 'results'
+                ? 'text-[#16a135] border-b-2 border-[#16a135] bg-green-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-xl">📄</span>
+              <span>Página Resultados</span>
+              <span className="px-2 py-0.5 text-xs rounded-full bg-gray-200">
+                {banners.filter(b => BANNER_TYPES[b.type]?.location === 'results').length}
+              </span>
+            </div>
+          </button>
         </div>
       </div>
 
-      {/* Banners List */}
+      {/* Banners List by Groups */}
       {loading ? (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16a135] mx-auto"></div>
           <p className="text-gray-500 mt-4">Cargando banners...</p>
         </div>
-      ) : filteredBanners.length === 0 ? (
+      ) : bannersInActiveTab.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
           <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay banners</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay banners en {activeTab === 'homepage' ? 'Homepage' : 'Página de Resultados'}</h3>
           <p className="text-gray-500 mb-4">
-            {filterType === 'all' 
-              ? 'Aún no hay banners creados. ¡Crea el primero!' 
-              : 'No hay banners de este tipo.'}
+            Crea tu primer banner para esta ubicación
           </p>
           <button
             onClick={() => {
@@ -375,8 +491,34 @@ export default function BannersPanel() {
           </button>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {filteredBanners.map((banner) => (
+        <div className="space-y-6">
+          {/* Renderizar grupos por tipo */}
+          {Object.entries(bannersByType).map(([type, bannersOfType]) => {
+            const typeConfig = BANNER_TYPES[type as BannerType];
+            if (!typeConfig) return null;
+
+            return (
+              <div key={type} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                {/* Group Header */}
+                <div className={`bg-gradient-to-r ${typeConfig.color} px-6 py-4 text-white`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold flex items-center gap-2">
+                        <span className="text-2xl">{typeConfig.icon}</span>
+                        {typeConfig.label}
+                      </h2>
+                      <p className="text-white/90 text-sm mt-1">{typeConfig.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold">{bannersOfType.length}</div>
+                      <div className="text-sm text-white/90">banner{bannersOfType.length !== 1 ? 's' : ''}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Banners Grid */}
+                <div className="p-6 grid gap-4">
+                  {bannersOfType.map((banner) => (
             <div
               key={banner.id}
               className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
@@ -491,7 +633,11 @@ export default function BannersPanel() {
                 </div>
               </div>
             </div>
-          ))}
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -518,19 +664,28 @@ export default function BannersPanel() {
             </div>
 
             <div className="p-6 space-y-4">
-              {/* Tipo de Banner */}
+              {/* Tipo de Banner - OBLIGATORIO */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de Banner *
+                  Tipo de Banner <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value as BannerType })}
+                  onChange={(e) => {
+                    const newType = e.target.value as BannerType;
+                    // Auto-limpiar categoría si cambia a homepage_vip
+                    if (newType === 'homepage_vip') {
+                      setFormData({ ...formData, type: newType, category: '' });
+                    } else {
+                      setFormData({ ...formData, type: newType });
+                    }
+                  }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+                  required
                 >
                   {Object.entries(BANNER_TYPES).map(([key, info]) => (
                     <option key={key} value={key}>
-                      {info.label}
+                      {info.icon} {info.label}
                     </option>
                   ))}
                 </select>
@@ -539,150 +694,168 @@ export default function BannersPanel() {
                 </p>
               </div>
 
-              {/* Título */}
+              {/* Nombre del Cliente - AUTO-GENERADO */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Título *
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                  placeholder="Nombre descriptivo del banner"
-                />
-              </div>
-
-              {/* Nombre del Cliente */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre del Cliente *
+                  Nombre del Cliente
                 </label>
                 <input
                   type="text"
                   value={formData.client_name}
                   onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                  placeholder="Ej: Distribuidora Z, Auri, MFE"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent bg-gray-50"
+                  placeholder="Se extrae automáticamente del nombre del archivo"
+                  readOnly
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Los banners se agruparán por este nombre en el dashboard
+                  🤖 Auto-extraído del filename al seleccionar imagen
                 </p>
               </div>
 
-              {/* Categoría (opcional) */}
+              {/* Categoría - OBLIGATORIA para TODOS los tipos */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Categoría (opcional)
+                  Categoría <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+                  required
                 >
-                  <option value="">Todas las categorías</option>
+                  <option value="">Seleccionar categoría</option>
                   {CATEGORIES.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
-              </div>
-
-              {/* Posición (solo para lateral) */}
-              {formData.type === 'results_lateral' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Posición Lateral *
-                  </label>
-                  <select
-                    value={formData.position || ''}
-                    onChange={(e) => setFormData({ ...formData, position: e.target.value as BannerPosition })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                  >
-                    <option value="">Seleccionar posición</option>
-                    <option value="A">A - Primera posición</option>
-                    <option value="B">B - Segunda posición</option>
-                    <option value="C">C - Tercera posición</option>
-                    <option value="D">D - Cuarta posición</option>
-                  </select>
-                </div>
-              )}
-
-              {/* Dispositivo Objetivo */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dispositivo Objetivo *
-                </label>
-                <select
-                  value={formData.device_target}
-                  onChange={(e) => setFormData({ ...formData, device_target: e.target.value as 'desktop' | 'mobile' })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                >
-                  <option value="desktop">💻 Desktop (1200x200px)</option>
-                  <option value="mobile">📱 Mobile (480x100px)</option>
-                </select>
                 <p className="text-xs text-gray-500 mt-1">
-                  Desktop y Mobile requieren tamaños de imagen diferentes
+                  ✅ Requerida para segmentar por categoría (incluso Banner VIP)
                 </p>
               </div>
 
-              {/* Imagen */}
+              {/* Banner Destacado (Estrella) */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_featured || false}
+                    onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                    className="w-5 h-5 text-yellow-500 border-yellow-300 rounded focus:ring-2 focus:ring-yellow-400"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                      <span className="text-xl">⭐</span>
+                      <span>Banner Destacado</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Aparece predeterminadamente en la sección correspondiente
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Dispositivo Objetivo - OBLIGATORIO */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Imagen * (Desktop: {BANNER_TYPES[formData.type].dimensions.desktop}, Mobile: {BANNER_TYPES[formData.type].dimensions.mobile})
+                  Dispositivo Objetivo <span className="text-red-500">*</span>
                 </label>
-                <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, device_target: 'desktop' })}
+                    className={`px-4 py-3 rounded-lg border-2 transition-all ${
+                      formData.device_target === 'desktop'
+                        ? 'border-[#16a135] bg-green-50 text-[#16a135] font-semibold'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    <Monitor className="w-5 h-5 mx-auto mb-1" />
+                    <div className="text-sm">Desktop</div>
+                    <div className="text-xs text-gray-500">{BANNER_TYPES[formData.type].dimensions.desktop}</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, device_target: 'mobile' })}
+                    className={`px-4 py-3 rounded-lg border-2 transition-all ${
+                      formData.device_target === 'mobile'
+                        ? 'border-[#16a135] bg-green-50 text-[#16a135] font-semibold'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    <Smartphone className="w-5 h-5 mx-auto mb-1" />
+                    <div className="text-sm">Mobile</div>
+                    <div className="text-xs text-gray-500">{BANNER_TYPES[formData.type].dimensions.mobile}</div>
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  📐 Cada dispositivo requiere dimensiones específicas
+                </p>
+              </div>
+
+              {/* Imagen - OBLIGATORIA */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Imagen del Banner <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-3">
                   <input
                     type="file"
                     accept=".jpg,.jpeg,.webp"
                     onChange={handleFileSelect}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#16a135] file:text-white hover:file:bg-[#0e7d25] file:cursor-pointer"
                   />
                   {selectedFile && (
                     <button
+                      type="button"
                       onClick={handleUploadImage}
                       disabled={uploadingImage}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      {uploadingImage ? 'Subiendo...' : 'Subir Imagen'}
+                      <Upload className="w-4 h-4" />
+                      {uploadingImage ? 'Subiendo imagen...' : 'Subir Imagen a Cloudinary'}
                     </button>
                   )}
                 </div>
                 {previewUrl && (
-                  <div className="mt-4">
+                  <div className="mt-4 border-2 border-gray-200 rounded-lg p-2">
+                    <p className="text-xs text-gray-600 mb-2">Vista previa:</p>
                     <img
                       src={previewUrl}
                       alt="Preview"
-                      className="max-w-full h-auto rounded-lg border border-gray-200"
+                      className="w-full h-auto rounded-lg"
                     />
                   </div>
                 )}
               </div>
 
-              {/* Link URL */}
+              {/* Link URL - OPCIONAL */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  URL de destino (opcional)
+                  URL de Destino <span className="text-gray-400 text-xs">(opcional)</span>
                 </label>
                 <input
                   type="url"
                   value={formData.link_url}
                   onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                  placeholder="https://..."
+                  placeholder="https://ejemplo.com/landing-page"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  🔗 Página donde se redirige al hacer clic (opcional)
+                </p>
               </div>
 
-              {/* Estado activo */}
-              <div className="flex items-center gap-2">
+              {/* Estado Activo */}
+              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <input
                   type="checkbox"
                   id="is_active"
                   checked={formData.is_active}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="w-4 h-4 text-[#16a135] rounded focus:ring-[#16a135]"
+                  className="w-5 h-5 text-[#16a135] rounded focus:ring-[#16a135]"
                 />
-                <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
-                  Banner activo
+                <label htmlFor="is_active" className="text-sm font-medium text-gray-700 cursor-pointer">
+                  ✅ Banner activo y visible en el sitio
                 </label>
               </div>
             </div>

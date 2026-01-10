@@ -93,15 +93,25 @@ export class UploadService {
   ): Promise<Result<{ url: string; public_id: string }>> {
     try {
       const cloudinary = getCloudinaryClient();
-      const folder = options?.folder || 'rural24/ads';
+      const folder = options?.folder || 'ads';
+      
+      // Determinar si usar preset de banners (sin transformaciones)
+      const isBanner = folder.includes('banners');
+      
+      // Carpetas en Cloudinary (plan FREE = Home/ads, Home/banners)
+      const targetFolder = isBanner ? 'banners' : 'ads';
+      
+      console.log(`📦 Upload: folder=${targetFolder}, isBanner=${isBanner}, preset=${isBanner ? 'banners_raw' : 'default'}`);
 
       return new Promise((resolve) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
-            folder,
+            folder: targetFolder,
             resource_type: 'image',
             allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
             max_bytes: 10485760, // 10MB
+            // Para banners: usar preset sin transformaciones
+            ...(isBanner && { upload_preset: 'banners_raw' }),
           },
           (error, result) => {
             if (error) {

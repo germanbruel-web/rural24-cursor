@@ -1,5 +1,5 @@
 // ====================================================================
-// PUBLICAR AVISO V3 - Wizard con Atributos Dinámicos
+// PUBLICAR AVISO - Wizard con Atributos Dinámicos
 // Mobile First + UX Profesional + Steps Intuitivos
 // ====================================================================
 

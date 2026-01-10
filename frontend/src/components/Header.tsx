@@ -9,7 +9,7 @@ import { supabase } from '../services/supabaseClient';
 import { Button } from './atoms/Button';
 
 interface HeaderProps {
-  onNavigate: (page: 'home' | 'my-ads' | 'banners' | 'inbox' | 'profile' | 'subscription' | 'users' | 'how-it-works' | 'publicar-v3' | 'ad-finder' | 'deleted-ads' | 'test-form' | 'categories-admin' | 'pricing') => void;
+  onNavigate: (page: 'home' | 'my-ads' | 'banners' | 'inbox' | 'profile' | 'subscription' | 'users' | 'how-it-works' | 'publicar' | 'ad-finder' | 'deleted-ads' | 'test-form' | 'categories-admin' | 'pricing') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => onNavigate('publicar-v3')}
+              onClick={() => onNavigate('publicar')}
               leftIcon={<Package size={16} />}
             >
               Publicar Aviso Gratis
@@ -277,7 +277,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                             variant="ghost"
                             size="sm"
                             fullWidth
-                            leftIcon={<ImageIcon size={16} />}
+                            leftIcon={<Star size={16} />}
                             className="justify-start"
                           >
                             Banners

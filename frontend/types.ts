@@ -156,24 +156,31 @@ export interface UpdateAdInput extends Partial<CreateAdInput> {
 // ============================================
 
 export type BannerType = 
-  | 'homepage_vip'        // BV: Banner VIP Homepage (Buscador dinámico) - 1200x200 desktop, 480x100 mobile
-  | 'homepage_category';  // BC: Banner Categorías Homepage (Carruseles) - 648x100 desktop, 480x100 mobile
+  | 'homepage_vip'          // Banner VIP Hero (1200x200 desktop, 480x100 mobile)
+  | 'homepage_category'     // Banner Categorías Homepage (650x120)
+  | 'results_lateral'       // Banner Lateral Resultados (300x600 desktop, 320x100 mobile)
+  | 'results_intercalated'  // Banner Intercalado Resultados (648x100 desktop, 320x100 mobile)
+  | 'homepage_search'       // [LEGACY] Banner Buscador Dinámico
+  | 'homepage_carousel';    // [LEGACY] Banner Categoría Carrusel
 
-export type DeviceTarget = 'desktop' | 'mobile';
+export type DeviceTarget = 'desktop' | 'mobile' | 'both';
+
+export type BannerPosition = 'A' | 'B' | 'C' | 'D'; // Posiciones laterales
 
 export interface Banner {
   id: string;
   type: BannerType;
-  client_name: string;  // Nombre del cliente/anunciante para agrupar
+  client_name?: string;  // Nombre del cliente/anunciante (opcional)
   title: string;
   image_url: string;
   link_url?: string;
-  category?: string;  // Solo para type: 'homepage_category'
+  category?: string;  // Categoría específica (NULL = todas)
+  position?: BannerPosition;  // Posición lateral (solo results_lateral)
   device_target: DeviceTarget;
   is_active: boolean;
-  display_order: number;
-  is_priority?: boolean;  // ⭐ Marca si es prioritario (se muestra primero)
-  priority_weight?: number;  // Peso de prioridad (mayor = más prioridad)
+  is_featured?: boolean;  // ⭐ Destacado: aparece predeterminadamente
+  starts_at?: string;  // 📅 Fecha inicio programada (NULL = inmediato)
+  expires_at?: string; // 📅 Fecha expiración (NULL = sin expiración)
   impressions?: number;
   clicks?: number;
   created_at: string;
@@ -182,16 +189,17 @@ export interface Banner {
 
 export interface CreateBannerInput {
   type: BannerType;
-  client_name: string;
-  title: string;
+  client_name?: string;
+  title?: string;
   image_url: string;
   link_url?: string;
   category?: string;
+  position?: BannerPosition;
   device_target: DeviceTarget;
   is_active?: boolean;
-  display_order?: number;
-  is_priority?: boolean;
-  priority_weight?: number;
+  is_featured?: boolean;
+  starts_at?: string;
+  expires_at?: string;
 }
 
 export interface UpdateBannerInput {
@@ -200,18 +208,63 @@ export interface UpdateBannerInput {
   image_url?: string;
   link_url?: string;
   category?: string;
+  position?: BannerPosition;
   device_target?: DeviceTarget;
   is_active?: boolean;
-  display_order?: number;
-  is_priority?: boolean;
-  priority_weight?: number;
+  is_featured?: boolean;
+  starts_at?: string;
+  expires_at?: string;
 }
-  image_url?: string;
+
+// ============================================
+// NUEVOS TIPOS PARA BANNERS_CLEAN (2026-01-10)
+// ============================================
+
+export type BannerPlacement = 'hero_vip' | 'category_carousel';
+
+export interface BannerClean {
+  id: string;
+  placement: BannerPlacement;
+  category: string;  // 'all', 'inmuebles', 'vehiculos', 'maquinarias', 'insumos', 'empleos'
+  client_name: string;
   link_url?: string;
-  category?: string;
-  position?: BannerPosition;
+  desktop_image_url?: string;  // 1200x200 (solo hero_vip)
+  mobile_image_url?: string;   // 480x100 (solo hero_vip)
+  carousel_image_url?: string; // 650x100 (solo category_carousel)
+  is_active: boolean;
+  starts_at?: string;
+  expires_at?: string;
+  impressions: number;
+  clicks: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateBannerCleanInput {
+  placement: BannerPlacement;
+  category: string;
+  client_name: string;
+  link_url?: string;
+  desktop_image_url?: string;
+  mobile_image_url?: string;
+  carousel_image_url?: string;
   is_active?: boolean;
-  display_order?: number;
+  starts_at?: string;
+  expires_at?: string;
+}
+
+export interface UpdateBannerCleanInput {
+  placement?: BannerPlacement;
+  category?: string;
+  client_name?: string;
+  title?: string;
+  link_url?: string;
+  desktop_image_url?: string;
+  mobile_image_url?: string;
+  carousel_image_url?: string;
+  is_active?: boolean;
+  starts_at?: string;
+  expires_at?: string;
 }
 
 // ================================================

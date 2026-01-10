@@ -108,7 +108,7 @@ export const DEFAULT_FOOTER_CONFIG: FooterConfig = {
       {
         id: 'link-4-3',
         label: 'Publicar aviso',
-        url: '#/publicar-v3',
+        url: '#/publicar',
         order: 3,
         openNewTab: false
       },

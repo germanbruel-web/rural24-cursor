@@ -43,11 +43,17 @@ export const uploadService = {
 
       const result = await response.json();
       
-      console.log(`✅ Imagen subida a Cloudinary: ${result.url}`);
+      console.log(`✅ Resultado completo del backend:`, result);
+      
+      // El backend devuelve {success: true, data: {url, path, ...}}
+      const uploadData = result.data || result;
+      const imageUrl = uploadData.url;
+      
+      console.log(`✅ Imagen subida a Cloudinary: ${imageUrl}`);
 
       return {
-        url: result.url,
-        path: result.path || result.url,
+        url: imageUrl,
+        path: uploadData.path || imageUrl,
       };
     } catch (error: any) {
       console.error('Upload error:', error);

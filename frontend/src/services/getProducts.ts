@@ -1,5 +1,6 @@
 import { supabase } from "./supabaseClient";
 import { transformAdToProduct } from "./adsService";
+import { DEFAULT_PLACEHOLDER_IMAGE } from '../constants/defaultImages';
 import type { Ad } from "../../types";
 
 /**
@@ -37,7 +38,16 @@ export const getProducts = async () => {
       return transformAdToProduct(ad as Ad);
     });
 
-    console.log('🔍 Sample transformed ad:', mappedAds[0]);
+    if (mappedAds.length > 0) {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📸 DIAGNÓSTICO IMAGEN - Primer aviso:');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('Título:', mappedAds[0].title);
+      console.log('imageUrl:', mappedAds[0].imageUrl);
+      console.log('imageUrls:', mappedAds[0].imageUrls);
+      console.log('¿Es placeholder?:', mappedAds[0].imageUrl === DEFAULT_PLACEHOLDER_IMAGE);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    }
 
     // 2. Obtener productos legacy (si existen)
     const { data: products, error: productsError } = await supabase

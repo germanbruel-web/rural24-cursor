@@ -114,6 +114,10 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File;
     const folder = (formData.get('folder') as string) || 'ads';
 
+    console.log(`[DEBUG] FormData keys:`, Array.from(formData.keys()));
+    console.log(`[DEBUG] Folder received:`, folder);
+    console.log(`[DEBUG] Folder type:`, typeof folder);
+
     if (!file) {
       return NextResponse.json(
         { error: 'No file provided' },

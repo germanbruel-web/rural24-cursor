@@ -13,7 +13,7 @@ import MyAdsPanel from "./src/components/admin/MyAdsPanel";
 import { MessagesPanel } from "./src/components/dashboard/MessagesPanel";
 import AllAdsPanel from "./src/components/admin/AllAdsPanel";
 import { UsersPanel } from "./src/components/admin/UsersPanel";
-import BannersPanel from "./src/components/admin/BannersPanel";
+import BannersCleanPanel from "./src/components/admin/BannersCleanPanel";
 import { CategoriasAdmin } from "./src/components/admin/CategoriasAdmin";
 import { AttributesAdmin } from "./src/components/admin/AttributesAdmin";
 import { BackendSettings } from "./src/components/admin/BackendSettings";
@@ -23,8 +23,10 @@ import { SubscriptionPanel } from "./src/components/dashboard/SubscriptionPanel"
 import { ReceivedContactsView } from "./src/components/dashboard/ReceivedContactsView";
 import { DashboardLayout } from "./src/components/layouts/DashboardLayout";
 import { FeaturedAdsSection } from "./src/components/sections/FeaturedAdsSection";
+import { BannersVipHero } from "./src/components/banners/BannersVipHero";
 import { getPremiumAds, getActiveAds } from "./src/services/adsService";
-import { getHomepageSearchBanners } from "./src/services/bannersService";
+import { getHomepageBanners } from "./src/services/bannersService";
+// Banners integrados en componentes
 import type { Ad } from "./types";
 import { PROVINCES } from "./src/constants/locations";
 import { ALL_CATEGORIES } from "./src/constants/categories";
@@ -34,7 +36,6 @@ import { RegisterBanner } from "./src/components/RegisterBanner";
 import { HowItWorksSection } from "./src/components/sections/HowItWorksSection";
 import { HowItWorksPage } from "./src/components/pages/HowItWorksPage";
 import { EmailConfirmationPage } from "./src/components/auth/EmailConfirmationPage";
-import { HomepageSearchBanner } from "./src/components/DynamicBanner";
 import AuthModal from "./src/components/auth/AuthModal";
 import PublicarAviso from "./src/components/pages/PublicarAviso";
 import { TestDynamicForm } from "./src/pages/TestDynamicForm";
@@ -313,8 +314,10 @@ const AppContent: React.FC = () => {
 
     const loadAllBanners = async () => {
       try {
-        const banners = await getHomepageSearchBanners(undefined, 'mobile');
-        setAllBanners(banners);
+        const banners = await getHomepageBanners(undefined);
+        // Filtrar solo mobile si es necesario
+        const mobileBanners = banners.filter(b => b.device_target === 'mobile' || b.device_target === 'both');
+        setAllBanners(mobileBanners);
       } catch (error) {
         console.error('❌ Error loading banners for mobile carousel:', error);
       }
@@ -461,7 +464,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'my-ads' && <MyAdsPanel />}
                 {currentPage === 'inbox' && <MessagesPanel />}
                 {currentPage === 'all-ads' && canAccessPage('all-ads', profile?.role) && <AllAdsPanel />}
-                {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersPanel />}
+                {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersCleanPanel />}
                 {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <CategoriasAdmin />}
                 {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <AttributesAdmin />}
                 {currentPage === 'backend-settings' && canAccessPage('backend-settings', profile?.role) && <BackendSettings />}
@@ -636,7 +639,7 @@ const AppContent: React.FC = () => {
       ) : (
         // VISTA DE INICIO
         <main className="flex-1">
-          {/* Hero con buscador avanzado y carousel de imágenes */}
+          {/* Hero con buscador avanzado y botones de categorías */}
           <HeroWithCarousel>
             <HeroSearchBarClon 
               onSearch={handleAdvancedSearch} 
@@ -645,16 +648,10 @@ const AppContent: React.FC = () => {
             />
           </HeroWithCarousel>
 
-          {/* Banner Publicitario Dinámico - Posición 1 (Homepage Search) */}
-          <section id="BannersHomepage" className="relative -mt-20 z-30 px-4">
-            <div className="w-full">
-              <div className="max-w-7xl mx-auto">
-                <HomepageSearchBanner 
-                  banner={currentBanner} 
-                  allBanners={allBanners}
-                  isMobile={isMobile}
-                />
-              </div>
+          {/* Banner VIP Hero - DEBAJO de los botones negros */}
+          <section className="relative -mt-16 z-20 px-4">
+            <div className="max-w-7xl mx-auto">
+              <BannersVipHero category={hoveredCategory || undefined} />
             </div>
           </section>
 

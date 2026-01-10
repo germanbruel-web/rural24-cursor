@@ -129,7 +129,7 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
 
   const openFullEditor = () => {
     onClose();
-    window.location.hash = `#/publicar-v3?edit=${adId}`;
+    window.location.hash = `#/edit/${adId}`;
   };
 
   if (loading) {

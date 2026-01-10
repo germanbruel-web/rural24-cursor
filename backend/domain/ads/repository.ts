@@ -53,7 +53,7 @@ export class AdsRepository {
         contact_phone: data.contact_phone || null,
         contact_email: data.contact_email || null,
         status: data.status || 'active',
-        approval_status: data.approval_status || 'pending',
+        approval_status: data.approval_status || 'approved', // ✅ Auto-aprobar en desarrollo
         is_premium: false,
         featured: false,
         views: 0,

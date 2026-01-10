@@ -4,7 +4,7 @@ import { ALL_CATEGORIES } from '../constants/categories';
 import { PROVINCES } from '../constants/locations';
 import type { SearchFilters, Product, Banner } from '../../types';
 import { useProducts } from '../hooks/useProducts';
-import { getHomepageSearchBanners } from '../services/bannersService';
+import { getHomepageBanners } from '../services/bannersService';
 
 const CATEGORY_ICONS: Record<string, string> = {
   'Maquinarias': 'icon-1.png',
@@ -63,7 +63,7 @@ export const HeroSearchBarClon: React.FC<HeroSearchBarClonProps> = ({
     }
 
     try {
-      const banners = await getHomepageSearchBanners(category, 'desktop');
+      const banners = await getHomepageBanners(category);
       setCategoryBanners(prev => ({ ...prev, [category]: banners }));
       
       if (onBannerChange) {
@@ -101,7 +101,7 @@ export const HeroSearchBarClon: React.FC<HeroSearchBarClonProps> = ({
         const deviceTarget = isMobile ? 'mobile' : 'desktop';
         
         // Cargar banner sin filtro de categoría para obtener el prioritario
-        const banners = await getHomepageSearchBanners(undefined, deviceTarget);
+        const banners = await getHomepageBanners(undefined);
         
         if (banners.length > 0 && onBannerChange) {
           console.log('🎯 Banner inicial cargado:', banners[0].title);

@@ -103,26 +103,58 @@ export async function getFeaturedAdsByCategories(
           })
         );
 
-        // 2c. Obtener TODOS los banners activos de esta categoría (type: category_header)
-        const { data: banners, error: bannerError } = await supabase
-          .from('banners')
-          .select('id, image_url, link_url, title')
-          .eq('type', 'category_header')
-          .eq('category', cat.name)
+        // Mapear nombre de categoría a slug de banners_clean
+        // SINCRONIZADO con categories table: name → slug usado en banners
+        const categorySlugMap: Record<string, string> = {
+          // Por display_name
+          'Maquinaria Agrícola': 'maquinaria',
+          'Maquinarias': 'maquinaria',
+          'Ganadería': 'ganaderia',
+          'Insumos Agropecuarios': 'insumos',
+          'Inmuebles Rurales': 'inmuebles',
+          'Guia Comercial': 'guia',
+          'Guía del Campo': 'guia',
+          // Por name (fallback)
+          'maquinaria': 'maquinaria',
+          'ganaderia': 'ganaderia',
+          'insumosagropecuarios': 'insumos',
+          'inmueblesrurales': 'inmuebles',
+          'guiacomercial': 'guia',
+        };
+        const catDisplayName = cat.display_name || cat.name;
+        const bannerCategorySlug = categorySlugMap[catDisplayName] || categorySlugMap[cat.name] || cat.name.toLowerCase();
+
+        console.log(`🎯 Buscando banners carousel para: ${catDisplayName} -> slug: ${bannerCategorySlug}`);
+
+        // 2c. Obtener banners activos de banners_clean (nueva tabla)
+        const { data: bannersData, error: bannerError } = await supabase
+          .from('banners_clean')
+          .select('id, carousel_image_url, link_url, client_name, category')
+          .eq('placement', 'category_carousel')
           .eq('is_active', true)
-          .order('is_priority', { ascending: false })
-          .order('priority_weight', { ascending: false })
-          .order('display_order');
+          .or(`category.eq.all,category.eq.${bannerCategorySlug}`)
+          .order('created_at', { ascending: false })
+          .limit(4);
+
+        console.log(`📢 Banners encontrados para ${catDisplayName}:`, bannersData?.length || 0, bannersData);
 
         if (bannerError) {
           console.error(`❌ Error fetching banners for ${cat.name}:`, bannerError);
         }
 
+        // Transformar al formato esperado por CategoryBannerCarousel
+        const banners = (bannersData || []).map(b => ({
+          id: b.id,
+          image_url: b.carousel_image_url || '',
+          link_url: b.link_url,
+          title: b.client_name
+        }));
+
         return {
           category_id: cat.id,
           category_name: cat.display_name || cat.name,
           category_slug: cat.name,
-          banners: banners || [],
+          banners: banners,
           subcategories: subcategoriesWithCounts,
           ads: ads || [],
           total_featured: ads?.length || 0

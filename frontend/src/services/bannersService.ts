@@ -41,24 +41,35 @@ async function isSuperAdmin(): Promise<boolean> {
  */
 export async function createBanner(input: CreateBannerInput): Promise<{ banner: Banner | null; error: any }> {
   try {
-    if (!await isSuperAdmin()) {
-      return { banner: null, error: { message: 'Acceso denegado. Solo SuperAdmin' } };
+    console.log('🔐 Verificando permisos SuperAdmin...');
+    const isAdmin = await isSuperAdmin();
+    console.log('✅ Permisos verificados:', isAdmin);
+    
+    if (!isAdmin) {
+      console.error('❌ Acceso denegado - No es SuperAdmin');
+      return { banner: null, error: { message: 'Acceso denegado. Solo SuperAdmin', code: 'FORBIDDEN' } };
     }
 
+    console.log('📤 Enviando INSERT a Supabase:', input);
+    
     const { data, error } = await supabase
       .from('banners')
       .insert({
         ...input,
         is_active: input.is_active ?? true,
-        display_order: input.display_order ?? 0,
       })
       .select()
       .single();
 
-    if (error) return { banner: null, error };
+    if (error) {
+      console.error('❌ Supabase retornó error:', error);
+      return { banner: null, error };
+    }
+    
+    console.log('✅ Banner creado exitosamente:', data);
     return { banner: data as Banner, error: null };
   } catch (error) {
-    console.error('Error creating banner:', error);
+    console.error('💥 Excepción capturada en createBanner:', error);
     return { banner: null, error };
   }
 }
@@ -76,7 +87,7 @@ export async function getBanners(): Promise<Banner[]> {
       .from('banners')
       .select('*')
       .order('type')
-      .order('display_order');
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching banners:', error);
@@ -103,7 +114,7 @@ export async function getBannersByType(type: BannerType): Promise<Banner[]> {
       .from('banners')
       .select('*')
       .eq('type', type)
-      .order('display_order');
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching banners by type:', error);
@@ -120,213 +131,113 @@ export async function getBannersByType(type: BannerType): Promise<Banner[]> {
 // ==================== PUBLIC QUERIES ====================
 
 /**
- * Obtener banners del buscador dinámico (Homepage - Posición 1)
- * Máximo 6 categorías - 1200x200
- * 
- * ESTRATEGIA DE SELECCIÓN:
- * 1. Si hay banner prioritario (is_priority = true) → Mostrar el de mayor priority_weight
- * 2. Si no hay prioritario → Seleccionar random entre banners activos
+ * Obtener banners VIP (Homepage - Hero Principal)
+ * Sin categoría: Solo destacados (is_featured)
+ * Con categoría: Todos los banners de esa categoría
+ * Auto-filtra: expirados y no iniciados
  */
-export async function getHomepageSearchBanners(category?: string, deviceTarget: 'desktop' | 'mobile' = 'desktop'): Promise<Banner[]> {
+export async function getHomepageBanners(category?: string): Promise<Banner[]> {
   try {
-    // 1️⃣ ESTRATEGIA: Intentar obtener banner prioritario primero
-    let priorityQuery = supabase
-      .from('banners')
-      .select('*')
-      .eq('type', 'homepage_search')
-      .eq('is_active', true)
-      .eq('is_priority', true)
-      .in('device_target', [deviceTarget, 'both'])
-      .order('priority_weight', { ascending: false })
-      .order('display_order')
-      .limit(1);
-
-    if (category) {
-      priorityQuery = priorityQuery.or(`category.eq.${category},category.is.null`);
-    }
-
-    const { data: priorityData, error: priorityError } = await priorityQuery;
-
-    // Si encontramos banner prioritario, retornarlo
-    if (!priorityError && priorityData && priorityData.length > 0) {
-      console.log('🎯 Banner prioritario seleccionado:', priorityData[0].title);
-      return priorityData as Banner[];
-    }
-
-    // 2️⃣ ESTRATEGIA: Si no hay prioritario, obtener todos y elegir random
-    let allQuery = supabase
-      .from('banners')
-      .select('*')
-      .eq('type', 'homepage_search')
-      .eq('is_active', true)
-      .in('device_target', [deviceTarget, 'both']);
-
-    if (category) {
-      allQuery = allQuery.or(`category.eq.${category},category.is.null`);
-    }
-
-    const { data: allData, error: allError } = await allQuery;
-
-    if (allError) {
-      console.warn('⚠️ Error fetching homepage search banners:', allError);
-      return [];
-    }
-
-    if (!allData || allData.length === 0) {
-      return [];
-    }
-
-    // Seleccionar uno random de los disponibles
-    const randomBanner = allData[Math.floor(Math.random() * allData.length)];
-    console.log('🎲 Banner random seleccionado:', randomBanner.title);
+    const now = new Date().toISOString();
     
-    return [randomBanner as Banner];
-  } catch (error) {
-    console.warn('⚠️ Error fetching homepage search banners:', error);
-    return [];
-  }
-}
-
-/**
- * Obtener banners del carrusel de categorías (Homepage - Posición 2)
- * Máximo 6 categorías - 648x100
- */
-export async function getHomepageCarouselBanners(category?: string, deviceTarget: 'desktop' | 'mobile' = 'desktop'): Promise<Banner[]> {
-  try {
     let query = supabase
       .from('banners')
       .select('*')
-      .eq('type', 'homepage_carousel')
+      .eq('type', 'homepage_vip')
       .eq('is_active', true)
-      .in('device_target', [deviceTarget, 'both'])
-      .order('display_order')
-      .limit(6);
+      // Filtrar expirados: expires_at IS NULL OR expires_at > NOW
+      .or(`expires_at.is.null,expires_at.gt.${now}`)
+      // Filtrar no iniciados: starts_at IS NULL OR starts_at <= NOW
+      .or(`starts_at.is.null,starts_at.lte.${now}`);
 
-    if (category) {
-      query = query.or(`category.eq.${category},category.is.null`);
+    // SIN CATEGORÍA (al cargar página): Solo destacados
+    if (!category) {
+      query = query.eq('is_featured', true);
+    } 
+    // CON CATEGORÍA (hover en botón): Todos los de esa categoría
+    else {
+      query = query.eq('category', category);
     }
 
     const { data, error } = await query;
-
+    
     if (error) {
-      console.error('Error fetching homepage carousel banners:', error);
+      console.error('Error fetching homepage banners:', error);
       return [];
     }
 
-    return data as Banner[];
+    if (!data || data.length === 0) return [];
+
+    // Ordenar: destacados primero, luego por fecha
+    const sorted = (data as Banner[]).sort((a, b) => {
+      if (a.is_featured && !b.is_featured) return -1;
+      if (!a.is_featured && b.is_featured) return 1;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+    return sorted.slice(0, 6);
   } catch (error) {
-    console.error('Error fetching homepage carousel banners:', error);
+    console.error('Error fetching homepage banners:', error);
     return [];
   }
 }
 
 /**
  * Obtener banner random intercalado (Resultados - Posición 3)
- * Se muestra cada 5 resultados - 648x100
  */
-export async function getRandomIntercalatedBanner(category?: string, deviceTarget: 'desktop' | 'mobile' = 'desktop'): Promise<Banner | null> {
+export async function getResultsIntercalatedBanner(category?: string): Promise<Banner | null> {
   try {
-    // Usar función SQL para obtener random
-    const { data, error } = await supabase
-      .rpc('get_random_intercalated_banner', {
-        p_category: category || null,
-      });
+    let query = supabase
+      .from('banners')
+      .select('*')
+      .eq('type', 'results_intercalated')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
 
+    if (category) {
+      query = query.or(`category.eq.${category},category.is.null`);
+    }
+
+    const { data, error } = await query;
     if (error) {
-      console.error('Error fetching random intercalated banner:', error);
+      console.error('Error fetching intercalated banner:', error);
       return null;
     }
 
-    const banner = (data?.[0] as Banner) || null;
-    // Filtrar por dispositivo
-    if (banner && (banner.device_target === deviceTarget || banner.device_target === 'both')) {
-      return banner;
-    }
-
-    return null;
+    // Seleccionar uno random
+    if (!data || data.length === 0) return null;
+    const randomBanner = data[Math.floor(Math.random() * data.length)];
+    return randomBanner as Banner;
   } catch (error) {
-    console.error('Error fetching random intercalated banner:', error);
+    console.error('Error fetching intercalated banner:', error);
     return null;
   }
 }
 
 /**
- * Obtener banner de header de categoría (Secciones Destacadas)
- * Banner principal para cada categoría en homepage - 1140x120
- * 
- * ESTRATEGIA:
- * 1. Buscar banner prioritario de la categoría
- * 2. Si no hay, buscar banner genérico activo
+ * Obtener banners laterales (Resultados - Posición 4)
  */
-export async function getCategoryHeaderBanner(
-  categoryName: string, 
-  deviceTarget: 'desktop' | 'mobile' = 'desktop'
-): Promise<Banner | null> {
+export async function getResultsLateralBanners(category?: string): Promise<Banner[]> {
   try {
-    // 1️⃣ Buscar banner prioritario de la categoría
-    const { data: priorityData, error: priorityError } = await supabase
+    let query = supabase
       .from('banners')
       .select('*')
-      .eq('type', 'category_header')
-      .eq('category', categoryName)
+      .eq('type', 'results_lateral')
       .eq('is_active', true)
-      .eq('is_priority', true)
-      .in('device_target', [deviceTarget, 'both'])
-      .order('priority_weight', { ascending: false })
-      .limit(1);
-
-    if (!priorityError && priorityData && priorityData.length > 0) {
-      console.log(`🎯 Banner prioritario de categoría "${categoryName}":`, priorityData[0].title);
-      return priorityData[0] as Banner;
-    }
-
-    // 2️⃣ Si no hay prioritario, buscar cualquier banner activo de la categoría
-    const { data: regularData, error: regularError } = await supabase
-      .from('banners')
-      .select('*')
-      .eq('type', 'category_header')
-      .eq('category', categoryName)
-      .eq('is_active', true)
-      .in('device_target', [deviceTarget, 'both'])
+      .order('position')
       .order('display_order')
-      .limit(1);
+      .limit(4);
 
-    if (!regularError && regularData && regularData.length > 0) {
-      console.log(`📌 Banner regular de categoría "${categoryName}":`, regularData[0].title);
-      return regularData[0] as Banner;
+    if (category) {
+      query = query.or(`category.eq.${category},category.is.null`);
     }
 
-    console.log(`⚠️ No hay banner para categoría "${categoryName}"`);
-    return null;
-  } catch (error) {
-    console.error('Error fetching category header banner:', error);
-    return null;
-  }
-}
-
-/**
- * Obtener banners laterales rotativos (Resultados - Posición 4)
- * Ordenados por posición A-B-C-D
- */
-export async function getLateralBanners(category?: string, deviceTarget: 'desktop' | 'mobile' = 'desktop'): Promise<Banner[]> {
-  try {
-    // Usar función SQL para obtener ordenados por posición
-    const { data, error } = await supabase
-      .rpc('get_lateral_banners', {
-        p_category: category || null,
-      });
-
+    const { data, error } = await query;
     if (error) {
       console.error('Error fetching lateral banners:', error);
       return [];
     }
-
-    // Filtrar por dispositivo
-    const filtered = (data as Banner[]).filter(
-      banner => banner.device_target === deviceTarget || banner.device_target === 'both'
-    );
-
-    return filtered;
+    return data as Banner[];
   } catch (error) {
     console.error('Error fetching lateral banners:', error);
     return [];
@@ -445,7 +356,10 @@ export async function updateBannerOrder(id: string, displayOrder: number): Promi
   }
 }
 
+// ==================== LEGACY FUNCTIONS (NO USAR - Columnas eliminadas) ====================
+
 /**
+ * @deprecated Columnas is_priority y priority_weight eliminadas en migración 2026-01-10
  * Activar/Desactivar prioridad de banner (Solo SuperAdmin)
  * Cuando se activa como prioritario, opcionalmente desactiva otros de la misma posición
  */
@@ -455,6 +369,10 @@ export async function toggleBannerPriority(
   priorityWeight: number = 100,
   deselectOthers: boolean = false
 ): Promise<{ error: any }> {
+  console.warn('⚠️ toggleBannerPriority está deprecada. Usar is_featured en su lugar.');
+  return { error: { message: 'Función deprecada. Columnas eliminadas.' } };
+  
+  /* CÓDIGO ORIGINAL COMENTADO - NO FUNCIONA
   try {
     if (!await isSuperAdmin()) {
       return { error: { message: 'Acceso denegado. Solo SuperAdmin' } };
@@ -499,6 +417,7 @@ export async function toggleBannerPriority(
     console.error('Error toggling banner priority:', error);
     return { error };
   }
+  */
 }
 
 /**

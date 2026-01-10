@@ -14,6 +14,5 @@ export default defineConfig({
   datasource: {
     // Usar DIRECT_URL para introspección (puerto 5432)
     url: process.env["DIRECT_URL"],
-    directUrl: process.env["DIRECT_URL"],
   },
 });
