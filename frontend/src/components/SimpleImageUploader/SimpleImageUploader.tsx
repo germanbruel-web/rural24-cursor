@@ -458,7 +458,6 @@ const SortableImage: React.FC<SortableImageProps> = ({ image, index, onRemove, o
   return (
     <div
       ref={setNodeRef}
-      style={style}
       className={`relative aspect-square rounded-lg overflow-hidden border-2 bg-gray-50 ${
         isDragging ? 'shadow-2xl z-50 scale-105' : ''
       }`}

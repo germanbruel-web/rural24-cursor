@@ -17,8 +17,8 @@ import {
   updateBannerClean,
   deleteBannerClean,
   toggleBannerCleanActive
-} from '@/src/services/bannersCleanService';
-import { supabase } from '@/src/services/supabaseClient';
+} from '@/services/bannersCleanService';
+import { supabase } from '@/services/supabaseClient';
 import { ImageUploader } from './ImageUploader';
 
 // ====================================
@@ -52,14 +52,14 @@ const INITIAL_FORM: BannerFormData = {
 };
 
 // Categorías reales del sistema (SINCRONIZADO con tabla categories en BD)
-// Los values deben coincidir con los usados en featuredAdsService.ts
+// Los values deben coincidir EXACTAMENTE con los nombres en la BD
 const CATEGORIES = [
   { value: 'all', label: 'Todas las Categorías' },
-  { value: 'maquinaria', label: 'Maquinaria Agrícola' },
-  { value: 'ganaderia', label: 'Ganadería' },
-  { value: 'insumos', label: 'Insumos Agropecuarios' },
-  { value: 'inmuebles', label: 'Inmuebles Rurales' },
-  { value: 'guia', label: 'Guía Comercial' }
+  { value: 'MAQUINARIAS AGRICOLAS', label: 'Maquinarias Agrícolas' },
+  { value: 'GANADERIA', label: 'Ganadería' },
+  { value: 'INSUMOS AGROPECUARIOS', label: 'Insumos Agropecuarios' },
+  { value: 'INMUEBLES RURALES', label: 'Inmuebles Rurales' },
+  { value: 'GUIA DEL CAMPO', label: 'Guía del Campo' }
 ];
 
 const PLACEMENTS = [

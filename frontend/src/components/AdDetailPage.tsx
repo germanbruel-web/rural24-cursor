@@ -616,7 +616,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                 ) : (
                   <>
                     {/* SECCIÓN 1: Información Básica - Compacta */}
-                    {(ad.category || ad.subcategory || ad.brand || ad.model || ad.year || ad.condition || ad.province) && (
+                    {(ad.category || ad.subcategory || ad.brand || ad.model || ad.year || ad.condition) && (
                       <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600">
                         <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                           <InformationCircleIcon className="w-5 h-5 text-green-600" />
@@ -664,33 +664,12 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                               <span className="text-base font-bold text-green-700 mt-1">{ad.condition}</span>
                             </div>
                           )}
-                          
-                          {ad.province && (
-                            <div className="flex flex-col">
-                              <span className="text-gray-600">{TEXTS.adDetail.location}</span>
-                              <span className="text-base font-bold text-gray-900 mt-1">{ad.province}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* SECCIÓN 2: Precio - Compacta */}
-                    {ad.price && (
-                      <div className="p-3 sm:p-6">
-                        <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                          <div className="w-1 h-5 bg-green-600 rounded-full"></div>
-                          {TEXTS.adDetail.price}
-                        </h3>
-                        <div className="flex flex-col">
-                          <span className="text-base font-semibold text-gray-500 uppercase tracking-wide">{TEXTS.adDetail.priceValue}</span>
-                          <span className="text-2xl font-black text-gray-900 mt-0.5">{formatPrice(ad.price, ad.currency)}</span>
                         </div>
                       </div>
                     )}
 
                     {/* Mensaje si no hay datos */}
-                    {!ad.category && !ad.subcategory && !ad.brand && !ad.model && !ad.year && !ad.condition && !ad.province && !ad.price && (
+                    {!ad.category && !ad.subcategory && !ad.brand && !ad.model && !ad.year && !ad.condition && (
                       <div className="text-center py-8">
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
                           <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1021,53 +1000,56 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
         </div>
       </div>
 
-      {/* Otros avisos del vendedor */}
-      {ad?.seller && (
-        <div className="max-w-7xl mx-auto px-4 py-12 bg-gray-50">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {TEXTS.adDetail.otherAds}
-            </h2>
-            {loadingOtherAds && (
-              <p className="text-gray-600 mt-1">{TEXTS.common.loading}</p>
-            )}
-            {!loadingOtherAds && sellerOtherAds.length === 0 && (
-              <p className="text-gray-600 mt-1">{TEXTS.adDetail.noOtherAds}</p>
-            )}
-            {!loadingOtherAds && sellerOtherAds.length > 0 && (
-              <p className="text-gray-600 mt-1">
-                {sellerOtherAds.length} {sellerOtherAds.length === 1 ? 'aviso disponible' : 'avisos disponibles'}
-              </p>
-            )}
-          </div>
-          
-          {loadingOtherAds ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16a135]"></div>
-            </div>
-          ) : sellerOtherAds.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {sellerOtherAds.map((otherAd) => (
-                <ProductCard 
-                  key={otherAd.id} 
-                  product={otherAd}
-                  variant="compact"
-                  onViewDetail={(adId) => {
-                    window.location.hash = `#/ad/${adId}`;
-                  }}
-                />
-              ))}
-            </div>
-          ) : null}
-        </div>
-      )}
-
       {/* Modal de autenticación */}
       <AuthModal 
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)}
         initialView="register"
       />
+
+      {/* Otros avisos del vendedor */}
+      {ad?.user_id && (
+        <div className="bg-gray-50 border-t border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 py-12">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {TEXTS.adDetail.otherAds}
+              </h2>
+              {loadingOtherAds && (
+                <p className="text-gray-600 mt-1">{TEXTS.common.loading}</p>
+              )}
+              {!loadingOtherAds && sellerOtherAds.length === 0 && (
+                <p className="text-gray-600 mt-1">{TEXTS.adDetail.noOtherAds}</p>
+              )}
+              {!loadingOtherAds && sellerOtherAds.length > 0 && (
+                <p className="text-gray-600 mt-1">
+                  {sellerOtherAds.length} {sellerOtherAds.length === 1 ? 'aviso disponible' : 'avisos disponibles'} de este vendedor
+                </p>
+              )}
+            </div>
+            
+            {loadingOtherAds ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16a135]"></div>
+              </div>
+            ) : sellerOtherAds.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {sellerOtherAds.map((otherAd) => (
+                  <ProductCard 
+                    key={otherAd.id} 
+                    product={otherAd}
+                    variant="compact"
+                    showProvince={true}
+                    onViewDetail={(adId) => {
+                      window.location.hash = `#/ad/${adId}`;
+                    }}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

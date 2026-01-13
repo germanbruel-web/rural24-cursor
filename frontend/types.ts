@@ -12,6 +12,7 @@ export interface Product {
   imageUrl: string; // Primera imagen para thumbnail
   imageUrls?: string[]; // Array completo para galería
   image_urls?: string[]; // Alias alternativo (legacy)
+  images?: Array<{url: string; path?: string; sortOrder?: number; isPrimary?: boolean} | string>; // Formato original de Supabase
   sourceUrl: string;
   category: string;
   subcategory?: string;

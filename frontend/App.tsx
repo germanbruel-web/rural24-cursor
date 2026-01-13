@@ -1,60 +1,87 @@
-import React, { useState, useCallback, useMemo } from "react";
-import { useProducts } from "./src/hooks/useProducts";
-import type { FilterOptions, SearchFilters, Banner } from "./types";
-import { Header } from "./src/components/Header";
-import { HeroWithCarousel } from "./src/components/HeroWithCarousel";
-import { FilterSidebar } from "./src/components/FilterSidebar";
-import { ProductCard } from "./src/components/ProductCard";
-import { AdvancedSearchBar } from "./src/components/AdvancedSearchBar";
-import { CategoryCarousel } from "./src/components/sections/CategoryCarousel";
-import { smartSearch, getPremiumProducts } from "./src/services/smartSearch";
-import { extractIdFromUrl } from "./src/utils/slugUtils";
-import MyAdsPanel from "./src/components/admin/MyAdsPanel";
-import { MessagesPanel } from "./src/components/dashboard/MessagesPanel";
-import AllAdsPanel from "./src/components/admin/AllAdsPanel";
-import { UsersPanel } from "./src/components/admin/UsersPanel";
-import BannersCleanPanel from "./src/components/admin/BannersCleanPanel";
-import { CategoriasAdmin } from "./src/components/admin/CategoriasAdmin";
-import { AttributesAdmin } from "./src/components/admin/AttributesAdmin";
-import { BackendSettings } from "./src/components/admin/BackendSettings";
-import { AdDetailPage } from "./src/components/AdDetailPage";
-import { ProfilePanel } from "./src/components/dashboard/ProfilePanel";
-import { SubscriptionPanel } from "./src/components/dashboard/SubscriptionPanel";
-import { ReceivedContactsView } from "./src/components/dashboard/ReceivedContactsView";
-import { DashboardLayout } from "./src/components/layouts/DashboardLayout";
-import { FeaturedAdsSection } from "./src/components/sections/FeaturedAdsSection";
-import { BannersVipHero } from "./src/components/banners/BannersVipHero";
-import { getPremiumAds, getActiveAds } from "./src/services/adsService";
-import { getHomepageBanners } from "./src/services/bannersService";
-// Banners integrados en componentes
-import type { Ad } from "./types";
-import { PROVINCES } from "./src/constants/locations";
-import { ALL_CATEGORIES } from "./src/constants/categories";
-import { SearchResultsPageMinimal } from "./src/components/SearchResultsPageMinimal";
-import { HeroSearchBarClon } from "./src/components/HeroSearchBarClon";
-import { RegisterBanner } from "./src/components/RegisterBanner";
-import { HowItWorksSection } from "./src/components/sections/HowItWorksSection";
-import { HowItWorksPage } from "./src/components/pages/HowItWorksPage";
-import { EmailConfirmationPage } from "./src/components/auth/EmailConfirmationPage";
-import AuthModal from "./src/components/auth/AuthModal";
-import PublicarAviso from "./src/components/pages/PublicarAviso";
-import { TestDynamicForm } from "./src/pages/TestDynamicForm";
-import { PricingPage } from "./src/components/pages/PricingPage";
-import { DesignSystemShowcase } from "./src/components/DesignSystemShowcase";
-import { DesignSystemShowcaseSimple } from "./src/components/DesignSystemShowcaseSimple";
-import { ExampleMigratedPage } from "./src/components/pages/ExampleMigratedPage";
-import APITestPage from "./src/pages/APITest";
+import React, { useState, useCallback, useMemo, Suspense, lazy } from "react";
 
-import { useAuth } from "./src/contexts/AuthContext";
-import { CategoryProvider } from "./src/contexts/CategoryContext";
-import { canAccessPage } from "./src/utils/rolePermissions";
-import { useCategoryPrefetch } from "./src/hooks/useCategoryPrefetch";
-import { useRealtimeCategories } from "./src/hooks/useRealtimeCategories";
-import { OfflineBanner } from "./src/hooks/useOnlineStatus";
-import { ToastProvider } from "./src/contexts/ToastContext";import { Footer } from "./src/components/Footer";import { useSiteSetting } from "./src/hooks/useSiteSetting";
-import { DiagnosticsPage } from "./src/pages/DiagnosticsPage";
+// ============================================================
+// TYPES
+// ============================================================
+import type { FilterOptions, SearchFilters, Banner, Ad, Product } from "./types";
 
-type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'backend-settings' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics';
+// ============================================================
+// CORE COMPONENTS (Critical Path - No Lazy Loading)
+// ============================================================
+import {
+  Header,
+  Footer,
+  HeroWithCarousel,
+  HeroSearchBarClon,
+  SearchResultsPageMinimal,
+  AdDetailPage,
+  AuthModal,
+  EmailConfirmationPage,
+  DashboardLayout,
+  FeaturedAdsSection,
+  HowItWorksSection,
+  BannersVipHero,
+} from "./src/components";
+
+// ============================================================
+// HOOKS & CONTEXTS (Agrupados por barrel)
+// ============================================================
+import { useProducts, useCategoryPrefetch, useRealtimeCategories, OfflineBanner } from "./src/hooks";
+import { useAuth, CategoryProvider, ToastProvider } from "./src/contexts";
+
+// ============================================================
+// SERVICES
+// ============================================================
+import { smartSearch, getPremiumProducts, getPremiumAds, getActiveAds, getHomepageBanners } from "./src/services";
+
+// ============================================================
+// UTILS & CONSTANTS
+// ============================================================
+import { extractIdFromUrl, canAccessPage } from "./src/utils";
+import { PROVINCES, ALL_CATEGORIES } from "./src/constants";
+
+// ============================================================
+// LAZY LOADED COMPONENTS (Code Splitting - Mejora LCP)
+// Componentes pesados que no se necesitan en el render inicial
+// ============================================================
+
+// Admin Panel Components (solo para admins)
+const MyAdsPanel = lazy(() => import("./src/components/admin/MyAdsPanel"));
+const AllAdsPanel = lazy(() => import("./src/components/admin/AllAdsPanel"));
+const BannersCleanPanel = lazy(() => import("./src/components/admin/BannersCleanPanel"));
+const UsersPanel = lazy(() => import("./src/components/admin/UsersPanel").then(m => ({ default: m.UsersPanel })));
+const CategoriasAdmin = lazy(() => import("./src/components/admin/CategoriasAdmin").then(m => ({ default: m.CategoriasAdmin })));
+const AttributesAdmin = lazy(() => import("./src/components/admin/AttributesAdmin").then(m => ({ default: m.AttributesAdmin })));
+const BackendSettings = lazy(() => import("./src/components/admin/BackendSettings").then(m => ({ default: m.BackendSettings })));
+
+// Dashboard Components (solo para usuarios autenticados)
+const MessagesPanel = lazy(() => import("./src/components/dashboard/MessagesPanel").then(m => ({ default: m.MessagesPanel })));
+const ProfilePanel = lazy(() => import("./src/components/dashboard/ProfilePanel").then(m => ({ default: m.ProfilePanel })));
+const SubscriptionPanel = lazy(() => import("./src/components/dashboard/SubscriptionPanel").then(m => ({ default: m.SubscriptionPanel })));
+const ReceivedContactsView = lazy(() => import("./src/components/dashboard/ReceivedContactsView").then(m => ({ default: m.ReceivedContactsView })));
+
+// Pages (rutas secundarias)
+const HowItWorksPage = lazy(() => import("./src/components/pages/HowItWorksPage").then(m => ({ default: m.HowItWorksPage })));
+const PricingPage = lazy(() => import("./src/components/pages/PricingPage").then(m => ({ default: m.PricingPage })));
+const PublicarAviso = lazy(() => import("./src/components/pages/PublicarAviso"));
+const ExampleMigratedPage = lazy(() => import("./src/components/pages/ExampleMigratedPage").then(m => ({ default: m.ExampleMigratedPage })));
+
+// Dev/Test Pages (solo desarrollo)
+const TestDynamicForm = lazy(() => import("./src/pages/TestDynamicForm").then(m => ({ default: m.TestDynamicForm })));
+const APITestPage = lazy(() => import("./src/pages/APITest"));
+const DiagnosticsPage = lazy(() => import("./src/pages/DiagnosticsPage").then(m => ({ default: m.DiagnosticsPage })));
+const DesignSystemShowcaseSimple = lazy(() => import("./src/components/DesignSystemShowcaseSimple").then(m => ({ default: m.DesignSystemShowcaseSimple })));
+
+// ============================================================
+// LOADING FALLBACK COMPONENT
+// ============================================================
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
+
+type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'backend-settings' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads';
 
 /**
  * Componente principal de AgroBuscador
@@ -172,7 +199,10 @@ const AppContent: React.FC = () => {
 
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({});
   const [searchResults, setSearchResults] = useState(products);
-  const [isSearching, setIsSearching] = useState(false);
+  // Inicializar isSearching basado en el hash actual
+  const [isSearching, setIsSearching] = useState(() => {
+    return window.location.hash.startsWith('#/search');
+  });
   const [activeFilters, setActiveFilters] = useState({});
   const [premiumAds, setPremiumAds] = useState<Product[]>([]);
   const [activeAds, setActiveAds] = useState<Product[]>([]);
@@ -193,6 +223,14 @@ const AppContent: React.FC = () => {
       
       // Scroll to top cuando cambia la página
       window.scrollTo(0, 0);
+      
+      // Routing para búsqueda: #/search?cat=X&sub=Y&prov=Z
+      if (hash.startsWith('#/search')) {
+        console.log('🔍 Navegando a página de búsqueda:', hash);
+        setIsSearching(true);
+        navigateToPage('home'); // Mantener home como página base
+        return;
+      }
       
       // Routing para confirmación de email
       if (hash.startsWith('#/auth/confirm')) {
@@ -269,7 +307,8 @@ const AppContent: React.FC = () => {
       }
       // Si no hay hash, mantener la página actual (ya inicializada desde localStorage)
       // Solo navegar a home si explícitamente se navega a #/ o se limpia el hash manualmente
-      else if (hash === '#/') {
+      else if (hash === '#/' || hash === '' || hash === '#') {
+        setIsSearching(false); // Salir de modo búsqueda
         navigateToPage('home');
         setSelectedAdId(null);
       }
@@ -455,8 +494,7 @@ const AppContent: React.FC = () => {
             
             {/* Renderizar contenido cuando no está loading o la página no requiere auth */}
             {!authLoading && (
-              <>
-                {console.log('🎯 APP.TSX RENDER:', { currentPage, role: profile?.role, canAccess: canAccessPage('categories-admin', profile?.role) })}
+              <Suspense fallback={<LoadingFallback />}>
                 {currentPage === 'profile' && <ProfilePanel />}
                 {currentPage === 'subscription' && <SubscriptionPanel />}
                 {currentPage === 'contacts' && <ReceivedContactsView />}
@@ -474,7 +512,7 @@ const AppContent: React.FC = () => {
                     <p className="text-gray-600">Panel de configuración en desarrollo...</p>
                   </div>
                 )}
-              </>
+              </Suspense>
             )}
           </DashboardLayout>
         </div>
@@ -490,13 +528,18 @@ const AppContent: React.FC = () => {
   if (currentPage === 'design-showcase') {
     return (
       <div className="flex flex-col min-h-screen bg-gray-50">
-        <Header onNavigate={(page) => {
-          navigateToPage(page);
-          if (page === 'home') {
-            handleBackToHome();
-          }
-        }} />
-        <DesignSystemShowcaseSimple />
+        <Header 
+          onNavigate={(page) => {
+            navigateToPage(page);
+            if (page === 'home') {
+              handleBackToHome();
+            }
+          }}
+          onSearch={handleSearch}
+        />
+        <Suspense fallback={<LoadingFallback />}>
+          <DesignSystemShowcaseSimple />
+        </Suspense>
         <Footer />
       </div>
     );
@@ -505,14 +548,16 @@ const AppContent: React.FC = () => {
   // Página de Ejemplo de Migración
   if (currentPage === 'example-migration') {
     return (
-      <ExampleMigratedPage 
-        onNavigate={(page) => {
-          navigateToPage(page);
-          if (page === 'home') {
-            handleBackToHome();
-          }
-        }} 
-      />
+      <Suspense fallback={<LoadingFallback />}>
+        <ExampleMigratedPage 
+          onNavigate={(page) => {
+            navigateToPage(page);
+            if (page === 'home') {
+              handleBackToHome();
+            }
+          }} 
+        />
+      </Suspense>
     );
   }
 
@@ -520,13 +565,18 @@ const AppContent: React.FC = () => {
   if (currentPage === 'pricing') {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Header onNavigate={(page) => {
-          navigateToPage(page);
-          if (page === 'home') {
-            handleBackToHome();
-          }
-        }} />
-        <PricingPage />
+        <Header 
+          onNavigate={(page) => {
+            navigateToPage(page);
+            if (page === 'home') {
+              handleBackToHome();
+            }
+          }}
+          onSearch={handleSearch}
+        />
+        <Suspense fallback={<LoadingFallback />}>
+          <PricingPage />
+        </Suspense>
         <Footer />
       </div>
     );
@@ -536,13 +586,18 @@ const AppContent: React.FC = () => {
   if (currentPage === 'publicar-v3') {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Header onNavigate={(page) => {
-          navigateToPage(page);
-          if (page === 'home') {
-            handleBackToHome();
-          }
-        }} />
-        <PublicarAviso />
+        <Header 
+          onNavigate={(page) => {
+            navigateToPage(page);
+            if (page === 'home') {
+              handleBackToHome();
+            }
+          }}
+          onSearch={handleSearch}
+        />
+        <Suspense fallback={<LoadingFallback />}>
+          <PublicarAviso />
+        </Suspense>
         <AuthModal 
           isOpen={showAuthModal} 
           onClose={() => setShowAuthModal(false)}
@@ -556,13 +611,18 @@ const AppContent: React.FC = () => {
   if (currentPage === 'test-form') {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Header onNavigate={(page) => {
-          navigateToPage(page);
-          if (page === 'home') {
-            handleBackToHome();
-          }
-        }} />
-        <TestDynamicForm />
+        <Header 
+          onNavigate={(page) => {
+            navigateToPage(page);
+            if (page === 'home') {
+              handleBackToHome();
+            }
+          }}
+          onSearch={handleSearch}
+        />
+        <Suspense fallback={<LoadingFallback />}>
+          <TestDynamicForm />
+        </Suspense>
       </div>
     );
   }
@@ -571,19 +631,24 @@ const AppContent: React.FC = () => {
   if (currentPage === 'how-it-works') {
     return (
       <div className="flex flex-col min-h-screen bg-white">
-        <Header onNavigate={(page) => {
-          navigateToPage(page);
-          if (page === 'home') {
-            handleBackToHome();
-          } else if (page === 'how-it-works') {
-            window.location.hash = '#/how-it-works';
-          }
-        }} />
-        <HowItWorksPage />
+        <Header 
+          onNavigate={(page) => {
+            navigateToPage(page);
+            if (page === 'home') {
+              handleBackToHome();
+            } else if (page === 'how-it-works') {
+              window.location.hash = '#/how-it-works';
+            }
+          }}
+          onSearch={handleSearch}
+        />
+        <Suspense fallback={<LoadingFallback />}>
+          <HowItWorksPage />
+        </Suspense>
         <AuthModal 
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
-          defaultMode="signup"
+          initialView="register"
         />
       </div>
     );
@@ -591,25 +656,28 @@ const AppContent: React.FC = () => {
 
   // Página de prueba de API
   if (currentPage === 'api-test') {
-    return <APITestPage />;
+    return <Suspense fallback={<LoadingFallback />}><APITestPage /></Suspense>;
   }
 
   // Página de diagnósticos de imágenes
   if (currentPage === 'diagnostics') {
-    return <DiagnosticsPage />;
+    return <Suspense fallback={<LoadingFallback />}><DiagnosticsPage /></Suspense>;
   }
 
   // Render normal para home, búsqueda y detalle
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      <Header onNavigate={(page) => {
+      <Header 
+        onNavigate={(page) => {
           navigateToPage(page);
           if (page === 'home') {
             handleBackToHome();
           } else if (page === 'how-it-works') {
             window.location.hash = '#/how-it-works';
           }
-        }} />
+        }}
+        onSearch={handleSearch}
+      />
 
       {currentPage === 'ad-detail' && selectedAdId ? (
         <AdDetailPage 
@@ -624,6 +692,8 @@ const AppContent: React.FC = () => {
         <SearchResultsPageMinimal
           results={searchResults}
           searchQuery={searchFilters.query}
+          categorySlug={searchFilters.categories?.[0]?.toLowerCase().replace(/\s+/g, '-')}
+          subcategorySlug={searchFilters.subcategories?.[0]?.toLowerCase().replace(/\s+/g, '-')}
           onBack={handleBackToHome}
           onSearch={handleAdvancedSearch}
           filterOptions={filterOptions}
@@ -666,13 +736,12 @@ const AppContent: React.FC = () => {
               window.location.hash = `#/ad/${adId}`;
             }}
             onCategoryClick={(categorySlug) => {
-              handleAdvancedSearch({ categories: [categorySlug] });
+              // Navegar a URL con filtro de categoría
+              window.location.hash = `#/search?cat=${categorySlug}`;
             }}
             onSubcategoryClick={(catSlug, subSlug) => {
-              handleAdvancedSearch({ 
-                categories: [catSlug],
-                subcategories: [subSlug]
-              });
+              // Navegar a URL con filtros de categoría y subcategoría
+              window.location.hash = `#/search?cat=${catSlug}&sub=${subSlug}`;
             }}
           />
 

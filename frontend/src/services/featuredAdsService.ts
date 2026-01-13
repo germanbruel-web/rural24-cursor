@@ -37,10 +37,10 @@ export async function getFeaturedAdsByCategories(
   try {
     console.log('🔍 getFeaturedAdsByCategories - START');
     
-    // 1. Obtener todas las categorías activas
+    // 1. Obtener todas las categorías activas (incluir slug)
     const { data: categories, error: catError } = await supabase
       .from('categories')
-      .select('id, name, display_name, icon')
+      .select('id, name, display_name, icon, slug')
       .eq('is_active', true)
       .order('sort_order');
 
@@ -71,7 +71,7 @@ export async function getFeaturedAdsByCategories(
         // 2b. Obtener subcategorías con contadores de avisos activos
         const { data: subcategories, error: subError } = await supabase
           .from('subcategories')
-          .select('id, name, display_name, icon, sort_order')
+          .select('id, name, display_name, icon, sort_order, slug')
           .eq('category_id', cat.id)
           .eq('is_active', true)
           .order('sort_order');
@@ -96,7 +96,7 @@ export async function getFeaturedAdsByCategories(
             return {
               id: sub.id,
               name: sub.display_name || sub.name,
-              slug: sub.name,
+              slug: sub.slug || sub.name,
               ads_count: count || 0,
               icon: sub.icon
             };
@@ -104,22 +104,30 @@ export async function getFeaturedAdsByCategories(
         );
 
         // Mapear nombre de categoría a slug de banners_clean
-        // SINCRONIZADO con categories table: name → slug usado en banners
+        // SINCRONIZADO con tabla categories en BD (nombres EXACTOS)
+        // El valor debe coincidir con banners_clean.category
         const categorySlugMap: Record<string, string> = {
-          // Por display_name
-          'Maquinaria Agrícola': 'maquinaria',
-          'Maquinarias': 'maquinaria',
-          'Ganadería': 'ganaderia',
-          'Insumos Agropecuarios': 'insumos',
-          'Inmuebles Rurales': 'inmuebles',
-          'Guia Comercial': 'guia',
-          'Guía del Campo': 'guia',
-          // Por name (fallback)
-          'maquinaria': 'maquinaria',
-          'ganaderia': 'ganaderia',
-          'insumosagropecuarios': 'insumos',
-          'inmueblesrurales': 'inmuebles',
-          'guiacomercial': 'guia',
+          // Variantes de Maquinarias (EXACTO de BD: "Maquinarias Agrícolas")
+          'Maquinarias Agrícolas': 'MAQUINARIAS AGRICOLAS',  // Con tilde í
+          'Maquinarias Agricolas': 'MAQUINARIAS AGRICOLAS',  // Sin tilde
+          'Maquinaria Agrícola': 'MAQUINARIAS AGRICOLAS',
+          'Maquinarias': 'MAQUINARIAS AGRICOLAS',
+          'MAQUINARIAS AGRICOLAS': 'MAQUINARIAS AGRICOLAS',
+          // Ganadería
+          'Ganadería': 'GANADERIA',
+          'Ganaderia': 'GANADERIA',
+          'GANADERIA': 'GANADERIA',
+          // Insumos
+          'Insumos Agropecuarios': 'INSUMOS AGROPECUARIOS',
+          'INSUMOS AGROPECUARIOS': 'INSUMOS AGROPECUARIOS',
+          // Inmuebles
+          'Inmuebles Rurales': 'INMUEBLES RURALES',
+          'INMUEBLES RURALES': 'INMUEBLES RURALES',
+          // Guía
+          'Guia Comercial': 'GUIA DEL CAMPO',
+          'Guía Comercial': 'GUIA DEL CAMPO',
+          'Guía del Campo': 'GUIA DEL CAMPO',
+          'GUIA DEL CAMPO': 'GUIA DEL CAMPO',
         };
         const catDisplayName = cat.display_name || cat.name;
         const bannerCategorySlug = categorySlugMap[catDisplayName] || categorySlugMap[cat.name] || cat.name.toLowerCase();
@@ -150,10 +158,17 @@ export async function getFeaturedAdsByCategories(
           title: b.client_name
         }));
 
+        // Generar slug normalizado: usar slug de BD, o generar desde name
+        const normalizedSlug = cat.slug || cat.name.toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        
+        console.log(`📌 Categoría ${cat.display_name}: slug BD=${cat.slug}, normalizado=${normalizedSlug}`);
+        
         return {
           category_id: cat.id,
           category_name: cat.display_name || cat.name,
-          category_slug: cat.name,
+          category_slug: normalizedSlug,
           banners: banners,
           subcategories: subcategoriesWithCounts,
           ads: ads || [],

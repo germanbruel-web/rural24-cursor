@@ -108,24 +108,32 @@ export const FeaturedAdsSection: React.FC<Props> = ({
               />
             </div>
 
-            {/* Grid Responsive: Mobile 1, Tablet 2, Desktop 4 */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4">
-              {catData.ads.map((ad) => (
+            {/* Grid Responsive: Mobile 2, Tablet 3, Desktop 5 */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 mb-4">
+              {catData.ads.map((ad) => {
+                // Extraer URL de imagen correctamente (soporta string y objeto {url, path})
+                const firstImage = ad.images?.[0];
+                const imageUrl = typeof firstImage === 'string' 
+                  ? firstImage 
+                  : (firstImage?.url || ad.image_urls?.[0] || '');
+                
+                return (
                 <ProductCard
                   key={ad.id}
                   product={{
                     ...ad,
-                    imageUrl: ad.images?.[0] || ad.image_urls?.[0] || '',
+                    imageUrl,
+                    images: ad.images, // Pasar images completo para useProductImage
                     sourceUrl: '',
                     isSponsored: ad.is_premium || false,
                   }}
                   variant="featured"
                   showBadges={true}
                   showLocation={true}
-                  showShareButton={true}
                   onViewDetail={() => onAdClick?.(ad.id)}
                 />
-              ))}
+                );
+              })}
             </div>
 
             {/* Links sutiles de subcategorías debajo de las cards */}

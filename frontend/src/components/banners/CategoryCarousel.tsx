@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { BannerClean } from '@/types';
-import { getCategoryCarouselBanners, incrementBannerImpression, incrementBannerClick } from '@/src/services/bannersCleanService';
+import { getCategoryCarouselBanners, incrementBannerImpression, incrementBannerClick } from '@/services/bannersCleanService';
 
 interface CategoryCarouselProps {
   category: string;  // 'inmuebles' | 'vehiculos' | 'maquinarias' | 'insumos' | 'empleos'

@@ -12,20 +12,14 @@ interface Props {
 }
 
 // Mapeo de nombres de categorías del hover a slugs de banners_clean
-// Sincronizado con constants/categories.ts y BannersCleanPanel
+// SINCRONIZADO con tabla categories en BD (nombres EXACTOS)
 const CATEGORY_MAP: Record<string, string> = {
-  // Nombres display → slugs
-  'Maquinarias': 'maquinarias',
-  'Ganadería': 'ganaderia',
-  'Insumos Agropecuarios': 'insumos',
-  'Inmuebles Rurales': 'inmuebles',
-  'Guía del Campo': 'guia',
-  // slugs directos también funcionan
-  'maquinarias': 'maquinarias',
-  'ganaderia': 'ganaderia',
-  'insumos': 'insumos',
-  'inmuebles': 'inmuebles',
-  'guia': 'guia',
+  // Nombres display del frontend → nombres EXACTOS en BD
+  'Maquinarias': 'MAQUINARIAS AGRICOLAS',
+  'Ganadería': 'GANADERIA',
+  'Insumos Agropecuarios': 'INSUMOS AGROPECUARIOS',
+  'Inmuebles Rurales': 'INMUEBLES RURALES',
+  'Guía del Campo': 'GUIA DEL CAMPO',
 };
 
 export const BannersVipHero: React.FC<Props> = ({ category }) => {
@@ -125,7 +119,7 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
   }
 
   return (
-    <div className="relative w-full rounded-lg overflow-hidden shadow-lg group">
+    <div className="relative w-full overflow-hidden shadow-lg group">
       {/* Banner Image - dimensiones exactas según diseño */}
       <a
         href={currentBanner.link_url || '#'}
@@ -166,25 +160,7 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
         </div>
       )}
 
-      {/* Navegación manual SOLO en mobile con múltiples banners */}
-      {isMobile && banners.length > 1 && (
-        <>
-          <button
-            onClick={() => setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-8 h-8 rounded-full flex items-center justify-center transition-opacity text-sm"
-            aria-label="Banner anterior"
-          >
-            ‹
-          </button>
-          <button
-            onClick={() => setCurrentIndex((prev) => (prev + 1) % banners.length)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-8 h-8 rounded-full flex items-center justify-center transition-opacity text-sm"
-            aria-label="Banner siguiente"
-          >
-            ›
-          </button>
-        </>
-      )}
+      {/* Navegación por dots - sin flechas */}
     </div>
   );
 };

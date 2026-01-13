@@ -47,11 +47,22 @@ export class CategoryRepository {
       }
 
       // Transform database response to domain model
+      // Helper to generate slug from name
+      const generateSlug = (name: string | null): string => {
+        if (!name) return 'sin-nombre';
+        return name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Remove accents
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '');
+      };
+
       const transformedCategories: Category[] = categories.map((cat: any) => ({
         id: cat.id,
         name: cat.name,
         display_name: cat.display_name,
-        slug: cat.slug,
+        slug: cat.slug || generateSlug(cat.name),
         icon: cat.icon,
         sort_order: cat.sort_order,
         is_active: cat.is_active,
@@ -62,7 +73,7 @@ export class CategoryRepository {
             id: sub.id,
             name: sub.name,
             display_name: sub.display_name,
-            slug: sub.slug,
+            slug: sub.slug || generateSlug(sub.name),
             category_id: sub.category_id,
             sort_order: sub.sort_order,
             is_active: sub.is_active,

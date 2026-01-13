@@ -822,3 +822,87 @@ export async function updateAdToHybrid(adId: string): Promise<{ error: any }> {
   }
 }
 
+// ====================================================================
+// BÚSQUEDA CON FILTROS DESDE BACKEND API
+// ====================================================================
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+export interface SearchFiltersParams {
+  cat?: string;           // Categoría slug
+  sub?: string;           // Subcategoría slug
+  prov?: string;          // Provincia
+  q?: string;             // Búsqueda texto libre
+  min_price?: number;
+  max_price?: number;
+  limit?: number;
+  offset?: number;
+  // Atributos dinámicos (cualquier clave extra)
+  [key: string]: string | number | undefined;
+}
+
+export interface SearchAdsResponse {
+  ads: Product[];
+  total: number;
+  hasMore: boolean;
+}
+
+/**
+ * Buscar avisos desde Backend API con filtros por slug
+ * Esta función consulta el backend BFF que resuelve slugs a IDs
+ */
+export async function searchAdsFromBackend(filters: SearchFiltersParams): Promise<SearchAdsResponse> {
+  try {
+    const params = new URLSearchParams();
+    
+    // Campos reservados y sus mappings (no son atributos JSONB)
+    const reservedFields = ['cat', 'sub', 'prov', 'province', 'q', 'min_price', 'max_price', 'limit', 'offset', 'condition', 'city'];
+    
+    // Convertir filtros a query params para el backend
+    if (filters.cat) params.set('cat', filters.cat);
+    if (filters.sub) params.set('sub', filters.sub);
+    // Aceptar tanto 'prov' como 'province'
+    const provinciaValue = filters.prov || filters.province;
+    if (provinciaValue) params.set('prov', String(provinciaValue));
+    if (filters.q) params.set('search', filters.q);
+    if (filters.min_price) params.set('min_price', filters.min_price.toString());
+    if (filters.max_price) params.set('max_price', filters.max_price.toString());
+    if (filters.limit) params.set('limit', filters.limit.toString());
+    if (filters.offset) params.set('offset', filters.offset.toString());
+    
+    // Pasar atributos dinámicos con prefijo attr_
+    for (const [key, value] of Object.entries(filters)) {
+      if (!reservedFields.includes(key) && value !== undefined && value !== '') {
+        params.set(`attr_${key}`, String(value));
+      }
+    }
+    
+    // Siempre traer solo avisos activos y aprobados
+    params.set('status', 'active');
+    params.set('approval_status', 'approved');
+    
+    console.log('🔍 searchAdsFromBackend - URL params:', params.toString());
+
+    const response = await fetch(`${API_URL}/api/ads/search?${params.toString()}`);
+    
+    if (!response.ok) {
+      console.error('❌ Error en searchAdsFromBackend:', response.status, response.statusText);
+      return { ads: [], total: 0, hasMore: false };
+    }
+
+    const data = await response.json();
+    
+    // Transformar ads del backend a Products para el frontend
+    const ads = (data.data || data.ads || []).map((ad: Ad) => transformAdToProduct(ad));
+    
+    return {
+      ads,
+      total: data.pagination?.total || ads.length,
+      hasMore: data.pagination?.hasMore || false,
+    };
+  } catch (error) {
+    console.error('❌ Error en searchAdsFromBackend:', error);
+    return { ads: [], total: 0, hasMore: false };
+  }
+}
+

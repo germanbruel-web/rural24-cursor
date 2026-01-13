@@ -21,6 +21,8 @@ interface ProductCardProps {
   onViewDetail?: (adId: string) => void;
   showBadges?: boolean;
   showLocation?: boolean;
+  /** Mostrar provincia además de localidad (ej: en página de detalle) */
+  showProvince?: boolean;
   className?: string;
 }
 
@@ -30,6 +32,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onViewDetail,
   showBadges = true,
   showLocation = true,
+  showProvince = false,
   className,
 }) => {
   const [imageError, setImageError] = useState(false);
@@ -211,15 +214,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        {/* Ubicación */}
-        {showLocation && product.location && (
+        {/* Ubicación - Inteligente: localidad siempre, provincia opcional */}
+        {showLocation && (product.location || product.province) && (
           <div className={cn(
             'flex items-center gap-1.5 text-gray-500',
             isFeatured ? 'text-xs' : 'text-[11px]',
             'mt-auto'
           )}>
-            <MapPin size={isFeatured ? 14 : 12} className="flex-shrink-0" />
-            <span className="truncate">{product.location}</span>
+            <MapPin size={isFeatured ? 14 : 12} className="flex-shrink-0 text-gray-400" />
+            <span className="truncate">
+              {(() => {
+                // Prioridad: localidad primero, luego provincia
+                const parts: string[] = [];
+                if (product.location && product.location !== 'Sin ubicación') {
+                  parts.push(product.location);
+                }
+                if (showProvince && product.province) {
+                  parts.push(product.province);
+                }
+                // Si no hay localidad pero sí provincia, mostrar provincia
+                if (parts.length === 0 && product.province) {
+                  parts.push(product.province);
+                }
+                return parts.join(', ') || 'Sin ubicación';
+              })()}
+            </span>
           </div>
         )}
       </div>

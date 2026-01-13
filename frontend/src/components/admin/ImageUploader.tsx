@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { Upload, X, Check, AlertCircle, Loader2 } from 'lucide-react';
-import { uploadService } from '@/src/services/uploadService';
+import { uploadService } from '@/services/uploadService';
 
 interface ImageUploaderProps {
   value: string;

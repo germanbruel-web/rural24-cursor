@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { DynamicFilterPanel } from './filters/DynamicFilterPanel';
 import { ResultsBannerIntercalated } from './banners/ResultsBannerIntercalated';
 import { ResultsBannerLateral } from './banners/ResultsBannerLateral';
-import { ProductCard } from './ProductCard';
+import { ProductCard } from './organisms/ProductCard';
 import { ArrowLeft, SlidersHorizontal } from 'lucide-react';
 import type { Product, FilterOptions } from '../../types';
 

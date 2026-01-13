@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { BannerClean } from '@/types';
-import { getHeroVIPBanners, incrementBannerImpression, incrementBannerClick } from '@/src/services/bannersCleanService';
+import { getHeroVIPBanners, incrementBannerImpression, incrementBannerClick } from '@/services/bannersCleanService';
 
 interface HeroVIPBannerProps {
   currentCategory?: string;  // 'all' | 'inmuebles' | 'vehiculos' | 'maquinarias' | 'insumos' | 'empleos'

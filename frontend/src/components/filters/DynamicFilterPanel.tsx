@@ -195,7 +195,7 @@ export const DynamicFilterPanel: React.FC<Props> = ({
                   <h4 className="text-sm font-medium text-gray-700">{filter.label}</h4>
                   
                   {filter.type === 'checkbox' && (
-                    <div className="space-y-1 max-h-48 overflow-y-auto">
+                    <div className="space-y-1">
                       {filter.options.map((option) => {
                         const isChecked = (activeFilters[filter.name] || []).includes(option.value);
                         

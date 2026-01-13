@@ -1,4 +1,4 @@
-import { supabase } from '@/src/services/supabaseClient';
+import { supabase } from '@/services/supabaseClient';
 import type { BannerClean, CreateBannerCleanInput, UpdateBannerCleanInput } from '@/types';
 
 // ====================================

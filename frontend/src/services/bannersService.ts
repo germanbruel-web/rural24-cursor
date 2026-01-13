@@ -140,15 +140,13 @@ export async function getHomepageBanners(category?: string): Promise<Banner[]> {
   try {
     const now = new Date().toISOString();
     
+    // Construir query base - NO usar múltiples .or() (Supabase solo permite uno)
+    // En lugar de filtrar expires_at y starts_at con .or(), lo hacemos post-fetch
     let query = supabase
       .from('banners')
       .select('*')
       .eq('type', 'homepage_vip')
-      .eq('is_active', true)
-      // Filtrar expirados: expires_at IS NULL OR expires_at > NOW
-      .or(`expires_at.is.null,expires_at.gt.${now}`)
-      // Filtrar no iniciados: starts_at IS NULL OR starts_at <= NOW
-      .or(`starts_at.is.null,starts_at.lte.${now}`);
+      .eq('is_active', true);
 
     // SIN CATEGORÍA (al cargar página): Solo destacados
     if (!category) {
@@ -168,8 +166,18 @@ export async function getHomepageBanners(category?: string): Promise<Banner[]> {
 
     if (!data || data.length === 0) return [];
 
+    // Filtrar expirados y no iniciados en el cliente
+    const nowDate = new Date(now);
+    const filtered = (data as Banner[]).filter(banner => {
+      // Filtrar expirados
+      if (banner.expires_at && new Date(banner.expires_at) < nowDate) return false;
+      // Filtrar no iniciados
+      if (banner.starts_at && new Date(banner.starts_at) > nowDate) return false;
+      return true;
+    });
+
     // Ordenar: destacados primero, luego por fecha
-    const sorted = (data as Banner[]).sort((a, b) => {
+    const sorted = filtered.sort((a, b) => {
       if (a.is_featured && !b.is_featured) return -1;
       if (!a.is_featured && b.is_featured) return 1;
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();

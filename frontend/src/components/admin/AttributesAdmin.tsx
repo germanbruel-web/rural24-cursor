@@ -100,6 +100,11 @@ function SortableAttribute({ attr, onEdit, onDelete }: SortableAttributeProps) {
                 Inactivo
               </span>
             )}
+            {attr.is_filterable && (
+              <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                🔍 Filtro
+              </span>
+            )}
           </div>
           <p className="text-sm text-gray-600 mt-1">
             {attr.field_group} • {attr.field_name}
@@ -162,6 +167,9 @@ export function AttributesAdmin() {
     is_required: false,
     is_active: true,
     sort_order: 1,
+    is_filterable: false,
+    filter_type: 'select',
+    filter_order: 99,
   });
 
   // ====================================================================
@@ -324,6 +332,9 @@ export function AttributesAdmin() {
         suffix: formData.suffix || null,
         sort_order: attributes.length + 1,
         is_active: true,
+        is_filterable: formData.is_filterable || false,
+        filter_type: formData.filter_type || 'select',
+        filter_order: formData.filter_order || 99,
       };
 
       await createAttribute(input);
@@ -359,6 +370,9 @@ export function AttributesAdmin() {
         prefix: formData.prefix,
         suffix: formData.suffix,
         is_active: formData.is_active,
+        is_filterable: formData.is_filterable,
+        filter_type: formData.filter_type,
+        filter_order: formData.filter_order,
       });
       
       await loadAttributes();
@@ -407,6 +421,9 @@ export function AttributesAdmin() {
       prefix: attr.prefix,
       suffix: attr.suffix,
       is_active: attr.is_active,
+      is_filterable: attr.is_filterable || false,
+      filter_type: attr.filter_type || 'select',
+      filter_order: attr.filter_order || 99,
     });
     setIsCreating(false);
   }
@@ -421,6 +438,9 @@ export function AttributesAdmin() {
       is_required: false,
       is_active: true,
       sort_order: 1,
+      is_filterable: false,
+      filter_type: 'select',
+      filter_order: 99,
     });
     setIsCreating(false);
     setEditingId(null);
@@ -711,32 +731,43 @@ export function AttributesAdmin() {
 
       {/* Create Button */}
       {selectedSubcategoryId && !showForm && (
-        <div className="flex items-center gap-3 flex-wrap">
-          <button
-            onClick={() => setIsCreating(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all font-semibold shadow-lg shadow-green-200"
-          >
-            <Plus className="w-5 h-5" />
-            Crear Atributo
-          </button>
-          
-          <button
-            onClick={() => setShowImportModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all font-semibold shadow-lg shadow-blue-200"
-          >
-            <Download className="w-5 h-5" />
-            Importar Template
-          </button>
-          
-          {attributes.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
-              onClick={handleSaveAsTemplate}
-              className="flex items-center gap-2 px-6 py-3 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-all font-semibold shadow-lg shadow-purple-200"
+              onClick={() => setIsCreating(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all font-semibold shadow-lg shadow-green-200"
             >
-              <Upload className="w-5 h-5" />
-              Guardar como Template
+              <Plus className="w-5 h-5" />
+              Crear Atributo
             </button>
-          )}
+            
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all font-semibold shadow-lg shadow-blue-200"
+            >
+              <Download className="w-5 h-5" />
+              Importar Template
+            </button>
+            
+            {attributes.length > 0 && (
+              <button
+                onClick={handleSaveAsTemplate}
+                className="flex items-center gap-2 px-6 py-3 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-all font-semibold shadow-lg shadow-purple-200"
+              >
+                <Upload className="w-5 h-5" />
+                Guardar como Template
+              </button>
+            )}
+          </div>
+          
+          {/* Nota explicativa sobre filtros */}
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <p className="text-sm text-blue-800">
+              <strong>💡 Tip:</strong> Para mostrar un atributo en los filtros de búsqueda, 
+              haz clic en el botón <Edit2 className="w-3 h-3 inline" /> de cualquier atributo 
+              y activa la opción <span className="font-semibold">🔍 Mostrar en filtros</span>.
+            </p>
+          </div>
         </div>
       )}
 
@@ -1043,7 +1074,7 @@ export function AttributesAdmin() {
           )}
 
           {/* Checkboxes */}
-          <div className="flex gap-6">
+          <div className="flex flex-wrap gap-6">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -1052,6 +1083,16 @@ export function AttributesAdmin() {
                 className="w-5 h-5 rounded border-2 border-gray-300 text-green-500 focus:ring-4 focus:ring-green-100"
               />
               <span className="text-sm font-medium text-gray-700">Campo obligatorio</span>
+            </label>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.is_filterable || false}
+                onChange={(e) => setFormData({ ...formData, is_filterable: e.target.checked })}
+                className="w-5 h-5 rounded border-2 border-gray-300 text-blue-500 focus:ring-4 focus:ring-blue-100"
+              />
+              <span className="text-sm font-medium text-gray-700">🔍 Mostrar en filtros</span>
             </label>
 
             {editingId && (
@@ -1066,6 +1107,47 @@ export function AttributesAdmin() {
               </label>
             )}
           </div>
+
+          {/* Opciones de filtro (solo si is_filterable está activo) */}
+          {formData.is_filterable && (
+            <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-4">
+              <h4 className="font-semibold text-blue-800 flex items-center gap-2">
+                🔍 Configuración de Filtro
+              </h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de filtro
+                  </label>
+                  <select
+                    value={formData.filter_type || 'select'}
+                    onChange={(e) => setFormData({ ...formData, filter_type: e.target.value as any })}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  >
+                    <option value="select">Dropdown (selección única)</option>
+                    <option value="checkbox">Checkbox (selección múltiple)</option>
+                    <option value="range">Rango (min-max)</option>
+                    <option value="chips">Chips (etiquetas)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Orden en filtros
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.filter_order || 99}
+                    onChange={(e) => setFormData({ ...formData, filter_order: parseInt(e.target.value) || 99 })}
+                    min={1}
+                    max={100}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-4 border-t-2 border-gray-100">

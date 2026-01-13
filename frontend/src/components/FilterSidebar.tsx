@@ -44,7 +44,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ options, onFilterC
       
       <div className="mb-6">
         <h4 className="font-semibold mb-2 text-gray-700">Categoría</h4>
-        <div className="max-h-48 overflow-y-auto">
+        <div>
           {options.categories.map(category => (
             <div key={category} className="flex items-center mb-2">
               <input 

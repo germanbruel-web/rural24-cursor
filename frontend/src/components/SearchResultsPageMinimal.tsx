@@ -1,14 +1,21 @@
 // src/components/SearchResultsPageMinimal.tsx
-// Página de resultados con layout de 3 columnas y filtros laterales
-import React, { useState, useMemo } from 'react';
-import { X } from 'lucide-react';
+// Página de resultados con FILTROS DINÁMICOS desde Backend
+// ====================================================================
+import React, { useState, useMemo, useEffect } from 'react';
+import { X, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Product, FilterOptions, SearchFilters } from '../../types';
 import { HeroSearchBarClon } from './HeroSearchBarClon';
 import { ProductCard } from './organisms/ProductCard';
+import { useDynamicFilters, type FilterConfig, type FilterOption } from '../hooks/useDynamicFilters';
+import { useCategories } from '../hooks/useCategories';
+import { parseFilterParams, buildFilterUrl, toSlug } from '../utils/urlFilterUtils';
+import { searchAdsFromBackend, type SearchFiltersParams } from '../services/adsService';
 
 interface SearchResultsPageMinimalProps {
   results: Product[];
   searchQuery?: string;
+  categorySlug?: string;
+  subcategorySlug?: string;
   onBack: () => void;
   onSearch: (filters: SearchFilters) => void;
   filterOptions: FilterOptions;
@@ -19,123 +26,141 @@ interface SearchResultsPageMinimalProps {
 export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> = ({
   results,
   searchQuery,
+  categorySlug,
+  subcategorySlug,
   onBack,
   onSearch,
   filterOptions,
   onFilter,
   onViewDetail,
 }) => {
-  // Detectar categoría actual de los resultados
-  const currentCategory = results.length > 0 ? results[0].category : '';
+  // Estado para rastrear el hash de la URL (necesario para reactividad)
+  const [hash, setHash] = useState(window.location.hash);
   
-  const [activeFilters, setActiveFilters] = useState<any>({
-    category: currentCategory || undefined
+  // Escuchar cambios en el hash
+  useEffect(() => {
+    const handleHashChange = () => {
+      setHash(window.location.hash);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+  
+  // Leer filtros activos desde la URL (GET params)
+  const urlFilters = useMemo(() => parseFilterParams(), [hash]);
+  
+  // ============================================================
+  // ESTADO: Ads cargados desde Backend
+  // ============================================================
+  const [backendAds, setBackendAds] = useState<Product[]>([]);
+  const [adsLoading, setAdsLoading] = useState(true);
+  const [totalFromBackend, setTotalFromBackend] = useState(0);
+  
+  // ============================================================
+  // CATEGORÍAS DESDE BACKEND (NO hardcodeadas)
+  // ============================================================
+  const { categories: backendCategories, loading: categoriesLoading } = useCategories();
+  
+  // ============================================================
+  // FILTROS DINÁMICOS V2 - Con contadores desde backend
+  // ============================================================
+  const { 
+    filters: backendFilters, 
+    subcategories: backendSubcategories,
+    category: resolvedCategory,
+    subcategory: resolvedSubcategory,
+    totalAds,
+    loading: filtersLoading 
+  } = useDynamicFilters({ 
+    categorySlug: urlFilters.cat || categorySlug, 
+    subcategorySlug: urlFilters.sub || subcategorySlug,
+    provinceSlug: urlFilters.prov,
   });
-  const [pendingFilters, setPendingFilters] = useState<any>({
-    category: currentCategory || undefined
-  });
+  
+  // ============================================================
+  // CARGAR ADS DESDE BACKEND cuando cambian los filtros URL
+  // ============================================================
+  
+  // Calcular un hash de todos los filtros URL para detectar cambios
+  const urlFiltersHash = useMemo(() => JSON.stringify(urlFilters), [urlFilters]);
+  
+  useEffect(() => {
+    const loadAds = async () => {
+      setAdsLoading(true);
+      console.log('🔍 Cargando ads desde backend con filtros:', urlFilters);
+      
+      // Pasar TODOS los filtros URL al backend (incluidos atributos dinámicos)
+      const params: SearchFiltersParams = {
+        ...urlFilters, // Incluye atributos dinámicos como marca, modelo, etc.
+        limit: 100,
+      };
+      
+      const result = await searchAdsFromBackend(params);
+      console.log('✅ Ads cargados desde backend:', result.ads.length, 'de', result.total);
+      
+      setBackendAds(result.ads);
+      setTotalFromBackend(result.total);
+      setAdsLoading(false);
+    };
+    
+    // Cargar si hay al menos un filtro activo
+    const hasFilters = Object.keys(urlFilters).some(k => urlFilters[k]);
+    if (hasFilters) {
+      loadAds();
+    } else {
+      // Sin filtros: usar los results pasados como prop (comportamiento legacy)
+      setBackendAds(results);
+      setTotalFromBackend(results.length);
+      setAdsLoading(false);
+    }
+  }, [urlFiltersHash, results]);
+  
+  // Estado para secciones colapsables
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(['subcategoria', 'provincia', 'categoria'])
+  );
+  
   const [currentPage, setCurrentPage] = useState(1);
   const RESULTS_PER_PAGE = 20;
   
-  // Obtener subcategorías únicas de los resultados filtrados por categoría
-  const availableSubcategories = useMemo(() => {
-    const subs = new Set<string>();
-    results.forEach(product => {
-      // Si hay categoría seleccionada, filtrar subcategorías de esa categoría
-      if (pendingFilters.category) {
-        if (product.category === pendingFilters.category && product.subcategory) {
-          subs.add(product.subcategory);
-        }
+  // Toggle sección colapsable
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(section)) {
+        next.delete(section);
       } else {
-        // Sin categoría, mostrar todas las subcategorías disponibles
-        if (product.subcategory) {
-          subs.add(product.subcategory);
-        }
+        next.add(section);
       }
+      return next;
     });
-    const sorted = Array.from(subs).sort();
-    console.log('🔍 Available subcategories for category:', pendingFilters.category, sorted);
-    return sorted;
-  }, [results, pendingFilters.category]);
+  };
   
-  // Obtener condiciones únicas disponibles
-  const availableConditions = useMemo(() => {
-    const conds = new Set<string>();
-    results.forEach(product => {
-      if ((product as any).condicion) {
-        conds.add((product as any).condicion);
-      }
+  // Generar link de filtro manteniendo otros filtros activos
+  const getFilterLink = (key: string, value: string | undefined) => {
+    const newFilters = { ...urlFilters, [key]: value };
+    // Limpiar filtros dependientes
+    if (key === 'cat' && !value) {
+      delete newFilters.sub;
+    }
+    if (key === 'prov' && !value) {
+      delete newFilters.city;
+    }
+    // Limpiar valores undefined
+    Object.keys(newFilters).forEach(k => {
+      if (!newFilters[k]) delete newFilters[k];
     });
-    return Array.from(conds).sort();
-  }, [results]);
-
-  const handleFilterChange = (key: string, value: any) => {
-    const newFilters = { ...pendingFilters, [key]: value };
-    
-    // Si cambia la categoría, resetear subcategoría
-    if (key === 'category') {
-      newFilters.subcategory = undefined;
-    }
-    
-    setPendingFilters(newFilters);
-  };
-  
-  const applyFilters = () => {
-    console.log('🔍 Aplicando filtros:', pendingFilters);
-    setActiveFilters(pendingFilters);
-    setCurrentPage(1); // Reset a página 1 al aplicar filtros
+    return buildFilterUrl('#/search', newFilters);
   };
 
-  const clearFilters = () => {
-    const resetFilters = { category: currentCategory || undefined };
-    setActiveFilters(resetFilters);
-    setPendingFilters(resetFilters);
-    setCurrentPage(1);
-  };
+  // Limpiar todos los filtros
+  const clearFiltersUrl = buildFilterUrl('#/search', { q: urlFilters.q });
 
-  // Aplicar filtros locales
-  const filteredResults = results.filter((product) => {
-    // Filtro por categoría
-    if (activeFilters.category && product.category !== activeFilters.category) {
-      return false;
-    }
-    
-    // Filtro por subcategoría
-    if (activeFilters.subcategory && product.subcategory !== activeFilters.subcategory) {
-      return false;
-    }
-    
-    // Filtro por provincia
-    if (activeFilters.province) {
-      // Usar campo province directo con manejo defensivo
-      if (!product.province || product.province !== activeFilters.province) {
-        return false;
-      }
-    }
-    
-    // Filtro por condición (Nuevo/Usado)
-    if (activeFilters.condicion && (product as any).condicion !== activeFilters.condicion) {
-      return false;
-    }
-    
-    return true;
-  });
-  
-  // DEBUG: Log detallado de filtros
-  console.log('🔍 FILTER DEBUG:', {
-    totalResults: results.length,
-    filteredResults: filteredResults.length,
-    activeFilters,
-    sampleProduct: results[0] ? {
-      id: results[0].id,
-      title: results[0].title,
-      category: results[0].category,
-      subcategory: results[0].subcategory,
-      province: results[0].province,
-    } : null,
-  });
-  
-  console.log(`📊 Filtros aplicados: ${filteredResults.length} de ${results.length} avisos`);
+  // USAR ADS DESDE BACKEND (ya vienen filtrados)
+  const filteredResults = backendAds;
+
+  // Contar filtros activos
+  const activeFilterCount = Object.keys(urlFilters).filter(k => k !== 'q').length;
 
   // JERARQUÍA DE AVISOS:
   // 1. Avisos Destacados (featured: true)
@@ -199,9 +224,22 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
       <div className="border-b bg-white">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <p className="text-sm text-gray-600">
-            {searchQuery && <span className="font-medium">{searchQuery}</span>}
-            {searchQuery && ' · '}
-            {sortedResults.length} {sortedResults.length === 1 ? 'resultado' : 'resultados'}
+            {/* Mostrar categoría/subcategoría resuelta desde backend */}
+            {resolvedCategory && (
+              <span className="font-medium">{resolvedCategory.name}</span>
+            )}
+            {resolvedSubcategory && (
+              <span className="font-medium"> › {resolvedSubcategory.name}</span>
+            )}
+            {searchQuery && !resolvedCategory && (
+              <span className="font-medium">{searchQuery}</span>
+            )}
+            {(resolvedCategory || searchQuery) && ' · '}
+            {adsLoading ? (
+              <span className="text-gray-400">Cargando...</span>
+            ) : (
+              <span>{sortedResults.length} {sortedResults.length === 1 ? 'resultado' : 'resultados'}</span>
+            )}
           </p>
         </div>
       </div>
@@ -212,113 +250,260 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Sidebar Izquierda - 20% - Filtros + Banners */}
             <aside className="lg:w-[20%]">
-              {/* Filtros */}
+              {/* Filtros como Links */}
               <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-gray-900">Filtros</h3>
-                  {(activeFilters.province || activeFilters.subcategory || activeFilters.condicion || (activeFilters.category && activeFilters.category !== currentCategory)) && (
-                    <button
-                      onClick={clearFilters}
+                  {activeFilterCount > 0 && (
+                    <a
+                      href={clearFiltersUrl}
                       className="text-xs text-[#16a135] hover:text-[#138a2c] flex items-center gap-1"
                     >
                       <X className="w-3 h-3" />
-                      Limpiar
-                    </button>
+                      Limpiar ({activeFilterCount})
+                    </a>
                   )}
                 </div>
 
-                {/* Filtro por Provincia */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Provincia
-                  </label>
-                  <select
-                    value={pendingFilters.province || ''}
-                    onChange={(e) => handleFilterChange('province', e.target.value || undefined)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                  >
-                    <option value="">Todas las provincias</option>
-                    {filterOptions.provinces?.map((prov) => (
-                      <option key={prov} value={prov}>
-                        {prov}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filtro por Categoría */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Categoría
-                  </label>
-                  <select
-                    value={pendingFilters.category || ''}
-                    onChange={(e) => handleFilterChange('category', e.target.value || undefined)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                  >
-                    <option value="">Todas las categorías</option>
-                    {filterOptions.categories?.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                {/* Filtro por Subcategoría - Dinámico según categoría */}
-                {availableSubcategories.length > 0 && (
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Subcategoría
-                    </label>
-                    <select
-                      value={pendingFilters.subcategory || ''}
-                      onChange={(e) => handleFilterChange('subcategory', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                    >
-                      <option value="">Todas las subcategorías</option>
-                      {availableSubcategories.map((sub) => (
-                        <option key={sub} value={sub}>
-                          {sub}
-                        </option>
-                      ))}
-                    </select>
+                {/* Loading state */}
+                {filtersLoading && (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                    <span className="ml-2 text-sm text-gray-500">Cargando...</span>
                   </div>
                 )}
-                
-                {/* Filtro por Condición (Nuevo/Usado) */}
-                {availableConditions.length > 0 && (
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Condición
-                    </label>
-                    <select
-                      value={pendingFilters.condicion || ''}
-                      onChange={(e) => handleFilterChange('condicion', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
-                    >
-                      <option value="">Todas</option>
-                      {availableConditions.map((cond) => (
-                        <option key={cond} value={cond}>
-                          {cond}
-                        </option>
-                      ))}
-                    </select>
+
+                {!filtersLoading && (
+                  <div className="space-y-4">
+                    {/* CATEGORÍAS - Desde backend, siempre visible */}
+                    <div>
+                      <button
+                        onClick={() => toggleSection('categoria')}
+                        className="flex items-center justify-between w-full text-sm font-semibold text-gray-800 mb-2"
+                      >
+                        Categoría
+                        {expandedSections.has('categoria') ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </button>
+                      {expandedSections.has('categoria') && (
+                        <ul className="space-y-1">
+                          <li>
+                            <a
+                              href={getFilterLink('cat', undefined)}
+                              className={`block px-2 py-1.5 text-sm rounded transition-colors ${
+                                !urlFilters.cat
+                                  ? 'bg-green-100 text-green-800 font-medium'
+                                  : 'text-gray-600 hover:bg-gray-100'
+                              }`}
+                            >
+                              Todas las categorías
+                            </a>
+                          </li>
+                          {categoriesLoading ? (
+                            <li className="text-sm text-gray-400 px-2 py-1">Cargando...</li>
+                          ) : (
+                            backendCategories.map((cat) => {
+                              // Usar slug del backend directamente
+                              const catSlug = cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-');
+                              const isActive = urlFilters.cat === catSlug || 
+                                urlFilters.cat?.toLowerCase() === cat.name.toLowerCase();
+                              return (
+                                <li key={cat.id}>
+                                  <a
+                                    href={getFilterLink('cat', catSlug)}
+                                    className={`block px-2 py-1.5 text-sm rounded transition-colors ${
+                                      isActive
+                                        ? 'bg-green-100 text-green-800 font-medium'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                    }`}
+                                  >
+                                    {cat.display_name || cat.name}
+                                  </a>
+                                </li>
+                              );
+                            })
+                          )}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* SUBCATEGORÍAS - Solo si hay categoría, CON CONTADORES del backend */}
+                    {urlFilters.cat && backendSubcategories.length > 0 && (
+                      <div className="border-t border-gray-100 pt-4">
+                        <button
+                          onClick={() => toggleSection('subcategoria')}
+                          className="flex items-center justify-between w-full text-sm font-semibold text-gray-800 mb-2"
+                        >
+                          Subcategoría
+                          {expandedSections.has('subcategoria') ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                        </button>
+                        {expandedSections.has('subcategoria') && (
+                          <ul className="space-y-1">
+                            <li>
+                              <a
+                                href={getFilterLink('sub', undefined)}
+                                className={`block px-2 py-1.5 text-sm rounded transition-colors ${
+                                  !urlFilters.sub
+                                    ? 'bg-green-100 text-green-800 font-medium'
+                                    : 'text-gray-600 hover:bg-gray-100'
+                                }`}
+                              >
+                                Todas
+                              </a>
+                            </li>
+                            {backendSubcategories
+                              .filter((sub) => sub.count > 0) // Ocultar subcategorías sin avisos
+                              .map((sub) => {
+                              const isActive = urlFilters.sub === sub.slug;
+                              return (
+                                <li key={sub.id}>
+                                  <a
+                                    href={getFilterLink('sub', sub.slug)}
+                                    className={`block px-2 py-1.5 text-sm rounded transition-colors ${
+                                      isActive
+                                        ? 'bg-green-100 text-green-800 font-medium'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                    }`}
+                                  >
+                                    {sub.name}
+                                    <span className={`ml-1 ${isActive ? 'text-green-600' : 'text-gray-400'}`}>
+                                      ({sub.count})
+                                    </span>
+                                  </a>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+
+                    {/* FILTROS DINÁMICOS DEL BACKEND (Provincia, Localidad, Atributos) */}
+                    {backendFilters.map((filter) => {
+                      // Saltar filtros de precio (se manejan diferente) y filtros vacíos
+                      if (filter.filter_type === 'range') return null;
+                      if (filter.options.length === 0) return null;
+                      
+                      const sectionKey = filter.field_name;
+                      const currentValue = urlFilters[filter.field_name];
+                      
+                      // Determinar si mostrar según visible_when
+                      if (filter.visible_when.requires_subcategory && !urlFilters.sub) return null;
+                      if (filter.visible_when.requires_province && !urlFilters.prov) return null;
+                      
+                      return (
+                        <div key={filter.field_name} className="border-t border-gray-100 pt-4">
+                          <button
+                            onClick={() => toggleSection(sectionKey)}
+                            className="flex items-center justify-between w-full text-sm font-semibold text-gray-800 mb-2"
+                          >
+                            <span className="flex items-center gap-1">
+                              {filter.field_label}
+                              {filter.is_dynamic && (
+                                <span className="text-[10px] text-purple-500 font-normal">●</span>
+                              )}
+                            </span>
+                            {expandedSections.has(sectionKey) ? (
+                              <ChevronUp className="w-4 h-4" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4" />
+                            )}
+                          </button>
+                          {expandedSections.has(sectionKey) && (
+                            <ul className="space-y-1 max-h-48 overflow-y-auto">
+                              <li>
+                                <a
+                                  href={getFilterLink(filter.field_name, undefined)}
+                                  className={`block px-2 py-1.5 text-sm rounded transition-colors ${
+                                    !currentValue
+                                      ? 'bg-green-100 text-green-800 font-medium'
+                                      : 'text-gray-600 hover:bg-gray-100'
+                                  }`}
+                                >
+                                  {filter.field_name === 'province' ? 'Todas las provincias' : 'Todos'}
+                                </a>
+                              </li>
+                              {filter.options
+                                .filter((opt) => opt.count > 0) // Ocultar opciones sin avisos
+                                .map((opt) => {
+                                const optSlug = toSlug(opt.value);
+                                const isActive = currentValue === optSlug;
+                                return (
+                                  <li key={opt.value}>
+                                    <a
+                                      href={getFilterLink(filter.field_name, optSlug)}
+                                      className={`block px-2 py-1.5 text-sm rounded transition-colors ${
+                                        isActive
+                                          ? 'bg-green-100 text-green-800 font-medium'
+                                          : 'text-gray-600 hover:bg-gray-100'
+                                      }`}
+                                    >
+                                      {opt.label}
+                                      <span className={`ml-1 ${isActive ? 'text-green-600' : 'text-gray-400'}`}>
+                                        ({opt.count})
+                                      </span>
+                                    </a>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* RANGO DE PRECIO */}
+                    {backendFilters.some(f => f.filter_type === 'range' && f.field_name === 'price' && f.range) && (
+                      <div className="border-t border-gray-100 pt-4">
+                        <button
+                          onClick={() => toggleSection('precio')}
+                          className="flex items-center justify-between w-full text-sm font-semibold text-gray-800 mb-2"
+                        >
+                          Precio
+                          {expandedSections.has('precio') ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                        </button>
+                        {expandedSections.has('precio') && (() => {
+                          const priceFilter = backendFilters.find(f => f.field_name === 'price');
+                          if (!priceFilter?.range) return null;
+                          return (
+                            <div className="px-2 space-y-2">
+                              <p className="text-xs text-gray-500">
+                                Rango: ${priceFilter.range.min.toLocaleString()} - ${priceFilter.range.max.toLocaleString()}
+                              </p>
+                              <div className="flex gap-2">
+                                <input
+                                  type="number"
+                                  placeholder="Mín"
+                                  className="w-1/2 px-2 py-1 text-sm border rounded focus:ring-1 focus:ring-green-500 focus:border-green-500"
+                                  defaultValue={urlFilters.priceMin}
+                                />
+                                <input
+                                  type="number"
+                                  placeholder="Máx"
+                                  className="w-1/2 px-2 py-1 text-sm border rounded focus:ring-1 focus:ring-green-500 focus:border-green-500"
+                                  defaultValue={urlFilters.priceMax}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                 )}
-                
-                {/* Botón APLICAR */}
-                <button
-                  onClick={applyFilters}
-                  className="w-full bg-[#16a135] hover:bg-[#138a2c] text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                  APLICAR FILTROS
-                </button>
 
-                {/* Contador de resultados filtrados */}
+                {/* Contador de resultados */}
                 <div className="pt-3 border-t border-gray-200 mt-4">
                   <p className="text-xs text-gray-500">
                     {filteredResults.length} {filteredResults.length === 1 ? 'aviso' : 'avisos'}
@@ -368,7 +553,12 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
 
             {/* Grid de Resultados Derecha - 80% - Cards en 4 columnas */}
             <div className="lg:w-[80%]">
-              {sortedResults.length === 0 ? (
+              {adsLoading ? (
+                <div className="py-12 text-center bg-white rounded-lg">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#16a135] border-t-transparent mb-4"></div>
+                  <p className="text-gray-600">Cargando resultados...</p>
+                </div>
+              ) : sortedResults.length === 0 ? (
                 <div className="py-12 text-center bg-white rounded-lg">
                   <p className="text-gray-600 mb-4">No se encontraron resultados para tu búsqueda.</p>
                   <button
@@ -385,8 +575,8 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                     Mostrando {startIndex + 1}-{Math.min(endIndex, sortedResults.length)} de {sortedResults.length} resultados
                   </div>
                   
-                  {/* Grid Responsive: Mobile 1, Tablet 2, Desktop 4 - Variante Compact */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                  {/* Grid Responsive: Mobile 2, Tablet 3, Desktop 4 - Variante Compact */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                     {paginatedResults.map((product) => (
                       <ProductCard
                         key={product.id}
@@ -394,7 +584,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                         variant="compact"
                         showBadges={false}
                         showLocation={true}
-                        showShareButton={true}
+                        showProvince={true}
                         onViewDetail={onViewDetail}
                       />
                     ))}

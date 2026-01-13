@@ -3,18 +3,18 @@
 // ====================================================================
 
 import { useState, useEffect } from 'react';
-import { getCatalog, Catalog } from '../services/catalogService';
+import { getDynamicCatalog, DynamicCatalog } from '../services/catalogService';
 
 const CACHE_KEY = 'catalog_cache';
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hora
 
 interface CachedCatalog {
-  data: Catalog;
+  data: DynamicCatalog;
   timestamp: number;
 }
 
 export function useCatalog() {
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [catalog, setCatalog] = useState<DynamicCatalog | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -46,7 +46,7 @@ export function useCatalog() {
       // 2. Fetch from Supabase
       // ====================================================================
       console.log('🔄 Fetching catalog from Supabase...');
-      const freshCatalog = await getCatalog();
+      const freshCatalog = await getDynamicCatalog();
 
       // ====================================================================
       // 3. Save to cache

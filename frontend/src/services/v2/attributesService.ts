@@ -23,6 +23,10 @@ export interface DynamicAttributeDB {
   suffix?: string | null;
   sort_order: number;
   is_active: boolean;
+  // Filtros dinámicos
+  is_filterable?: boolean;
+  filter_type?: 'select' | 'range' | 'checkbox' | 'chips';
+  filter_order?: number;
   created_at: string;
   updated_at: string;
 }

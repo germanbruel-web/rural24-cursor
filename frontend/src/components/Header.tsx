@@ -3,21 +3,23 @@ import { TractorIcon } from './IconComponents';
 import { useAuth } from '../contexts/AuthContext';
 import { useDevMode } from '../contexts/DevModeContext';
 import AuthModal from './auth/AuthModal';
-import { LogOut, User, Home, Search, Package, Clock, Users, ImageIcon, Trash2, MessageSquare, Settings, Star } from 'lucide-react';
+import { LogOut, User, Home, Search, Package, Clock, Users, ImageIcon, Trash2, MessageSquare, Settings, Star, X } from 'lucide-react';
 import { canAccessPage } from '../utils/rolePermissions';
 import { supabase } from '../services/supabaseClient';
 import { Button } from './atoms/Button';
 
 interface HeaderProps {
   onNavigate: (page: 'home' | 'my-ads' | 'banners' | 'inbox' | 'profile' | 'subscription' | 'users' | 'how-it-works' | 'publicar' | 'ad-finder' | 'deleted-ads' | 'test-form' | 'categories-admin' | 'pricing') => void;
+  onSearch?: (query: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
+export const Header: React.FC<HeaderProps> = ({ onNavigate, onSearch }) => {
   const { user, profile, signOut, isAdmin } = useAuth();
   const { isDevMode } = useDevMode();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
   
   // DEBUG: Ver qué datos llegan del profile
@@ -89,8 +91,49 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             />
           </button>
           
+          {/* Buscador compacto - siempre visible */}
+          {/* Buscador - Design System Rural24 */}
+          <div className="hidden md:flex flex-1 max-w-md mx-4">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (searchQuery.trim() && onSearch) {
+                  onSearch(searchQuery.trim());
+                  setSearchQuery('');
+                }
+              }}
+              className="relative w-full"
+            >
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar tractores, cosechadoras..."
+                  className="w-full pl-12 pr-24 py-3 text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white shadow-sm"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-16 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="w-4 h-4 text-gray-400" />
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
+                >
+                  Buscar
+                </button>
+              </div>
+            </form>
+          </div>
+          
           {/* Menu Links */}
-          <nav className="hidden md:flex flex-1 items-center justify-end gap-2 ml-8">
+          <nav className="hidden md:flex items-center gap-2">
             <Button
               variant="ghost"
               onClick={() => onNavigate('how-it-works')}
@@ -109,7 +152,10 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => onNavigate('publicar')}
+              onClick={() => {
+                // Navegar al formulario de alta de avisos
+                window.location.hash = '#/publicar';
+              }}
               leftIcon={<Package size={16} />}
             >
               Publicar Aviso Gratis

@@ -4,6 +4,14 @@ import { ProductCard } from '../organisms/ProductCard';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { SUBCATEGORIES } from '../../constants/categories';
 
+// Helper para extraer URL de imagen (soporta string y objeto {url, path})
+const extractImageUrl = (images?: any[], image_urls?: string[]): string => {
+  const firstImage = images?.[0];
+  if (typeof firstImage === 'string') return firstImage;
+  if (firstImage?.url) return firstImage.url;
+  return image_urls?.[0] || '';
+};
+
 interface CategoryCarouselProps {
   title: string;
   category: string;
@@ -96,7 +104,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
       currency: ad.currency,
       location: ad.location || 'Sin ubicación',
       province: ad.province,
-      imageUrl: ad.images?.[0] || '',
+      imageUrl: extractImageUrl(ad.images, ad.image_urls),
       sourceUrl: ad.external_url || '',
       category: ad.category || category,
       subcategory: ad.subcategory,
@@ -138,7 +146,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
       currency: ad.currency,
       location: ad.location || 'Sin ubicación',
       province: ad.province,
-      imageUrl: ad.images?.[0] || '',
+      imageUrl: extractImageUrl(ad.images, ad.image_urls),
       sourceUrl: ad.external_url || '',
       category: ad.category || category,
       subcategory: ad.subcategory,
@@ -189,8 +197,8 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
     console.log(`   Premium: ${premiumProducts.length}, Manual: ${manualProducts.length}, Total activeAds: ${activeAds.length}, Total premiumAds: ${premiumAds.length}`);
   }
 
-  // LIMITAR A 8 AVISOS MÁS RECIENTES (según requerimiento)
-  const MAX_PRODUCTS = 8;
+  // LIMITAR A 10 AVISOS MÁS RECIENTES (5 columnas x 2 filas)
+  const MAX_PRODUCTS = 10;
   const filledProducts = categoryProducts.slice(0, MAX_PRODUCTS);
   const hasMoreProducts = categoryProducts.length > MAX_PRODUCTS;
 
@@ -224,7 +232,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
             </div>
             {/* Cards skeleton con icono animado en el centro */}
             <div className="relative">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="bg-gray-100 rounded-xl p-4 animate-pulse">
                     <div className="w-full h-48 bg-gray-200 rounded-lg mb-3" />
@@ -441,8 +449,8 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
             </>
           )}
 
-          {/* Grid de 4 columnas con cards mejorados */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
+          {/* Grid de 5 columnas con cards mejorados */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
             {visibleProducts.map((product) => (
               <ProductCard
                 key={product.id}
