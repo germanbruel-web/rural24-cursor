@@ -324,39 +324,58 @@ export async function getAdById(id: string): Promise<Ad | null> {
     console.log('🔍 getAdById llamado con ID:', id);
     console.log('   Tipo:', typeof id);
     
-    // Obtener el aviso básico primero
+    // Validar formato UUID
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    
+    // Obtener el aviso básico
     let basicData: any = null;
     let basicError: any = null;
     
-    // Intentar buscar por UUID completo primero
-    const result = await supabase
-      .from('ads')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    basicData = result.data;
-    basicError = result.error;
-
-    // Si no se encontró y el ID es corto (6 chars), buscar por coincidencia de final de UUID
-    if (basicError && id.length === 6) {
-      console.log('🔍 ID corto detectado, buscando por coincidencia de final de UUID...');
-      const { data: allAds, error: searchError } = await supabase
+    if (isUUID) {
+      // Buscar por UUID completo
+      const result = await supabase
         .from('ads')
-        .select('*');
+        .select('*')
+        .eq('id', id)
+        .single();
       
-      if (searchError) {
-        console.error('❌ Error buscando por shortId:', searchError);
-        return null;
-      }
+      basicData = result.data;
+      basicError = result.error;
+    } else {
+      // Estrategia de búsqueda para IDs cortos:
+      // 1. Primero buscar por short_id (columna dedicada)
+      // 2. Si no encuentra, buscar por sufijo del UUID (últimos 6+ chars)
+      console.log('🔍 ID no es UUID, buscando por short_id primero...');
       
-      // Buscar UUID que termine con el shortId
-      const matchingAd = allAds?.find(ad => ad.id.endsWith(id));
+      let result = await supabase
+        .from('ads')
+        .select('*')
+        .eq('short_id', id)
+        .single();
       
-      if (matchingAd) {
-        basicData = matchingAd;
-        basicError = null;
-        console.log('✅ Aviso encontrado por shortId:', matchingAd.id);
+      if (result.data) {
+        console.log('✅ Aviso encontrado por short_id:', result.data.id);
+        basicData = result.data;
+      } else {
+        // Fallback: buscar por sufijo del UUID (para URLs antiguas con id.slice(-6))
+        console.log('🔍 No encontrado por short_id, buscando por sufijo UUID...');
+        const suffixResult = await supabase
+          .from('ads')
+          .select('*')
+          .ilike('id', `%${id}`);
+        
+        if (suffixResult.data && suffixResult.data.length === 1) {
+          console.log('✅ Aviso encontrado por sufijo UUID:', suffixResult.data[0].id);
+          basicData = suffixResult.data[0];
+        } else if (suffixResult.data && suffixResult.data.length > 1) {
+          console.warn('⚠️ Múltiples avisos coinciden con sufijo:', id);
+          // Tomar el más reciente
+          basicData = suffixResult.data.sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0];
+        } else {
+          basicError = result.error || { message: 'Aviso no encontrado' };
+        }
       }
     }
 

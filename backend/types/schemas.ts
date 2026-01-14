@@ -196,7 +196,7 @@ export const DynamicAttributeSchema = z.object({
   id: z.string().uuid(),
   field_name: z.string(),
   field_label: z.string(),
-  field_type: z.enum(['text', 'number', 'select', 'textarea', 'checkbox', 'date']),
+  field_type: z.enum(['text', 'number', 'select', 'multiselect', 'textarea', 'checkbox', 'date']),
   field_group: z.string(),
   field_options: z.array(z.string()),
   is_required: z.boolean(),

@@ -11,7 +11,7 @@ export interface DynamicFormField {
   id: string;
   field_name: string;
   field_label: string;
-  field_type: 'text' | 'number' | 'select' | 'multiselect' | 'textarea';
+  field_type: 'text' | 'number' | 'select' | 'multiselect' | 'textarea' | 'checkbox' | 'date';
   field_group: string;
   field_options: string[];
   is_required: boolean;
@@ -36,18 +36,38 @@ export interface FormConfigResponse {
  * Obtener configuración de formulario para una subcategoría
  */
 export async function getFormConfig(subcategoryId: string): Promise<FormConfigResponse> {
-  const response = await fetch(`${API_URL}/api/config/form/${subcategoryId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const url = `${API_URL}/api/config/form/${subcategoryId}`;
+  console.log(`🌐 Fetching form config from: ${url}`);
+  console.log(`🔧 API_URL configured as: ${API_URL}`);
+  
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!response.ok) {
-    throw new Error(`Error fetching form config: ${response.statusText}`);
+    console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+    console.log(`📡 Response headers:`, Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      console.error(`❌ Form config fetch failed:`, response.status, response.statusText);
+      const errorText = await response.text();
+      console.error(`❌ Error response body:`, errorText);
+      throw new Error(`Error fetching form config: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`✅ Form config received:`, data);
+    return data;
+  } catch (error) {
+    console.error(`🔥 Fetch error:`, error);
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error(`🔥 Network error - backend might be down or unreachable`);
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
@@ -115,9 +135,19 @@ export async function getFormConfigCached(subcategoryId: string): Promise<FormCo
 }
 
 /**
- * Obtener campos de formulario como FieldConfig[] (compatibilidad con código existente)
+ * Obtener campos de formulario en formato backend original (respeta todos los tipos)
  */
-export async function getFieldsForSubcategory(subcategoryId: string): Promise<FieldConfig[]> {
+export async function getFieldsForSubcategory(subcategoryId: string): Promise<DynamicFormField[]> {
+  const formConfig = await getFormConfigCached(subcategoryId);
+
+  return formConfig.dynamic_attributes
+    .sort((a, b) => a.sort_order - b.sort_order);
+}
+
+/**
+ * Obtener campos como FieldConfig[] (LEGACY - para compatibilidad con sistema hardcoded)
+ */
+export async function getFieldsForSubcategoryLegacy(subcategoryId: string): Promise<FieldConfig[]> {
   const formConfig = await getFormConfigCached(subcategoryId);
 
   return formConfig.dynamic_attributes

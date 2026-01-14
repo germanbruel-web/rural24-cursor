@@ -65,49 +65,72 @@ export const useProductImage = (product: Product): string => {
 };
 
 /**
- * Obtiene el label del producto con taxonomía de 3 niveles
- * Taxonomía por categoría:
- * - Maquinarias: Tipo de Categoría · Marca · Modelo
- * - Ganadería: Tipo de Ganadería · Raza · Edad
- * - Otros: Subcategoría · Marca · Modelo
+ * CONFIGURACIÓN DE ATRIBUTOS PRIORITARIOS POR SUBCATEGORÍA
+ * 
+ * Formato: subcategory_name (lowercase) → [atributo_nivel_1, atributo_nivel_2]
+ * Los nombres de atributos deben coincidir con las keys en product.attributes
+ */
+const SUBCATEGORY_PRIORITY_ATTRIBUTES: Record<string, [string, string]> = {
+  // === GANADERÍA ===
+  'bovinos': ['tipobovino', 'razabovinos'],      // Toro · Aberdeen Angus
+  'ovinos': ['tipoovino', 'razaovinos'],         // Cordero · Merino
+  'equinos': ['tipoequino', 'razaequinos'],      // Yegua · Criollo
+  'porcinos': ['tipoporcino', 'razaporcinos'],   // Lechón · Hampshire
+  'caprinos': ['tipocaprino', 'razacaprinos'],   // Cabra · Boer
+};
+
+/**
+ * Obtiene el label del producto con taxonomía de 2 niveles
+ * 
+ * ARQUITECTURA:
+ * 1. Subcategoría (siempre primero) - ej: "Bovinos"
+ * 2. Atributo Nivel 1 según config - ej: "Toro" (tipobovino)
+ * 3. Atributo Nivel 2 según config - ej: "Aberdeen Angus" (razabovinos)
+ * 4. Fallback: marca/brand si no hay config específica
+ * 
+ * Resultado: "Bovinos · Toro · Aberdeen Angus"
  */
 export const getProductLabel = (product: Product): string => {
   const parts: string[] = [];
-  const attrs = product.attributes || {};
+  const attrs = {
+    ...(product.attributes || {}),
+    ...((product as any).dynamic_fields || {})
+  };
   
-  // MAQUINARIAS: Tipo · Marca · Modelo
-  if (product.category?.toLowerCase().includes('maquinaria')) {
-    // 1. Tipo de Categoría (subcategory o tipotractor)
-    const tipoCat = attrs.tipotractor || attrs.tipo_maquinaria || product.subcategory;
-    if (tipoCat) parts.push(String(tipoCat));
-    
-    // 2. Marca
-    const marca = attrs.marca || product.brand;
-    if (marca) parts.push(String(marca));
-    
-    // 3. Modelo
-    const modelo = attrs.modelo || product.model;
-    if (modelo) parts.push(String(modelo));
+  // Normalizar nombre de subcategoría para buscar config
+  const subcategoryKey = (product.subcategory || '').toLowerCase().trim();
+  
+  // 1. Subcategoría (siempre primero)
+  if (product.subcategory) {
+    parts.push(String(product.subcategory));
   }
-  // GANADERÍA: Tipo · Raza · Edad
-  else if (product.category?.toLowerCase().includes('ganader')) {
-    // 1. Tipo de Ganadería (subcategory o tipo_ganado)
-    const tipoGanado = attrs.tipo_ganado || product.subcategory;
-    if (tipoGanado) parts.push(String(tipoGanado));
+  
+  // 2. Buscar atributos prioritarios según config de subcategoría
+  const priorityConfig = SUBCATEGORY_PRIORITY_ATTRIBUTES[subcategoryKey];
+  
+  if (priorityConfig) {
+    const [attr1Key, attr2Key] = priorityConfig;
     
-    // 2. Raza
-    const raza = attrs.raza || attrs.breed;
-    if (raza) parts.push(String(raza));
+    // Atributo Nivel 1 (ej: tipobovino = "Toro")
+    if (attr1Key && attrs[attr1Key]) {
+      parts.push(String(attrs[attr1Key]));
+    }
     
-    // 3. Edad
-    const edad = attrs.edad || attrs.age;
-    if (edad) parts.push(String(edad));
-  }
-  // OTROS (fallback genérico): Subcategoría · Marca · Modelo
-  else {
-    if (product.subcategory) parts.push(product.subcategory);
-    if (product.brand) parts.push(product.brand);
-    if (product.model) parts.push(product.model);
+    // Atributo Nivel 2 (ej: razabovinos = "Aberdeen Angus")
+    if (attr2Key && attrs[attr2Key]) {
+      parts.push(String(attrs[attr2Key]));
+    }
+  } else {
+    // Fallback para categorías sin config: usar marca
+    if (product.category?.toLowerCase().includes('ganader')) {
+      // Ganadería sin config específica: buscar raza legacy
+      const raza = attrs.raza || attrs.breed || attrs.razabovinos;
+      if (raza) parts.push(String(raza));
+    } else {
+      // Maquinarias y otros: Marca
+      const marca = attrs.marca || product.brand;
+      if (marca) parts.push(String(marca));
+    }
   }
   
   return parts.join(' · ') || product.category || '';

@@ -53,7 +53,7 @@ export const ResultsBannerLateral: React.FC<Props> = ({ category }) => {
           <img
             src={banner.image_url}
             alt={banner.title}
-            className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-auto object-cover"
           />
           {/* Indicador de posición (A, B, C, D) */}
           {banner.position && (

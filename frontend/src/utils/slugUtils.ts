@@ -1,7 +1,7 @@
 /**
  * Utilidades para generar y parsear slugs de avisos
  * URL amigable: /ad/tractor-john-deere-5070-abc123
- * donde "abc123" son los últimos 6 chars del UUID
+ * donde "abc123" es el short_id o los últimos 6 chars del UUID
  */
 
 /**
@@ -22,11 +22,15 @@ export function generateSlug(text: string): string {
 /**
  * Genera slug de aviso con ID corto al final
  * Ejemplo: "tractor-john-deere-5070-abc123"
+ * @param title - Título del aviso
+ * @param id - UUID del aviso
+ * @param shortId - short_id opcional (preferido si existe)
  */
-export function generateAdSlug(title: string, id: string): string {
+export function generateAdSlug(title: string, id: string, shortId?: string): string {
   const titleSlug = generateSlug(title);
-  const shortId = id.slice(-6); // Últimos 6 chars del UUID
-  return `${titleSlug}-${shortId}`;
+  // Prioridad: short_id > últimos 6 chars del UUID
+  const suffix = shortId || id.slice(-6);
+  return `${titleSlug}-${suffix}`;
 }
 
 /**
@@ -42,9 +46,12 @@ export function extractIdFromSlug(slug: string): string {
 
 /**
  * Genera URL de detalle de aviso con slug
+ * @param title - Título del aviso
+ * @param id - UUID del aviso
+ * @param shortId - short_id opcional (preferido si existe)
  */
-export function getAdDetailUrl(title: string, id: string): string {
-  const slug = generateAdSlug(title, id);
+export function getAdDetailUrl(title: string, id: string, shortId?: string): string {
+  const slug = generateAdSlug(title, id, shortId);
   return `#/ad/${slug}`;
 }
 

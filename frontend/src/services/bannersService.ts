@@ -140,27 +140,22 @@ export async function getHomepageBanners(category?: string): Promise<Banner[]> {
   try {
     const now = new Date().toISOString();
     
-    // Construir query base - NO usar múltiples .or() (Supabase solo permite uno)
-    // En lugar de filtrar expires_at y starts_at con .or(), lo hacemos post-fetch
+    // Usar banners_clean con placement 'hero_vip' (valor del enum en BD)
     let query = supabase
-      .from('banners')
+      .from('banners_clean')
       .select('*')
-      .eq('type', 'homepage_vip')
+      .eq('placement', 'hero_vip')
       .eq('is_active', true);
 
-    // SIN CATEGORÍA (al cargar página): Solo destacados
-    if (!category) {
-      query = query.eq('is_featured', true);
-    } 
-    // CON CATEGORÍA (hover en botón): Todos los de esa categoría
-    else {
+    // CON CATEGORÍA: Filtrar por categoría
+    if (category) {
       query = query.eq('category', category);
     }
 
     const { data, error } = await query;
     
     if (error) {
-      console.error('Error fetching homepage banners:', error);
+      // Silenciar error si el placement no existe
       return [];
     }
 

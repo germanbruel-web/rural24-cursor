@@ -204,10 +204,9 @@ export const FIELD_TYPES = [
   { value: 'number', label: 'Número' },
   { value: 'select', label: 'Selección (dropdown)' },
   { value: 'multiselect', label: 'Selección múltiple' },
-  { value: 'boolean', label: 'Sí/No (toggle)' },
+  { value: 'checkbox', label: 'Sí/No (checkbox)' },
   { value: 'date', label: 'Fecha' },
   { value: 'textarea', label: 'Texto largo' },
-  { value: 'range', label: 'Rango numérico' },
 ] as const;
 
 export const FIELD_GROUPS = [

@@ -62,7 +62,7 @@ export const HomepageBannerSection: React.FC<Props> = ({ category }) => {
         <img
           src={currentBanner.image_url}
           alt={currentBanner.title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover rounded-lg"
         />
       </a>
 

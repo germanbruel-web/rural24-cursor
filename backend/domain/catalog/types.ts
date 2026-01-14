@@ -30,7 +30,7 @@ export interface DynamicAttribute {
   id: string;
   field_name: string;
   field_label: string;
-  field_type: 'text' | 'number' | 'select' | 'textarea' | 'checkbox' | 'date';
+  field_type: 'text' | 'number' | 'select' | 'multiselect' | 'textarea' | 'checkbox' | 'date';
   field_group: string;
   field_options: string[];
   is_required: boolean;

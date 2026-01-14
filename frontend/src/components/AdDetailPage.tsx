@@ -174,18 +174,18 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
       }
     }
     
-    if (data?.user_id) {
-      // Cargar otros avisos del vendedor
-      loadSellerOtherAds(data.user_id);
+    if (data?.user_id && data?.id) {
+      // Cargar otros avisos del vendedor usando el UUID real del ad
+      loadSellerOtherAds(data.user_id, data.id);
     }
     
     setLoading(false);
   };
 
-  const loadSellerOtherAds = async (sellerId: string) => {
+  const loadSellerOtherAds = async (sellerId: string, currentAdUuid: string) => {
     setLoadingOtherAds(true);
     try {
-      console.log('🔍 Cargando otros avisos del vendedor:', sellerId);
+      console.log('🔍 Cargando otros avisos del vendedor:', sellerId, 'excluyendo:', currentAdUuid);
       
       // Query simple sin join - solo los ads
       const { data, error } = await supabase
@@ -193,7 +193,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
         .select('*')
         .eq('user_id', sellerId)
         .eq('status', 'active')
-        .neq('id', adId)
+        .neq('id', currentAdUuid)
         .order('created_at', { ascending: false })
         .limit(6);
 

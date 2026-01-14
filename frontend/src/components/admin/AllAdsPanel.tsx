@@ -997,11 +997,13 @@ interface EditAdModalProps {
 }
 
 function EditAdModal({ ad, categories, onSave, onClose }: EditAdModalProps) {
+  // Nota: la tabla ads usa category_id (UUID), no category (string)
+  const adAny = ad as any;
   const [formData, setFormData] = useState({
     title: ad.title || '',
     description: ad.description || '',
     price: ad.price || 0,
-    category: ad.category || '',
+    category_id: adAny.category_id || '',
     status: ad.status || 'active',
     province: ad.province || '',
     featured: ad.featured || false
@@ -1077,14 +1079,14 @@ function EditAdModal({ ad, categories, onSave, onClose }: EditAdModalProps) {
                 Categoría *
               </label>
               <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                value={formData.category_id}
+                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
                 required
               >
                 <option value="">Seleccionar...</option>
                 {categories.map(cat => (
-                  <option key={cat.id} value={cat.display_name}>{cat.display_name}</option>
+                  <option key={cat.id} value={cat.id}>{cat.display_name}</option>
                 ))}
               </select>
             </div>

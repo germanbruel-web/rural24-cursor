@@ -30,13 +30,18 @@ export const FeaturedAdsSection: React.FC<Props> = ({
   const loadFeaturedAds = async () => {
     console.log('🚀 FeaturedAdsSection - loadFeaturedAds START');
     setLoading(true);
-    const data = await getFeaturedAdsByCategories(8); // 8 avisos por categoría
-    console.log('📦 FeaturedAdsSection - data received:', { 
-      categoriesCount: data.length,
-      categories: data.map(c => ({ name: c.category_name, adsCount: c.ads.length }))
-    });
-    setCategoriesData(data);
-    setLoading(false);
+    try {
+      const data = await getFeaturedAdsByCategories(8); // 8 avisos por categoría
+      console.log('📦 FeaturedAdsSection - data received:', { 
+        categoriesCount: data.length,
+        categories: data.map(c => ({ name: c.category_name, adsCount: c.ads.length }))
+      });
+      setCategoriesData(data);
+    } catch (err) {
+      console.error('❌ FeaturedAdsSection - ERROR:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -122,6 +127,7 @@ export const FeaturedAdsSection: React.FC<Props> = ({
                   key={ad.id}
                   product={{
                     ...ad,
+                    category: catData.category_name, // Agregar categoría para badges contextuales
                     imageUrl,
                     images: ad.images, // Pasar images completo para useProductImage
                     sourceUrl: '',

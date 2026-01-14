@@ -63,6 +63,16 @@ export async function getFeaturedAdsByCategories(
           .limit(limit);
 
         console.log(`📋 Ads for ${cat.name}:`, { count: ads?.length, error: adsError });
+        
+        // DEBUG: Ver atributos del primer ad
+        if (ads?.[0]) {
+          console.log(`🔍 [DEBUG] Primer ad de ${cat.name}:`, {
+            id: ads[0].id,
+            title: ads[0].title?.substring(0, 30),
+            attributes: ads[0].attributes,
+            dynamic_fields: ads[0].dynamic_fields
+          });
+        }
 
         if (adsError) {
           console.error(`❌ Error fetching ads for ${cat.name}:`, adsError);
@@ -79,6 +89,35 @@ export async function getFeaturedAdsByCategories(
         if (subError) {
           console.error(`❌ Error fetching subcategories for ${cat.name}:`, subError);
         }
+
+        // Crear mapa de subcategorías para enriquecer los ads
+        const subcategoryMap = new Map(
+          (subcategories || []).map(s => [s.id, s.display_name || s.name])
+        );
+
+        // Enriquecer ads con subcategoría, brand, model y atributos combinados
+        const enrichedAds = (ads || []).map(ad => {
+          // Combinar attributes legacy + dynamic_fields
+          const combinedAttrs = {
+            ...(ad.attributes || {}),
+            ...(ad.dynamic_fields || {})
+          };
+          
+          // Extraer brand y model de los joins o de dynamic_fields
+          const brandName = ad.brands?.name || combinedAttrs.marca || null;
+          const modelName = ad.models?.name || combinedAttrs.modelo || null;
+          
+          return {
+            ...ad,
+            subcategory: subcategoryMap.get(ad.subcategory_id) || null,
+            brand: brandName,
+            model: modelName,
+            attributes: combinedAttrs,
+            // Limpiar objetos de join
+            brands: undefined,
+            models: undefined
+          };
+        });
 
         // 2b-bis. Contar avisos activos por subcategoría
         const subcategoriesWithCounts = await Promise.all(
@@ -171,8 +210,8 @@ export async function getFeaturedAdsByCategories(
           category_slug: normalizedSlug,
           banners: banners,
           subcategories: subcategoriesWithCounts,
-          ads: ads || [],
-          total_featured: ads?.length || 0
+          ads: enrichedAds,
+          total_featured: enrichedAds.length
         };
       })
     );

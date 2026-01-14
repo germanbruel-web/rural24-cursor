@@ -32,11 +32,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getCategories, getSubcategories, getCategoryTypes } from '../../services/v2/formsService';
-import { getAttributes } from '../../services/v2/attributesService';
 import type { Category, Subcategory, CategoryType } from '../../types/v2';
-import type { DynamicAttributeDB } from '../../services/v2/attributesService';
-import { DynamicField } from '../DynamicField';
-import type { DynamicAttribute } from '../../services/catalogService';
 import { PROVINCES, LOCALITIES_BY_PROVINCE } from '../../constants/locations';
 import { supabase } from '../../services/supabaseClient';
 import { uploadService } from '../../services/uploadService';
@@ -58,6 +54,7 @@ import type { AdPreviewData } from '../shared/AdPreviewCard';
 import InfoBox from '../molecules/InfoBox/InfoBox';
 import TipsCard from '../molecules/TipsCard/TipsCard';
 import { AutoSaveIndicator } from '../molecules/AutoSaveIndicator';
+import { DynamicFormLoader } from '../forms/DynamicFormLoader';
 
 // ====================================================================
 // WIZARD STEPS
@@ -107,7 +104,6 @@ export default function PublicarAviso() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
 
   // Step 2: Atributos dinámicos
-  const [attributes, setAttributes] = useState<DynamicAttribute[]>([]);
   const [attributeValues, setAttributeValues] = useState<Record<string, any>>({});
 
   // Step 3: Ubicación
@@ -272,65 +268,6 @@ export default function PublicarAviso() {
     }
   };
   
-  // ====================================================================
-  // FUNCIONES DE VALIDACIÓN DE GRUPOS (100% DINÁMICO)
-  // ====================================================================
-  
-  /**
-   * Obtener orden de grupos dinámicamente basado en displayOrder de atributos
-   */
-  const getGroupsOrder = (attrs: DynamicAttribute[]): string[] => {
-    const groupsMap = attrs.reduce((acc, attr) => {
-      const group = attr.fieldGroup || 'general';
-      if (!acc[group] || attr.displayOrder < acc[group]) {
-        acc[group] = attr.displayOrder;
-      }
-      return acc;
-    }, {} as Record<string, number>);
-    
-    return Object.keys(groupsMap).sort((a, b) => groupsMap[a] - groupsMap[b]);
-  };
-  
-  /**
-   * Validar si un grupo está completo (todos los campos requeridos llenos)
-   */
-  const isGroupComplete = (group: string, groupFields: DynamicAttribute[]): boolean => {
-    const requiredFields = groupFields.filter(f => f.isRequired);
-    
-    // Si no hay campos requeridos, el grupo se considera auto-completado
-    if (requiredFields.length === 0) return true;
-    
-    // Verificar que todos los campos requeridos tengan valor
-    return requiredFields.every(field => {
-      const value = attributeValues[field.slug];
-      if (value === null || value === undefined || value === '') return false;
-      if (Array.isArray(value) && value.length === 0) return false;
-      return true;
-    });
-  };
-  
-  /**
-   * Verificar si un grupo está desbloqueado (secuencial)
-   */
-  const isGroupUnlocked = (group: string, attrs: DynamicAttribute[]): boolean => {
-    const groupsOrder = getGroupsOrder(attrs);
-    const groupIndex = groupsOrder.indexOf(group);
-    
-    // Primer grupo siempre desbloqueado
-    if (groupIndex === 0) return true;
-    
-    // Verificar que todos los grupos anteriores estén completos
-    for (let i = 0; i < groupIndex; i++) {
-      const prevGroup = groupsOrder[i];
-      const prevGroupFields = attrs.filter(a => (a.fieldGroup || 'general') === prevGroup);
-      if (!isGroupComplete(prevGroup, prevGroupFields)) {
-        return false;
-      }
-    }
-    
-    return true;
-  };
-
   // ====================================================================
   // EFFECTS - Cargar datos
   // ====================================================================
@@ -576,24 +513,6 @@ export default function PublicarAviso() {
     }
   }, [selectedCategory]);
 
-  useEffect(() => {
-    if (selectedSubcategory) {
-      loadAttributes();
-    } else {
-      setAttributes([]);
-    }
-  }, [selectedSubcategory]);
-
-  // Abrir automáticamente el primer grupo cuando se cargan atributos
-  useEffect(() => {
-    if (attributes.length > 0 && currentStep === 2 && !expandedAttributeGroup) {
-      const groupsOrder = getGroupsOrder(attributes);
-      if (groupsOrder.length > 0) {
-        setExpandedAttributeGroup(groupsOrder[0]);
-      }
-    }
-  }, [attributes, currentStep]);
-
   // ====================================================================
   // DATA LOADING
   // ====================================================================
@@ -624,53 +543,6 @@ export default function PublicarAviso() {
       }
     } catch (error) {
       console.error('Error cargando subcategorías:', error);
-    }
-  }
-
-  async function loadAttributes() {
-    try {
-      setLoading(true);
-      
-      const filters: any = {
-        subcategoryId: selectedSubcategory,
-        isActive: true,
-      };
-      
-      const data = await getAttributes(filters);
-
-      // Convertir al formato DynamicAttribute
-      const formatted: DynamicAttribute[] = data.map((attr: DynamicAttributeDB) => ({
-        id: attr.id,
-        slug: attr.field_name,
-        name: attr.field_label,
-        description: attr.help_text || undefined,
-        inputType: attr.field_type,
-        dataType: attr.field_type,
-        isRequired: attr.is_required,
-        displayOrder: attr.sort_order,
-        fieldGroup: attr.field_group || 'general',
-        uiConfig: {
-          label: attr.field_label,
-          placeholder: attr.placeholder || undefined,
-          prefix: attr.prefix || undefined,
-          suffix: attr.suffix || undefined,
-        },
-        validations: {
-          min: attr.min_value !== null ? attr.min_value : undefined,
-          max: attr.max_value !== null ? attr.max_value : undefined,
-        },
-        isFilterable: false,
-        isFeatured: false,
-        options: Array.isArray(attr.field_options)
-          ? attr.field_options.map((opt: string) => ({ value: opt, label: opt }))
-          : [],
-      }));
-
-      setAttributes(formatted);
-    } catch (error) {
-      console.error('Error cargando atributos:', error);
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -765,14 +637,8 @@ export default function PublicarAviso() {
     }
 
     if (currentStep === 2) {
-      // Validar atributos obligatorios
-      const requiredAttrs = attributes.filter(a => a.isRequired);
-      const missingAttrs = requiredAttrs.filter(a => !attributeValues[a.slug]);
-      
-      if (missingAttrs.length > 0) {
-        notify.error(`Completa: ${missingAttrs.map(a => a.name).join(', ')}`);
-        return;
-      }
+      // DynamicFormLoader maneja sus propias validaciones
+      // Por ahora permitimos continuar
     }
 
     if (currentStep === 3) {
@@ -1050,7 +916,44 @@ export default function PublicarAviso() {
             <h1 className="text-2xl font-bold text-gray-900">
               {isEditMode ? 'Editar Aviso' : 'Publicar Nuevo Aviso'}
             </h1>
-            <AutoSaveIndicator lastSaved={lastSaved} />
+            <div className="flex items-center gap-4">
+              <AutoSaveIndicator lastSaved={lastSaved} />
+              
+              {/* Botón para limpiar draft */}
+              {draftId && (
+                <button
+                  onClick={() => {
+                    if (confirm('¿Empezar un nuevo aviso? Se perderán los cambios actuales.')) {
+                      // Limpiar estados
+                      setCurrentStep(1);
+                      setSelectedCategory('');
+                      setSelectedSubcategory('');
+                      setAttributeValues({});
+                      setProvince('');
+                      setLocality('');
+                      setUploadedImages([]);
+                      setTitle('');
+                      setDescription('');
+                      setPrice('');
+                      
+                      // Crear nuevo draft
+                      const newDraftId = DraftManager.generateDraftId();
+                      setDraftId(newDraftId);
+                      updateDraftURL(newDraftId, 1);
+                      
+                      // Limpiar accordion
+                      setExpandedAttributeGroup('');
+                      setCompletedGroups(new Set());
+                      
+                      notify.success('Nuevo aviso iniciado');
+                    }
+                  }}
+                  className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                >
+                  🆕 Nuevo
+                </button>
+              )}
+            </div>
           </div>
           
           {/* Desktop Stepper */}
@@ -1129,34 +1032,7 @@ export default function PublicarAviso() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8 bg-gray-50">
-        {/* Breadcrumb sticky - Desde Step 2 */}
-        {currentStep >= 2 && selectedCategory && selectedSubcategory && (
-          <div className="sticky top-56 lg:top-4 z-30 mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl px-5 py-4 shadow-md">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Tag className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <div className="flex items-center gap-2 text-base sm:text-lg font-bold text-green-700">
-                  <span>{categories.find(c => c.id === selectedCategory)?.display_name}</span>
-                  <ChevronRight className="w-4 h-4" />
-                  <span>{subcategories.find(s => s.id === selectedSubcategory)?.display_name}</span>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setCurrentStep(1);
-                  setSelectedCategory('');
-                  setSelectedSubcategory('');
-                  setExpandedCategory('');
-                }}
-                className="text-sm text-green-600 hover:text-green-700 font-semibold hover:underline"
-              >
-                Cambiar
-              </button>
-            </div>
-          </div>
-        )}
-
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 bg-gray-50">
         {/* Layout: Full width sin preview lateral */}
         <div className="max-w-4xl mx-auto">
           <div>
@@ -1236,17 +1112,7 @@ export default function PublicarAviso() {
                                         // Auto-avanzar al step 2 con scroll suave
                                         setTimeout(() => {
                                           setCurrentStep(2);
-                                          // Abrir primer accordion automáticamente
-                                          const firstGroup = Object.keys(
-                                            attributes.reduce((acc, attr) => {
-                                              const group = attr.fieldGroup || 'general';
-                                              if (!acc[group]) acc[group] = [];
-                                              return acc;
-                                            }, {} as Record<string, any>)
-                                          )[0];
-                                          if (firstGroup) {
-                                            setExpandedAttributeGroup(firstGroup);
-                                          }
+                                          // DynamicFormLoader maneja la apertura de grupos automáticamente
                                           // Scroll suave al contenido
                                           window.scrollTo({ top: 0, behavior: 'smooth' });
                                         }, 300);
@@ -1275,154 +1141,51 @@ export default function PublicarAviso() {
 
             {/* STEP 2: CARACTERÍSTICAS (Atributos Dinámicos) */}
             {currentStep === 2 && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-                    Características técnicas
-                  </h2>
-                  <p className="text-base sm:text-lg text-gray-600">
-                    Completá los detalles específicos de tu producto
-                  </p>
-                </div>
-
-                {loading ? (
-                  <div className="text-center py-12">
-                    <div className="inline-block w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-gray-600 mt-4">Cargando campos...</p>
-                  </div>
-                ) : attributes.length > 0 ? (
-                  <div className="space-y-4">
-                    {/* Agrupar y ordenar atributos dinámicamente */}
-                    {(() => {
-                      // Agrupar atributos
-                      const grouped = attributes.reduce((acc, attr) => {
-                        const group = attr.fieldGroup || 'general';
-                        if (!acc[group]) acc[group] = [];
-                        acc[group].push(attr);
-                        return acc;
-                      }, {} as Record<string, DynamicAttribute[]>);
-                      
-                      // Obtener orden dinámico
-                      const groupsOrder = getGroupsOrder(attributes);
-                      
-                      // Mapear títulos dinámicamente (capitalizar nombre del grupo)
-                      const getGroupTitle = (groupKey: string): string => {
-                        const titles: Record<string, string> = {
-                          general: 'Información General',
-                          motor: 'Motor',
-                          transmision: 'Transmisión',
-                          dimensiones: 'Dimensiones',
-                          hidraulica: 'Sistema Hidráulico',
-                          cabina: 'Cabina y Confort',
-                          neumaticos: 'Neumáticos',
-                          toma_fuerza: 'Toma de Fuerza',
-                          capacidades: 'Capacidades',
-                          implementos: 'Implementos',
-                          otros: 'Otros',
-                        };
-                        return titles[groupKey] || groupKey.charAt(0).toUpperCase() + groupKey.slice(1);
-                      };
-                      
-                      return groupsOrder.map((group, index) => {
-                        const fields = grouped[group];
-                        const isExpanded = expandedAttributeGroup === group;
-                        const isUnlocked = isGroupUnlocked(group, attributes);
-                        const isComplete = isGroupComplete(group, fields);
-                        const requiredCount = fields.filter(f => f.isRequired).length;
-                        
-                        return (
-                          <div 
-                            key={group} 
-                            className={`border-2 rounded-xl overflow-hidden transition-all ${
-                              isUnlocked 
-                                ? isComplete 
-                                  ? 'border-green-300 bg-green-50/30' 
-                                  : 'border-gray-200'
-                                : 'border-gray-300 bg-gray-50 opacity-60'
-                            }`}
-                          >
-                            <button
-                              onClick={() => {
-                                if (!isUnlocked) return; // No permitir abrir grupos bloqueados
-                                setExpandedAttributeGroup(isExpanded ? '' : group);
-                              }}
-                              disabled={!isUnlocked}
-                              className={`w-full p-5 sm:p-6 transition-all text-left ${
-                                !isUnlocked
-                                  ? 'cursor-not-allowed'
-                                  : isExpanded
-                                  ? 'bg-green-50 border-b-2 border-green-200'
-                                  : 'bg-white hover:bg-green-50'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3 flex-1">
-                                  {/* Ícono de estado */}
-                                  {isComplete ? (
-                                    <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
-                                  ) : !isUnlocked ? (
-                                    <Lock className="w-6 h-6 text-gray-400 flex-shrink-0" />
-                                  ) : (
-                                    <div className="w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0" />
-                                  )}
-                                  
-                                  <div className="flex-1">
-                                    <p className={`text-lg sm:text-xl font-bold ${
-                                      isUnlocked ? 'text-gray-900' : 'text-gray-500'
-                                    }`}>
-                                      {getGroupTitle(group)}
-                                    </p>
-                                    <p className="text-sm sm:text-base text-gray-600 mt-1">
-                                      {requiredCount > 0 
-                                        ? `${requiredCount} campo${requiredCount !== 1 ? 's' : ''} requerido${requiredCount !== 1 ? 's' : ''}`
-                                        : `${fields.length} campo${fields.length !== 1 ? 's' : ''} opcional${fields.length !== 1 ? 'es' : ''}`
-                                      }
-                                    </p>
-                                  </div>
-                                </div>
-                                
-                                <ChevronRight
-                                  className={`w-6 h-6 flex-shrink-0 ml-3 transition-transform ${
-                                    isUnlocked ? 'text-green-600' : 'text-gray-400'
-                                  } ${isExpanded ? 'rotate-90' : ''}`}
-                                />
-                              </div>
-                            </button>
-
-                            {isExpanded && isUnlocked && (
-                              <div className="p-4 sm:p-5 bg-white space-y-4 animate-fadeIn">
-                                {fields.map((attr) => (
-                                  <DynamicField
-                                    key={attr.slug}
-                                    attribute={attr}
-                                    value={attributeValues[attr.slug]}
-                                    onChange={(value) => {
-                                      setAttributeValues(prev => ({
-                                        ...prev,
-                                        [attr.slug]: value,
-                                      }));
-                                    }}
-                                    error={undefined}
-                                  />
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 px-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-                    <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">
-                      No hay campos específicos para esta categoría
-                    </p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Puedes continuar al siguiente paso
-                    </p>
+              <div className="space-y-4">
+                {/* Breadcrumb integrado en el formulario - Mobile First */}
+                {selectedCategory && selectedSubcategory && (
+                  <div className="flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg px-4 py-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Tag className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <span className="text-sm font-medium text-green-700 truncate">
+                        {categories.find(c => c.id === selectedCategory)?.display_name}
+                      </span>
+                      <ChevronRight className="w-3 h-3 text-green-500 flex-shrink-0" />
+                      <span className="text-sm font-bold text-green-800 truncate">
+                        {subcategories.find(s => s.id === selectedSubcategory)?.display_name}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setCurrentStep(1);
+                        setSelectedCategory('');
+                        setSelectedSubcategory('');
+                        setExpandedCategory('');
+                      }}
+                      className="text-xs text-green-600 hover:text-green-700 font-semibold hover:underline flex-shrink-0 ml-2"
+                    >
+                      Cambiar
+                    </button>
                   </div>
                 )}
+
+                {/* DynamicFormLoader - Sin título redundante */}
+                <DynamicFormLoader
+                  subcategoryId={selectedSubcategory}
+                  categoryName={selectedCategory || ''}
+                  subcategoryName={subcategories.find(s => s.id === selectedSubcategory)?.display_name || ''}
+                  values={attributeValues}
+                  onChange={(name: string, value: any) => {
+                    setAttributeValues(prev => ({
+                      ...prev,
+                      [name]: value,
+                    }));
+                  }}
+                  errors={{}}
+                  expandedGroup={expandedAttributeGroup}
+                  onGroupToggle={setExpandedAttributeGroup}
+                  completedGroups={completedGroups}
+                />
               </div>
             )}
 
@@ -1430,10 +1193,10 @@ export default function PublicarAviso() {
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
                     ¿Dónde está ubicado?
                   </h2>
-                  <p className="text-gray-600">
+                  <p className="text-base sm:text-lg text-gray-600">
                     Indicá la ubicación para que los compradores te encuentren
                   </p>
                 </div>
@@ -1441,7 +1204,7 @@ export default function PublicarAviso() {
                 <div className="space-y-4">
                   {/* Provincia */}
                   <Card variant="default" padding="md">
-                    <label className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-3">
+                    <label className="flex items-center gap-2 text-lg font-bold text-gray-900 mb-3">
                       <MapPin className="w-5 h-5 text-green-600" />
                       Provincia *
                     </label>
@@ -1451,7 +1214,7 @@ export default function PublicarAviso() {
                         setProvince(e.target.value);
                         setLocality('');
                       }}
-                      className="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all bg-white"
+                      className="w-full px-5 py-4 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white"
                     >
                       <option value="">Seleccionar provincia</option>
                       {PROVINCES.map((prov) => (
@@ -1464,7 +1227,7 @@ export default function PublicarAviso() {
 
                   {/* Localidad */}
                   <Card variant="default" padding="md">
-                    <label className="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-3">
+                    <label className="flex items-center gap-2 text-lg font-bold text-gray-900 mb-3">
                       <MapPin className="w-5 h-5 text-green-600" />
                       Localidad {province && '*'}
                     </label>
@@ -1472,7 +1235,7 @@ export default function PublicarAviso() {
                       <select
                         value={locality}
                         onChange={(e) => setLocality(e.target.value)}
-                        className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white"
+                        className="w-full px-5 py-4 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white"
                       >
                         <option value="">Seleccionar localidad</option>
                         {(LOCALITIES_BY_PROVINCE[province] || []).map((loc) => (
@@ -1482,7 +1245,7 @@ export default function PublicarAviso() {
                         ))}
                       </select>
                     ) : (
-                      <div className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed flex items-center">
+                      <div className="w-full px-5 py-4 text-base sm:text-lg rounded-xl border-2 border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed flex items-center">
                         Selecciona primero una provincia
                       </div>
                     )}
@@ -1754,7 +1517,7 @@ export default function PublicarAviso() {
                           value={formatPriceDisplay(price)}
                           onChange={(e) => setPrice(cleanPrice(e.target.value))}
                           placeholder="50000"
-                          className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+                          className="w-full px-5 py-4 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
                         />
                         <p className="text-xs text-gray-500 mt-2">
                           Solo números enteros (sin centavos)
@@ -1765,7 +1528,7 @@ export default function PublicarAviso() {
                         <select
                           value={currency}
                           onChange={(e) => setCurrency(e.target.value as 'ARS' | 'USD')}
-                          className="w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+                          className="w-full px-5 py-4 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white"
                         >
                           <option value="ARS">ARS $</option>
                           <option value="USD">USD $</option>

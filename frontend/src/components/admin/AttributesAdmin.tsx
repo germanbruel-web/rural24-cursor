@@ -4,7 +4,7 @@
 // ====================================================================
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, X, GripVertical, AlertCircle, CheckCircle2, Download, Upload, Eye, LayoutGrid } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, GripVertical, AlertCircle, CheckCircle2, Download, Upload, Eye, LayoutGrid, Folder } from 'lucide-react';
 import { getCategories, getSubcategories, getCategoryTypes } from '../../services/v2/formsService';
 import {
   getAttributes,
@@ -13,10 +13,12 @@ import {
   deleteAttribute,
   reorderAttributes,
   FIELD_TYPES,
-  FIELD_GROUPS,
+  FIELD_GROUPS, // Fallback si no hay grupos dinámicos
   type DynamicAttributeDB,
   type CreateAttributeInput,
 } from '../../services/v2/attributesService';
+import { getGroups, type AttributeGroup } from '../../services/v2/groupsService';
+import { GroupsAdmin } from './GroupsAdmin';
 import { createTemplateFromSubcategory } from '../../services/v2/templatesService';
 import { ImportTemplateModal } from './ImportTemplateModal';
 import { FormPreview } from './FormPreview';
@@ -139,6 +141,8 @@ export function AttributesAdmin() {
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   // const [types, setTypes] = useState<any[]>([]); // SOFT HIDE: Campo tipo deshabilitado
   const [attributes, setAttributes] = useState<DynamicAttributeDB[]>([]);
+  const [dynamicGroups, setDynamicGroups] = useState<AttributeGroup[]>([]);
+  const [showGroupsPanel, setShowGroupsPanel] = useState(false);
   
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string>('');
@@ -156,6 +160,11 @@ export function AttributesAdmin() {
   const [templateDescription, setTemplateDescription] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+
+  // Grupos disponibles (dinámicos o fallback)
+  const availableGroups = dynamicGroups.length > 0
+    ? dynamicGroups.map(g => ({ value: g.display_name, label: g.display_name }))
+    : FIELD_GROUPS;
 
   // Form state
   const [formData, setFormData] = useState<Partial<CreateAttributeInput>>({
@@ -235,17 +244,33 @@ export function AttributesAdmin() {
   // }, [selectedSubcategoryId]);
 
   useEffect(() => {
-    // Cargar atributos cuando se selecciona subcategoría (tipo removido)
+    // Cargar atributos y grupos cuando se selecciona subcategoría
     if (selectedSubcategoryId) {
       loadAttributes();
+      loadDynamicGroups();
     } else {
       setAttributes([]);
+      setDynamicGroups([]);
     }
   }, [selectedSubcategoryId]); // SOFT HIDE: Removido selectedTypeId
 
   // ====================================================================
   // DATA LOADING
   // ====================================================================
+  async function loadDynamicGroups() {
+    try {
+      const groups = await getGroups(selectedSubcategoryId);
+      setDynamicGroups(groups);
+      // Si hay grupos, poner el primero como default
+      if (groups.length > 0) {
+        setFormData(prev => ({ ...prev, field_group: groups[0].display_name }));
+      }
+    } catch (error) {
+      console.warn('No se pudieron cargar grupos dinámicos, usando fallback');
+      setDynamicGroups([]);
+    }
+  }
+
   async function loadCategories() {
     try {
       const data = await getCategories();
@@ -742,6 +767,18 @@ export function AttributesAdmin() {
             </button>
             
             <button
+              onClick={() => setShowGroupsPanel(!showGroupsPanel)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-semibold shadow-lg ${
+                showGroupsPanel 
+                  ? 'bg-amber-500 text-white shadow-amber-200 hover:bg-amber-600' 
+                  : 'bg-amber-100 text-amber-700 shadow-amber-100 hover:bg-amber-200'
+              }`}
+            >
+              <Folder className="w-5 h-5" />
+              {showGroupsPanel ? 'Cerrar Grupos' : 'Gestionar Grupos'}
+            </button>
+            
+            <button
               onClick={() => setShowImportModal(true)}
               className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all font-semibold shadow-lg shadow-blue-200"
             >
@@ -759,6 +796,24 @@ export function AttributesAdmin() {
               </button>
             )}
           </div>
+          
+          {/* Panel de Grupos */}
+          {showGroupsPanel && (
+            <GroupsAdmin
+              subcategoryId={selectedSubcategoryId}
+              subcategoryName={subcategories.find(s => s.id === selectedSubcategoryId)?.display_name}
+              attributeCounts={attributes.reduce((acc, attr) => {
+                const group = dynamicGroups.find(g => g.display_name === attr.field_group);
+                if (group) {
+                  acc[group.id] = (acc[group.id] || 0) + 1;
+                }
+                return acc;
+              }, {} as Record<string, number>)}
+              onGroupsChange={(groups) => {
+                setDynamicGroups(groups);
+              }}
+            />
+          )}
           
           {/* Nota explicativa sobre filtros */}
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
@@ -844,7 +899,7 @@ export function AttributesAdmin() {
                 onChange={(e) => setFormData({ ...formData, field_group: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
               >
-                {FIELD_GROUPS.map((group) => (
+                {availableGroups.map((group) => (
                   <option key={group.value} value={group.value}>
                     {group.label}
                   </option>

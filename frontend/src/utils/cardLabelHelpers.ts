@@ -2,55 +2,94 @@
  * CARD LABEL HELPERS
  * Utilidades para generar etiquetas dinámicas en las cards de avisos
  * Formato: Subcategoría · Atributo1 · Atributo2
+ * 
+ * ARQUITECTURA:
+ * - Cada subcategoría puede definir qué atributos mostrar como "tags" en las cards
+ * - Nivel 1: Atributo principal (ej: tipobovino = "Toro")
+ * - Nivel 2: Atributo secundario (ej: razabovinos = "Aberdeen Angus")
+ * - Fallback: brand/model para categorías sin config específica
  */
 
 import type { Product } from '../../types';
 
 /**
+ * CONFIGURACIÓN DE ATRIBUTOS PRIORITARIOS POR SUBCATEGORÍA
+ * 
+ * Formato: subcategory_name (lowercase) → [atributo_nivel_1, atributo_nivel_2]
+ * Los nombres de atributos deben coincidir con las keys en product.attributes
+ * 
+ * Para agregar nuevas subcategorías:
+ * 1. Buscar el nombre de la subcategoría en minúsculas
+ * 2. Identificar las keys de atributos en la BD (ej: tipobovino, razabovinos)
+ * 3. Agregar la entrada aquí
+ */
+const SUBCATEGORY_PRIORITY_ATTRIBUTES: Record<string, [string, string]> = {
+  // === GANADERÍA ===
+  'bovinos': ['tipobovino', 'razabovinos'],      // Toro · Aberdeen Angus
+  'ovinos': ['tipoovino', 'razaovinos'],         // Cordero · Merino
+  'equinos': ['tipoequino', 'razaequinos'],      // Yegua · Criollo
+  'porcinos': ['tipoporcino', 'razaporcinos'],   // Lechón · Hampshire
+  'caprinos': ['tipocaprino', 'razacaprinos'],   // Cabra · Boer
+  
+  // === MAQUINARIAS (fallback a brand/model por defecto) ===
+  // Si se necesita config específica, agregar aquí:
+  // 'tractores': ['marca', 'modelo'],
+  
+  // === INSUMOS ===
+  // 'semillas': ['cultivo', 'variedad'],
+  // 'fertilizantes': ['tipo', 'marca'],
+};
+
+/**
  * Extrae la etiqueta para mostrar en la card
  * Lógica:
  * 1. Subcategoría (siempre primero si existe)
- * 2. Atributos dinámicos (ordenados por sort_order, hasta 2)
- * 3. Fallback a brand/model si no hay atributos dinámicos
+ * 2. Atributos PRIORITARIOS según config de la subcategoría
+ * 3. Fallback a brand/model si no hay config específica
  * 
  * @param product - Producto con datos
  * @param maxParts - Máximo de partes a mostrar (default: 3)
- * @returns String formateado "Subcategoría · Marca · Modelo"
+ * @returns String formateado "Bovinos · Toro · Aberdeen Angus"
  */
 export function getCardLabel(
   product: Product,
   maxParts: number = 3
 ): string {
   const parts: string[] = [];
+  const attrs = product.attributes || {};
+  
+  // Normalizar nombre de subcategoría para buscar config
+  const subcategoryKey = (product.subcategory || '').toLowerCase().trim();
 
   // 1. Subcategoría (siempre primero)
   if (product.subcategory) {
     parts.push(product.subcategory);
   }
 
-  // 2. Atributos dinámicos (si existen)
-  if (product.attributes && typeof product.attributes === 'object') {
-    const attributeEntries = Object.entries(product.attributes)
-      .filter(([_, value]) => {
-        // Saltear valores vacíos, null, undefined, o strings vacíos
-        if (value === null || value === undefined) return false;
-        if (typeof value === 'string' && value.trim() === '') return false;
-        if (typeof value === 'boolean' && !value) return false;
-        return true;
-      })
-      .slice(0, maxParts - parts.length); // Limitar a espacios disponibles
-
-    attributeEntries.forEach(([key, value]) => {
-      if (parts.length >= maxParts) return;
-      
-      const formatted = formatAttributeValue(value, key);
+  // 2. Buscar atributos prioritarios según config de subcategoría
+  const priorityConfig = SUBCATEGORY_PRIORITY_ATTRIBUTES[subcategoryKey];
+  
+  if (priorityConfig && parts.length < maxParts) {
+    const [attr1Key, attr2Key] = priorityConfig;
+    
+    // Atributo Nivel 1 (principal)
+    if (attr1Key && attrs[attr1Key] && parts.length < maxParts) {
+      const formatted = formatAttributeValue(attrs[attr1Key], attr1Key);
       if (formatted) {
         parts.push(formatted);
       }
-    });
+    }
+    
+    // Atributo Nivel 2 (secundario)
+    if (attr2Key && attrs[attr2Key] && parts.length < maxParts) {
+      const formatted = formatAttributeValue(attrs[attr2Key], attr2Key);
+      if (formatted) {
+        parts.push(formatted);
+      }
+    }
   }
 
-  // 3. Fallback a campos fijos (brand, model) si no hay atributos dinámicos
+  // 3. Fallback a brand/model si no hay config específica o no se encontraron atributos
   if (parts.length === 1 && product.subcategory) {
     // Solo tenemos subcategoría, intentar brand/model
     if (product.brand && parts.length < maxParts) {

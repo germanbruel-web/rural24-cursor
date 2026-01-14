@@ -119,7 +119,7 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
   }
 
   return (
-    <div className="relative w-full overflow-hidden shadow-lg group">
+    <div className="relative w-full overflow-hidden shadow-lg rounded-lg group">
       {/* Banner Image - dimensiones exactas según diseño */}
       <a
         href={currentBanner.link_url || '#'}
@@ -131,7 +131,7 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
         <img
           src={imageUrl}
           alt={currentBanner.client_name}
-          className={`w-full object-cover transition-transform duration-300 group-hover:scale-[1.02] ${
+          className={`w-full object-cover ${
             isMobile ? 'h-[100px]' : 'h-[200px]'
           }`}
         />

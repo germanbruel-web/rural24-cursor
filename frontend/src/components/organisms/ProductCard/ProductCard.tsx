@@ -39,17 +39,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const imageUrl = useProductImage(product);
   const cardLabel = getProductLabel(product);
   
-  // Debug log
-  console.log('[ProductCard] Debug:', {
-    id: product.id,
-    category: product.category,
-    subcategory: product.subcategory,
-    brand: product.brand,
-    model: product.model,
-    attributes: product.attributes,
-    cardLabel
-  });
-  
   const isFeatured = variant === 'featured';
   const isCompact = variant === 'compact';
 
@@ -72,7 +61,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     if ((e.target as HTMLElement).closest('button')) return;
     
     if (product.id && product.title) {
-      const url = getAdDetailUrl(product.title, product.id);
+      // Usar short_id si está disponible, sino fallback a UUID
+      const shortId = (product as any).short_id;
+      const url = getAdDetailUrl(product.title, product.id, shortId);
       window.location.hash = url;
     } else if (onViewDetail && product.id) {
       onViewDetail(product.id);
@@ -85,8 +76,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       padding="none"
       className={cn(
         'group cursor-pointer overflow-hidden',
-        'transform transition-all duration-300',
-        'hover:-translate-y-1 hover:border-[#16a135]',
+        'transition-all duration-300 ease-out',
+        'hover:-translate-y-[3px] hover:shadow-lg hover:border-[#16a135]',
         isFeatured && 'h-full',
         isCompact && 'h-auto',
         className
@@ -102,12 +93,49 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           src={imageError ? DEFAULT_PLACEHOLDER_IMAGE : imageUrl}
           alt={product.title}
           loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover"
           onError={() => setImageError(true)}
         />
         
         {/* Gradient overlay en hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        {/* Badge contextual: Ganadería=Edad, Otros=Nuevo/Usado */}
+        {(() => {
+          // Combinar attributes + dynamic_fields
+          const attrs = {
+            ...(product.attributes || {}),
+            ...((product as any).dynamic_fields || {})
+          };
+          const isGanaderia = product.category?.toLowerCase().includes('ganader');
+          
+          // GANADERÍA: mostrar Edad
+          if (isGanaderia) {
+            const edad = attrs.edad || attrs.age;
+            if (!edad) return null;
+            return (
+              <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">
+                {edad}
+              </span>
+            );
+          }
+          
+          // OTROS: mostrar Nuevo/Usado
+          const condition = (product as any).condition || attrs.condicion || attrs.estado || attrs.condition;
+          if (!condition) return null;
+          
+          const condLower = String(condition).toLowerCase();
+          const isNew = condLower.includes('nuevo') || condLower === 'new';
+          const isUsed = condLower.includes('usado') || condLower === 'used';
+          
+          if (!isNew && !isUsed) return null;
+          
+          return (
+            <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">
+              {isNew ? 'Nuevo' : 'Usado'}
+            </span>
+          );
+        })()}
 
         {/* Badges destacados */}
         {showBadges && product.isSponsored && isFeatured && (
@@ -162,57 +190,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </p>
           </div>
         </div>
-
-        {/* Badges: Atributos dinámicos relevantes */}
-        {showBadges && (
-          <div className="flex flex-wrap gap-2">
-            {/* Extraer badges según categoría */}
-            {(() => {
-              const badges: Array<{ label: string; value: string }> = [];
-              const attrs = product.attributes || {};
-              
-              // MAQUINARIAS: Marca, Modelo, Año, Condición
-              if (product.category?.toLowerCase().includes('maquinaria')) {
-                if (attrs.marca || product.brand) badges.push({ label: 'Marca', value: String(attrs.marca || product.brand) });
-                if (attrs.modelo || product.model) badges.push({ label: 'Modelo', value: String(attrs.modelo || product.model) });
-                if (attrs.año || attrs.year || (product as any).year) badges.push({ label: 'Año', value: String(attrs.año || attrs.year || (product as any).year) });
-                if (attrs.condicion || attrs.estado) badges.push({ label: 'Estado', value: String(attrs.condicion || attrs.estado) });
-              }
-              // GANADERÍA: Raza, Edad, Peso, Cantidad
-              else if (product.category?.toLowerCase().includes('ganader')) {
-                if (attrs.raza || attrs.breed) badges.push({ label: 'Raza', value: String(attrs.raza || attrs.breed) });
-                if (attrs.edad || attrs.age) badges.push({ label: 'Edad', value: String(attrs.edad || attrs.age) });
-                if (attrs.peso || attrs.weight) badges.push({ label: 'Peso', value: String(attrs.peso || attrs.weight) + ' kg' });
-                if (attrs.cantidad || attrs.quantity) badges.push({ label: 'Cantidad', value: String(attrs.cantidad || attrs.quantity) });
-              }
-              // OTROS: Genérico
-              else {
-                if (product.brand) badges.push({ label: 'Marca', value: product.brand });
-                if (product.model) badges.push({ label: 'Modelo', value: product.model });
-                if ((product as any).year) badges.push({ label: 'Año', value: String((product as any).year) });
-              }
-              
-              // Limitar badges: featured = 4, compact = 2
-              const maxBadges = isFeatured ? 4 : 2;
-              
-              return badges.slice(0, maxBadges).map((badge, idx) => (
-                <span 
-                  key={idx}
-                  className={cn(
-                    "inline-flex items-center gap-1 bg-gray-100 text-gray-800 font-bold rounded-full border border-gray-200",
-                    isFeatured ? "text-[10px] px-2.5 py-1" : "text-[9px] px-2 py-0.5"
-                  )}
-                >
-                  <div className={cn(
-                    "rounded-full bg-[#16a135]",
-                    isFeatured ? "w-1.5 h-1.5" : "w-1 h-1"
-                  )} />
-                  {badge.value}
-                </span>
-              ));
-            })()}
-          </div>
-        )}
 
         {/* Ubicación - Inteligente: localidad siempre, provincia opcional */}
         {showLocation && (product.location || product.province) && (

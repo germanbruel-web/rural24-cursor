@@ -1,7 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { DynamicFormSection } from './DynamicFields';
-import { getFieldsForSubcategory } from '../../services/formConfigService';
-import { getFieldsForAd, type FieldConfig } from '../../config/adFieldsConfig';
+import { BackendFormSection } from './BackendFormSection';
+import { getFieldsForSubcategory, type DynamicFormField } from '../../services/formConfigService';
+import { WifiOff, RefreshCw, AlertTriangle } from 'lucide-react';
+
+/**
+ * Normaliza el nombre del grupo para comparaciones
+ * "Información General" -> "informacion_general"
+ */
+const normalizeGroupName = (name: string): string => {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
+    .replace(/\s+/g, '_');            // Espacios a guiones bajos
+};
 
 interface DynamicFormLoaderProps {
   subcategoryId: string;
@@ -12,6 +24,11 @@ interface DynamicFormLoaderProps {
   errors?: Record<string, string>;
   title?: string;
   description?: string;
+  expandedGroup?: string;
+  onGroupToggle?: (groupName: string) => void;
+  completedGroups?: Set<string>;
+  /** Callback para notificar al padre cuando hay error de conexión */
+  onConnectionError?: (hasError: boolean) => void;
 }
 
 /**
@@ -26,44 +43,88 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
   onChange,
   errors,
   title,
-  description
+  description,
+  expandedGroup,
+  onGroupToggle,
+  completedGroups,
+  onConnectionError
 }) => {
-  const [fields, setFields] = useState<FieldConfig[]>([]);
+  const [backendFields, setBackendFields] = useState<DynamicFormField[]>([]);
   const [loading, setLoading] = useState(true);
-  const [source, setSource] = useState<'backend' | 'fallback'>('backend');
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    loadFields();
-  }, [subcategoryId, categoryName, subcategoryName]);
+    // Cargar campos siempre que tengamos un subcategoryId válido
+    if (subcategoryId && subcategoryId.trim() !== '') {
+      console.log(`🔄 DynamicFormLoader: Loading fields for subcategoryId: ${subcategoryId}`);
+      loadFields();
+    } else {
+      console.log(`⚠️ DynamicFormLoader: No subcategoryId provided, skipping load`);
+      setBackendFields([]);
+      setLoading(false);
+    }
+  }, [subcategoryId, categoryName, subcategoryName, retryCount]);
 
   const loadFields = async () => {
     setLoading(true);
+    setConnectionError(null);
     
     try {
-      // 1. Intentar desde backend (nueva arquitectura)
+      // Cargar desde backend (única fuente de verdad)
       console.log(`🔄 Cargando campos desde backend para subcategory: ${subcategoryId}`);
-      const backendFields = await getFieldsForSubcategory(subcategoryId);
+      const response = await getFieldsForSubcategory(subcategoryId);
       
-      setFields(backendFields);
-      setSource('backend');
-      console.log(`✅ ${backendFields.length} campos cargados desde backend`);
+      setBackendFields(response);
+      setConnectionError(null);
+      onConnectionError?.(false);
+      console.log(`✅ ${response.length} campos cargados desde backend`);
+      
+      // Auto-abrir primer grupo disponible (usando nombres normalizados)
+      if (response.length > 0 && onGroupToggle && !expandedGroup) {
+        // Obtener grupos únicos normalizados
+        const groupsNormalized = response.reduce((acc, field) => {
+          const group = field.field_group || 'General';
+          const normalized = normalizeGroupName(group);
+          if (!acc.includes(normalized)) acc.push(normalized);
+          return acc;
+        }, [] as string[]);
+        
+        // Orden de prioridad
+        const groupOrder = ['informacion_general', 'especificaciones_tecnicas', 'caracteristicas'];
+        const firstGroup = groupOrder.find(g => groupsNormalized.includes(g)) || groupsNormalized[0];
+        
+        if (firstGroup) {
+          console.log(`🔓 Auto-abriendo grupo: ${firstGroup}`);
+          onGroupToggle(firstGroup);
+        }
+      }
       
     } catch (error) {
-      // 2. Fallback a configuración hardcoded
-      console.warn('⚠️ Backend no disponible, usando fallback hardcoded');
+      // ERROR DE CONEXIÓN - NO hay fallback, bloquear avance
+      console.error('❌ Error de conexión con el servidor:', error);
       
-      if (categoryName && subcategoryName) {
-        const fallbackFields = getFieldsForAd(categoryName, subcategoryName);
-        setFields(fallbackFields);
-        setSource('fallback');
-        console.log(`✅ ${fallbackFields.length} campos cargados desde fallback`);
-      } else {
-        console.error('❌ No se puede usar fallback: falta categoryName o subcategoryName');
-        setFields([]);
-      }
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      const isNetworkError = errorMessage.includes('fetch') || 
+                             errorMessage.includes('network') ||
+                             errorMessage.includes('Failed to fetch') ||
+                             errorMessage.includes('ERR_CONNECTION');
+      
+      setConnectionError(
+        isNetworkError 
+          ? 'No se pudo conectar con el servidor. Verifique su conexión a internet o que el servidor esté activo.'
+          : `Error al cargar el formulario: ${errorMessage}`
+      );
+      setBackendFields([]);
+      onConnectionError?.(true);
+      
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
   };
 
   if (loading) {
@@ -87,7 +148,55 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
     );
   }
 
-  if (fields.length === 0) {
+  // ERROR DE CONEXIÓN - Bloquear avance con mensaje claro
+  if (connectionError) {
+    return (
+      <div className="bg-red-50 border-2 border-red-300 rounded-xl p-8 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+            <WifiOff className="w-8 h-8 text-red-500" />
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold text-red-800">
+              No es posible continuar
+            </h3>
+            <p className="text-red-600 max-w-md">
+              {connectionError}
+            </p>
+          </div>
+
+          <div className="bg-red-100 rounded-lg p-4 mt-2">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-red-700 text-left">
+                <p className="font-medium mb-1">Para continuar, asegúrese de:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Tener conexión estable a internet</li>
+                  <li>El servidor de la aplicación esté funcionando</li>
+                  <li>No haya bloqueadores de red activos</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleRetry}
+            className="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Reintentar conexión
+          </button>
+
+          <p className="text-xs text-red-400 mt-2">
+            Si el problema persiste, contacte al soporte técnico.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (backendFields.length === 0) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <p className="text-yellow-800">
@@ -99,26 +208,26 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
 
   return (
     <>
-      {/* Badge indicador de origen (solo en dev) */}
+      {/* Badge indicador de conexión exitosa (solo en dev) */}
       {process.env.NODE_ENV === 'development' && (
         <div className="mb-2">
-          <span className={`text-xs px-2 py-1 rounded ${
-            source === 'backend' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-yellow-100 text-yellow-800'
-          }`}>
-            {source === 'backend' ? '🔄 Backend API' : '⚠️ Fallback hardcoded'}
+          <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
+            ✅ Conectado al servidor
           </span>
         </div>
       )}
       
-      <DynamicFormSection
-        fields={fields}
+      {/* Formulario desde Backend */}
+      <BackendFormSection
+        fields={backendFields}
         values={values}
         onChange={onChange}
         errors={errors}
         title={title}
         description={description}
+        expandedGroup={expandedGroup}
+        onGroupToggle={onGroupToggle}
+        completedGroups={completedGroups}
       />
     </>
   );

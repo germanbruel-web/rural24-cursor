@@ -5,7 +5,6 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Banner {
   id: string;
@@ -48,22 +47,10 @@ export const CategoryBannerCarousel: React.FC<CategoryBannerCarouselProps> = ({
     setTimeout(() => setIsAutoPlaying(true), 10000); // Resume after 10s
   }, []);
 
-  const goToPrevious = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000);
-  }, [banners.length]);
-
-  const goToNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % banners.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000);
-  }, [banners.length]);
-
   if (!hasBanners) {
     // Skeleton placeholder
     return (
-      <div className="w-full lg:w-[650px] h-20 sm:h-24 rounded-xl border-2 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="w-full lg:w-[650px] h-20 sm:h-24 border-2 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="text-center px-4">
           <svg className="w-8 h-8 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -77,7 +64,7 @@ export const CategoryBannerCarousel: React.FC<CategoryBannerCarouselProps> = ({
   const currentBanner = banners[currentIndex];
 
   return (
-    <div className="relative w-full lg:w-[650px] h-20 sm:h-24 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 group">
+    <div className="relative w-full lg:w-[650px] h-20 sm:h-24 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 group">
       {/* Banner Image */}
       <a
         href={currentBanner.link_url || '#'}
@@ -94,29 +81,9 @@ export const CategoryBannerCarousel: React.FC<CategoryBannerCarouselProps> = ({
         <img
           src={currentBanner.image_url}
           alt={currentBanner.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover"
         />
       </a>
-
-      {/* Navigation Arrows - Solo si hay múltiples banners */}
-      {hasMultipleBanners && (
-        <>
-          <button
-            onClick={goToPrevious}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-            aria-label="Banner anterior"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={goToNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-            aria-label="Banner siguiente"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </>
-      )}
 
       {/* Dots Navigation - Solo si hay múltiples banners */}
       {hasMultipleBanners && (
