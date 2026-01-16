@@ -22,7 +22,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary: 'bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md hover:shadow-lg active:scale-[0.98]',
   secondary: 'bg-gradient-to-r from-secondary-400 to-secondary-500 hover:from-secondary-500 hover:to-secondary-600 text-white shadow-md hover:shadow-lg active:scale-[0.98]',
   outline: 'bg-white border-2 border-primary-500 text-primary-600 hover:bg-primary-50 active:scale-[0.98]',
-  ghost: 'bg-transparent hover:bg-gray-100 text-gray-700 active:scale-[0.98]',
+  ghost: 'bg-transparent hover:bg-gray-100 text-gray-700 active:scale-[0.98] !font-medium',
   danger: 'bg-error hover:bg-red-700 text-white shadow-md hover:shadow-lg active:scale-[0.98]',
 };
 

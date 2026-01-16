@@ -59,7 +59,7 @@ const CATEGORIES = [
   { value: 'GANADERIA', label: 'Ganadería' },
   { value: 'INSUMOS AGROPECUARIOS', label: 'Insumos Agropecuarios' },
   { value: 'INMUEBLES RURALES', label: 'Inmuebles Rurales' },
-  { value: 'GUIA DEL CAMPO', label: 'Guía del Campo' }
+  { value: 'SERVICIOS RURALES', label: 'Servicios Rurales' }
 ];
 
 const PLACEMENTS = [

@@ -29,10 +29,10 @@ export interface FeaturedAdsByCategory {
 
 /**
  * Obtiene avisos destacados agrupados por categoría principal
- * @param limit Número máximo de avisos por categoría (default: 8)
+ * @param limit Número máximo de avisos por categoría (default: 12)
  */
 export async function getFeaturedAdsByCategories(
-  limit: number = 8
+  limit: number = 12
 ): Promise<FeaturedAdsByCategory[]> {
   try {
     console.log('🔍 getFeaturedAdsByCategories - START');
@@ -53,16 +53,24 @@ export async function getFeaturedAdsByCategories(
     const results = await Promise.all(
       categories.map(async (cat) => {
         // 2a. Avisos destacados con orden manual
-        const { data: ads, error: adsError } = await supabase
+        // Primero obtenemos todos y luego filtramos expirados en JS
+        const { data: rawAds, error: adsError } = await supabase
           .from('ads')
           .select('*')
           .eq('featured', true)
           .eq('category_id', cat.id)
           .eq('status', 'active')
           .order('featured_order', { ascending: true })
-          .limit(limit);
+          .limit(limit + 5); // Traer más por si hay expirados
 
-        console.log(`📋 Ads for ${cat.name}:`, { count: ads?.length, error: adsError });
+        // Filtrar expirados en JavaScript (más confiable)
+        const now = new Date();
+        const ads = (rawAds || []).filter(ad => {
+          if (!ad.featured_until) return true; // Sin fecha = válido
+          return new Date(ad.featured_until) > now; // Fecha futura = válido
+        }).slice(0, limit);
+
+        console.log(`📋 Ads for ${cat.name}:`, { raw: rawAds?.length, filtered: ads.length, error: adsError });
         
         // DEBUG: Ver atributos del primer ad
         if (ads?.[0]) {
@@ -162,11 +170,14 @@ export async function getFeaturedAdsByCategories(
           // Inmuebles
           'Inmuebles Rurales': 'INMUEBLES RURALES',
           'INMUEBLES RURALES': 'INMUEBLES RURALES',
-          // Guía
-          'Guia Comercial': 'GUIA DEL CAMPO',
-          'Guía Comercial': 'GUIA DEL CAMPO',
-          'Guía del Campo': 'GUIA DEL CAMPO',
-          'GUIA DEL CAMPO': 'GUIA DEL CAMPO',
+          // Servicios Rurales (antes Guía del Campo)
+          'Servicios Rurales': 'SERVICIOS RURALES',
+          'SERVICIOS RURALES': 'SERVICIOS RURALES',
+          // Fallback para compatibilidad con datos legacy
+          'Guia Comercial': 'SERVICIOS RURALES',
+          'Guía Comercial': 'SERVICIOS RURALES',
+          'Guía del Campo': 'SERVICIOS RURALES',
+          'GUIA DEL CAMPO': 'SERVICIOS RURALES',
         };
         const catDisplayName = cat.display_name || cat.name;
         const bannerCategorySlug = categorySlugMap[catDisplayName] || categorySlugMap[cat.name] || cat.name.toLowerCase();

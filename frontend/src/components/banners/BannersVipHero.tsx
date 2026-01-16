@@ -14,12 +14,14 @@ interface Props {
 // Mapeo de nombres de categorías del hover a slugs de banners_clean
 // SINCRONIZADO con tabla categories en BD (nombres EXACTOS)
 const CATEGORY_MAP: Record<string, string> = {
-  // Nombres display del frontend → nombres EXACTOS en BD
+  // Nombres display del frontend → nombres EXACTOS en BD banners_clean.category
   'Maquinarias': 'MAQUINARIAS AGRICOLAS',
+  'Maquinarias Agrícolas': 'MAQUINARIAS AGRICOLAS',
   'Ganadería': 'GANADERIA',
   'Insumos Agropecuarios': 'INSUMOS AGROPECUARIOS',
   'Inmuebles Rurales': 'INMUEBLES RURALES',
-  'Guía del Campo': 'GUIA DEL CAMPO',
+  'Servicios Rurales': 'SERVICIOS RURALES',
+  'Guía del Campo': 'SERVICIOS RURALES', // Fallback legacy
 };
 
 export const BannersVipHero: React.FC<Props> = ({ category }) => {

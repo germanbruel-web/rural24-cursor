@@ -12,7 +12,7 @@ import {
   Header,
   Footer,
   HeroWithCarousel,
-  HeroSearchBarClon,
+  HeroCategoryButtons,
   SearchResultsPageMinimal,
   AdDetailPage,
   AuthModal,
@@ -52,6 +52,7 @@ const BannersCleanPanel = lazy(() => import("./src/components/admin/BannersClean
 const UsersPanel = lazy(() => import("./src/components/admin/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const CategoriasAdmin = lazy(() => import("./src/components/admin/CategoriasAdmin").then(m => ({ default: m.CategoriasAdmin })));
 const AttributesAdmin = lazy(() => import("./src/components/admin/AttributesAdmin").then(m => ({ default: m.AttributesAdmin })));
+const ContentTemplatesAdmin = lazy(() => import("./src/components/admin/ContentTemplatesAdmin").then(m => ({ default: m.ContentTemplatesAdmin })));
 const BackendSettings = lazy(() => import("./src/components/admin/BackendSettings").then(m => ({ default: m.BackendSettings })));
 
 // Dashboard Components (solo para usuarios autenticados)
@@ -81,7 +82,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'backend-settings' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads';
+type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads';
 
 /**
  * Componente principal de AgroBuscador
@@ -127,6 +128,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/featured-ads') return 'featured-ads';
     if (hash === '#/categories-admin') return 'categories-admin';
     if (hash === '#/attributes-admin') return 'attributes-admin';
+    if (hash === '#/templates-admin') return 'templates-admin';
     if (hash === '#/backend-settings') return 'backend-settings';
     if (hash === '#/deleted-ads') return 'deleted-ads';
     if (hash === '#/profile') return 'profile';
@@ -163,6 +165,7 @@ const AppContent: React.FC = () => {
       'banners': '#/banners',
       'categories-admin': '#/categories-admin',
       'attributes-admin': '#/attributes-admin',
+      'templates-admin': '#/templates-admin',
       'backend-settings': '#/backend-settings',
       'profile': '#/profile',
       'subscription': '#/subscription',
@@ -290,6 +293,9 @@ const AppContent: React.FC = () => {
       }
       else if (hash === '#/attributes-admin') {
         navigateToPage('attributes-admin');
+      }
+      else if (hash === '#/templates-admin') {
+        navigateToPage('templates-admin');
       }
       else if (hash === '#/backend-settings') {
         navigateToPage('backend-settings');
@@ -443,7 +449,7 @@ const AppContent: React.FC = () => {
   console.log('🎯 Estado actual - currentPage:', currentPage, 'isSearching:', isSearching);
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'all-ads', 'banners', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'backend-settings'].includes(currentPage);
+  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'all-ads', 'banners', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
@@ -505,6 +511,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersCleanPanel />}
                 {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <CategoriasAdmin />}
                 {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <AttributesAdmin />}
+                {currentPage === 'templates-admin' && canAccessPage('templates-admin', profile?.role) && <ContentTemplatesAdmin />}
                 {currentPage === 'backend-settings' && canAccessPage('backend-settings', profile?.role) && <BackendSettings />}
                 {currentPage === 'settings' && (
                   <div className="bg-white rounded-lg shadow p-6">
@@ -709,9 +716,9 @@ const AppContent: React.FC = () => {
       ) : (
         // VISTA DE INICIO
         <main className="flex-1">
-          {/* Hero con buscador avanzado y botones de categorías */}
+          {/* Hero con botones de categorías */}
           <HeroWithCarousel>
-            <HeroSearchBarClon 
+            <HeroCategoryButtons 
               onSearch={handleAdvancedSearch} 
               onCategoryHover={setHoveredCategory}
               onBannerChange={setCurrentBanner}

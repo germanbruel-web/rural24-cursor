@@ -62,7 +62,7 @@ const CATEGORIES = [
   'Ganadería',
   'Insumos Agropecuarios',
   'Inmuebles Rurales',
-  'Guía del Campo',
+  'Servicios Rurales',
 ];
 
 export default function BannersPanel() {

@@ -7,7 +7,7 @@ export const CATEGORIES = [
   'Ganadería',
   'Insumos Agropecuarios',
   'Inmuebles Rurales',
-  'Guía del Campo',
+  'Servicios Rurales',
 ] as const;
 
 export type Category = typeof CATEGORIES[number];
@@ -48,12 +48,13 @@ export const SUBCATEGORIES: Record<string, readonly string[]> = {
     'Quintas',
     'Lotes',
   ] as const,
-  'Guía del Campo': [
-    'Herramientas Manuales',
-    'Equipos de Riego',
-    'Generadores',
-    'Bombas',
-    'Otros',
+  'Servicios Rurales': [
+    'Veterinarios',
+    'Transporte de Hacienda',
+    'Alambradores',
+    'Contratistas',
+    'Profesionales',
+    'Otros Servicios',
   ] as const,
 } as const;
 

@@ -92,23 +92,23 @@ export default function PublicarSeleccionCategoria({ onSelect, onBack }: Publica
             </p>
           </button>
 
-          {/* Guía del Campo */}
+          {/* Servicios Rurales */}
           <button
-            onClick={() => onSelect('guia')}
+            onClick={() => onSelect('servicios')}
             className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border-2 border-transparent hover:border-[#16a135] text-left md:col-span-2"
           >
             <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Guía del Campo
+              Servicios Rurales
             </h3>
             <p className="text-sm text-gray-600">
-              Servicios, profesionales, empresas y guías del sector agropecuario
+              Veterinarios, transporte, contratistas y profesionales del agro
             </p>
           </button>
         </div>
 
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500">
-            💡 Ambas opciones son completamente gratuitas
+            Ambas opciones son completamente gratuitas
           </p>
         </div>
       </div>

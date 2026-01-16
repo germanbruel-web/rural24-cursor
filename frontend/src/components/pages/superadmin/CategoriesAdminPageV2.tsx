@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ChevronRight, 
   Plus, 
@@ -11,7 +11,10 @@ import {
   CheckCircle,
   XCircle,
   X,
-  Save
+  Save,
+  Upload,
+  Loader2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { 
   getCategories,
@@ -33,6 +36,7 @@ import {
   deleteBrand
 } from '../../../services/categoriesService';
 import { supabase } from '../../../services/supabaseClient';
+import { uploadService } from '../../../services/uploadService';
 
 type ViewMode = 'categories' | 'subcategories' | 'brands' | 'models';
 
@@ -104,8 +108,11 @@ export const CategoriesAdminPageV2: React.FC = () => {
     name: '',
     display_name: '',
     is_active: true,
-    sort_order: 0
+    sort_order: 0,
+    icon: ''
   });
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const iconInputRef = useRef<HTMLInputElement>(null);
 
   // Bulk import states
   const [showBulkImport, setShowBulkImport] = useState(false);
@@ -293,7 +300,8 @@ export const CategoriesAdminPageV2: React.FC = () => {
         name: item.name,
         display_name: item.display_name,
         is_active: item.is_active,
-        sort_order: item.sort_order || 0
+        sort_order: item.sort_order || 0,
+        icon: item.icon || ''
       });
     } else if (nav.mode === 'subcategories') {
       setEditingSubcategory(item);
@@ -351,8 +359,38 @@ export const CategoriesAdminPageV2: React.FC = () => {
       name: '',
       display_name: '',
       is_active: true,
-      sort_order: 0
+      sort_order: 0,
+      icon: ''
     });
+  };
+
+  // Handler para subir icono de categoría
+  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo
+    if (!file.type.startsWith('image/')) {
+      alert('Solo se permiten imágenes');
+      return;
+    }
+
+    // Validar tamaño (máx 500KB para iconos)
+    if (file.size > 500 * 1024) {
+      alert('El icono debe pesar menos de 500KB');
+      return;
+    }
+
+    try {
+      setUploadingIcon(true);
+      const result = await uploadService.uploadImage(file, 'category-icons');
+      setCategoryFormData({ ...categoryFormData, icon: result.url });
+    } catch (err: any) {
+      console.error('Error subiendo icono:', err);
+      alert('Error subiendo icono: ' + (err.message || 'Error desconocido'));
+    } finally {
+      setUploadingIcon(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -372,10 +410,15 @@ export const CategoriesAdminPageV2: React.FC = () => {
 
         if (editingCategory) {
           // Update existing category
-          await updateCategory(editingCategory.id, {
-            ...categoryFormData,
+          const updateData = {
+            display_name: categoryFormData.display_name,
+            is_active: categoryFormData.is_active,
+            sort_order: categoryFormData.sort_order,
+            icon: categoryFormData.icon || null,
             name
-          });
+          };
+          console.log('📝 Actualizando categoría:', updateData);
+          await updateCategory(editingCategory.id, updateData);
           alert('✅ Categoría actualizada');
         } else {
           // Create new category - Necesita operation_type_id
@@ -994,6 +1037,74 @@ export const CategoriesAdminPageV2: React.FC = () => {
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">Número menor aparece primero</p>
+                </div>
+              )}
+
+              {/* Icono de Categoría - Upload PNG */}
+              {nav.mode === 'categories' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Icono de categoría
+                  </label>
+                  <div className="flex items-center gap-4">
+                    {/* Preview del icono */}
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 overflow-hidden">
+                      {categoryFormData.icon ? (
+                        <img 
+                          src={categoryFormData.icon.startsWith('http') 
+                            ? categoryFormData.icon 
+                            : `/images/icons/${categoryFormData.icon}`
+                          } 
+                          alt="Icono" 
+                          className="w-12 h-12 object-contain"
+                        />
+                      ) : (
+                        <ImageIcon className="w-6 h-6 text-gray-400" />
+                      )}
+                    </div>
+                    
+                    {/* Botón upload */}
+                    <div className="flex-1">
+                      <input
+                        ref={iconInputRef}
+                        type="file"
+                        accept="image/png,image/svg+xml,image/webp"
+                        onChange={handleIconUpload}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => iconInputRef.current?.click()}
+                        disabled={uploadingIcon}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {uploadingIcon ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Subiendo...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            {categoryFormData.icon ? 'Cambiar icono' : 'Subir icono'}
+                          </>
+                        )}
+                      </button>
+                      <p className="text-xs text-gray-500 mt-1">PNG, SVG o WebP. Máx 500KB. Recomendado: 48x48px</p>
+                    </div>
+
+                    {/* Botón eliminar */}
+                    {categoryFormData.icon && (
+                      <button
+                        type="button"
+                        onClick={() => setCategoryFormData({ ...categoryFormData, icon: '' })}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Eliminar icono"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 

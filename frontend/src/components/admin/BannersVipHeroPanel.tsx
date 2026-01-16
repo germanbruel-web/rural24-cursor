@@ -37,7 +37,7 @@ const CATEGORIES = [
   'Ganadería',
   'Insumos Agropecuarios',
   'Inmuebles Rurales',
-  'Guía del Campo',
+  'Servicios Rurales',
 ];
 
 // Helper: Parsear fecha DD/MM/YYYY o YYYY-MM-DD a ISO string

@@ -9,7 +9,7 @@
 export { Header } from './Header';
 export { Footer } from './Footer';
 export { HeroWithCarousel } from './HeroWithCarousel';
-export { HeroSearchBarClon } from './HeroSearchBarClon';
+export { HeroCategoryButtons } from './HeroCategoryButtons';
 export { FilterSidebar } from './FilterSidebar';
 export { SearchResultsPageMinimal } from './SearchResultsPageMinimal';
 export { AdDetailPage } from './AdDetailPage';

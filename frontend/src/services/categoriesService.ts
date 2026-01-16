@@ -5,6 +5,40 @@ import { categoryCache, cacheKeys } from '../utils/categoryCache';
 // CATALOG MASTER - NUEVO SISTEMA CON CACHÉ
 // =====================================================
 
+// ICONOS DE CATEGORÍAS (desde category_icons)
+export interface CategoryIcon {
+  id: string;
+  name: string;
+  url_light: string;
+  url_dark: string | null;
+}
+
+export const getCategoryIcons = async (): Promise<CategoryIcon[]> => {
+  const cacheKey = 'category_icons';
+  const cached = categoryCache.get(cacheKey);
+  
+  if (cached) {
+    console.log('✅ Iconos desde caché');
+    return cached;
+  }
+
+  console.log('🔍 Cargando iconos desde BD...');
+  const { data, error } = await supabase
+    .from('category_icons')
+    .select('id, name, url_light, url_dark')
+    .order('name');
+  
+  if (error) {
+    console.error('❌ Error cargando iconos:', error);
+    return []; // No lanzar error, usar fallback
+  }
+  
+  // Guardar en caché por 1 hora
+  categoryCache.set(cacheKey, data, 1000 * 60 * 60);
+  console.log('✅ Iconos cargados:', data?.length || 0);
+  return data || [];
+};
+
 // CATEGORÍAS
 export const getCategories = async () => {
   // Intentar obtener del caché

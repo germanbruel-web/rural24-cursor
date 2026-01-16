@@ -57,6 +57,11 @@ export default function AllAdsPanel({ onNavigate }: AllAdsPanelProps = {}) {
     paused: 0,
     featured: 0
   });
+  
+  // Métricas de destacados
+  const [showFeaturedMetrics, setShowFeaturedMetrics] = useState(false);
+  const [featuredAds, setFeaturedAds] = useState<any[]>([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(false);
 
   const [filters, setFilters] = useState<Filters>({
     category: 'all',
@@ -91,6 +96,89 @@ export default function AllAdsPanel({ onNavigate }: AllAdsPanelProps = {}) {
     } catch (error) {
       console.error('Error loading global stats:', error);
     }
+  };
+
+  const loadFeaturedMetrics = async () => {
+    setLoadingFeatured(true);
+    try {
+      // Cargar avisos destacados
+      const { data: adsData, error: adsError } = await supabase
+        .from('ads')
+        .select('id, title, featured, featured_until, created_at, category_id, user_id')
+        .eq('featured', true)
+        .order('featured_until', { ascending: true });
+
+      if (adsError) throw adsError;
+
+      // Enriquecer con datos de categorías y usuarios
+      const enrichedAds = await Promise.all((adsData || []).map(async (ad) => {
+        let categoryName = '-';
+        let userData = { email: '', full_name: '', subscription_plan: 'free' };
+
+        if (ad.category_id) {
+          const { data: cat } = await supabase
+            .from('categories')
+            .select('display_name')
+            .eq('id', ad.category_id)
+            .single();
+          if (cat) categoryName = cat.display_name;
+        }
+
+        if (ad.user_id) {
+          const { data: user } = await supabase
+            .from('users')
+            .select('email, full_name, subscription_plan')
+            .eq('id', ad.user_id)
+            .single();
+          if (user) userData = user;
+        }
+
+        return {
+          ...ad,
+          categories: { display_name: categoryName },
+          users: userData
+        };
+      }));
+
+      setFeaturedAds(enrichedAds);
+    } catch (error) {
+      console.error('Error loading featured metrics:', error);
+      notify.error('Error al cargar métricas de destacados');
+    } finally {
+      setLoadingFeatured(false);
+    }
+  };
+
+  const toggleFeaturedMetrics = () => {
+    if (!showFeaturedMetrics) {
+      loadFeaturedMetrics();
+    }
+    setShowFeaturedMetrics(!showFeaturedMetrics);
+  };
+
+  // Helpers para métricas
+  const getDaysUntilExpiry = (date: string) => {
+    const now = new Date();
+    const expiry = new Date(date);
+    const diffTime = expiry.getTime() - now.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const getExpiryStatus = (date: string) => {
+    const days = getDaysUntilExpiry(date);
+    if (days < 0) return { color: 'bg-red-100 text-red-800', label: 'Vencido' };
+    if (days <= 3) return { color: 'bg-orange-100 text-orange-800', label: `${days}d` };
+    if (days <= 7) return { color: 'bg-yellow-100 text-yellow-800', label: `${days}d` };
+    return { color: 'bg-green-100 text-green-800', label: `${days}d` };
+  };
+
+  const getFeaturedByCategory = () => {
+    const grouped: Record<string, number> = {};
+    featuredAds.forEach(ad => {
+      const catName = ad.categories?.display_name || 'Sin categoría';
+      grouped[catName] = (grouped[catName] || 0) + 1;
+    });
+    return grouped;
   };
 
   const loadInitialData = async () => {
@@ -367,13 +455,20 @@ export default function AllAdsPanel({ onNavigate }: AllAdsPanelProps = {}) {
     try {
       const { error } = await supabase
         .from('ads')
-        .update({ featured: false })
+        .update({ featured: false, featured_until: null })
         .eq('id', adId);
 
       if (error) throw error;
 
+      // Actualizar estado local inmediatamente para reflejar el cambio visual
+      setAds(prev => prev.map(a => 
+        a.id === adId 
+          ? { ...a, featured: false, featured_until: null } as Ad
+          : a
+      ));
+
       notify.success('Destacado removido');
-      loadAds(currentPage);
+      loadGlobalStats(); // Refrescar stats
     } catch (error) {
       console.error('Error removing featured:', error);
       notify.error('Error al remover destacado');
@@ -397,10 +492,17 @@ export default function AllAdsPanel({ onNavigate }: AllAdsPanelProps = {}) {
 
       if (error) throw error;
 
+      // Actualizar estado local inmediatamente para reflejar el cambio visual
+      setAds(prev => prev.map(a => 
+        a.id === selectedAd.id 
+          ? { ...a, featured: true, featured_until: featureDuration } as Ad
+          : a
+      ));
+      
       notify.success(`Aviso destacado hasta el ${new Date(featureDuration).toLocaleDateString('es-AR')}`);
       setSelectedAd(null);
       setFeatureDuration('');
-      loadAds(currentPage);
+      loadGlobalStats(); // Refrescar stats
     } catch (error) {
       console.error('Error featuring ad:', error);
       notify.error('Error al destacar aviso');
@@ -487,11 +589,146 @@ export default function AllAdsPanel({ onNavigate }: AllAdsPanelProps = {}) {
           <div className="text-2xl font-bold text-yellow-600">{globalStats.paused}</div>
           <div className="text-sm text-gray-600">Pausados</div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-          <div className="text-2xl font-bold text-[#f0bf43]">{globalStats.featured}</div>
-          <div className="text-sm text-gray-600">Destacados</div>
-        </div>
+        <button 
+          onClick={toggleFeaturedMetrics}
+          className={`bg-white p-4 rounded-lg shadow-sm border-2 transition-all text-left hover:shadow-md ${
+            showFeaturedMetrics ? 'border-yellow-400 ring-2 ring-yellow-200' : 'border-gray-200 hover:border-yellow-300'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-[#f0bf43]">{globalStats.featured}</div>
+              <div className="text-sm text-gray-600">Destacados</div>
+            </div>
+            <Star className={`w-5 h-5 ${showFeaturedMetrics ? 'text-yellow-500 fill-yellow-400' : 'text-gray-400'}`} />
+          </div>
+          <div className="text-xs text-gray-500 mt-1">Click para ver métricas</div>
+        </button>
       </div>
+
+      {/* Panel de Métricas de Destacados */}
+      {showFeaturedMetrics && (
+        <div className="bg-gradient-to-r from-yellow-50 to-amber-50 p-6 rounded-lg shadow-sm border border-yellow-200 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <Star className="w-5 h-5 text-yellow-500 fill-yellow-400" />
+              Métricas de Avisos Destacados
+            </h3>
+            <button 
+              onClick={() => setShowFeaturedMetrics(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {loadingFeatured ? (
+            <div className="text-center py-8 text-gray-500">Cargando métricas...</div>
+          ) : featuredAds.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No hay avisos destacados actualmente
+            </div>
+          ) : (
+            <>
+              {/* Resumen por categoría */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-4">
+                {Object.entries(getFeaturedByCategory()).map(([cat, count]) => (
+                  <div key={cat} className="bg-white px-3 py-2 rounded-lg border border-yellow-200 text-center">
+                    <div className="text-lg font-bold text-yellow-600">{count}</div>
+                    <div className="text-xs text-gray-600 truncate" title={cat}>{cat}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tabla de destacados */}
+              <div className="overflow-x-auto bg-white rounded-lg border border-yellow-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-yellow-100 text-gray-700">
+                    <tr>
+                      <th className="text-left p-3 font-medium">Categoría</th>
+                      <th className="text-left p-3 font-medium">Título</th>
+                      <th className="text-left p-3 font-medium">Usuario</th>
+                      <th className="text-left p-3 font-medium">Plan</th>
+                      <th className="text-left p-3 font-medium">Inicio</th>
+                      <th className="text-left p-3 font-medium">Vencimiento</th>
+                      <th className="text-center p-3 font-medium">Estado</th>
+                      <th className="text-center p-3 font-medium">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-yellow-100">
+                    {featuredAds.map((ad) => {
+                      const expiryStatus = ad.featured_until ? getExpiryStatus(ad.featured_until) : null;
+                      return (
+                        <tr key={ad.id} className="hover:bg-yellow-50">
+                          <td className="p-3 text-gray-700">
+                            {ad.categories?.display_name || '-'}
+                          </td>
+                          <td className="p-3 font-medium text-gray-900 max-w-[200px] truncate" title={ad.title}>
+                            {ad.title}
+                          </td>
+                          <td className="p-3 text-gray-600">
+                            <div className="truncate max-w-[150px]" title={ad.users?.email}>
+                              {ad.users?.full_name || ad.users?.email?.split('@')[0] || '-'}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              ad.users?.subscription_plan === 'premium' ? 'bg-purple-100 text-purple-800' :
+                              ad.users?.subscription_plan === 'pro' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {ad.users?.subscription_plan || 'free'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-gray-600 whitespace-nowrap">
+                            {new Date(ad.created_at).toLocaleDateString('es-AR')}
+                          </td>
+                          <td className="p-3 text-gray-600 whitespace-nowrap">
+                            {ad.featured_until 
+                              ? new Date(ad.featured_until).toLocaleDateString('es-AR')
+                              : '-'
+                            }
+                          </td>
+                          <td className="p-3 text-center">
+                            {expiryStatus ? (
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${expiryStatus.color}`}>
+                                {expiryStatus.label}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                Sin fecha
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3 text-center">
+                            <button
+                              onClick={() => handleToggleFeatured(ad.id, true)}
+                              className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                              title="Quitar destacado"
+                            >
+                              <Star className="w-4 h-4 fill-current" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Alertas de vencimiento */}
+              {featuredAds.filter(ad => ad.featured_until && getDaysUntilExpiry(ad.featured_until) <= 3).length > 0 && (
+                <div className="bg-orange-100 border border-orange-300 rounded-lg p-4">
+                  <p className="text-orange-800 font-medium flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    {featuredAds.filter(ad => ad.featured_until && getDaysUntilExpiry(ad.featured_until) <= 3).length} aviso(s) vencen en los próximos 3 días
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Filtros */}
       {showFilters && (
@@ -1005,8 +1242,8 @@ function EditAdModal({ ad, categories, onSave, onClose }: EditAdModalProps) {
     price: ad.price || 0,
     category_id: adAny.category_id || '',
     status: ad.status || 'active',
-    province: ad.province || '',
-    featured: ad.featured || false
+    province: ad.province || ''
+    // featured removido - se gestiona desde columna ACCIONES
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -1119,21 +1356,6 @@ function EditAdModal({ ad, categories, onSave, onClose }: EditAdModalProps) {
                 <option value="paused">Pausado</option>
               </select>
             </div>
-          </div>
-
-          {/* Destacado */}
-          <div className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <input
-              type="checkbox"
-              id="featured"
-              checked={formData.featured}
-              onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-              className="w-4 h-4 text-[#16a135] border-gray-300 rounded focus:ring-2 focus:ring-[#16a135]"
-            />
-            <label htmlFor="featured" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Star className="w-4 h-4 text-yellow-600" />
-              Destacar este aviso
-            </label>
           </div>
 
           {/* Footer */}

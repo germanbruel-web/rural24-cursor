@@ -20,24 +20,28 @@ import type { Product } from '../../types';
  * 
  * Para agregar nuevas subcategorías:
  * 1. Buscar el nombre de la subcategoría en minúsculas
- * 2. Identificar las keys de atributos en la BD (ej: tipobovino, razabovinos)
+ * 2. Identificar las keys de atributos en la BD (ej: tipobovino, raza)
  * 3. Agregar la entrada aquí
+ * 
+ * El segundo elemento es un array de fallbacks para raza
  */
-const SUBCATEGORY_PRIORITY_ATTRIBUTES: Record<string, [string, string]> = {
+const SUBCATEGORY_PRIORITY_ATTRIBUTES: Record<string, [string, string[]]> = {
   // === GANADERÍA ===
-  'bovinos': ['tipobovino', 'razabovinos'],      // Toro · Aberdeen Angus
-  'ovinos': ['tipoovino', 'razaovinos'],         // Cordero · Merino
-  'equinos': ['tipoequino', 'razaequinos'],      // Yegua · Criollo
-  'porcinos': ['tipoporcino', 'razaporcinos'],   // Lechón · Hampshire
-  'caprinos': ['tipocaprino', 'razacaprinos'],   // Cabra · Boer
+  // Formato: [tipoX, [raza, razaX, legacy...]]
+  'bovinos': ['tipobovino', ['raza', 'razabovinos', 'breed']],
+  'ovinos': ['tipoovino', ['raza', 'razaovinos', 'razabovinos', 'breed']],
+  'equinos': ['tipoequino', ['raza', 'razaequinos', 'breed']],
+  'porcinos': ['tipoporcino', ['raza', 'razaporcinos', 'breed']],
+  'caprinos': ['tipocaprino', ['raza', 'razacaprinos', 'breed']],
+  'aves': ['tipoave', ['raza', 'razaaves', 'breed']],
   
   // === MAQUINARIAS (fallback a brand/model por defecto) ===
   // Si se necesita config específica, agregar aquí:
-  // 'tractores': ['marca', 'modelo'],
+  // 'tractores': ['marca', ['modelo']],
   
   // === INSUMOS ===
-  // 'semillas': ['cultivo', 'variedad'],
-  // 'fertilizantes': ['tipo', 'marca'],
+  // 'semillas': ['cultivo', ['variedad']],
+  // 'fertilizantes': ['tipo', ['marca']],
 };
 
 /**
@@ -70,7 +74,7 @@ export function getCardLabel(
   const priorityConfig = SUBCATEGORY_PRIORITY_ATTRIBUTES[subcategoryKey];
   
   if (priorityConfig && parts.length < maxParts) {
-    const [attr1Key, attr2Key] = priorityConfig;
+    const [attr1Key, attr2Fallbacks] = priorityConfig;
     
     // Atributo Nivel 1 (principal)
     if (attr1Key && attrs[attr1Key] && parts.length < maxParts) {
@@ -80,11 +84,16 @@ export function getCardLabel(
       }
     }
     
-    // Atributo Nivel 2 (secundario)
-    if (attr2Key && attrs[attr2Key] && parts.length < maxParts) {
-      const formatted = formatAttributeValue(attrs[attr2Key], attr2Key);
-      if (formatted) {
-        parts.push(formatted);
+    // Atributo Nivel 2 con fallbacks (buscar en orden hasta encontrar uno)
+    if (attr2Fallbacks && Array.isArray(attr2Fallbacks) && parts.length < maxParts) {
+      for (const key of attr2Fallbacks) {
+        if (attrs[key]) {
+          const formatted = formatAttributeValue(attrs[key], key);
+          if (formatted) {
+            parts.push(formatted);
+            break; // Usar el primero encontrado
+          }
+        }
       }
     }
   }

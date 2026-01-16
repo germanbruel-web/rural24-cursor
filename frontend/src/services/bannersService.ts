@@ -130,6 +130,17 @@ export async function getBannersByType(type: BannerType): Promise<Banner[]> {
 
 // ==================== PUBLIC QUERIES ====================
 
+// Mapeo de nombres de categorías del frontend a valores en BD
+const CATEGORY_MAP: Record<string, string> = {
+  'Maquinarias': 'MAQUINARIAS AGRICOLAS',
+  'Maquinarias Agrícolas': 'MAQUINARIAS AGRICOLAS',
+  'Ganadería': 'GANADERIA',
+  'Insumos Agropecuarios': 'INSUMOS AGROPECUARIOS',
+  'Inmuebles Rurales': 'INMUEBLES RURALES',
+  'Servicios Rurales': 'SERVICIOS RURALES',
+  'Guía del Campo': 'SERVICIOS RURALES',
+};
+
 /**
  * Obtener banners VIP (Homepage - Hero Principal)
  * Sin categoría: Solo destacados (is_featured)
@@ -140,6 +151,9 @@ export async function getHomepageBanners(category?: string): Promise<Banner[]> {
   try {
     const now = new Date().toISOString();
     
+    // Mapear categoría al valor de BD
+    const categorySlug = category ? (CATEGORY_MAP[category] || category) : undefined;
+    
     // Usar banners_clean con placement 'hero_vip' (valor del enum en BD)
     let query = supabase
       .from('banners_clean')
@@ -147,9 +161,9 @@ export async function getHomepageBanners(category?: string): Promise<Banner[]> {
       .eq('placement', 'hero_vip')
       .eq('is_active', true);
 
-    // CON CATEGORÍA: Filtrar por categoría
-    if (category) {
-      query = query.eq('category', category);
+    // CON CATEGORÍA: Filtrar por categoría mapeada
+    if (categorySlug) {
+      query = query.eq('category', categorySlug);
     }
 
     const { data, error } = await query;

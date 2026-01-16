@@ -154,7 +154,7 @@ export const Column1Contact: React.FC<Props> = ({ column, onChange }) => {
             <label className="flex-1 cursor-pointer">
               <input
                 type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp,image/svg+xml"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/svg+xml,image/avif"
                 onChange={handleLogoUpload}
                 disabled={uploadingLogo}
                 className="hidden"
@@ -167,7 +167,7 @@ export const Column1Contact: React.FC<Props> = ({ column, onChange }) => {
           </div>
 
           <p className="text-xs text-gray-500">
-            Formatos: JPG, PNG, WEBP, SVG • Máximo 5MB • Recomendado: fondo transparente
+            Formatos: JPG, PNG, WEBP, SVG, AVIF • Máximo 5MB • Recomendado: fondo transparente
           </p>
         </div>
       </div>

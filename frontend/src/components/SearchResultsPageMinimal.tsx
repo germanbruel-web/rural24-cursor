@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Product, FilterOptions, SearchFilters } from '../../types';
-import { HeroSearchBarClon } from './HeroSearchBarClon';
+import { HeroCategoryButtons } from './HeroCategoryButtons';
 import { ProductCard } from './organisms/ProductCard';
 import { useDynamicFilters, type FilterConfig, type FilterOption } from '../hooks/useDynamicFilters';
 import { useCategories } from '../hooks/useCategories';
@@ -213,10 +213,10 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Buscador de homepage */}
+      {/* Botones de categorías de homepage */}
       <div className="bg-gradient-to-br from-[#f0f9f4] to-[#e8f5ed] py-6 border-b">
         <div className="max-w-7xl mx-auto px-4">
-          <HeroSearchBarClon onSearch={onSearch} showCategoryButtons={false} />
+          <HeroCategoryButtons onSearch={onSearch} showCategoryButtons={false} />
         </div>
       </div>
 

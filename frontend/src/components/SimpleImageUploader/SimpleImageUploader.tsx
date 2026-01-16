@@ -294,7 +294,7 @@ export const SimpleImageUploader: React.FC<Props> = ({
       <label className="block">
         <input
           type="file"
-          accept="image/jpeg,image/jpg,image/png,image/webp"
+          accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/avif"
           multiple
           onChange={handleFileSelect}
           disabled={uploading || images.length >= maxFiles}

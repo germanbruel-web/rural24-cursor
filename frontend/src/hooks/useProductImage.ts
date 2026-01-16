@@ -67,16 +67,18 @@ export const useProductImage = (product: Product): string => {
 /**
  * CONFIGURACIÓN DE ATRIBUTOS PRIORITARIOS POR SUBCATEGORÍA
  * 
- * Formato: subcategory_name (lowercase) → [atributo_nivel_1, atributo_nivel_2]
- * Los nombres de atributos deben coincidir con las keys en product.attributes
+ * Formato: subcategory_name (lowercase) → [atributo_nivel_1, atributo_nivel_2[]]
+ * El nivel 2 ahora es un array de fallbacks para buscar en orden
  */
-const SUBCATEGORY_PRIORITY_ATTRIBUTES: Record<string, [string, string]> = {
+const SUBCATEGORY_PRIORITY_ATTRIBUTES: Record<string, [string, string[]]> = {
   // === GANADERÍA ===
-  'bovinos': ['tipobovino', 'razabovinos'],      // Toro · Aberdeen Angus
-  'ovinos': ['tipoovino', 'razaovinos'],         // Cordero · Merino
-  'equinos': ['tipoequino', 'razaequinos'],      // Yegua · Criollo
-  'porcinos': ['tipoporcino', 'razaporcinos'],   // Lechón · Hampshire
-  'caprinos': ['tipocaprino', 'razacaprinos'],   // Cabra · Boer
+  // Formato: [tipoX, [raza, razaX, legacy...]]
+  'bovinos': ['tipobovino', ['raza', 'razabovinos', 'breed']],
+  'ovinos': ['tipoovino', ['raza', 'razaovinos', 'razabovinos', 'breed']],
+  'equinos': ['tipoequino', ['raza', 'razaequinos', 'breed']],
+  'porcinos': ['tipoporcino', ['raza', 'razaporcinos', 'breed']],
+  'caprinos': ['tipocaprino', ['raza', 'razacaprinos', 'breed']],
+  'aves': ['tipoave', ['raza', 'razaaves', 'breed']],
 };
 
 /**
@@ -85,7 +87,7 @@ const SUBCATEGORY_PRIORITY_ATTRIBUTES: Record<string, [string, string]> = {
  * ARQUITECTURA:
  * 1. Subcategoría (siempre primero) - ej: "Bovinos"
  * 2. Atributo Nivel 1 según config - ej: "Toro" (tipobovino)
- * 3. Atributo Nivel 2 según config - ej: "Aberdeen Angus" (razabovinos)
+ * 3. Atributo Nivel 2 según config - ej: "Aberdeen Angus" (raza con fallbacks)
  * 4. Fallback: marca/brand si no hay config específica
  * 
  * Resultado: "Bovinos · Toro · Aberdeen Angus"
@@ -109,16 +111,21 @@ export const getProductLabel = (product: Product): string => {
   const priorityConfig = SUBCATEGORY_PRIORITY_ATTRIBUTES[subcategoryKey];
   
   if (priorityConfig) {
-    const [attr1Key, attr2Key] = priorityConfig;
+    const [attr1Key, attr2Fallbacks] = priorityConfig;
     
     // Atributo Nivel 1 (ej: tipobovino = "Toro")
     if (attr1Key && attrs[attr1Key]) {
       parts.push(String(attrs[attr1Key]));
     }
     
-    // Atributo Nivel 2 (ej: razabovinos = "Aberdeen Angus")
-    if (attr2Key && attrs[attr2Key]) {
-      parts.push(String(attrs[attr2Key]));
+    // Atributo Nivel 2 con fallbacks (buscar en orden hasta encontrar uno)
+    if (attr2Fallbacks && Array.isArray(attr2Fallbacks)) {
+      for (const key of attr2Fallbacks) {
+        if (attrs[key]) {
+          parts.push(String(attrs[key]));
+          break; // Usar el primero encontrado
+        }
+      }
     }
   } else {
     // Fallback para categorías sin config: usar marca

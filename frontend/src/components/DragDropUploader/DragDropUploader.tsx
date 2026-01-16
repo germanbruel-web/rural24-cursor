@@ -311,7 +311,7 @@ export function DragDropUploader({
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/jpeg,image/jpg,image/png,image/webp,image/heic"
+          accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/avif"
           onChange={handleFileSelect}
           style={{ display: 'none' }}
         />
@@ -320,7 +320,7 @@ export function DragDropUploader({
           <div className="drop-zone-content">
             <span className="icon">📸</span>
             <p>Arrastra fotos aquí o haz click para seleccionar</p>
-            <span className="hint">Máximo {maxFiles} fotos • JPG, PNG, WebP, HEIC • Horizontales (16:9 o 4:3)</span>
+            <span className="hint">Máximo {maxFiles} fotos • JPG, PNG, WebP, AVIF, HEIC • Horizontales (16:9 o 4:3)</span>
           </div>
         ) : (
           <div className="drop-zone-content">

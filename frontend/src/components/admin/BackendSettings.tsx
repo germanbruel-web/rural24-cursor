@@ -40,8 +40,9 @@ import {
 import { useToastHelpers } from '../../contexts/ToastContext';
 import { CMSImagesGallery } from './CMSImagesGallery';
 import { FooterCMS } from './FooterCMS';
+import { CategoryIconsCMS } from './CategoryIconsCMS';
 
-type Section = 'header' | 'footer' | 'content' | 'general' | 'gallery';
+type Section = 'header' | 'footer' | 'content' | 'general' | 'gallery' | 'icons';
 
 interface SettingsBySection {
   header: SiteSetting[];
@@ -196,10 +197,10 @@ export const BackendSettings: React.FC = () => {
     
     const validationOptions: FileValidationOptions = {
       maxSizeMB: 5,
-      allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+      allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/avif'],
       maxWidth: 4096,
       maxHeight: 4096,
-      recommendedFormats: ['image/webp']
+      recommendedFormats: ['image/webp', 'image/avif']
     };
 
     const validation = await validateImageFile(file, validationOptions);
@@ -388,7 +389,7 @@ export const BackendSettings: React.FC = () => {
             <input
               ref={el => { fileInputRefs.current[setting.setting_key] = el; }}
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+              accept="image/jpeg,image/png,image/webp,image/svg+xml,image/avif"
               className="hidden"
               disabled={isUploading}
               onChange={(e) => {
@@ -403,9 +404,9 @@ export const BackendSettings: React.FC = () => {
           <p className="text-xs text-blue-900 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>
-              <strong>Formatos:</strong> JPG, PNG, WEBP, SVG<br />
+              <strong>Formatos:</strong> JPG, PNG, WEBP, SVG, AVIF<br />
               <strong>Máximo:</strong> 5 MB<br />
-              <strong>Recomendado:</strong> WEBP para mejor rendimiento
+              <strong>Recomendado:</strong> WEBP o AVIF para mejor rendimiento
             </span>
           </p>
         </div>
@@ -448,9 +449,9 @@ export const BackendSettings: React.FC = () => {
 
       {/* Tabs de secciones */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
-          {(['header', 'content', 'footer', 'general', 'gallery'] as Section[]).map(section => {
-            const count = section === 'gallery' ? 0 : settings[section as keyof SettingsBySection].length;
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+          {(['header', 'content', 'footer', 'general', 'icons', 'gallery'] as Section[]).map(section => {
+            const count = (section === 'gallery' || section === 'icons') ? 0 : settings[section as keyof SettingsBySection].length;
             return (
               <button
                 key={section}
@@ -469,10 +470,11 @@ export const BackendSettings: React.FC = () => {
                     {section === 'content' && '📄'}
                     {section === 'footer' && '🔽'}
                     {section === 'general' && '⚙️'}
+                    {section === 'icons' && '🎨'}
                     {section === 'gallery' && '🖼️'}
                   </span>
                   <span className="text-sm uppercase tracking-wide">{section}</span>
-                  {section !== 'gallery' && <span className="text-xs opacity-75">{count} items</span>}
+                  {section !== 'gallery' && section !== 'icons' && <span className="text-xs opacity-75">{count} items</span>}
                 </div>
               </button>
             );
@@ -496,9 +498,11 @@ export const BackendSettings: React.FC = () => {
         </div>
       </div>
 
-      {/* Mostrar galería, footer CMS o settings según la sección */}
+      {/* Mostrar galería, iconos, footer CMS o settings según la sección */}
       {activeSection === 'gallery' ? (
         <CMSImagesGallery />
+      ) : activeSection === 'icons' ? (
+        <CategoryIconsCMS />
       ) : activeSection === 'footer' ? (
         <FooterCMS />
       ) : (

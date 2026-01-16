@@ -38,7 +38,6 @@ export const CategoriasAdmin: React.FC = () => {
     name: '',
     display_name: '',
     description: '',
-    icon: '',
     parent_category_id: '',
     parent_subcategory_id: '',
   });
@@ -111,7 +110,6 @@ export const CategoriasAdmin: React.FC = () => {
       name: '',
       display_name: '',
       description: '',
-      icon: '',
       parent_category_id: categoryId,
       parent_subcategory_id: type === 'type' ? (parentId || '') : '',
     };
@@ -139,7 +137,6 @@ export const CategoriasAdmin: React.FC = () => {
       name: item.name,
       display_name: item.display_name,
       description: item.description || '',
-      icon: item.icon || '',
       parent_category_id: parentCategoryId || item.category_id || '',
       parent_subcategory_id: item.subcategory_id || '',
     });
@@ -156,14 +153,12 @@ export const CategoriasAdmin: React.FC = () => {
             name: formData.name,
             display_name: formData.display_name,
             description: formData.description,
-            icon: formData.icon,
           });
         } else {
           await createCategory({
             name: formData.name,
             display_name: formData.display_name,
             description: formData.description,
-            icon: formData.icon,
           });
         }
       } else if (formType === 'subcategory') {
@@ -243,7 +238,6 @@ export const CategoriasAdmin: React.FC = () => {
       name: '',
       display_name: '',
       description: '',
-      icon: '',
       parent_category_id: '',
       parent_subcategory_id: '',
     });
@@ -496,21 +490,6 @@ export const CategoriasAdmin: React.FC = () => {
                   rows={3}
                 />
               </div>
-
-              {formType === 'category' && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Icono (emoji)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.icon}
-                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                    placeholder="🚜"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              )}
 
               <div className="flex justify-end gap-3 pt-4">
                 <button

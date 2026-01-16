@@ -31,7 +31,7 @@ export const FeaturedAdsSection: React.FC<Props> = ({
     console.log('🚀 FeaturedAdsSection - loadFeaturedAds START');
     setLoading(true);
     try {
-      const data = await getFeaturedAdsByCategories(8); // 8 avisos por categoría
+      const data = await getFeaturedAdsByCategories(12); // 12 avisos por categoría
       console.log('📦 FeaturedAdsSection - data received:', { 
         categoriesCount: data.length,
         categories: data.map(c => ({ name: c.category_name, adsCount: c.ads.length }))
@@ -93,7 +93,8 @@ export const FeaturedAdsSection: React.FC<Props> = ({
         {/* Por cada categoría */}
         {categoriesData.map((catData, idx) => (
           <div 
-            key={catData.category_id} 
+            key={catData.category_id}
+            id={catData.category_slug}
             className={`mb-16 last:mb-0 ${idx > 0 ? 'pt-8 border-t border-gray-200' : ''}`}
           >
             

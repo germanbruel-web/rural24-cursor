@@ -151,7 +151,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, onSearch }) => {
             {/* Botón Publicar Aviso Gratis */}
             <Button
               variant="primary"
-              size="lg"
+              size="md"
               onClick={() => {
                 // Navegar al formulario de alta de avisos
                 window.location.hash = '#/publicar';

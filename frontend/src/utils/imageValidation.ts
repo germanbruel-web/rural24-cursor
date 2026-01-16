@@ -50,11 +50,11 @@ export async function getImageDimensions(file: File): Promise<ImageDimensions> {
 export async function validateImageBeforeUpload(file: File): Promise<ValidationResult> {
   try {
     // 1. Validar tipo de archivo
-    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic'];
+    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/avif'];
     if (!ALLOWED_TYPES.includes(file.type.toLowerCase())) {
       return {
         valid: false,
-        message: `Formato ${file.type} no permitido. Usá JPG, PNG, WebP o HEIC`,
+        message: `Formato ${file.type} no permitido. Usá JPG, PNG, WebP, AVIF o HEIC`,
         canProceed: false
       };
     }

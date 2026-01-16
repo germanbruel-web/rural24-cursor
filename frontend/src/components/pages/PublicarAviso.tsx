@@ -55,6 +55,7 @@ import InfoBox from '../molecules/InfoBox/InfoBox';
 import TipsCard from '../molecules/TipsCard/TipsCard';
 import { AutoSaveIndicator } from '../molecules/AutoSaveIndicator';
 import { DynamicFormLoader } from '../forms/DynamicFormLoader';
+import { TemplateSuggestions } from '../forms/TemplateSuggestions';
 
 // ====================================================================
 // WIZARD STEPS
@@ -1080,7 +1081,6 @@ export default function PublicarAviso() {
                               <div className="flex items-center justify-between">
                                 <div className="flex-1">
                                   <p className="text-lg sm:text-xl font-bold text-gray-900">
-                                    {cat.icon && <span className="mr-3">{cat.icon}</span>}
                                     {cat.display_name}
                                   </p>
                                   {cat.description && (
@@ -1321,90 +1321,47 @@ export default function PublicarAviso() {
             {/* STEP 5: INFORMACIÓN */}
             {currentStep === 5 && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-                      Información del aviso
-                    </h2>
-                    <p className="text-base sm:text-lg text-gray-600">
-                      Título, descripción y precio
-                    </p>
-                  </div>
-
-                  {/* Botón de generación automática - Posición superior derecha */}
-                  <Button
-                    type="button"
-                    onClick={handleGenerateContent}
-                    disabled={generatingContent || !selectedCategory}
-                    variant="secondary"
-                    className="flex items-center gap-2 whitespace-nowrap"
-                  >
-                    {generatingContent ? (
-                      <>
-                        <Loader className="w-4 h-4 animate-spin" />
-                        <span className="hidden sm:inline">Generando...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4" />
-                        <span className="hidden sm:inline">Generar Sugerencias</span>
-                        <span className="sm:hidden">IA</span>
-                      </>
-                    )}
-                  </Button>
+                <div>
+                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+                    Información del aviso
+                  </h2>
+                  <p className="text-base sm:text-lg text-gray-600">
+                    Título, descripción y precio
+                  </p>
                 </div>
 
+                {/* Dropdowns de plantillas */}
+                <TemplateSuggestions
+                  categoryId={selectedCategory}
+                  subcategoryId={selectedSubcategory}
+                  typeId={attributeValues['type_id'] as string}
+                  categoria={categories.find(c => c.id === selectedCategory)?.name}
+                  subcategoria={subcategories.find(s => s.id === selectedSubcategory)?.name}
+                  tipo={attributeValues['tipo'] as string}
+                  marca={attributeValues['marca'] as string}
+                  modelo={attributeValues['modelo'] as string}
+                  año={attributeValues['año'] as string}
+                  condicion={attributeValues['condicion'] as string}
+                  provincia={province}
+                  localidad={locality}
+                  precio={price ? `${currency} ${price}` : ''}
+                  atributos={Object.entries(attributeValues).reduce((acc, [key, val]) => {
+                    if (typeof val === 'string') acc[key] = val;
+                    return acc;
+                  }, {} as Record<string, string>)}
+                  onSelectTitle={(t) => {
+                    setTitle(t);
+                    setSelectedTitleIndex(null);
+                  }}
+                  onSelectDescription={(d) => {
+                    setDescription(d);
+                    setSelectedDescIndex(null);
+                  }}
+                  currentTitle={title}
+                  currentDescription={description}
+                />
+
                 {/* Sugerencias de título */}
-                {suggestedTitles.length > 0 && (
-                  <div className="space-y-3 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
-                    <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-green-600" />
-                      Títulos sugeridos (click para usar)
-                    </h4>
-                    {suggestedTitles.map((suggestion, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          setTitle(suggestion);
-                          setSelectedTitleIndex(idx);
-                        }}
-                        className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
-                          selectedTitleIndex === idx
-                            ? 'bg-green-100 border-green-500 font-semibold'
-                            : 'bg-white border-green-200 hover:bg-green-50 hover:border-green-300'
-                        }`}
-                      >
-                        {idx + 1}. {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Sugerencia de descripción */}
-                {suggestedDescriptions.length > 0 && (
-                  <div className="space-y-3 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
-                    <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-green-600" />
-                      Descripción sugerida (editable)
-                    </h4>
-                    <div className="bg-white p-4 rounded-lg border-2 border-green-200">
-                      <p className="text-sm text-gray-700 whitespace-pre-line">{suggestedDescriptions[0]}</p>
-                    </div>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setDescription(suggestedDescriptions[0]);
-                        setSelectedDescIndex(0);
-                      }}
-                      variant="outline"
-                      fullWidth
-                    >
-                      Usar esta descripción
-                    </Button>
-                  </div>
-                )}
-
                 {/* Título */}
                 <div className="space-y-2">
                   <label className="block text-lg font-bold text-gray-900">

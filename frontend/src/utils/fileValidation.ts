@@ -23,10 +23,10 @@ export interface FileValidationOptions {
 
 const DEFAULT_OPTIONS: FileValidationOptions = {
   maxSizeMB: 5,
-  allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+  allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/avif'],
   maxWidth: 4096,
   maxHeight: 4096,
-  recommendedFormats: ['image/webp']
+  recommendedFormats: ['image/webp', 'image/avif']
 };
 
 /**

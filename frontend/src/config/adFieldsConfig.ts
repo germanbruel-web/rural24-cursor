@@ -697,9 +697,9 @@ export const INMUEBLES_CONFIG: CategoryFieldsConfig = {
 };
 
 // =====================================================
-// GUÍA DEL CAMPO
+// SERVICIOS RURALES (antes Guía del Campo)
 // =====================================================
-export const GUIA_CAMPO_CONFIG: CategoryFieldsConfig = {
+export const SERVICIOS_RURALES_CONFIG: CategoryFieldsConfig = {
   commonFields: [
     {
       name: 'business_name',
@@ -822,7 +822,9 @@ export const CATEGORY_CONFIGS: Record<string, CategoryFieldsConfig> = {
   ganaderia: GANADERIA_CONFIG,
   insumos: INSUMOS_CONFIG,
   inmuebles_rurales: INMUEBLES_CONFIG,
-  guia_campo: GUIA_CAMPO_CONFIG
+  servicios_rurales: SERVICIOS_RURALES_CONFIG,
+  // Alias legacy para compatibilidad
+  guia_campo: SERVICIOS_RURALES_CONFIG
 };
 
 /**
