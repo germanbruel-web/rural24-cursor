@@ -1040,9 +1040,6 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     product={otherAd}
                     variant="compact"
                     showProvince={true}
-                    onViewDetail={(adId) => {
-                      window.location.hash = `#/ad/${adId}`;
-                    }}
                   />
                 ))}
               </div>

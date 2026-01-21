@@ -5,13 +5,13 @@
 
 import type { FieldConfig } from '../config/adFieldsConfig';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export interface DynamicFormField {
   id: string;
   field_name: string;
   field_label: string;
-  field_type: 'text' | 'number' | 'select' | 'multiselect' | 'textarea' | 'checkbox' | 'date';
+  field_type: 'text' | 'number' | 'select' | 'multiselect' | 'textarea' | 'checkbox' | 'date' | 'boolean';
   field_group: string;
   field_options: string[];
   is_required: boolean;

@@ -139,7 +139,7 @@ export function DynamicField({ attribute, value, onChange, error }: DynamicField
   // ====================================================================
   // BOOLEAN (Toggle Switch)
   // ====================================================================
-  if (inputType === 'boolean') {
+  if (inputType === 'boolean' || inputType === 'checkbox') {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between p-5 bg-gray-50 rounded-xl border-2 border-gray-200">

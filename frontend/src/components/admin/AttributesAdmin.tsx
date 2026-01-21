@@ -104,7 +104,7 @@ function SortableAttribute({ attr, onEdit, onDelete }: SortableAttributeProps) {
             )}
             {attr.is_filterable && (
               <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
-                🔍 Filtro
+                Filtro
               </span>
             )}
           </div>
@@ -210,7 +210,7 @@ export function AttributesAdmin() {
     } catch (error) {
       // Revertir en caso de error
       setAttributes(attributes);
-      showMessage('error', '❌ Error al guardar el orden');
+      showMessage('error', 'Error al guardar el orden');
     }
   }
 
@@ -590,7 +590,7 @@ export function AttributesAdmin() {
       field_options: [...currentOptions, ...newOptions],
     });
 
-    showMessage('success', `✅ ${newOptions.length} opción${newOptions.length !== 1 ? 'es' : ''} agregada${newOptions.length !== 1 ? 's' : ''}`);
+    showMessage('success', `${newOptions.length} opción${newOptions.length !== 1 ? 'es' : ''} agregada${newOptions.length !== 1 ? 's' : ''}`);
     setBulkInput('');
     setShowBulkMode(false); // Colapsar después de agregar
   }
@@ -818,9 +818,9 @@ export function AttributesAdmin() {
           {/* Nota explicativa sobre filtros */}
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
             <p className="text-sm text-blue-800">
-              <strong>💡 Tip:</strong> Para mostrar un atributo en los filtros de búsqueda, 
+              <strong>Tip:</strong> Para mostrar un atributo en los filtros de búsqueda, 
               haz clic en el botón <Edit2 className="w-3 h-3 inline" /> de cualquier atributo 
-              y activa la opción <span className="font-semibold">🔍 Mostrar en filtros</span>.
+              y activa la opción <span className="font-semibold">Mostrar en filtros</span>.
             </p>
           </div>
         </div>
@@ -1030,7 +1030,7 @@ export function AttributesAdmin() {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {showBulkMode ? '📋 Modo Masivo (activo)' : '📋 Activar carga masiva'}
+                  {showBulkMode ? 'Modo Masivo (activo)' : 'Activar carga masiva'}
                 </button>
                 <span className="text-sm text-gray-500">
                   {showBulkMode ? 'Pega múltiples opciones separadas por comas o saltos de línea' : 'o agrega opciones una por una'}
@@ -1147,7 +1147,7 @@ export function AttributesAdmin() {
                 onChange={(e) => setFormData({ ...formData, is_filterable: e.target.checked })}
                 className="w-5 h-5 rounded border-2 border-gray-300 text-blue-500 focus:ring-4 focus:ring-blue-100"
               />
-              <span className="text-sm font-medium text-gray-700">🔍 Mostrar en filtros</span>
+              <span className="text-sm font-medium text-gray-700">Mostrar en filtros</span>
             </label>
 
             {editingId && (
@@ -1167,7 +1167,7 @@ export function AttributesAdmin() {
           {formData.is_filterable && (
             <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-4">
               <h4 className="font-semibold text-blue-800 flex items-center gap-2">
-                🔍 Configuración de Filtro
+                Configuración de Filtro
               </h4>
               
               <div className="grid grid-cols-2 gap-4">
@@ -1231,11 +1231,11 @@ export function AttributesAdmin() {
         <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b-2 border-gray-200">
             <h3 className="text-lg font-bold text-gray-900">
-              📋 Lista de Atributos ({attributes.length})
+              Lista de Atributos ({attributes.length})
             </h3>
             {attributes.length > 1 && (
               <p className="text-sm text-gray-600 mt-1">
-                💡 <strong>Arrastrá</strong> los atributos para cambiar el orden en el formulario de publicación
+                <strong>Arrastrá</strong> los atributos para cambiar el orden en el formulario de publicación
               </p>
             )}
           </div>

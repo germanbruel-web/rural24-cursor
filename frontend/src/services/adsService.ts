@@ -327,6 +327,9 @@ export async function getAdById(id: string): Promise<Ad | null> {
     // Validar formato UUID
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     
+    // Detectar si parece un slug (contiene guiones y letras)
+    const isSlug = !isUUID && id.includes('-') && /[a-z]/.test(id) && id.length > 10;
+    
     // Obtener el aviso básico
     let basicData: any = null;
     let basicError: any = null;
@@ -341,6 +344,21 @@ export async function getAdById(id: string): Promise<Ad | null> {
       
       basicData = result.data;
       basicError = result.error;
+    } else if (isSlug) {
+      // Buscar por slug
+      console.log('🔍 Buscando por slug:', id);
+      const result = await supabase
+        .from('ads')
+        .select('*')
+        .eq('slug', id)
+        .single();
+      
+      if (result.data) {
+        console.log('✅ Aviso encontrado por slug:', result.data.id);
+        basicData = result.data;
+      } else {
+        basicError = result.error || { message: 'Aviso no encontrado por slug' };
+      }
     } else {
       // Estrategia de búsqueda para IDs cortos:
       // 1. Primero buscar por short_id (columna dedicada)
@@ -845,7 +863,7 @@ export async function updateAdToHybrid(adId: string): Promise<{ error: any }> {
 // BÚSQUEDA CON FILTROS DESDE BACKEND API
 // ====================================================================
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export interface SearchFiltersParams {
   cat?: string;           // Categoría slug
@@ -864,6 +882,14 @@ export interface SearchAdsResponse {
   ads: Product[];
   total: number;
   hasMore: boolean;
+  // Metadata del backend para detección automática de categoría/subcategoría
+  meta?: {
+    category?: string;
+    subcategory?: string;
+    detected_from_search?: boolean;
+    detected_category_slug?: string;
+    detected_subcategory_slug?: string;
+  };
 }
 
 /**
@@ -918,6 +944,8 @@ export async function searchAdsFromBackend(filters: SearchFiltersParams): Promis
       ads,
       total: data.pagination?.total || ads.length,
       hasMore: data.pagination?.hasMore || false,
+      // Incluir metadata del backend para detección automática
+      meta: data.meta || undefined,
     };
   } catch (error) {
     console.error('❌ Error en searchAdsFromBackend:', error);

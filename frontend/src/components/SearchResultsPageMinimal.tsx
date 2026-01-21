@@ -62,7 +62,18 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
   const { categories: backendCategories, loading: categoriesLoading } = useCategories();
   
   // ============================================================
+  // ESTADO PARA IDs DETECTADOS AUTOMÁTICAMENTE
+  // Cuando el backend detecta subcategoría desde búsqueda, guardamos los IDs
+  // para cargar los filtros dinámicos correctos
+  // ============================================================
+  const [detectedIds, setDetectedIds] = useState<{
+    categoryId?: string;
+    subcategoryId?: string;
+  }>({});
+  
+  // ============================================================
   // FILTROS DINÁMICOS V2 - Con contadores desde backend
+  // Usa slugs de URL O IDs detectados automáticamente
   // ============================================================
   const { 
     filters: backendFilters, 
@@ -70,16 +81,31 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
     category: resolvedCategory,
     subcategory: resolvedSubcategory,
     totalAds,
-    loading: filtersLoading 
+    loading: filtersLoading,
+    reload: reloadFilters
   } = useDynamicFilters({ 
     categorySlug: urlFilters.cat || categorySlug, 
     subcategorySlug: urlFilters.sub || subcategorySlug,
     provinceSlug: urlFilters.prov,
+    // ✅ FIX: Pasar IDs detectados para cargar atributos dinámicos
+    categoryId: detectedIds.categoryId,
+    subcategoryId: detectedIds.subcategoryId,
   });
   
   // ============================================================
   // CARGAR ADS DESDE BACKEND cuando cambian los filtros URL
   // ============================================================
+  
+  // Estado para metadata de detección automática
+  const [detectedMeta, setDetectedMeta] = useState<{
+    category?: string;
+    subcategory?: string;
+    category_id?: string;
+    subcategory_id?: string;
+    detected_from_search?: boolean;
+    detected_category_slug?: string;
+    detected_subcategory_slug?: string;
+  } | null>(null);
   
   // Calcular un hash de todos los filtros URL para detectar cambios
   const urlFiltersHash = useMemo(() => JSON.stringify(urlFilters), [urlFilters]);
@@ -100,6 +126,36 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
       
       setBackendAds(result.ads);
       setTotalFromBackend(result.total);
+      
+      // Guardar metadata de detección
+      if (result.meta) {
+        setDetectedMeta(result.meta);
+        
+        // ✅ FIX: Si detectó subcategoría, guardar IDs para cargar filtros dinámicos
+        if (result.meta.detected_from_search && result.meta.category_id && result.meta.subcategory_id) {
+          console.log('🎯 Subcategoría detectada automáticamente:', result.meta.subcategory);
+          console.log('📦 Guardando IDs para filtros dinámicos:', { 
+            categoryId: result.meta.category_id, 
+            subcategoryId: result.meta.subcategory_id 
+          });
+          
+          // Guardar IDs para que useDynamicFilters cargue los atributos
+          setDetectedIds({
+            categoryId: result.meta.category_id,
+            subcategoryId: result.meta.subcategory_id,
+          });
+          
+          // Actualizar URL sin recargar (replace para no llenar historial)
+          if (result.meta.detected_category_slug && result.meta.detected_subcategory_slug) {
+            const newUrl = `#/search?cat=${result.meta.detected_category_slug}&sub=${result.meta.detected_subcategory_slug}`;
+            window.history.replaceState(null, '', newUrl);
+          }
+        }
+      } else {
+        // Limpiar IDs si no hay detección
+        setDetectedIds({});
+      }
+      
       setAdsLoading(false);
     };
     
@@ -111,6 +167,8 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
       // Sin filtros: usar los results pasados como prop (comportamiento legacy)
       setBackendAds(results);
       setTotalFromBackend(results.length);
+      setDetectedMeta(null);
+      setDetectedIds({});
       setAdsLoading(false);
     }
   }, [urlFiltersHash, results]);
@@ -121,7 +179,8 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
   );
   
   const [currentPage, setCurrentPage] = useState(1);
-  const RESULTS_PER_PAGE = 20;
+  // 16 resultados = 4 cards x 4 filas
+  const RESULTS_PER_PAGE = 16;
   
   // Toggle sección colapsable
   const toggleSection = (section: string) => {
@@ -224,17 +283,17 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
       <div className="border-b bg-white">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <p className="text-sm text-gray-600">
-            {/* Mostrar categoría/subcategoría resuelta desde backend */}
-            {resolvedCategory && (
-              <span className="font-medium">{resolvedCategory.name}</span>
+            {/* Mostrar categoría/subcategoría resuelta desde backend o detectedMeta */}
+            {(resolvedCategory || detectedMeta?.category) && (
+              <span className="font-medium">{resolvedCategory?.name || detectedMeta?.category}</span>
             )}
-            {resolvedSubcategory && (
-              <span className="font-medium"> › {resolvedSubcategory.name}</span>
+            {(resolvedSubcategory || detectedMeta?.subcategory) && (
+              <span className="font-medium"> › {resolvedSubcategory?.name || detectedMeta?.subcategory}</span>
             )}
-            {searchQuery && !resolvedCategory && (
-              <span className="font-medium">{searchQuery}</span>
+            {searchQuery && !resolvedCategory && !detectedMeta?.category && (
+              <span className="font-medium">Búsqueda: "{searchQuery}"</span>
             )}
-            {(resolvedCategory || searchQuery) && ' · '}
+            {(resolvedCategory || detectedMeta?.category || searchQuery) && ' · '}
             {adsLoading ? (
               <span className="text-gray-400">Cargando...</span>
             ) : (
@@ -274,113 +333,106 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                 )}
 
                 {!filtersLoading && (
-                  <div className="space-y-4">
-                    {/* CATEGORÍAS - Desde backend, siempre visible */}
+                  <div className="space-y-2">
+                    {/* CATEGORÍAS - Links apilados ultra-compactos */}
                     <div>
                       <button
                         onClick={() => toggleSection('categoria')}
-                        className="flex items-center justify-between w-full text-sm font-semibold text-gray-800 mb-2"
+                        className="flex items-center justify-between w-full text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1"
                       >
                         Categoría
                         {expandedSections.has('categoria') ? (
-                          <ChevronUp className="w-4 h-4" />
+                          <ChevronUp className="w-3 h-3 text-gray-400" />
                         ) : (
-                          <ChevronDown className="w-4 h-4" />
+                          <ChevronDown className="w-3 h-3 text-gray-400" />
                         )}
                       </button>
                       {expandedSections.has('categoria') && (
-                        <ul className="space-y-1">
-                          <li>
-                            <a
-                              href={getFilterLink('cat', undefined)}
-                              className={`block px-2 py-1.5 text-sm rounded transition-colors ${
-                                !urlFilters.cat
-                                  ? 'bg-green-100 text-green-800 font-medium'
-                                  : 'text-gray-600 hover:bg-gray-100'
-                              }`}
-                            >
-                              Todas las categorías
-                            </a>
-                          </li>
+                        <div className="space-y-0">
+                          <a
+                            href={getFilterLink('cat', undefined)}
+                            className={`block py-1 text-[13px] border-l-2 pl-2 transition-all ${
+                              !urlFilters.cat
+                                ? 'border-primary-500 text-primary-600 font-semibold bg-primary-50/50'
+                                : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-800'
+                            }`}
+                          >
+                            Todas
+                          </a>
                           {categoriesLoading ? (
-                            <li className="text-sm text-gray-400 px-2 py-1">Cargando...</li>
+                            <span className="text-xs text-gray-400 pl-2">Cargando...</span>
                           ) : (
                             backendCategories.map((cat) => {
-                              // Usar slug del backend directamente
                               const catSlug = cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-');
                               const isActive = urlFilters.cat === catSlug || 
                                 urlFilters.cat?.toLowerCase() === cat.name.toLowerCase();
                               return (
-                                <li key={cat.id}>
-                                  <a
-                                    href={getFilterLink('cat', catSlug)}
-                                    className={`block px-2 py-1.5 text-sm rounded transition-colors ${
-                                      isActive
-                                        ? 'bg-green-100 text-green-800 font-medium'
-                                        : 'text-gray-600 hover:bg-gray-100'
-                                    }`}
-                                  >
-                                    {cat.display_name || cat.name}
-                                  </a>
-                                </li>
+                                <a
+                                  key={cat.id}
+                                  href={getFilterLink('cat', catSlug)}
+                                  className={`block py-1 text-[13px] border-l-2 pl-2 transition-all ${
+                                    isActive
+                                      ? 'border-primary-500 text-primary-600 font-semibold bg-primary-50/50'
+                                      : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-800'
+                                  }`}
+                                >
+                                  {cat.display_name || cat.name}
+                                </a>
                               );
                             })
                           )}
-                        </ul>
+                        </div>
                       )}
                     </div>
 
-                    {/* SUBCATEGORÍAS - Solo si hay categoría, CON CONTADORES del backend */}
-                    {urlFilters.cat && backendSubcategories.length > 0 && (
-                      <div className="border-t border-gray-100 pt-4">
+                    {/* SUBCATEGORÍAS - Solo si hay categoría */}
+                    {(urlFilters.cat || detectedIds.categoryId) && backendSubcategories.length > 0 && (
+                      <div className="border-t border-gray-100 pt-2">
                         <button
                           onClick={() => toggleSection('subcategoria')}
-                          className="flex items-center justify-between w-full text-sm font-semibold text-gray-800 mb-2"
+                          className="flex items-center justify-between w-full text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1"
                         >
                           Subcategoría
                           {expandedSections.has('subcategoria') ? (
-                            <ChevronUp className="w-4 h-4" />
+                            <ChevronUp className="w-3 h-3 text-gray-400" />
                           ) : (
-                            <ChevronDown className="w-4 h-4" />
+                            <ChevronDown className="w-3 h-3 text-gray-400" />
                           )}
                         </button>
                         {expandedSections.has('subcategoria') && (
-                          <ul className="space-y-1">
-                            <li>
-                              <a
-                                href={getFilterLink('sub', undefined)}
-                                className={`block px-2 py-1.5 text-sm rounded transition-colors ${
-                                  !urlFilters.sub
-                                    ? 'bg-green-100 text-green-800 font-medium'
-                                    : 'text-gray-600 hover:bg-gray-100'
-                                }`}
-                              >
-                                Todas
-                              </a>
-                            </li>
+                          <div className="space-y-0">
+                            <a
+                              href={getFilterLink('sub', undefined)}
+                              className={`block py-1 text-[13px] border-l-2 pl-2 transition-all ${
+                                !urlFilters.sub
+                                  ? 'border-primary-500 text-primary-600 font-semibold bg-primary-50/50'
+                                  : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-800'
+                              }`}
+                            >
+                              Todas
+                            </a>
                             {backendSubcategories
-                              .filter((sub) => sub.count > 0) // Ocultar subcategorías sin avisos
+                              .filter((sub) => sub.count > 0)
                               .map((sub) => {
                               const isActive = urlFilters.sub === sub.slug;
                               return (
-                                <li key={sub.id}>
-                                  <a
-                                    href={getFilterLink('sub', sub.slug)}
-                                    className={`block px-2 py-1.5 text-sm rounded transition-colors ${
-                                      isActive
-                                        ? 'bg-green-100 text-green-800 font-medium'
-                                        : 'text-gray-600 hover:bg-gray-100'
-                                    }`}
-                                  >
-                                    {sub.name}
-                                    <span className={`ml-1 ${isActive ? 'text-green-600' : 'text-gray-400'}`}>
-                                      ({sub.count})
-                                    </span>
-                                  </a>
-                                </li>
+                                <a
+                                  key={sub.id}
+                                  href={getFilterLink('sub', sub.slug)}
+                                  className={`flex items-center justify-between py-1 text-[13px] border-l-2 pl-2 pr-1 transition-all ${
+                                    isActive
+                                      ? 'border-primary-500 text-primary-600 font-semibold bg-primary-50/50'
+                                      : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-800'
+                                  }`}
+                                >
+                                  <span>{sub.name}</span>
+                                  <span className={`text-[10px] ${isActive ? 'text-primary-400' : 'text-gray-400'}`}>
+                                    {sub.count}
+                                  </span>
+                                </a>
                               );
                             })}
-                          </ul>
+                          </div>
                         )}
                       </div>
                     )}
@@ -395,65 +447,69 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                       const currentValue = urlFilters[filter.field_name];
                       
                       // Determinar si mostrar según visible_when
-                      if (filter.visible_when.requires_subcategory && !urlFilters.sub) return null;
+                      if (filter.visible_when.requires_subcategory && !urlFilters.sub && !detectedIds.subcategoryId) return null;
                       if (filter.visible_when.requires_province && !urlFilters.prov) return null;
                       
+                      // Filtrar opciones con avisos
+                      const validOptions = filter.options.filter((opt) => opt.count > 0);
+                      if (validOptions.length === 0) return null;
+                      
                       return (
-                        <div key={filter.field_name} className="border-t border-gray-100 pt-4">
+                        <div key={filter.field_name} className="border-t border-gray-100 pt-2">
+                          {/* Header ultra-compacto */}
                           <button
                             onClick={() => toggleSection(sectionKey)}
-                            className="flex items-center justify-between w-full text-sm font-semibold text-gray-800 mb-2"
+                            className="flex items-center justify-between w-full text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1"
                           >
                             <span className="flex items-center gap-1">
                               {filter.field_label}
                               {filter.is_dynamic && (
-                                <span className="text-[10px] text-purple-500 font-normal">●</span>
+                                <span className="w-1 h-1 bg-primary-500 rounded-full" />
                               )}
                             </span>
                             {expandedSections.has(sectionKey) ? (
-                              <ChevronUp className="w-4 h-4" />
+                              <ChevronUp className="w-3 h-3 text-gray-400" />
                             ) : (
-                              <ChevronDown className="w-4 h-4" />
+                              <ChevronDown className="w-3 h-3 text-gray-400" />
                             )}
                           </button>
+                          
                           {expandedSections.has(sectionKey) && (
-                            <ul className="space-y-1 max-h-48 overflow-y-auto">
-                              <li>
-                                <a
-                                  href={getFilterLink(filter.field_name, undefined)}
-                                  className={`block px-2 py-1.5 text-sm rounded transition-colors ${
-                                    !currentValue
-                                      ? 'bg-green-100 text-green-800 font-medium'
-                                      : 'text-gray-600 hover:bg-gray-100'
-                                  }`}
-                                >
-                                  {filter.field_name === 'province' ? 'Todas las provincias' : 'Todos'}
-                                </a>
-                              </li>
-                              {filter.options
-                                .filter((opt) => opt.count > 0) // Ocultar opciones sin avisos
-                                .map((opt) => {
+                            <div className="space-y-0">
+                              {/* Link "Todos" */}
+                              <a
+                                href={getFilterLink(filter.field_name, undefined)}
+                                className={`block py-1 text-[13px] border-l-2 pl-2 transition-all ${
+                                  !currentValue
+                                    ? 'border-primary-500 text-primary-600 font-semibold bg-primary-50/50'
+                                    : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-800'
+                                }`}
+                              >
+                                Todos
+                              </a>
+                              
+                              {/* Opciones como links apilados */}
+                              {validOptions.map((opt) => {
                                 const optSlug = toSlug(opt.value);
                                 const isActive = currentValue === optSlug;
                                 return (
-                                  <li key={opt.value}>
-                                    <a
-                                      href={getFilterLink(filter.field_name, optSlug)}
-                                      className={`block px-2 py-1.5 text-sm rounded transition-colors ${
-                                        isActive
-                                          ? 'bg-green-100 text-green-800 font-medium'
-                                          : 'text-gray-600 hover:bg-gray-100'
-                                      }`}
-                                    >
-                                      {opt.label}
-                                      <span className={`ml-1 ${isActive ? 'text-green-600' : 'text-gray-400'}`}>
-                                        ({opt.count})
-                                      </span>
-                                    </a>
-                                  </li>
+                                  <a
+                                    key={opt.value}
+                                    href={getFilterLink(filter.field_name, optSlug)}
+                                    className={`flex items-center justify-between py-1 text-[13px] border-l-2 pl-2 pr-1 transition-all ${
+                                      isActive
+                                        ? 'border-primary-500 text-primary-600 font-semibold bg-primary-50/50'
+                                        : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-800'
+                                    }`}
+                                  >
+                                    <span className="truncate">{opt.label}</span>
+                                    <span className={`text-[10px] flex-shrink-0 ${isActive ? 'text-primary-400' : 'text-gray-400'}`}>
+                                      {opt.count}
+                                    </span>
+                                  </a>
                                 );
                               })}
-                            </ul>
+                            </div>
                           )}
                         </div>
                       );

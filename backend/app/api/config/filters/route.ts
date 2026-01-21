@@ -293,28 +293,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 5c. Filtro de Precio (siempre visible)
-    let minPrice = Infinity;
-    let maxPrice = -Infinity;
-    filteredAds.forEach(ad => {
-      if (typeof ad.price === 'number' && ad.price > 0) {
-        minPrice = Math.min(minPrice, ad.price);
-        maxPrice = Math.max(maxPrice, ad.price);
-      }
-    });
-
-    if (minPrice !== Infinity && maxPrice !== -Infinity) {
-      filters.push({
-        field_name: 'price',
-        field_label: 'Precio',
-        filter_type: 'range',
-        filter_order: 3,
-        is_dynamic: false,
-        visible_when: { always: true },
-        options: [],
-        range: { min: Math.floor(minPrice), max: Math.ceil(maxPrice) },
-      });
-    }
+    // 5c. Filtro de Precio - ELIMINADO por requerimiento de UX
+    // Los usuarios prefieren no filtrar por precio en esta etapa
 
     // ================================================================
     // 6. OBTENER ATRIBUTOS DINÁMICOS (solo si hay subcategoría)

@@ -13,7 +13,9 @@ import {
   Edit,
   Trash2,
   Plus,
-  AlertTriangle
+  AlertTriangle,
+  Crown,
+  Shield
 } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import type { UserRole, UserType } from '../../../types';
@@ -98,13 +100,13 @@ export const UsersPanel: React.FC = () => {
 
   const handleDeleteUser = async (userId: string) => {
     const user = users.find(u => u.id === userId);
-    const confirmText = `⚠️ ¿ELIMINAR usuario "${user?.email}" permanentemente?\n\nEsta acción NO se puede deshacer.\nSe eliminarán:\n- Su cuenta\n- Todos sus avisos (${user?.ads_count || 0})\n- Sus mensajes\n- Todos sus datos`;
+    const confirmText = `¿ELIMINAR usuario "${user?.email}" permanentemente?\n\nEsta acción NO se puede deshacer.\nSe eliminarán:\n- Su cuenta\n- Todos sus avisos (${user?.ads_count || 0})\n- Sus mensajes\n- Todos sus datos`;
     
     if (!confirm(confirmText)) return;
     
     // Doble confirmación para SuperAdmins
     if (user?.role === 'superadmin') {
-      if (!confirm('⚠️⚠️⚠️ ATENCIÓN: Vas a eliminar un SUPERADMIN. ¿Estás SEGURO?')) return;
+      if (!confirm('ATENCIÓN: Vas a eliminar un SUPERADMIN. ¿Estás SEGURO?')) return;
     }
     
     try {
@@ -237,9 +239,9 @@ export const UsersPanel: React.FC = () => {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
           >
             <option value="all">Todos los roles</option>
-            <option value="superadmin">👑 SuperAdmin</option>
-            <option value="adminscrap">🔍 AdminScrap</option>
-            <option value="free">👤 Free</option>
+            <option value="superadmin">SuperAdmin</option>
+            <option value="adminscrap">AdminScrap</option>
+            <option value="free">Free</option>
           </select>
 
           {/* Status Filter */}
@@ -249,8 +251,8 @@ export const UsersPanel: React.FC = () => {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
           >
             <option value="all">Todos los estados</option>
-            <option value="active">✅ Verificados</option>
-            <option value="inactive">⚠️ No verificados</option>
+            <option value="active">Verificados</option>
+            <option value="inactive">No verificados</option>
           </select>
         </div>
       </div>
@@ -328,7 +330,7 @@ export const UsersPanel: React.FC = () => {
                       )}
                       {user.user_type && (
                         <span className="text-xs text-gray-500">
-                          {user.user_type === 'empresa' ? '🏢 Empresa' : '👤 Particular'}
+                          {user.user_type === 'empresa' ? 'Empresa' : 'Particular'}
                         </span>
                       )}
                     </div>
@@ -336,12 +338,12 @@ export const UsersPanel: React.FC = () => {
                   <td className="px-6 py-4">
                     {user.email_verified ? (
                       <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                        ✅ Verificado
+                        Verificado
                       </span>
                     ) : (
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
-                          ⚠️ Sin verificar
+                          Sin verificar
                         </span>
                         <button
                           onClick={() => handleVerifyEmail(user.id)}

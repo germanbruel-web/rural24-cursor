@@ -4,6 +4,7 @@
  */
 
 export { CategoryCarousel } from './CategoryCarousel';
+export { CategoryBannerSlider } from './CategoryBannerSlider';
 export { FeaturedAdsSection } from './FeaturedAdsSection';
 export { HowItWorksSection } from './HowItWorksSection';
 export { PremiumSection } from './PremiumSection';

@@ -96,6 +96,59 @@ export async function GET(request: NextRequest) {
     let subcategoryId: string | null = null;
     let categoryName: string | null = null;
     let subcategoryName: string | null = null;
+    let detectedFromSearch = false; // Flag para saber si se detectó automáticamente
+
+    // ============================================================
+    // 1.1 DETECCIÓN INTELIGENTE: Si hay searchQuery sin categoría/subcategoría,
+    //     intentar detectar si coincide con alguna subcategoría
+    // ============================================================
+    if (searchQuery && !categorySlug && !subcategorySlug) {
+      const searchSlug = toSlug(searchQuery);
+      const searchLower = searchQuery.toLowerCase();
+      // Obtener forma singular (quitar 's' final) y plural (agregar 's')
+      const searchSingular = searchLower.replace(/s$/, '');
+      const searchPlural = searchLower.endsWith('s') ? searchLower : `${searchLower}s`;
+      
+      console.log('🔎 Intentando detectar subcategoría desde búsqueda:', { 
+        original: searchQuery, 
+        singular: searchSingular, 
+        plural: searchPlural 
+      });
+      
+      // Buscar subcategoría que coincida con el texto de búsqueda (flexible singular/plural)
+      const { data: matchingSubcats } = await supabase
+        .from('subcategories')
+        .select('id, name, display_name, slug, category_id')
+        .or(`slug.eq.${searchSlug},slug.eq.${searchSingular},slug.eq.${searchPlural},name.ilike.%${searchSingular}%,display_name.ilike.%${searchSingular}%`)
+        .limit(3);
+      
+      if (matchingSubcats && matchingSubcats.length > 0) {
+        // Usar la primera coincidencia
+        const matchedSub = matchingSubcats[0];
+        subcategoryId = matchedSub.id;
+        subcategoryName = matchedSub.display_name || matchedSub.name;
+        detectedFromSearch = true;
+        
+        console.log('✅ Subcategoría detectada automáticamente:', { 
+          subcategoryId, 
+          subcategoryName,
+          fromSearch: searchQuery 
+        });
+        
+        // También resolver la categoría padre
+        const { data: parentCat } = await supabase
+          .from('categories')
+          .select('id, name, display_name, slug')
+          .eq('id', matchedSub.category_id)
+          .single();
+        
+        if (parentCat) {
+          categoryId = parentCat.id;
+          categoryName = parentCat.display_name || parentCat.name;
+          console.log('✅ Categoría padre resuelta:', { categoryId, categoryName });
+        }
+      }
+    }
 
     if (categorySlug) {
       // Normalizar slug: quitar 's' final para buscar singular/plural
@@ -190,7 +243,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Búsqueda por texto
-    if (searchQuery) {
+    // ✅ FIX: No aplicar búsqueda de texto si ya se detectó subcategoría automáticamente
+    // porque el usuario ya encontró lo que buscaba (ej: "tractores" -> subcategoría Tractores)
+    if (searchQuery && !detectedFromSearch) {
       query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
     }
 
@@ -296,6 +351,13 @@ export async function GET(request: NextRequest) {
       meta: {
         category: categoryName,
         subcategory: subcategoryName,
+        // IDs para que el frontend pueda cargar filtros dinámicos
+        category_id: categoryId,
+        subcategory_id: subcategoryId,
+        // Incluir flag de detección automática para que el frontend pueda actualizar la URL
+        detected_from_search: detectedFromSearch,
+        detected_category_slug: categoryId ? toSlug(categoryName || '') : null,
+        detected_subcategory_slug: subcategoryId ? toSlug(subcategoryName || '') : null,
         elapsed_ms: elapsed,
       }
     });

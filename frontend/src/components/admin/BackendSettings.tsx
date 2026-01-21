@@ -309,7 +309,7 @@ export const BackendSettings: React.FC = () => {
         {displayUrl ? (
           <div className="mb-4 relative">
             <p className="text-sm font-medium text-gray-700 mb-2">
-              {previewUrl ? '🔄 Vista previa:' : 'Imagen actual:'}
+              {previewUrl ? 'Vista previa:' : 'Imagen actual:'}
             </p>
             <div className="relative group">
               <img 
@@ -328,8 +328,8 @@ export const BackendSettings: React.FC = () => {
             </div>
             <p className="text-xs text-gray-400 mt-1">
               {displayUrl.includes('cms-images') 
-                ? '📁 Almacenada en CMS' 
-                : '📦 Placeholder por defecto'}
+                ? 'Almacenada en CMS' 
+                : 'Placeholder por defecto'}
             </p>
           </div>
         ) : (
@@ -346,10 +346,10 @@ export const BackendSettings: React.FC = () => {
           <div className="mb-4">
             <div className="flex items-center justify-between text-sm mb-1">
               <span className="text-gray-700 font-medium">
-                {status === 'validating' && '🔍 Validando...'}
-                {status === 'uploading' && '📤 Subiendo...'}
-                {status === 'updating' && '💾 Guardando...'}
-                {status === 'completed' && '✅ ¡Completado!'}
+                {status === 'validating' && 'Validando...'}
+                {status === 'uploading' && 'Subiendo...'}
+                {status === 'updating' && 'Guardando...'}
+                {status === 'completed' && '¡Completado!'}
               </span>
               <span className="text-gray-600 font-mono">{progress}%</span>
             </div>
@@ -439,10 +439,10 @@ export const BackendSettings: React.FC = () => {
         </p>
         <div className="mt-4 flex items-center gap-4 text-sm">
           <span className="bg-white/20 px-3 py-1 rounded-full">
-            📊 {totalSettings} configuraciones totales
+            {totalSettings} configuraciones totales
           </span>
           <span className="bg-white/20 px-3 py-1 rounded-full">
-            🔒 Solo SuperAdmin
+            Solo SuperAdmin
           </span>
         </div>
       </div>
@@ -467,11 +467,11 @@ export const BackendSettings: React.FC = () => {
                 <div className="flex flex-col items-center gap-1">
                   <span>
                     {section === 'header' && '📋'}
-                    {section === 'content' && '📄'}
-                    {section === 'footer' && '🔽'}
-                    {section === 'general' && '⚙️'}
-                    {section === 'icons' && '🎨'}
-                    {section === 'gallery' && '🖼️'}
+                    {section === 'header' && 'H'}
+                    {section === 'footer' && 'F'}
+                    {section === 'general' && 'G'}
+                    {section === 'icons' && 'I'}
+                    {section === 'gallery' && 'Gal'}
                   </span>
                   <span className="text-sm uppercase tracking-wide">{section}</span>
                   {section !== 'gallery' && section !== 'icons' && <span className="text-xs opacity-75">{count} items</span>}

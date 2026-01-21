@@ -174,7 +174,7 @@ export function GroupsAdmin({
       setGroups(data);
       onGroupsChange?.(data);
     } catch (error) {
-      showMessage('error', '❌ Error cargando grupos');
+      showMessage('error', 'Error cargando grupos');
     } finally {
       setLoading(false);
     }
@@ -253,7 +253,7 @@ export function GroupsAdmin({
       showMessage('success', '✓ Grupo eliminado');
       await loadGroups();
     } catch (error) {
-      showMessage('error', '❌ Error al eliminar');
+      showMessage('error', 'Error al eliminar');
     }
   }
 
@@ -277,7 +277,7 @@ export function GroupsAdmin({
     } catch (error) {
       // Revertir en caso de error
       setGroups(groups);
-      showMessage('error', '❌ Error al reordenar');
+      showMessage('error', 'Error al reordenar');
     }
   }
 
@@ -291,7 +291,7 @@ export function GroupsAdmin({
       showMessage('success', '✓ Grupos por defecto creados');
       await loadGroups();
     } catch (error) {
-      showMessage('error', '❌ Error al crear grupos por defecto');
+      showMessage('error', 'Error al crear grupos por defecto');
     }
   }
 

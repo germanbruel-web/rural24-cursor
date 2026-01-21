@@ -160,7 +160,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
             <>
               {/* Instructions */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold text-blue-900 mb-2">📋 Formato esperado:</h3>
+                <h3 className="font-semibold text-blue-900 mb-2">Formato esperado:</h3>
                 <div className="bg-white rounded p-3 font-mono text-sm mb-3 overflow-x-auto">
                   <pre className="text-gray-700">{columnConfig.example}</pre>
                 </div>
@@ -290,7 +290,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
               {result.errors.length > 0 && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 max-w-2xl mx-auto">
                   <h4 className="font-semibold text-yellow-900 mb-2">
-                    ⚠️ {result.errors.length} errores encontrados:
+                    {result.errors.length} errores encontrados:
                   </h4>
                   <ul className="text-left text-sm text-yellow-800 space-y-1">
                     {result.errors.slice(0, 10).map((err, i) => (

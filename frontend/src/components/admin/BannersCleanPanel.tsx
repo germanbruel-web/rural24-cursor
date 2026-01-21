@@ -371,7 +371,7 @@ export default function BannersCleanPanel() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {banner.impressions || 0} 👁️ / {banner.clicks || 0} 🖱️
+                      {banner.impressions || 0} imp / {banner.clicks || 0} clicks
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">

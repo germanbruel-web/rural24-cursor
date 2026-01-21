@@ -1,10 +1,14 @@
 import { supabase } from './supabaseClient';
 import type { UserRole, UserType } from '../../types';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 export interface UserData {
   id: string;
   email: string;
   full_name?: string;
+  first_name?: string;
+  last_name?: string;
   phone?: string;
   mobile?: string;
   role: UserRole;
@@ -36,54 +40,28 @@ export interface UpdateUserData {
 
 /**
  * Obtener todos los usuarios con conteo de avisos
+ * Usa API del backend con service_role para bypass de RLS
  */
 export const getAllUsers = async (): Promise<{ data: UserData[] | null; error: Error | null }> => {
   try {
-    console.log('📥 Cargando usuarios desde Supabase...');
+    console.log('📥 Cargando usuarios desde API backend...');
 
-    // Obtener usuarios
-    const { data: users, error: usersError } = await supabase
-      .from('users')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const response = await fetch(`${API_BASE}/api/admin/users`);
+    const json = await response.json();
 
-    if (usersError) {
-      console.error('❌ Error loading users:', usersError);
-      return { data: null, error: usersError };
+    if (!json.success) {
+      console.error('❌ Error loading users:', json.error);
+      return { data: null, error: new Error(json.error) };
     }
 
-    // Obtener conteo de avisos por usuario
-    const { data: adsCounts, error: adsError } = await supabase
-      .from('products')
-      .select('seller_id');
-
-    if (adsError) {
-      console.warn('⚠️ Error loading ads count:', adsError);
-    }
-
-    // Contar avisos por usuario
-    const adsCountMap: Record<string, number> = {};
-    if (adsCounts) {
-      adsCounts.forEach(ad => {
-        if (ad.seller_id) {
-          adsCountMap[ad.seller_id] = (adsCountMap[ad.seller_id] || 0) + 1;
-        }
-      });
-    }
-
-    // Agregar conteo de avisos a cada usuario
-    const usersWithAds = users.map(user => ({
-      ...user,
-      ads_count: adsCountMap[user.id] || 0,
-    }));
-
-    console.log(`✅ ${usersWithAds.length} usuarios cargados`);
-    return { data: usersWithAds, error: null };
+    console.log(`✅ ${json.data?.length || 0} usuarios cargados`);
+    return { data: json.data, error: null };
   } catch (error) {
     console.error('❌ Error en getAllUsers:', error);
     return { data: null, error: error as Error };
   }
 };
+
 
 /**
  * Crear un nuevo usuario (Solo SuperAdmin)

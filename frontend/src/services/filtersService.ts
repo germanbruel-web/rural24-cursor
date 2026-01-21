@@ -2,7 +2,7 @@
 // FILTERS SERVICE - Obtener filtros dinámicos desde Backend BFF
 // ====================================================================
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // ====================================================================
 // TIPOS V2 - Con contadores y estructura jerárquica

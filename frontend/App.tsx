@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, Suspense, lazy } from "react";
+import React, { useState, useCallback, useMemo, Suspense, lazy, useEffect } from "react";
 
 // ============================================================
 // TYPES
@@ -33,6 +33,7 @@ import { useAuth, CategoryProvider, ToastProvider } from "./src/contexts";
 // SERVICES
 // ============================================================
 import { smartSearch, getPremiumProducts, getPremiumAds, getActiveAds, getHomepageBanners } from "./src/services";
+import { getSettingNumber } from "./src/services/v2/globalSettingsService";
 
 // ============================================================
 // UTILS & CONSTANTS
@@ -47,13 +48,15 @@ import { PROVINCES, ALL_CATEGORIES } from "./src/constants";
 
 // Admin Panel Components (solo para admins)
 const MyAdsPanel = lazy(() => import("./src/components/admin/MyAdsPanel"));
-const AllAdsPanel = lazy(() => import("./src/components/admin/AllAdsPanel"));
+const AdsManagementPanel = lazy(() => import("./src/components/admin/AdsManagementPanel"));
 const BannersCleanPanel = lazy(() => import("./src/components/admin/BannersCleanPanel"));
 const UsersPanel = lazy(() => import("./src/components/admin/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const CategoriasAdmin = lazy(() => import("./src/components/admin/CategoriasAdmin").then(m => ({ default: m.CategoriasAdmin })));
 const AttributesAdmin = lazy(() => import("./src/components/admin/AttributesAdmin").then(m => ({ default: m.AttributesAdmin })));
 const ContentTemplatesAdmin = lazy(() => import("./src/components/admin/ContentTemplatesAdmin").then(m => ({ default: m.ContentTemplatesAdmin })));
 const BackendSettings = lazy(() => import("./src/components/admin/BackendSettings").then(m => ({ default: m.BackendSettings })));
+const GlobalSettingsPanel = lazy(() => import("./src/components/admin/GlobalSettingsPanel"));
+const PaymentsAdminPanel = lazy(() => import("./src/components/admin/PaymentsAdminPanel"));
 
 // Dashboard Components (solo para usuarios autenticados)
 const MessagesPanel = lazy(() => import("./src/components/dashboard/MessagesPanel").then(m => ({ default: m.MessagesPanel })));
@@ -82,7 +85,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads';
+type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads';
 
 /**
  * Componente principal de AgroBuscador
@@ -124,6 +127,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/inbox') return 'inbox';
     if (hash === '#/pending-ads') return 'pending-ads';
     if (hash === '#/users') return 'users';
+    if (hash === '#/ads-management') return 'ads-management';
     if (hash === '#/banners') return 'banners';
     if (hash === '#/featured-ads') return 'featured-ads';
     if (hash === '#/categories-admin') return 'categories-admin';
@@ -161,12 +165,16 @@ const AppContent: React.FC = () => {
       'my-ads': '#/my-ads',
       'inbox': '#/inbox',
       'all-ads': '#/all-ads',
+      'ads-management': '#/ads-management',
       'users': '#/users',
       'banners': '#/banners',
       'categories-admin': '#/categories-admin',
       'attributes-admin': '#/attributes-admin',
       'templates-admin': '#/templates-admin',
       'backend-settings': '#/backend-settings',
+      'global-settings': '#/global-settings',
+      'featured-queue': '#/featured-queue',
+      'payments-admin': '#/payments-admin',
       'profile': '#/profile',
       'subscription': '#/subscription',
       'contacts': '#/dashboard/contacts',
@@ -218,6 +226,9 @@ const AppContent: React.FC = () => {
   const [adToEdit, setAdToEdit] = useState<Ad | undefined>(undefined);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login');
+  
+  // Estado global para el límite de avisos destacados en HomePage (desde Config Global)
+  const [homepageFeaturedLimit, setHomepageFeaturedLimit] = useState<number | null>(null);
 
   // Hash-based routing
   React.useEffect(() => {
@@ -264,9 +275,12 @@ const AppContent: React.FC = () => {
       // Routing para detalle de aviso: #/ad/:id o #/ad/:slug
       else if (hash.startsWith('#/ad/')) {
         const slugOrId = hash.replace('#/ad/', '');
-        const adId = extractIdFromUrl(slugOrId); // Extrae ID desde slug o UUID
-        console.log('🔍 Navegando a detalle de aviso:', { slugOrId, extractedId: adId });
-        setSelectedAdId(adId);
+        // ✅ FIX: Pasar el slug completo para que getAdById pueda buscar por slug o UUID
+        // extractIdFromUrl solo se usa para logging, no para la búsqueda
+        console.log('🔍 Navegando a detalle de aviso:', { slugOrId });
+        // ✅ FIX: Limpiar isSearching para que AdDetailPage tome prioridad en el render
+        setIsSearching(false);
+        setSelectedAdId(slugOrId); // Pasar slug completo, getAdById soporta slug, UUID y shortId
         navigateToPage('ad-detail');
       } 
       // Routing para páginas de admin/dashboard
@@ -299,6 +313,15 @@ const AppContent: React.FC = () => {
       }
       else if (hash === '#/backend-settings') {
         navigateToPage('backend-settings');
+      }
+      else if (hash === '#/global-settings') {
+        navigateToPage('global-settings');
+      }
+      else if (hash === '#/featured-queue') {
+        navigateToPage('featured-queue');
+      }
+      else if (hash === '#/payments-admin') {
+        navigateToPage('payments-admin');
       }
       else if (hash === '#/profile') {
         navigateToPage('profile');
@@ -395,6 +418,11 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Cargar límite de avisos destacados desde configuración global
+  useEffect(() => {
+    getSettingNumber('homepage_featured_ads_limit', 12).then(setHomepageFeaturedLimit);
+  }, []);
+
   // Función para scroll al top
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -416,12 +444,18 @@ const AppContent: React.FC = () => {
     [products]
   );
 
-  // Búsqueda simple (compatible con SearchBar antiguo)
+  // Búsqueda simple - Navegar a URL con query para que el backend resuelva
   const handleSearch = useCallback(
     (query: string) => {
-      handleAdvancedSearch({ query });
+      // Convertir query a slug para URL amigable
+      const slug = query.trim().toLowerCase().replace(/\s+/g, '-');
+      // Navegar a página de búsqueda con el query como parámetro
+      window.location.hash = `#/search?q=${encodeURIComponent(query.trim())}`;
+      // También activar estado de búsqueda para mostrar la página correcta
+      setIsSearching(true);
+      setSearchFilters({ query: query.trim() });
     },
-    [handleAdvancedSearch]
+    []
   );
 
   const handleBackToHome = () => {
@@ -449,11 +483,25 @@ const AppContent: React.FC = () => {
   console.log('🎯 Estado actual - currentPage:', currentPage, 'isSearching:', isSearching);
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'all-ads', 'banners', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings'].includes(currentPage);
+  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'ads-management', 'banners', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
-    // Verificar permisos para la página actual
+    // Esperar a que cargue el perfil antes de verificar permisos en páginas protegidas
+    const isProtectedPage = ['users', 'ads-management', 'banners', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin'].includes(currentPage);
+    
+    if (authLoading && isProtectedPage) {
+      return (
+        <div className="flex items-center justify-center h-screen bg-gray-50">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando perfil...</p>
+          </div>
+        </div>
+      );
+    }
+    
+    // Verificar permisos para la página actual (solo después de que cargue el perfil)
     if (!canAccessPage(currentPage, profile?.role)) {
       // Redirigir a home si no tiene permisos
       setTimeout(() => {
@@ -488,17 +536,7 @@ const AppContent: React.FC = () => {
               handleBackToHome();
             }
           }}>
-            {/* Mostrar loading mientras se carga el perfil para páginas protegidas */}
-            {authLoading && (currentPage === 'categories-admin' || currentPage === 'users' || currentPage === 'all-ads') && (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-600">Cargando perfil...</p>
-                </div>
-              </div>
-            )}
-            
-            {/* Renderizar contenido cuando no está loading o la página no requiere auth */}
+            {/* Renderizar contenido */}
             {!authLoading && (
               <Suspense fallback={<LoadingFallback />}>
                 {currentPage === 'profile' && <ProfilePanel />}
@@ -507,12 +545,14 @@ const AppContent: React.FC = () => {
                 {currentPage === 'users' && canAccessPage('users', profile?.role) && <UsersPanel />}
                 {currentPage === 'my-ads' && <MyAdsPanel />}
                 {currentPage === 'inbox' && <MessagesPanel />}
-                {currentPage === 'all-ads' && canAccessPage('all-ads', profile?.role) && <AllAdsPanel />}
+                {currentPage === 'ads-management' && canAccessPage('ads-management', profile?.role) && <AdsManagementPanel />}
                 {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersCleanPanel />}
                 {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <CategoriasAdmin />}
                 {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <AttributesAdmin />}
                 {currentPage === 'templates-admin' && canAccessPage('templates-admin', profile?.role) && <ContentTemplatesAdmin />}
                 {currentPage === 'backend-settings' && canAccessPage('backend-settings', profile?.role) && <BackendSettings />}
+                {currentPage === 'global-settings' && canAccessPage('global-settings', profile?.role) && <GlobalSettingsPanel />}
+                {currentPage === 'payments-admin' && canAccessPage('payments-admin', profile?.role) && <PaymentsAdminPanel />}
                 {currentPage === 'settings' && (
                   <div className="bg-white rounded-lg shadow p-6">
                     <h2 className="text-2xl font-bold mb-4">Configuración</h2>
@@ -736,21 +776,43 @@ const AppContent: React.FC = () => {
           <HowItWorksSection onRegisterClick={() => setShowAuthModal(true)} />
 
           {/* 🌟 Avisos Destacados por Categoría (Seleccionados por Superadmin) */}
-          <FeaturedAdsSection
-            onAdClick={(adId) => {
-              setSelectedAdId(adId);
-              setCurrentPage('ad-detail');
-              window.location.hash = `#/ad/${adId}`;
-            }}
-            onCategoryClick={(categorySlug) => {
-              // Navegar a URL con filtro de categoría
-              window.location.hash = `#/search?cat=${categorySlug}`;
-            }}
-            onSubcategoryClick={(catSlug, subSlug) => {
-              // Navegar a URL con filtros de categoría y subcategoría
-              window.location.hash = `#/search?cat=${catSlug}&sub=${subSlug}`;
-            }}
-          />
+          {/* Setting dinámico para cantidad de avisos destacados */}
+          {/** UX: loading skeleton si el setting no está listo **/}
+          {typeof homepageFeaturedLimit === 'number' ? (
+            <FeaturedAdsSection
+              onAdClick={(adId) => {
+                setSelectedAdId(adId);
+                setCurrentPage('ad-detail');
+                window.location.hash = `#/ad/${adId}`;
+              }}
+              onCategoryClick={(categorySlug) => {
+                window.location.hash = `#/search?cat=${categorySlug}`;
+              }}
+              onSubcategoryClick={(catSlug, subSlug) => {
+                window.location.hash = `#/search?cat=${catSlug}&sub=${subSlug}`;
+              }}
+              maxAdsPerCategory={homepageFeaturedLimit}
+            />
+          ) : (
+            <section className="py-8 sm:py-12 bg-white" aria-busy="true" aria-label="Cargando avisos destacados">
+              <div className="max-w-7xl mx-auto px-3 sm:px-4">
+                <div className="h-12 bg-gray-200 rounded animate-pulse mb-6" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                      <div className="w-full aspect-[4/3] bg-gray-200 animate-pulse" />
+                      <div className="p-3 space-y-2">
+                        <div className="h-3 bg-gray-200 rounded animate-pulse" />
+                        <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse" />
+                        <div className="h-5 bg-gray-200 rounded w-1/2 animate-pulse mt-3" />
+                        <div className="h-8 bg-gray-200 rounded animate-pulse mt-3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* Sistema de avisos destacados dinámico - ya integrado arriba con FeaturedAdsSection */}
         </main>

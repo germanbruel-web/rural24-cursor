@@ -235,7 +235,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
       {!isSuperAdmin && adLimit.current >= adLimit.limit && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-800 font-medium">
-            ⚠️ Has alcanzado el límite de avisos de tu plan. Para publicar más avisos, 
+            Has alcanzado el límite de avisos de tu plan. Para publicar más avisos, 
             elimina o pausa algunos existentes.
           </p>
         </div>
@@ -325,7 +325,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">
-                      👁️ {ad.views_count || 0}
+                      {ad.views_count || 0} vistas
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
@@ -436,7 +436,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Visitas</label>
-                  <p className="text-gray-900">👁️ {selectedAdForView.views_count || 0}</p>
+                  <p className="text-gray-900">{selectedAdForView.views_count || 0}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Creado</label>
@@ -493,7 +493,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
                 <p className="text-red-800 text-sm text-center font-medium">
-                  ⚠️ Esta acción es PERMANENTE y no se puede deshacer
+                  Esta acción es PERMANENTE y no se puede deshacer
                 </p>
               </div>
               

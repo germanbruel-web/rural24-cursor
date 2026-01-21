@@ -58,6 +58,34 @@ import { DynamicFormLoader } from '../forms/DynamicFormLoader';
 import { TemplateSuggestions } from '../forms/TemplateSuggestions';
 
 // ====================================================================
+// DESIGN SYSTEM RURAL24 - Estilos consistentes de formularios
+// ====================================================================
+const DS = {
+  // Input/Select base - Design System RURAL24
+  input: 'w-full px-4 py-3 text-base bg-white border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder:text-gray-400',
+  
+  // Input con error
+  inputError: 'w-full px-4 py-3 text-base bg-white border-2 border-error rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-error focus:border-transparent placeholder:text-gray-400',
+  
+  // Label
+  label: 'block text-sm font-semibold text-gray-700 mb-2',
+  
+  // Helper text
+  helperText: 'mt-1.5 text-sm text-gray-500',
+  
+  // Error text
+  errorText: 'mt-1.5 text-sm text-error flex items-center gap-1',
+  
+  // Checkbox
+  checkbox: 'h-5 w-5 text-primary-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all',
+  
+  // Card seleccionable
+  cardSelectable: 'w-full p-4 sm:p-5 rounded-xl border-2 transition-all text-left',
+  cardSelectableDefault: 'border-gray-200 hover:border-primary-400 hover:bg-primary-50',
+  cardSelectableActive: 'border-primary-500 bg-primary-50 shadow-md',
+};
+
+// ====================================================================
 // WIZARD STEPS
 // ====================================================================
 const STEPS = [
@@ -1072,10 +1100,10 @@ export default function PublicarAviso() {
                                   setSelectedSubcategory('');
                                 }
                               }}
-                              className={`w-full p-5 sm:p-6 rounded-xl border-2 transition-all text-left ${
+                              className={`${DS.cardSelectable} ${
                                 isSelected
-                                  ? 'border-green-500 bg-green-50 shadow-md'
-                                  : 'border-gray-200 hover:border-green-400 hover:bg-green-50'
+                                  ? DS.cardSelectableActive
+                                  : DS.cardSelectableDefault
                               }`}
                             >
                               <div className="flex items-center justify-between">
@@ -1090,7 +1118,7 @@ export default function PublicarAviso() {
                                   )}
                                 </div>
                                 <ChevronRight
-                                  className={`w-6 h-6 text-green-600 flex-shrink-0 ml-3 transition-transform ${
+                                  className={`w-6 h-6 text-primary-600 flex-shrink-0 ml-3 transition-transform ${
                                     isExpanded ? 'rotate-90' : ''
                                   }`}
                                 />
@@ -1204,9 +1232,8 @@ export default function PublicarAviso() {
                 <div className="space-y-4">
                   {/* Provincia */}
                   <Card variant="default" padding="md">
-                    <label className="flex items-center gap-2 text-lg font-bold text-gray-900 mb-3">
-                      <MapPin className="w-5 h-5 text-green-600" />
-                      Provincia *
+                    <label className={DS.label}>
+                      Provincia <span className="text-error">*</span>
                     </label>
                     <select
                       value={province}
@@ -1214,7 +1241,7 @@ export default function PublicarAviso() {
                         setProvince(e.target.value);
                         setLocality('');
                       }}
-                      className="w-full px-5 py-4 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white"
+                      className={DS.input}
                     >
                       <option value="">Seleccionar provincia</option>
                       {PROVINCES.map((prov) => (
@@ -1227,15 +1254,14 @@ export default function PublicarAviso() {
 
                   {/* Localidad */}
                   <Card variant="default" padding="md">
-                    <label className="flex items-center gap-2 text-lg font-bold text-gray-900 mb-3">
-                      <MapPin className="w-5 h-5 text-green-600" />
-                      Localidad {province && '*'}
+                    <label className={DS.label}>
+                      Localidad {province && <span className="text-error">*</span>}
                     </label>
                     {province ? (
                       <select
                         value={locality}
                         onChange={(e) => setLocality(e.target.value)}
-                        className="w-full px-5 py-4 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white"
+                        className={DS.input}
                       >
                         <option value="">Seleccionar localidad</option>
                         {(LOCALITIES_BY_PROVINCE[province] || []).map((loc) => (
@@ -1245,7 +1271,7 @@ export default function PublicarAviso() {
                         ))}
                       </select>
                     ) : (
-                      <div className="w-full px-5 py-4 text-base sm:text-lg rounded-xl border-2 border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed flex items-center">
+                      <div className="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed flex items-center">
                         Selecciona primero una provincia
                       </div>
                     )}
@@ -1363,9 +1389,9 @@ export default function PublicarAviso() {
 
                 {/* Sugerencias de título */}
                 {/* Título */}
-                <div className="space-y-2">
-                  <label className="block text-lg font-bold text-gray-900">
-                    Título del aviso <span className="text-red-500">*</span>
+                <div className="space-y-1.5">
+                  <label className={DS.label}>
+                    Título del aviso <span className="text-error">*</span>
                   </label>
                   <input
                     type="text"
@@ -1373,18 +1399,14 @@ export default function PublicarAviso() {
                     onChange={(e) => handleTitleChange(e.target.value)}
                     placeholder="Ej: Tractor John Deere 5070E con pala frontal"
                     maxLength={100}
-                    className={`w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 transition-all ${
-                      titleError
-                        ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-100 bg-red-50'
-                        : 'border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100'
-                    }`}
+                    className={titleError ? DS.inputError : DS.input}
                   />
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-500">
+                    <p className={DS.helperText}>
                       {title.length}/100 caracteres
                     </p>
                     {titleError && (
-                      <p className="text-sm font-semibold text-red-600 flex items-center gap-1">
+                      <p className={DS.errorText}>
                         <AlertCircle className="w-4 h-4" />
                         Validando...
                       </p>
@@ -1403,9 +1425,9 @@ export default function PublicarAviso() {
                 </div>
 
                 {/* Descripción */}
-                <div className="space-y-2">
-                  <label className="block text-lg font-bold text-gray-900">
-                    Descripción <span className="text-red-500">*</span>
+                <div className="space-y-1.5">
+                  <label className={DS.label}>
+                    Descripción <span className="text-error">*</span>
                   </label>
                   <textarea
                     value={description}
@@ -1413,26 +1435,22 @@ export default function PublicarAviso() {
                     placeholder="Describe tu producto con el mayor detalle posible. Incluye características, estado, año, etc."
                     rows={6}
                     maxLength={2000}
-                    className={`w-full px-5 py-5 text-base sm:text-lg rounded-xl border-2 transition-all resize-none ${
-                      descriptionError
-                        ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-100 bg-red-50'
-                        : 'border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100'
-                    }`}
+                    className={`${descriptionError ? DS.inputError : DS.input} min-h-[120px] resize-y`}
                   />
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-500">
+                    <p className={DS.helperText}>
                       {description.length}/2000 caracteres
                     </p>
                     {descriptionError && (
-                      <p className="text-sm font-semibold text-red-600 flex items-center gap-1">
+                      <p className={DS.errorText}>
                         <AlertCircle className="w-4 h-4" />
                         Validando...
                       </p>
                     )}
                   </div>
                   {descriptionError ? (
-                    <div className="flex items-start gap-2 p-3 bg-red-50 border-2 border-red-300 rounded-lg">
-                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-2 p-3 bg-red-50 border-2 border-error rounded-lg">
+                      <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
                       <p className="text-sm font-medium text-red-700">{descriptionError}</p>
                     </div>
                   ) : (
@@ -1444,7 +1462,7 @@ export default function PublicarAviso() {
 
                 {/* Precio */}
                 <div className="space-y-4">
-                  <label className="block text-lg font-bold text-gray-900">
+                  <label className={DS.label}>
                     Precio
                   </label>
 
@@ -1457,9 +1475,9 @@ export default function PublicarAviso() {
                         setPriceNegotiable(e.target.checked);
                         if (e.target.checked) setPrice('');
                       }}
-                      className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+                      className={DS.checkbox}
                     />
-                    <span className="text-base font-semibold text-gray-700 group-hover:text-green-600 transition-colors flex items-center gap-2">
+                    <span className="text-base font-medium text-gray-700 group-hover:text-primary-600 transition-colors flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
                       A Convenir (no especificar precio)
                     </span>
@@ -1474,9 +1492,9 @@ export default function PublicarAviso() {
                           value={formatPriceDisplay(price)}
                           onChange={(e) => setPrice(cleanPrice(e.target.value))}
                           placeholder="50000"
-                          className="w-full px-5 py-4 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+                          className={DS.input}
                         />
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className={DS.helperText}>
                           Solo números enteros (sin centavos)
                         </p>
                       </div>
@@ -1485,7 +1503,7 @@ export default function PublicarAviso() {
                         <select
                           value={currency}
                           onChange={(e) => setCurrency(e.target.value as 'ARS' | 'USD')}
-                          className="w-full px-5 py-4 text-base sm:text-lg rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all bg-white"
+                          className={DS.input}
                         >
                           <option value="ARS">ARS $</option>
                           <option value="USD">USD $</option>
@@ -1496,10 +1514,10 @@ export default function PublicarAviso() {
 
                   {/* Preview del precio formateado */}
                   {price && !priceNegotiable && (
-                    <div className="flex items-center gap-2 p-3 bg-green-50 border-2 border-green-200 rounded-lg">
-                      <DollarSign className="w-5 h-5 text-green-600" />
+                    <div className="flex items-center gap-2 p-3 bg-primary-50 border-2 border-primary-200 rounded-lg">
+                      <DollarSign className="w-5 h-5 text-primary-600" />
                       <span className="text-sm text-gray-700">
-                        Se publicará como: <strong className="text-green-700 text-lg">{formatCurrency(price, currency)}</strong>
+                        Se publicará como: <strong className="text-primary-700 text-lg">{formatCurrency(price, currency)}</strong>
                       </span>
                     </div>
                   )}

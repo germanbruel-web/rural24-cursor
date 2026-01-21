@@ -55,12 +55,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     return `${symbol} ${formatted}`;
   };
 
-  // Navegación con slug SEO
+  // Navegación con slug SEO (usar product.slug si está disponible)
   const handleCardClick = (e: React.MouseEvent) => {
     // Prevenir navegación si se hace click en botones
     if ((e.target as HTMLElement).closest('button')) return;
     
-    if (product.id && product.title) {
+    if (product.slug) {
+      window.location.hash = `#/ad/${product.slug}`;
+    } else if (product.id && product.title) {
       // Usar short_id si está disponible, sino fallback a UUID
       const shortId = (product as any).short_id;
       const url = getAdDetailUrl(product.title, product.id, shortId);

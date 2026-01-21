@@ -1,156 +1,207 @@
 /**
- * FeaturedAdsByCategory - Muestra avisos destacados agrupados por categoría
- * Diseño: Título (izq) + Carrusel Banner 650px (der) + Grid 4 columnas + Links subcategorías
+ * FeaturedAdsSection - Avisos Destacados por Categoría
+ * 
+ * Estructura HTML semántica:
+ * - section#HomePage_FeaturedAds_Container
+ *   - article#HomePage_bloque_Cat_{category_id}  (por cada categoría)
+ *     - header: Título + BannerSlider
+ *     - div#HomePage_grid_Cat_{category_id}: Grid de productos
+ *     - nav: Links de subcategorías
+ * 
+ * Mobile First: 1col → 2col (sm) → 3col (md) → 4col (lg) → 5col (xl)
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { getFeaturedAdsByCategories, type FeaturedAdsByCategory } from '../../services/featuredAdsService';
 import { ProductCard } from '../organisms/ProductCard';
 import { SubcategoriesExpressBar } from './SubcategoriesExpressBar';
-import { CategoryBannerCarousel } from './CategoryBannerCarousel';
+import { CategoryBannerSlider } from './CategoryBannerSlider';
 
-interface Props {
+interface FeaturedAdsSectionProps {
   onAdClick?: (adId: string) => void;
   onCategoryClick?: (categorySlug: string) => void;
   onSubcategoryClick?: (categorySlug: string, subcategorySlug: string) => void;
+  /** Cantidad máxima de avisos por categoría */
+  maxAdsPerCategory?: number;
 }
 
-export const FeaturedAdsSection: React.FC<Props> = ({ 
+export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({ 
   onAdClick, 
   onCategoryClick,
-  onSubcategoryClick 
+  onSubcategoryClick,
+  maxAdsPerCategory = 12
 }) => {
   const [categoriesData, setCategoriesData] = useState<FeaturedAdsByCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadFeaturedAds();
-  }, []);
-
-  const loadFeaturedAds = async () => {
-    console.log('🚀 FeaturedAdsSection - loadFeaturedAds START');
+  const loadFeaturedAds = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const data = await getFeaturedAdsByCategories(12); // 12 avisos por categoría
-      console.log('📦 FeaturedAdsSection - data received:', { 
-        categoriesCount: data.length,
-        categories: data.map(c => ({ name: c.category_name, adsCount: c.ads.length }))
-      });
+      const data = await getFeaturedAdsByCategories(maxAdsPerCategory);
       setCategoriesData(data);
     } catch (err) {
-      console.error('❌ FeaturedAdsSection - ERROR:', err);
+      console.error('[FeaturedAdsSection] Error loading featured ads:', err);
+      setError('Error al cargar avisos destacados');
     } finally {
       setLoading(false);
     }
-  };
+  }, [maxAdsPerCategory]);
 
+  useEffect(() => {
+    loadFeaturedAds();
+  }, [loadFeaturedAds]);
+
+  // Estado de carga - Skeleton Mobile First
   if (loading) {
     return (
-      <section className="py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Skeleton de 2 categorías con 3 cards cada una */}
+      <section 
+        id="HomePage_FeaturedAds_Container"
+        className="py-8 sm:py-12 bg-white"
+        aria-busy="true"
+        aria-label="Cargando avisos destacados"
+      >
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
           {[1, 2].map((catIndex) => (
-            <div key={catIndex} className={`mb-16 ${catIndex > 1 ? 'pt-8 border-t border-gray-200' : ''}`}>
-              {/* Skeleton Header */}
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-1.5 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-                <div className="h-8 w-48 bg-gray-200 rounded-lg animate-pulse"></div>
-              </div>
+            <article 
+              key={catIndex} 
+              className={`mb-12 sm:mb-16 ${catIndex > 1 ? 'pt-6 sm:pt-8 border-t border-gray-200' : ''}`}
+            >
+              {/* Skeleton Header - Stack en mobile, row en lg */}
+              <header className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-1 sm:w-1.5 h-6 sm:h-8 bg-gray-200 rounded-full animate-pulse" />
+                  <div className="h-6 sm:h-8 w-32 sm:w-48 bg-gray-200 rounded-lg animate-pulse" />
+                </div>
+                {/* Banner skeleton - full width mobile, 650px desktop */}
+                <div className="w-full lg:w-[650px] lg:ml-auto h-16 sm:h-20 bg-gray-200 animate-pulse rounded" />
+              </header>
               
-              {/* Skeleton Grid 3 columnas */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[1, 2, 3].map((cardIndex) => (
-                  <div key={cardIndex} className="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100">
-                    {/* Skeleton Imagen */}
-                    <div className="w-full aspect-[16/9] bg-gray-200 animate-pulse"></div>
-                    
-                    {/* Skeleton Contenido */}
-                    <div className="p-5 space-y-3">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                      <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
-                      <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse mt-4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse"></div>
-                      <div className="h-10 bg-gray-200 rounded animate-pulse mt-4"></div>
+              {/* Skeleton Grid - Mobile First: 1 → 2 → 3 → 4 → 5 columnas */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                {[1, 2, 3, 4].map((cardIndex) => (
+                  <div 
+                    key={cardIndex} 
+                    className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border border-gray-100"
+                  >
+                    <div className="w-full aspect-[4/3] bg-gray-200 animate-pulse" />
+                    <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                      <div className="h-3 sm:h-4 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                      <div className="h-5 sm:h-6 bg-gray-200 rounded w-1/2 animate-pulse mt-3 sm:mt-4" />
+                      <div className="h-8 sm:h-10 bg-gray-200 rounded animate-pulse mt-3 sm:mt-4" />
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </article>
           ))}
         </div>
       </section>
     );
   }
 
-  if (categoriesData.length === 0) {
-    return null; // No mostrar nada si no hay avisos destacados
+  // Sin datos o error
+  if (error || categoriesData.length === 0) {
+    return null;
   }
 
   return (
-    <section className="py-12 bg-white">
-      <div className="max-w-7xl mx-auto px-4">
+    <section 
+      id="HomePage_FeaturedAds_Container"
+      className="py-8 sm:py-12 bg-white"
+      aria-label="Avisos destacados por categoría"
+    >
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
 
-        {/* Por cada categoría */}
-        {categoriesData.map((catData, idx) => (
-          <div 
-            key={catData.category_id}
-            id={catData.category_slug}
-            className={`mb-16 last:mb-0 ${idx > 0 ? 'pt-8 border-t border-gray-200' : ''}`}
-          >
-            
-            {/* Header: Título (izq) + Carrusel Banner 650px (der) */}
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-              {/* Título de la Categoría */}
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <span className="w-1.5 h-8 bg-green-600 rounded-full"></span>
-                {catData.category_name}
-              </h3>
+        {/* Por cada categoría con avisos destacados */}
+        {categoriesData.map((catData, idx) => {
+          // IDs dinámicos para cada bloque
+          const blockId = `HomePage_bloque_Cat_${catData.category_id}`;
+          const gridId = `HomePage_grid_Cat_${catData.category_id}`;
+          const bannerId = `HomePage_banner_Cat_${catData.category_id}`;
+          
+          return (
+            <article 
+              key={catData.category_id}
+              id={blockId}
+              data-category-slug={catData.category_slug}
+              className={`mb-12 sm:mb-16 last:mb-0 ${idx > 0 ? 'pt-6 sm:pt-8 border-t border-gray-200' : ''}`}
+            >
+              
+              {/* Header: Título + Banner Slider - Stack en mobile, row en lg */}
+              <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+                {/* Título de la Categoría */}
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+                  <span 
+                    className="w-1 sm:w-1.5 h-6 sm:h-8 bg-green-600 rounded-full" 
+                    aria-hidden="true"
+                  />
+                  <button
+                    onClick={() => onCategoryClick?.(catData.category_slug)}
+                    className="hover:text-green-700 transition-colors"
+                  >
+                    {catData.category_name}
+                  </button>
+                </h2>
 
-              {/* Carrusel de Banners - 650px alineado derecha */}
-              <CategoryBannerCarousel
-                banners={catData.banners}
-                categorySlug={catData.category_slug}
-                onCategoryClick={onCategoryClick}
-              />
-            </div>
-
-            {/* Grid Responsive: Mobile 2, Tablet 3, Desktop 5 */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 mb-4">
-              {catData.ads.map((ad) => {
-                // Extraer URL de imagen correctamente (soporta string y objeto {url, path})
-                const firstImage = ad.images?.[0];
-                const imageUrl = typeof firstImage === 'string' 
-                  ? firstImage 
-                  : (firstImage?.url || ad.image_urls?.[0] || '');
-                
-                return (
-                <ProductCard
-                  key={ad.id}
-                  product={{
-                    ...ad,
-                    category: catData.category_name, // Agregar categoría para badges contextuales
-                    imageUrl,
-                    images: ad.images, // Pasar images completo para useProductImage
-                    sourceUrl: '',
-                    isSponsored: ad.is_premium || false,
-                  }}
-                  variant="featured"
-                  showBadges={true}
-                  showLocation={true}
-                  onViewDetail={() => onAdClick?.(ad.id)}
+                {/* Banner Slider - Full width mobile, 650px desktop */}
+                <CategoryBannerSlider
+                  id={bannerId}
+                  banners={catData.banners}
+                  categorySlug={catData.category_slug}
+                  onCategoryClick={onCategoryClick}
                 />
-                );
-              })}
-            </div>
+              </header>
 
-            {/* Links sutiles de subcategorías debajo de las cards */}
-            <SubcategoriesExpressBar
-              categorySlug={catData.category_slug}
-              subcategories={catData.subcategories}
-              onSubcategoryClick={onSubcategoryClick}
-            />
-          </div>
-        ))}
+              {/* Grid de Productos - Mobile First Responsive */}
+              <div 
+                id={gridId}
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4"
+              >
+                {catData.ads.map((ad, adIdx) => {
+                  // Extraer URL de imagen correctamente
+                  const firstImage = ad.images?.[0];
+                  const imageUrl = typeof firstImage === 'string' 
+                    ? firstImage 
+                    : ((firstImage as { url?: string })?.url || ad.image_urls?.[0] || '');
+                  
+                  return (
+                    <div 
+                      key={ad.id}
+                      id={`HomePage_ad_${ad.id}`}
+                      data-position={adIdx + 1}
+                    >
+                      <ProductCard
+                        product={{
+                          ...ad,
+                          category: catData.category_name,
+                          location: ad.location || '',
+                          imageUrl,
+                          images: ad.images,
+                          sourceUrl: '',
+                          isSponsored: (ad as any).is_premium || false,
+                        }}
+                        variant="featured"
+                        showBadges={true}
+                        showLocation={true}
+                        onViewDetail={() => onAdClick?.(ad.id)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Links de subcategorías */}
+              <SubcategoriesExpressBar
+                categorySlug={catData.category_slug}
+                subcategories={catData.subcategories}
+                onSubcategoryClick={onSubcategoryClick}
+              />
+            </article>
+          );
+        })}
       </div>
     </section>
   );

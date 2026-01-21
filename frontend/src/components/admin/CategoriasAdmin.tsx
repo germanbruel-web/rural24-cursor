@@ -198,18 +198,18 @@ export const CategoriasAdmin: React.FC = () => {
       
       resetForm();
       loadData();
-      alert(`✅ ${editingItem ? 'Actualizado' : 'Creado'} exitosamente`);
+      alert(`${editingItem ? 'Actualizado' : 'Creado'} exitosamente`);
     } catch (error: any) {
-      alert('❌ Error: ' + error.message);
+      alert('Error: ' + error.message);
     }
   };
 
   const handleDelete = async (item: any, type: ItemType) => {
     const warningText = type === 'category' 
-      ? '⚠️ Esto eliminará TODAS las subcategorías, tipos y marcas relacionadas.'
+      ? 'Esto eliminará TODAS las subcategorías, tipos y marcas relacionadas.'
       : type === 'subcategory'
-      ? '⚠️ Esto eliminará TODOS los tipos y marcas relacionadas.'
-      : '⚠️ Esto eliminará TODAS las marcas relacionadas.';
+      ? 'Esto eliminará TODOS los tipos y marcas relacionadas.'
+      : 'Esto eliminará TODAS las marcas relacionadas.';
     
     if (!confirm(`¿Eliminar "${item.display_name}"?\n\n${warningText}`)) {
       return;
@@ -225,9 +225,9 @@ export const CategoriasAdmin: React.FC = () => {
       }
       
       loadData();
-      alert('✅ Eliminado exitosamente');
+      alert('Eliminado exitosamente');
     } catch (error: any) {
-      alert('❌ Error al eliminar: ' + error.message);
+      alert('Error al eliminar: ' + error.message);
     }
   };
 
@@ -440,7 +440,7 @@ export const CategoriasAdmin: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6">
             <h3 className="text-2xl font-bold text-gray-900 mb-6">
-              {editingItem ? '✏️ Editar' : '➕ Nueva'} {
+              {editingItem ? 'Editar' : 'Nueva'} {
                 formType === 'category' ? 'Categoría' :
                 formType === 'subcategory' ? 'Subcategoría' : 'Tipo'
               }
@@ -503,7 +503,7 @@ export const CategoriasAdmin: React.FC = () => {
                   type="submit"
                   className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold"
                 >
-                  {editingItem ? '💾 Guardar Cambios' : '✅ Crear'}
+                  {editingItem ? 'Guardar Cambios' : 'Crear'}
                 </button>
               </div>
             </form>

@@ -513,9 +513,9 @@ export function ContentTemplatesAdmin() {
           >
             <option value="all">Todos los niveles</option>
             <option value="global">🌐 Global</option>
-            <option value="category">📁 Categoría</option>
+            <option value="category">Categoría</option>
             <option value="subcategory">📂 Subcategoría</option>
-            <option value="type">🏷️ Tipo</option>
+            <option value="type">Tipo</option>
           </select>
           
           <select

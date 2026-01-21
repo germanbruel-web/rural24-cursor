@@ -284,10 +284,10 @@ export const CategoryIconsCMS: React.FC = () => {
         </p>
         <div className="mt-4 flex items-center gap-4 text-sm">
           <span className="bg-white/20 px-3 py-1 rounded-full">
-            📊 {icons.length} iconos
+            {icons.length} iconos
           </span>
           <span className="bg-white/20 px-3 py-1 rounded-full">
-            🎯 Solo Hero Homepage
+            Solo Hero Homepage
           </span>
         </div>
       </div>
@@ -350,7 +350,7 @@ export const CategoryIconsCMS: React.FC = () => {
 
               {/* Tipo */}
               <p className="text-xs text-gray-500 text-center mt-1">
-                {icon.storage_path ? '☁️ Supabase' : '📁 Estático'}
+                {icon.storage_path ? 'Supabase' : 'Estático'}
               </p>
 
               {/* Actions */}
@@ -401,7 +401,7 @@ export const CategoryIconsCMS: React.FC = () => {
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900">
-                {editingIcon ? '✏️ Editar Icono' : '➕ Nuevo Icono'}
+                {editingIcon ? 'Editar Icono' : 'Nuevo Icono'}
               </h3>
               <button
                 onClick={closeModal}

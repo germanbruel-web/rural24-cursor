@@ -17,7 +17,7 @@ const BANNER_TYPES = {
     },
     location: 'homepage',
     color: 'from-purple-600 to-pink-600',
-    icon: '⭐',
+    icon: 'VIP',
   },
   homepage_category: {
     code: 'BC',
@@ -29,7 +29,7 @@ const BANNER_TYPES = {
     },
     location: 'homepage',
     color: 'from-green-600 to-emerald-600',
-    icon: '🏷️',
+    icon: 'CAT',
   },
   results_lateral: {
     code: 'RL',
@@ -41,7 +41,7 @@ const BANNER_TYPES = {
     },
     location: 'results',
     color: 'from-blue-600 to-cyan-600',
-    icon: '📌',
+    icon: 'LAT',
   },
   results_intercalated: {
     code: 'RI',
@@ -53,7 +53,7 @@ const BANNER_TYPES = {
     },
     location: 'results',
     color: 'from-orange-600 to-red-600',
-    icon: '🔄',
+    icon: 'INT',
   },
 };
 
@@ -171,7 +171,7 @@ export default function BannersPanel() {
         console.log('🔄 FormData actualizado:', updated);
         return updated;
       });
-      notify.success('✅ Imagen subida a Cloudinary: Home/banners/');
+      notify.success('Imagen subida a Cloudinary: Home/banners/');
     } catch (error) {
       console.error('❌ Error subiendo imagen:', error);
       notify.error('Error al subir imagen');
@@ -186,7 +186,7 @@ export default function BannersPanel() {
     
     // 1. Tipo de banner (campo requerido por sistema)
     if (!formData.type) {
-      notify.error('❌ El tipo de banner es obligatorio');
+      notify.error('El tipo de banner es obligatorio');
       return;
     }
 
@@ -203,13 +203,13 @@ export default function BannersPanel() {
       trimmed: formData.image_url?.trim()
     });
     if (!formData.image_url || !formData.image_url.trim()) {
-      notify.error('❌ Debes subir una imagen para el banner');
+      notify.error('Debes subir una imagen para el banner');
       return;
     }
 
     // 5. Categoría OBLIGATORIA para todos los tipos
     if (!formData.category || !formData.category.trim()) {
-      notify.error('❌ La categoría es obligatoria para todos los banners');
+      notify.error('La categoría es obligatoria para todos los banners');
       return;
     }
 
@@ -218,7 +218,7 @@ export default function BannersPanel() {
       try {
         new URL(formData.link_url);
       } catch {
-        notify.error('❌ La URL de destino no es válida (debe comenzar con http:// o https://)');
+        notify.error('La URL de destino no es válida (debe comenzar con http:// o https://)');
         return;
       }
     }
@@ -229,7 +229,7 @@ export default function BannersPanel() {
     
     // Notificación informativa (no bloquea)
     if (!editingBanner) {
-      notify.info(`📐 Asegúrate que la imagen tenga ${requiredDimensions}`, { duration: 5000 });
+      notify.info(`Asegúrate que la imagen tenga ${requiredDimensions}`, { duration: 5000 });
     }
 
     // Preparar datos finales con fallbacks
@@ -246,11 +246,11 @@ export default function BannersPanel() {
       if (editingBanner) {
         const { error } = await bannersService.updateBanner(editingBanner.id, finalFormData);
         if (error) throw error;
-        notify.success('✅ Banner actualizado correctamente');
+        notify.success('Banner actualizado correctamente');
       } else {
         const { error } = await bannersService.createBanner(finalFormData);
         if (error) throw error;
-        notify.success('✅ Banner creado correctamente');
+        notify.success('Banner creado correctamente');
       }
       
       setShowAddModal(false);
@@ -338,7 +338,7 @@ export default function BannersPanel() {
 
       notify.success(
         newPriorityStatus 
-          ? '⭐ Banner marcado como PRIORITARIO - Se mostrará primero en homepage'
+          ? 'Banner marcado como PRIORITARIO - Se mostrará primero en homepage'
           : 'Banner desmarcado como prioritario - Rotación random activada'
       );
       loadBanners();
@@ -441,7 +441,7 @@ export default function BannersPanel() {
             }`}
           >
             <div className="flex items-center justify-center gap-2">
-              <span className="text-xl">🏠</span>
+              <Monitor className="w-5 h-5" />
               <span>Homepage</span>
               <span className="px-2 py-0.5 text-xs rounded-full bg-gray-200">
                 {banners.filter(b => BANNER_TYPES[b.type]?.location === 'homepage').length}
@@ -457,7 +457,7 @@ export default function BannersPanel() {
             }`}
           >
             <div className="flex items-center justify-center gap-2">
-              <span className="text-xl">📄</span>
+              <ExternalLink className="w-5 h-5" />
               <span>Página Resultados</span>
               <span className="px-2 py-0.5 text-xs rounded-full bg-gray-200">
                 {banners.filter(b => BANNER_TYPES[b.type]?.location === 'results').length}
@@ -623,11 +623,11 @@ export default function BannersPanel() {
                     {BANNER_TYPES[banner.type].description}
                   </p>
                   <p className="text-xs text-gray-500">
-                    📏 Desktop: {BANNER_TYPES[banner.type].dimensions.desktop} • Mobile: {BANNER_TYPES[banner.type].dimensions.mobile}
+                    Desktop: {BANNER_TYPES[banner.type].dimensions.desktop} • Mobile: {BANNER_TYPES[banner.type].dimensions.mobile}
                   </p>
                   {banner.link_url && (
                     <p className="text-xs text-gray-500 mt-1 truncate">
-                      🔗 {banner.link_url}
+                      Link: {banner.link_url}
                     </p>
                   )}
                 </div>
@@ -708,7 +708,7 @@ export default function BannersPanel() {
                   readOnly
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  🤖 Auto-extraído del filename al seleccionar imagen
+                  Auto-extraído del filename al seleccionar imagen
                 </p>
               </div>
 
@@ -729,7 +729,7 @@ export default function BannersPanel() {
                   ))}
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
-                  ✅ Requerida para segmentar por categoría (incluso Banner VIP)
+                  Requerida para segmentar por categoría (incluso Banner VIP)
                 </p>
               </div>
 
@@ -744,7 +744,7 @@ export default function BannersPanel() {
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                      <span className="text-xl">⭐</span>
+                      <Star className="w-5 h-5 text-yellow-500" />
                       <span>Banner Destacado</span>
                     </div>
                     <p className="text-xs text-gray-600 mt-1">
@@ -788,7 +788,7 @@ export default function BannersPanel() {
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  📐 Cada dispositivo requiere dimensiones específicas
+                  Cada dispositivo requiere dimensiones específicas
                 </p>
               </div>
 
@@ -841,7 +841,7 @@ export default function BannersPanel() {
                   placeholder="https://ejemplo.com/landing-page"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  🔗 Página donde se redirige al hacer clic (opcional)
+                  Página donde se redirige al hacer clic (opcional)
                 </p>
               </div>
 
@@ -855,7 +855,7 @@ export default function BannersPanel() {
                   className="w-5 h-5 text-[#16a135] rounded focus:ring-[#16a135]"
                 />
                 <label htmlFor="is_active" className="text-sm font-medium text-gray-700 cursor-pointer">
-                  ✅ Banner activo y visible en el sitio
+                  Banner activo y visible en el sitio
                 </label>
               </div>
             </div>

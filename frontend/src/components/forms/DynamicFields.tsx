@@ -9,6 +9,28 @@ interface DynamicFieldProps {
 }
 
 /**
+ * ====================================================================
+ * DESIGN SYSTEM RURAL24 - Estilos de inputs
+ * ====================================================================
+ */
+const DS = {
+  // Input base
+  input: 'w-full px-4 py-3 text-base bg-white border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder:text-gray-400',
+  // Input con error
+  inputError: 'w-full px-4 py-3 text-base bg-white border-2 border-error rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-error focus:border-transparent placeholder:text-gray-400',
+  // Label
+  label: 'block text-sm font-semibold text-gray-700 mb-2',
+  // Helper text
+  helperText: 'mt-1.5 text-sm text-gray-500',
+  // Error text
+  errorText: 'mt-1.5 text-sm text-error flex items-center gap-1',
+  // Checkbox
+  checkbox: 'h-5 w-5 text-primary-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all',
+  // Radio
+  radio: 'w-4 h-4 text-primary-500 border-2 border-gray-300 focus:ring-2 focus:ring-primary-500',
+};
+
+/**
  * Componente que renderiza un campo de formulario dinámico
  * según su configuración (tipo, opciones, validaciones, etc.)
  */
@@ -25,11 +47,10 @@ export const DynamicField: React.FC<DynamicFieldProps> = ({
     onChange(field.name, newValue);
   };
 
-  const renderField = () => {
-    const baseClasses = `w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-      error ? 'border-red-500' : 'border-gray-300'
-    }`;
+  // Seleccionar clase según estado de error
+  const inputClasses = error ? DS.inputError : DS.input;
 
+  const renderField = () => {
     switch (field.type) {
       case 'textarea':
         return (
@@ -40,7 +61,7 @@ export const DynamicField: React.FC<DynamicFieldProps> = ({
             onChange={handleChange}
             placeholder={field.placeholder}
             required={field.required}
-            className={`${baseClasses} min-h-[120px] resize-y`}
+            className={`${inputClasses} min-h-[120px] resize-y`}
           />
         );
 
@@ -52,7 +73,7 @@ export const DynamicField: React.FC<DynamicFieldProps> = ({
             value={value || ''}
             onChange={handleChange}
             required={field.required}
-            className={baseClasses}
+            className={inputClasses}
           >
             <option value="">Seleccionar...</option>
             {field.options?.map(option => (
@@ -67,7 +88,7 @@ export const DynamicField: React.FC<DynamicFieldProps> = ({
         return (
           <div className="space-y-2">
             {field.options?.map(option => (
-              <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
+              <label key={option.value} className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="radio"
                   name={field.name}
@@ -75,7 +96,7 @@ export const DynamicField: React.FC<DynamicFieldProps> = ({
                   checked={value === option.value}
                   onChange={handleChange}
                   required={field.required}
-                  className="w-4 h-4 text-green-600 focus:ring-green-500"
+                  className={DS.radio}
                 />
                 <span className="text-gray-700">{option.label}</span>
               </label>
@@ -84,14 +105,15 @@ export const DynamicField: React.FC<DynamicFieldProps> = ({
         );
 
       case 'checkbox':
+      case 'boolean':
         return (
-          <label className="flex items-center space-x-2 cursor-pointer">
+          <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
               name={field.name}
               checked={value || false}
               onChange={(e) => onChange(field.name, e.target.checked)}
-              className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+              className={DS.checkbox}
             />
             <span className="text-gray-700">{field.placeholder || field.label}</span>
           </label>
@@ -110,10 +132,10 @@ export const DynamicField: React.FC<DynamicFieldProps> = ({
               required={field.required}
               min={field.min}
               max={field.max}
-              className={`${baseClasses} ${field.unit ? 'pr-16' : ''}`}
+              className={`${inputClasses} ${field.unit ? 'pr-16' : ''}`}
             />
             {field.unit && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
                 {field.unit}
               </span>
             )}
@@ -130,7 +152,7 @@ export const DynamicField: React.FC<DynamicFieldProps> = ({
             onChange={handleChange}
             placeholder={field.placeholder}
             required={field.required}
-            className={baseClasses}
+            className={inputClasses}
           />
         );
 
@@ -144,7 +166,7 @@ export const DynamicField: React.FC<DynamicFieldProps> = ({
             onChange={handleChange}
             placeholder={field.placeholder}
             required={field.required}
-            className={baseClasses}
+            className={inputClasses}
           />
         );
 
@@ -159,27 +181,32 @@ export const DynamicField: React.FC<DynamicFieldProps> = ({
             onChange={handleChange}
             placeholder={field.placeholder}
             required={field.required}
-            className={baseClasses}
+            className={inputClasses}
           />
         );
     }
   };
 
   return (
-    <div className="space-y-1">
-      <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
+    <div className="space-y-1.5">
+      <label htmlFor={field.name} className={DS.label}>
         {field.label}
-        {field.required && <span className="text-red-500 ml-1">*</span>}
+        {field.required && <span className="text-error ml-1">*</span>}
       </label>
       
       {renderField()}
       
       {field.helpText && !error && (
-        <p className="text-xs text-gray-500">{field.helpText}</p>
+        <p className={DS.helperText}>{field.helpText}</p>
       )}
       
       {error && (
-        <p className="text-xs text-red-500">{error}</p>
+        <p className={DS.errorText}>
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          {error}
+        </p>
       )}
     </div>
   );

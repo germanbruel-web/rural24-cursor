@@ -1,10 +1,170 @@
 /**
  * Servicio de Avisos Destacados
  * Gestiona avisos marcados para homepage por superadmin
+ * 
+ * NUEVO: Usa la tabla featured_ads_queue como fuente de verdad
  */
 
 import { supabase } from './supabaseClient';
 import type { Ad } from '../../types';
+
+// ========== API NUEVA: featured_ads_queue ==========
+
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
+export interface FeaturedQueueItem {
+  id: string;
+  ad_id: string;
+  activated_at: string;
+  expires_at: string | null;
+  status: 'active' | 'inactive' | 'expired' | 'restored';
+  reason: string | null;
+  restored_from: string | null;
+  ads?: {
+    id: string;
+    title: string;
+    slug: string;
+    images: string[];
+    category_id: string;
+    subcategory_id: string;
+    price: number;
+    currency: string;
+  };
+  _fallback?: boolean;
+}
+
+/**
+ * Obtiene la cola de destacados activos (siempre 10, rellenando con el último si faltan)
+ */
+export async function getFeaturedQueue(): Promise<FeaturedQueueItem[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/featured-ads`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return json.data || [];
+  } catch (err: any) {
+    console.error('❌ Error obteniendo cola de destacados:', err);
+    return [];
+  }
+}
+
+/**
+ * Obtiene el historial de destacados (para auditoría/restauración)
+ */
+export async function getFeaturedHistory(): Promise<FeaturedQueueItem[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/featured-ads/history`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return json.data || [];
+  } catch (err: any) {
+    console.error('❌ Error obteniendo historial de destacados:', err);
+    return [];
+  }
+}
+
+/**
+ * Activa un aviso como destacado (cola nueva)
+ */
+export async function activateFeaturedAd(
+  ad_id: string,
+  expires_at?: string,
+  reason?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/api/featured-ads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ad_id, expires_at, reason }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Desactiva un aviso destacado (cola nueva)
+ */
+export async function deactivateFeaturedAd(
+  ad_id: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/api/featured-ads?ad_id=${ad_id}`, {
+      method: 'DELETE',
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Restaura un aviso destacado desde el historial
+ */
+export async function restoreFeaturedAd(
+  queue_id: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/api/featured-ads/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ queue_id }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+// ========== LÓGICA DE REFRESCO AUTOMÁTICO ==========
+
+type FeaturedQueueListener = (data: FeaturedQueueItem[]) => void;
+let featuredQueueListeners: FeaturedQueueListener[] = [];
+let featuredQueuePollingInterval: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * Suscribirse a cambios en la cola de destacados (polling cada 30s)
+ */
+export function subscribeFeaturedQueue(listener: FeaturedQueueListener): () => void {
+  featuredQueueListeners.push(listener);
+  // Si es el primer listener, iniciar polling
+  if (featuredQueueListeners.length === 1) {
+    startFeaturedQueuePolling();
+  }
+  // Devuelve función para desuscribirse
+  return () => {
+    featuredQueueListeners = featuredQueueListeners.filter(l => l !== listener);
+    if (featuredQueueListeners.length === 0) {
+      stopFeaturedQueuePolling();
+    }
+  };
+}
+
+async function pollFeaturedQueue() {
+  const data = await getFeaturedQueue();
+  featuredQueueListeners.forEach(listener => listener(data));
+}
+
+function startFeaturedQueuePolling() {
+  pollFeaturedQueue(); // Ejecutar inmediatamente
+  featuredQueuePollingInterval = setInterval(pollFeaturedQueue, 30000); // Cada 30s
+}
+
+function stopFeaturedQueuePolling() {
+  if (featuredQueuePollingInterval) {
+    clearInterval(featuredQueuePollingInterval);
+    featuredQueuePollingInterval = null;
+  }
+}
+
+// ========== LEGACY: Lógica de flags (deprecada) ==========
 
 export interface FeaturedAdsByCategory {
   category_id: string;
@@ -200,7 +360,7 @@ export async function getFeaturedAdsByCategories(
           console.error(`❌ Error fetching banners for ${cat.name}:`, bannerError);
         }
 
-        // Transformar al formato esperado por CategoryBannerCarousel
+        // Transformar al formato esperado por CategoryBannerSlider
         const banners = (bannersData || []).map(b => ({
           id: b.id,
           image_url: b.carousel_image_url || '',

@@ -22,13 +22,15 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   
   // Solo SuperAdmin
   users: ['superadmin'],
-  'all-ads': ['superadmin'], // Nuevo panel unificado de gestión
+  'ads-management': ['superadmin'], // Panel unificado de gestión de avisos
   banners: ['superadmin'],
   settings: ['superadmin'],
   'categories-admin': ['superadmin'],
   'attributes-admin': ['superadmin'],
   'templates-admin': ['superadmin'],
   'backend-settings': ['superadmin'],
+  'global-settings': ['superadmin'],
+  'payments-admin': ['superadmin'],
 };
 
 /**
@@ -114,8 +116,8 @@ export const MENU_STRUCTURE: MenuItem[] = [
     allowedRoles: ['superadmin'],
   },
   {
-    id: 'all-ads',
-    label: 'Avisos',
+    id: 'ads-management',
+    label: 'Gestión de Avisos',
     allowedRoles: ['superadmin'],
   },
   {
@@ -143,6 +145,16 @@ export const MENU_STRUCTURE: MenuItem[] = [
     label: 'Backend CMS',
     allowedRoles: ['superadmin'],
   },
+  {
+    id: 'global-settings',
+    label: 'Config Global',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'payments-admin',
+    label: 'Cobranzas',
+    allowedRoles: ['superadmin'],
+  },
   
   // SECCIÓN: HERRAMIENTAS DE DESARROLLO
   {
@@ -153,17 +165,17 @@ export const MENU_STRUCTURE: MenuItem[] = [
   },
   {
     id: 'diagnostics',
-    label: '🔬 Diagnósticos',
+    label: 'Diagnósticos',
     allowedRoles: ['superadmin'],
   },
   {
     id: 'design-showcase',
-    label: '🎨 Design System',
+    label: 'Design System',
     allowedRoles: ['superadmin'],
   },
   {
     id: 'example-migration',
-    label: '📦 Migration Guide',
+    label: 'Migration Guide',
     allowedRoles: ['superadmin'],
   },
 ];

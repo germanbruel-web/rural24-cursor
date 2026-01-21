@@ -3,7 +3,7 @@
  * Cliente HTTP para comunicarse con el backend Next.js
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface ApiResponse<T> {
   success: boolean;

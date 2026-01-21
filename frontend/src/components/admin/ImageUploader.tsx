@@ -132,7 +132,7 @@ export function ImageUploader({
         {label}
       </label>
       <div className="text-xs text-gray-500 mb-2">
-        📐 {requiredWidth}x{requiredHeight}px · 📦 Max {maxSizeMB}MB
+        {requiredWidth}x{requiredHeight}px · Max {maxSizeMB}MB
       </div>
 
       {!value ? (

@@ -297,7 +297,7 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
       {/* Footer Info */}
       <div className="p-3 border-t-2 border-gray-200 bg-blue-50">
         <p className="text-xs text-gray-600 text-center">
-          <strong>💡 Preview interactivo:</strong> Probá completando campos para ver la validación secuencial
+          <strong>Preview interactivo:</strong> Probá completando campos para ver la validación secuencial
         </p>
       </div>
     </div>

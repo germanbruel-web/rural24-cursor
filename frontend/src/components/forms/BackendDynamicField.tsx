@@ -10,6 +10,68 @@ interface BackendDynamicFieldProps {
 }
 
 /**
+ * ====================================================================
+ * DESIGN SYSTEM RURAL24 - Estilos de inputs
+ * ====================================================================
+ * 
+ * Clases base del Design System:
+ * - Input base: px-4 py-3 border-2 rounded-lg
+ * - Focus: focus:ring-2 focus:ring-primary-500 focus:border-transparent
+ * - Error: border-error focus:ring-error
+ * - Transition: transition-all duration-200
+ */
+const DESIGN_SYSTEM = {
+  // Input base - Design System RURAL24
+  inputBase: `
+    w-full 
+    px-4 py-3 
+    text-base 
+    bg-white 
+    border-2 border-gray-300 
+    rounded-lg 
+    transition-all duration-200
+    focus:outline-none 
+    focus:ring-2 focus:ring-primary-500 focus:border-transparent
+    placeholder:text-gray-400
+  `.replace(/\s+/g, ' ').trim(),
+  
+  // Input con error
+  inputError: `
+    w-full 
+    px-4 py-3 
+    text-base 
+    bg-white 
+    border-2 border-error 
+    rounded-lg 
+    transition-all duration-200
+    focus:outline-none 
+    focus:ring-2 focus:ring-error focus:border-transparent
+    placeholder:text-gray-400
+  `.replace(/\s+/g, ' ').trim(),
+  
+  // Label
+  label: 'block text-sm font-semibold text-gray-700 mb-2',
+  
+  // Helper text
+  helperText: 'mt-1.5 text-sm text-gray-500',
+  
+  // Error text
+  errorText: 'mt-1.5 text-sm text-error flex items-center gap-1',
+  
+  // Checkbox container
+  checkboxContainer: 'flex items-center gap-3',
+  
+  // Checkbox
+  checkbox: 'h-5 w-5 text-primary-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all',
+  
+  // Multiselect chip - default
+  chipDefault: 'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-100',
+  
+  // Multiselect chip - selected
+  chipSelected: 'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 bg-primary-50 border-primary-500 text-primary-800',
+};
+
+/**
  * Componente que renderiza campos dinámicos respetando los tipos del backend
  * Maneja todos los tipos: text, number, select, multiselect, textarea, checkbox, date
  */
@@ -40,9 +102,8 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
     onChange(field.field_name, newValues);
   };
 
-  const baseClasses = `w-full px-5 py-4 text-base border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all bg-white ${
-    error ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : 'border-gray-300'
-  }`;
+  // Seleccionar clase base según estado de error
+  const inputClasses = error ? DESIGN_SYSTEM.inputError : DESIGN_SYSTEM.inputBase;
 
   const renderField = () => {
     switch (field.field_type) {
@@ -56,7 +117,7 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
             onChange={handleChange}
             placeholder={field.placeholder || ''}
             required={field.is_required}
-            className={baseClasses}
+            className={inputClasses}
           />
         );
 
@@ -71,7 +132,7 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
               onChange={handleChange}
               placeholder={field.placeholder || ''}
               required={field.is_required}
-              className={`${baseClasses} ${field.suffix ? 'pr-16' : ''}`}
+              className={`${inputClasses} ${field.suffix ? 'pr-16' : ''}`}
               min={field.min_value ?? undefined}
               max={field.max_value ?? undefined}
             />
@@ -92,7 +153,7 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
             onChange={handleChange}
             placeholder={field.placeholder || ''}
             required={field.is_required}
-            className={`${baseClasses} min-h-[120px] resize-y`}
+            className={`${inputClasses} min-h-[120px] resize-y`}
             rows={4}
           />
         );
@@ -105,7 +166,7 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
             value={value || ''}
             onChange={handleChange}
             required={field.is_required}
-            className={baseClasses}
+            className={inputClasses}
           >
             <option value="">
               {field.placeholder || `Seleccionar ${field.field_label}...`}
@@ -131,14 +192,7 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
                     key={option}
                     type="button"
                     onClick={() => handleMultiselectToggle(option)}
-                    className={`
-                      inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium
-                      transition-all duration-200 border-2
-                      ${isSelected 
-                        ? 'bg-green-100 border-green-500 text-green-800' 
-                        : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-100'
-                      }
-                    `}
+                    className={isSelected ? DESIGN_SYSTEM.chipSelected : DESIGN_SYSTEM.chipDefault}
                   >
                     {isSelected && <Check className="w-4 h-4" />}
                     {option}
@@ -149,7 +203,7 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
             
             {/* Contador de selección */}
             {selectedValues.length > 0 && (
-              <p className="text-xs text-green-600 font-medium">
+              <p className="text-xs text-primary-600 font-medium">
                 {selectedValues.length} seleccionado{selectedValues.length !== 1 ? 's' : ''}
               </p>
             )}
@@ -158,7 +212,7 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
 
       case 'checkbox':
         return (
-          <div className="flex items-center">
+          <div className={DESIGN_SYSTEM.checkboxContainer}>
             <input
               type="checkbox"
               id={field.field_name}
@@ -166,9 +220,27 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
               checked={value || false}
               onChange={handleChange}
               required={field.is_required}
-              className="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              className={DESIGN_SYSTEM.checkbox}
             />
-            <label htmlFor={field.field_name} className="ml-3 text-sm text-gray-700">
+            <label htmlFor={field.field_name} className="text-sm text-gray-700 cursor-pointer">
+              {field.field_label}
+            </label>
+          </div>
+        );
+
+      case 'boolean':
+        return (
+          <div className={DESIGN_SYSTEM.checkboxContainer}>
+            <input
+              type="checkbox"
+              id={field.field_name}
+              name={field.field_name}
+              checked={value || false}
+              onChange={handleChange}
+              required={field.is_required}
+              className={DESIGN_SYSTEM.checkbox}
+            />
+            <label htmlFor={field.field_name} className="text-sm text-gray-700 cursor-pointer">
               {field.field_label}
             </label>
           </div>
@@ -183,7 +255,7 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
             value={value || ''}
             onChange={handleChange}
             required={field.is_required}
-            className={baseClasses}
+            className={inputClasses}
             min={field.min_value ?? undefined}
             max={field.max_value ?? undefined}
           />
@@ -199,34 +271,37 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
             onChange={handleChange}
             placeholder={field.placeholder || ''}
             required={field.is_required}
-            className={baseClasses}
+            className={inputClasses}
           />
         );
     }
   };
 
   return (
-    <div className="space-y-2">
-      {field.field_type !== 'checkbox' && (
+    <div className="space-y-1.5">
+      {field.field_type !== 'checkbox' && field.field_type !== 'boolean' && (
         <label 
           htmlFor={field.field_name}
-          className="block text-base font-bold text-gray-900"
+          className={DESIGN_SYSTEM.label}
         >
           {field.field_label}
-          {field.is_required && <span className="text-red-500 ml-1">*</span>}
+          {field.is_required && <span className="text-error ml-1">*</span>}
         </label>
       )}
       
       {renderField()}
 
-      {field.help_text && (
-        <p className="text-sm text-gray-500">
+      {field.help_text && !error && (
+        <p className={DESIGN_SYSTEM.helperText}>
           {field.help_text}
         </p>
       )}
 
       {error && (
-        <p className="text-sm text-red-600">
+        <p className={DESIGN_SYSTEM.errorText}>
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
           {error}
         </p>
       )}

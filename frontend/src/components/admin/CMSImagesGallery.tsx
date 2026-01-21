@@ -95,10 +95,10 @@ export const CMSImagesGallery: React.FC = () => {
         </p>
         <div className="mt-4 flex items-center gap-4 text-sm">
           <span className="bg-white/20 px-3 py-1 rounded-full">
-            📊 {images.length} imágenes totales
+            {images.length} imágenes totales
           </span>
           <span className="bg-white/20 px-3 py-1 rounded-full">
-            💾 {formatFileSize(images.reduce((sum, img) => sum + img.size, 0))}
+            {formatFileSize(images.reduce((sum, img) => sum + img.size, 0))}
           </span>
         </div>
       </div>
@@ -176,7 +176,7 @@ export const CMSImagesGallery: React.FC = () => {
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
         <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
         <div className="text-sm text-yellow-900">
-          <p className="font-semibold mb-1">⚠️ Precaución al eliminar</p>
+          <p className="font-semibold mb-1">Precaución al eliminar</p>
           <p>
             Si una imagen está siendo usada en el sitio (header, footer, etc.), 
             eliminarla causará que no se muestre correctamente. 
