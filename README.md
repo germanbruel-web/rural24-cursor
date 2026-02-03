@@ -386,12 +386,15 @@ Las migraciones están en `database/migrations/`. Ejecutar en orden en Supabase 
 
 | Documento | Descripción |
 |-----------|-------------|
-| [AUTH_GUIDE.md](docs/AUTH_GUIDE.md) | Sistema de autenticación |
-| [CLOUDINARY_ARCHITECTURE_2026.md](docs/CLOUDINARY_ARCHITECTURE_2026.md) | Arquitectura de imágenes |
-| [BANNERS_CLEAN_V2_README.md](docs/BANNERS_CLEAN_V2_README.md) | Sistema de banners |
-| [BANNER_PRIORITY_ARCHITECTURE.md](docs/BANNER_PRIORITY_ARCHITECTURE.md) | Prioridad de banners |
+| [AUTH_GUIDE.md](docs/AUTH_GUIDE.md) | Sistema de autenticación completo |
+| [CLOUDINARY_ARCHITECTURE_2026.md](docs/CLOUDINARY_ARCHITECTURE_2026.md) | Arquitectura de imágenes con Cloudinary |
+| [BANNERS_CLEAN_V2_README.md](docs/BANNERS_CLEAN_V2_README.md) | Sistema de banners V2 |
+| [BANNER_PRIORITY_ARCHITECTURE.md](docs/BANNER_PRIORITY_ARCHITECTURE.md) | Prioridad y rotación de banners |
+| [BANNERS_KIT_COMERCIAL.md](docs/BANNERS_KIT_COMERCIAL.md) | Kit comercial para ventas de banners |
 | [PRISMA_MIGRATION_GUIDE.md](docs/PRISMA_MIGRATION_GUIDE.md) | Guía de migraciones Prisma |
-| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Guía de despliegue |
+| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Guía de despliegue a producción |
+| [DESIGN_SYSTEM_UNIFIED.md](docs/DESIGN_SYSTEM_UNIFIED.md) | Sistema de diseño unificado |
+| [GUIA_HABILITAR_RLS.md](docs/GUIA_HABILITAR_RLS.md) | Configuración de Row Level Security |
 
 ---
 
