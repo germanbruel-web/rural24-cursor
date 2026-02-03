@@ -10,8 +10,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Upload, X, CheckCircle, AlertCircle, Loader, GripVertical, Star } from 'lucide-react';
+import { Upload, X, AlertCircle, Loader, Star } from 'lucide-react';
 import { uploadsApi } from '../../services/api';
+import { notify } from '../../utils/notifications';
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -87,7 +88,7 @@ export const SimpleImageUploader: React.FC<Props> = ({
 
     // Validar cantidad
     if (images.length + files.length > maxFiles) {
-      alert(`Máximo ${maxFiles} imágenes permitidas`);
+      notify.warning(`Máximo ${maxFiles} fotos`);
       return;
     }
 
@@ -95,7 +96,7 @@ export const SimpleImageUploader: React.FC<Props> = ({
     const MAX_SIZE = 5 * 1024 * 1024;
     const oversized = files.filter(f => f.size > MAX_SIZE);
     if (oversized.length > 0) {
-      alert(`Imágenes demasiado grandes (máx 5MB): ${oversized.map(f => f.name).join(', ')}`);
+      notify.error(`Foto muy grande (máx 5MB)`);
       return;
     }
 
@@ -290,7 +291,7 @@ export const SimpleImageUploader: React.FC<Props> = ({
 
   return (
     <div className="space-y-4">
-      {/* Botón de Upload */}
+      {/* Botón de Upload - Compacto mobile */}
       <label className="block">
         <input
           type="file"
@@ -302,130 +303,70 @@ export const SimpleImageUploader: React.FC<Props> = ({
         />
         
         <div className={`
-          border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
+          border-2 border-dashed rounded-lg p-4 sm:p-6 text-center cursor-pointer transition-all
           ${uploading || images.length >= maxFiles
             ? 'border-gray-300 bg-gray-50 cursor-not-allowed opacity-60'
             : 'border-green-400 bg-green-50 hover:bg-green-100 hover:border-green-500'
           }
         `}>
-          <Upload className="w-12 h-12 mx-auto mb-3 text-green-600" />
-          
           {uploading ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-center gap-2">
-                <Loader className="w-5 h-5 animate-spin text-green-600" />
-                <p className="text-lg font-semibold text-gray-900">
-                  Subiendo imágenes...
-                </p>
-              </div>
-              <p className="text-sm text-gray-600">
-                Espera mientras se suben tus fotos
-              </p>
+            <div className="flex items-center justify-center gap-2">
+              <Loader className="w-5 h-5 animate-spin text-green-600" />
+              <span className="text-sm font-medium text-gray-700">Subiendo...</span>
             </div>
           ) : images.length >= maxFiles ? (
-            <div className="space-y-2">
-              <p className="text-lg font-semibold text-gray-900">
-                Máximo alcanzado
-              </p>
-              <p className="text-sm text-gray-600">
-                Ya subiste {maxFiles} imágenes (máximo permitido)
-              </p>
+            <div className="flex items-center justify-center gap-2 text-gray-500">
+              <CheckCircle className="w-5 h-5" />
+              <span className="text-sm font-medium">Máximo alcanzado</span>
             </div>
           ) : (
-            <div className="space-y-2">
-              <p className="text-lg font-semibold text-gray-900">
-                Haz click para subir fotos
-              </p>
-              <p className="text-sm text-gray-600">
-                O arrastra y suelta aquí (máximo {maxFiles} imágenes)
-              </p>
-              <p className="text-xs text-gray-500 mt-2">
-                JPG, PNG o WEBP • Máximo 5MB por imagen
-              </p>
+            <div className="flex items-center justify-center gap-3">
+              <Upload className="w-6 h-6 text-green-600" />
+              <span className="text-sm font-medium text-gray-700">Subir fotos</span>
+              <span className="text-xs text-gray-400 hidden sm:inline">• máx 5MB</span>
             </div>
           )}
         </div>
       </label>
 
-      {/* Botón: Imagen predeterminada - Diseño mejorado */}
+      {/* Botón: Imagen predeterminada - Compacto */}
       {images.length < maxFiles && !uploading && (
         <button
           type="button"
           onClick={addDefaultImage}
-          className="group w-full flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl hover:from-blue-100 hover:to-indigo-100 hover:border-blue-400 hover:shadow-md transition-all duration-200"
+          className="w-full flex items-center justify-center gap-2 py-2 text-sm text-gray-600 hover:text-blue-600 transition-colors"
         >
-          {/* Preview de la imagen predeterminada */}
-          <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 border-blue-300 bg-white shadow-sm">
-            <img 
-              src={DEFAULT_IMAGE.url} 
-              alt="Preview imagen predeterminada"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.src = DEFAULT_IMAGE.fallback;
-              }}
-            />
-          </div>
-          
-          {/* Texto */}
-          <div className="flex-1 text-left">
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="w-5 h-5 text-blue-600" />
-              <span className="font-bold text-gray-900 group-hover:text-blue-900 transition-colors">
-                Usar imagen predeterminada
-              </span>
-            </div>
-            <p className="text-xs text-gray-600">
-              Imagen placeholder del sistema • Puedes reemplazarla después
-            </p>
-          </div>
-          
-          {/* Icono de acción */}
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 rounded-full bg-blue-600 group-hover:bg-blue-700 flex items-center justify-center transition-colors">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-              </svg>
-            </div>
-          </div>
+          <img 
+            src={DEFAULT_IMAGE.url} 
+            alt=""
+            className="w-8 h-8 rounded object-cover"
+            onError={(e) => { e.currentTarget.src = DEFAULT_IMAGE.fallback; }}
+          />
+          <span>Usar imagen de ejemplo</span>
         </button>
       )}
 
       {/* Grid de imágenes subidas CON DRAG & DROP */}
       {images.length > 0 && (
-        <div className="space-y-4">
-          {/* Instrucciones */}
-          <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <GripVertical className="w-5 h-5 text-blue-600" />
-            <span><strong>Arrastrá las fotos</strong> para cambiar el orden. La primera será la portada.</span>
-          </div>
-
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext items={images.map(img => img.path || img.preview || '')}>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {images.map((image, index) => (
-                  <SortableImage
-                    key={image.path || image.preview || index}
-                    image={image}
-                    index={index}
-                    onRemove={() => removeImage(index)}
-                    onSetPrimary={() => setAsPrimary(index)}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        </div>
-      )}
-
-      {/* Contador */}
-      {images.length > 0 && (
-        <div className="text-center text-sm text-gray-600">
-          {images.filter(img => img.status === 'success').length} de {maxFiles} imágenes subidas
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={images.map(img => img.path || img.preview || '')}>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
+              {images.map((image, index) => (
+                <SortableImage
+                  key={image.path || image.preview || index}
+                  image={image}
+                  index={index}
+                  onRemove={() => removeImage(index)}
+                  onSetPrimary={() => setAsPrimary(index)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );
@@ -458,81 +399,46 @@ const SortableImage: React.FC<SortableImageProps> = ({ image, index, onRemove, o
   return (
     <div
       ref={setNodeRef}
-      className={`relative aspect-square rounded-lg overflow-hidden border-2 bg-gray-50 ${
-        isDragging ? 'shadow-2xl z-50 scale-105' : ''
-      }`}
-      style={{
-        ...style,
-        borderColor: 
-          image.isPrimary ? '#10b981' :
-          image.status === 'error' ? '#ef4444' :
-          '#d1d5db',
-        borderWidth: image.isPrimary ? '4px' : '2px'
-      }}
+      className={`relative aspect-square rounded overflow-hidden bg-gray-100 ${
+        isDragging ? 'shadow-xl z-50 scale-105' : ''
+      } ${image.isPrimary ? 'ring-2 ring-green-500' : ''}`}
+      style={style}
+      {...attributes}
+      {...listeners}
     >
       {/* Preview de imagen */}
       <img
         src={image.preview || image.url}
-        alt={`Imagen ${index + 1}`}
+        alt={`Foto ${index + 1}`}
         className="w-full h-full object-cover"
-        onError={(e) => {
-          e.currentTarget.src = 'https://via.placeholder.com/400x400/10b981/ffffff?text=Imagen+' + (index + 1);
-        }}
       />
 
-      {/* Drag handle - Visible siempre para táctil */}
-      {image.status === 'success' && (
-        <div
-          {...attributes}
-          {...listeners}
-          className="absolute top-2 right-2 bg-white/90 hover:bg-white rounded-full p-2 cursor-move shadow-lg touch-none"
-        >
-          <GripVertical className="w-5 h-5 text-gray-700" />
-        </div>
-      )}
-
-      {/* Badge PORTADA */}
+      {/* Badge PORTADA - solo icono */}
       {image.isPrimary && image.status === 'success' && (
-        <div className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-          <Star className="w-4 h-4 fill-current" />
-          PORTADA
+        <div className="absolute top-1 left-1 bg-green-500 text-white p-1 rounded" title="Portada">
+          <Star className="w-3 h-3 fill-current" />
         </div>
       )}
 
-      {/* Número de orden */}
-      {!image.isPrimary && image.status === 'success' && (
-        <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
-          📸 {index + 1}
-        </div>
-      )}
-
-      {/* Botón: Marcar como principal */}
+      {/* Número de orden - solo para no-primarias */}
       {!image.isPrimary && image.status === 'success' && (
         <button
           onClick={onSetPrimary}
-          className="absolute bottom-2 left-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 shadow-lg transition-all"
-          title="Marcar como portada"
+          className="absolute top-1 left-1 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded"
+          title="Hacer portada"
         >
-          <Star className="w-3 h-3" />
-          Portada
+          {index + 1}
         </button>
       )}
 
       {/* Overlay estado uploading/error */}
       {image.status !== 'success' && (
-        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
           {image.status === 'uploading' && (
-            <div className="text-center text-white">
-              <Loader className="w-8 h-8 animate-spin mx-auto mb-2" />
-              <p className="text-sm font-semibold">Subiendo...</p>
-            </div>
+            <Loader className="w-5 h-5 animate-spin text-white" />
           )}
-
           {image.status === 'error' && (
-            <div className="text-center text-white">
-              <AlertCircle className="w-8 h-8 mx-auto mb-2 text-red-500" />
-              <p className="text-xs">{image.error}</p>
-            </div>
+            <AlertCircle className="w-5 h-5 text-red-400" />
           )}
         </div>
       )}
@@ -540,11 +446,11 @@ const SortableImage: React.FC<SortableImageProps> = ({ image, index, onRemove, o
       {/* Botón eliminar */}
       {image.status !== 'uploading' && (
         <button
-          onClick={onRemove}
-          className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 transition-all shadow-lg"
-          aria-label="Eliminar imagen"
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
+          className="absolute top-1 right-1 bg-black/60 hover:bg-red-500 text-white rounded-full p-1 transition-colors"
+          aria-label="Eliminar"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3 h-3" />
         </button>
       )}
     </div>

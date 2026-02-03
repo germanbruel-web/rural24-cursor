@@ -1229,7 +1229,7 @@ export function AttributesAdmin() {
       {/* List - Normal Mode */}
       {selectedSubcategoryId && !showForm && (
         <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
-          <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b-2 border-gray-200">
+          <div className="p-4 bg-gray-50 border-b-2 border-gray-200">
             <h3 className="text-lg font-bold text-gray-900">
               Lista de Atributos ({attributes.length})
             </h3>

@@ -122,23 +122,16 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
   };
 
   const handleCategoryHover = (category: string | null) => {
-    setHoveredCategory(category);
-    
+    // Solo actuar cuando hay una categoría (hover in)
+    // El banner se mantiene "sticky" hasta que el usuario haga hover en otra categoría
     if (category) {
-      // HOVER IN: Cargar banner de la categoría
+      setHoveredCategory(category);
       if (onCategoryHover) {
         onCategoryHover(category);
       }
       loadBannerForCategory(category);
-    } else {
-      // HOVER OUT: Volver al banner random default
-      if (onCategoryHover) {
-        onCategoryHover(null);
-      }
-      if (onBannerChange && defaultBanner) {
-        onBannerChange(defaultBanner);
-      }
     }
+    // Ya no reseteamos al hacer hover out - el banner permanece en la última categoría
   };
 
   // Cargar TODOS los banners y seleccionar uno random al montar
@@ -355,61 +348,116 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
   const querySuggestions = getQuerySuggestions();
   const locationSuggestions = getLocationSuggestions();
 
+  // Detectar mobile
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handler para navegar a la categoría
+  const handleCategoryClick = (slug: string) => {
+    const element = document.getElementById(slug);
+    if (element) {
+      const yOffset = -80;
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto mt-8">
-      {/* Botones de categorías rápidas - Solo en homepage */}
+      {/* Botones de categorías - Layout diferente Mobile vs Desktop */}
       {showCategoryButtons && categories.length > 0 && (
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-          {categories.map((cat) => {
-            // Generar slug normalizado si no existe
-            const slug = cat.slug || cat.name.toLowerCase()
-              .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-              .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-            
-            // Buscar icono en category_icons por nombre (match flexible)
-            const categoryName = cat.display_name || cat.name;
-            const iconFromDB = categoryIcons.find(icon => 
-              icon.name.toLowerCase() === categoryName.toLowerCase() ||
-              icon.name.toLowerCase().includes(categoryName.toLowerCase().split(' ')[0])
-            );
-            
-            // Prioridad: 1) category_icons.url_light, 2) categories.icon, 3) fallback map
-            const iconUrl = iconFromDB?.url_light 
-              || (cat.icon ? `/images/icons/${cat.icon}` : null)
-              || CATEGORY_ICON_MAP[slug] 
-              || '/images/icons/icon-1.png';
-            
-            return (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  // Scroll suave al carrusel de la categoría
-                  const element = document.getElementById(slug);
-                  if (element) {
-                    const yOffset = -80; // Offset para el header sticky
-                    const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                    window.scrollTo({ top: y, behavior: 'smooth' });
-                  }
-                }}
-                onMouseEnter={() => handleCategoryHover(cat.display_name || cat.name)}
-                onMouseLeave={() => handleCategoryHover(null)}
-                className="rounded-[8px] p-3 transition-all duration-300 hover:scale-105 shadow-lg flex flex-col items-center gap-2 aspect-square justify-center relative overflow-hidden group bg-black hover:bg-[#16a135] border-2 border-black hover:border-green-600 cursor-pointer"
-              >
-                {/* Efecto de brillo en hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
-                
-                <img 
-                  src={iconUrl} 
-                  alt={cat.display_name || cat.name}
-                  className="w-12 h-12 object-contain relative z-10"
-                />
-                <span className="text-white text-sm font-bold text-center relative z-10 drop-shadow-lg">
-                  {cat.display_name || cat.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <>
+          {/* ========== MOBILE: Lista vertical con botones rectangulares ========== */}
+          <div className="md:hidden flex flex-col gap-2">
+            {categories.map((cat) => {
+              const slug = cat.slug || cat.name.toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+              
+              const categoryName = cat.display_name || cat.name;
+              const iconFromDB = categoryIcons.find(icon => 
+                icon.name.toLowerCase() === categoryName.toLowerCase() ||
+                icon.name.toLowerCase().includes(categoryName.toLowerCase().split(' ')[0])
+              );
+              
+              const iconUrl = iconFromDB?.url_light 
+                || (cat.icon ? `/images/icons/${cat.icon}` : null)
+                || CATEGORY_ICON_MAP[slug] 
+                || '/images/icons/icon-1.png';
+              
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(slug)}
+                  className="flex items-center gap-3 w-full px-4 py-3 bg-black hover:bg-[#16a135] rounded transition-colors duration-200 active:scale-[0.98]"
+                >
+                  <img 
+                    src={iconUrl} 
+                    alt={categoryName}
+                    className="w-8 h-8 object-contain flex-shrink-0"
+                  />
+                  <span className="text-white text-sm font-semibold text-left flex-1">
+                    {categoryName}
+                  </span>
+                  <svg 
+                    className="w-4 h-4 text-white/60" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ========== DESKTOP: Grid cuadrado con hover ========== */}
+          <div className="hidden md:grid grid-cols-5 gap-3">
+            {categories.map((cat) => {
+              const slug = cat.slug || cat.name.toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+              
+              const categoryName = cat.display_name || cat.name;
+              const iconFromDB = categoryIcons.find(icon => 
+                icon.name.toLowerCase() === categoryName.toLowerCase() ||
+                icon.name.toLowerCase().includes(categoryName.toLowerCase().split(' ')[0])
+              );
+              
+              const iconUrl = iconFromDB?.url_light 
+                || (cat.icon ? `/images/icons/${cat.icon}` : null)
+                || CATEGORY_ICON_MAP[slug] 
+                || '/images/icons/icon-1.png';
+              
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(slug)}
+                  onMouseEnter={() => handleCategoryHover(categoryName)}
+                  className="rounded-[8px] p-3 transition-all duration-300 hover:scale-105 shadow-lg flex flex-col items-center gap-2 aspect-square justify-center relative overflow-hidden group bg-black hover:bg-[#16a135] border-2 border-black hover:border-green-600 cursor-pointer"
+                >
+                  {/* Efecto de brillo en hover */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
+                  
+                  <img 
+                    src={iconUrl} 
+                    alt={categoryName}
+                    className="w-12 h-12 object-contain relative z-10"
+                  />
+                  <span className="text-white text-sm font-bold text-center relative z-10 drop-shadow-lg">
+                    {categoryName}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

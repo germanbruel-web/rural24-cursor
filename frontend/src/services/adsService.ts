@@ -60,6 +60,8 @@ export function transformAdToProduct(ad: Ad): Product {
 
   return {
     id: ad.id,
+    slug: ad.slug,
+    short_id: ad.short_id,
     title: ad.title,
     description: ad.description,
     price: ad.price,
@@ -345,19 +347,76 @@ export async function getAdById(id: string): Promise<Ad | null> {
       basicData = result.data;
       basicError = result.error;
     } else if (isSlug) {
-      // Buscar por slug
+      // ========== ESTRATEGIA DE BÚSQUEDA POR SLUG ==========
+      // 1. PRIMERO: Buscar directamente por columna 'slug' (más eficiente)
+      // 2. SEGUNDO: Extraer shortId del final y buscar por short_id
+      // 3. TERCERO: Fallback por sufijo UUID
       console.log('🔍 Buscando por slug:', id);
-      const result = await supabase
+      
+      // 1. Buscar directamente por columna slug
+      let result = await supabase
         .from('ads')
         .select('*')
         .eq('slug', id)
         .single();
       
       if (result.data) {
-        console.log('✅ Aviso encontrado por slug:', result.data.id);
+        console.log('✅ Aviso encontrado por columna slug:', result.data.id);
         basicData = result.data;
       } else {
-        basicError = result.error || { message: 'Aviso no encontrado por slug' };
+        // 2. Extraer shortId del final del slug (formato: titulo-abc123)
+        const parts = id.split('-');
+        const shortId = parts[parts.length - 1];
+        console.log('🔍 No encontrado por slug, probando short_id:', shortId);
+        
+        result = await supabase
+          .from('ads')
+          .select('*')
+          .eq('short_id', shortId)
+          .single();
+        
+        if (result.data) {
+          console.log('✅ Aviso encontrado por short_id desde slug:', result.data.id);
+          basicData = result.data;
+        } else {
+          // 3. Fallback: buscar por sufijo del UUID
+          console.log('🔍 No encontrado por short_id, buscando por sufijo UUID en memoria...');
+          const allAdsResult = await supabase
+            .from('ads')
+            .select('*')
+            .in('status', ['active', 'pending', 'draft']);
+          
+          if (allAdsResult.data) {
+            // Intentar match por sufijo UUID o por título normalizado
+            const slugTitle = id.replace(/-[^-]+$/, ''); // Quitar última parte (posible shortId)
+            
+            const matches = allAdsResult.data.filter(ad => {
+              // Match por sufijo UUID
+              if (ad.id.endsWith(shortId)) return true;
+              // Match por título normalizado (slug sin shortId)
+              const adTitleSlug = ad.title
+                ?.toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+              return adTitleSlug === slugTitle || adTitleSlug === id;
+            });
+            
+            if (matches.length === 1) {
+              console.log('✅ Aviso encontrado por búsqueda avanzada:', matches[0].id);
+              basicData = matches[0];
+            } else if (matches.length > 1) {
+              basicData = matches.sort((a, b) => 
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+              )[0];
+              console.log('⚠️ Múltiples coincidencias, usando el más reciente:', basicData.id);
+            } else {
+              basicError = { message: 'Aviso no encontrado por slug' };
+            }
+          } else {
+            basicError = allAdsResult.error || { message: 'Error al buscar avisos' };
+          }
+        }
       }
     } else {
       // Estrategia de búsqueda para IDs cortos:
@@ -375,24 +434,29 @@ export async function getAdById(id: string): Promise<Ad | null> {
         console.log('✅ Aviso encontrado por short_id:', result.data.id);
         basicData = result.data;
       } else {
-        // Fallback: buscar por sufijo del UUID (para URLs antiguas con id.slice(-6))
-        console.log('🔍 No encontrado por short_id, buscando por sufijo UUID...');
-        const suffixResult = await supabase
+        // Fallback: buscar por sufijo del UUID (select + filter en memoria porque ilike no funciona con uuid)
+        console.log('🔍 No encontrado por short_id, buscando por sufijo UUID en memoria...');
+        const allAdsResult = await supabase
           .from('ads')
           .select('*')
-          .ilike('id', `%${id}`);
+          .eq('status', 'active');
         
-        if (suffixResult.data && suffixResult.data.length === 1) {
-          console.log('✅ Aviso encontrado por sufijo UUID:', suffixResult.data[0].id);
-          basicData = suffixResult.data[0];
-        } else if (suffixResult.data && suffixResult.data.length > 1) {
-          console.warn('⚠️ Múltiples avisos coinciden con sufijo:', id);
-          // Tomar el más reciente
-          basicData = suffixResult.data.sort((a, b) => 
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          )[0];
+        if (allAdsResult.data) {
+          const matches = allAdsResult.data.filter(ad => ad.id.endsWith(id));
+          if (matches.length === 1) {
+            console.log('✅ Aviso encontrado por sufijo UUID:', matches[0].id);
+            basicData = matches[0];
+          } else if (matches.length > 1) {
+            console.warn('⚠️ Múltiples avisos coinciden con sufijo:', id);
+            // Tomar el más reciente
+            basicData = matches.sort((a, b) => 
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            )[0];
+          } else {
+            basicError = { message: 'Aviso no encontrado' };
+          }
         } else {
-          basicError = result.error || { message: 'Aviso no encontrado' };
+          basicError = allAdsResult.error || { message: 'Error al buscar avisos' };
         }
       }
     }
@@ -869,23 +933,38 @@ export interface SearchFiltersParams {
   cat?: string;           // Categoría slug
   sub?: string;           // Subcategoría slug
   prov?: string;          // Provincia
+  province?: string;      // Alias para provincia
   q?: string;             // Búsqueda texto libre
   min_price?: number;
   max_price?: number;
   limit?: number;
   offset?: number;
+  page?: number;          // Número de página (alternativa a offset)
   // Atributos dinámicos (cualquier clave extra)
   [key: string]: string | number | undefined;
+}
+
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  offset: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+  showing: number;
 }
 
 export interface SearchAdsResponse {
   ads: Product[];
   total: number;
   hasMore: boolean;
+  pagination?: PaginationInfo;
   // Metadata del backend para detección automática de categoría/subcategoría
   meta?: {
     category?: string;
     subcategory?: string;
+    category_id?: string;
+    subcategory_id?: string;
     detected_from_search?: boolean;
     detected_category_slug?: string;
     detected_subcategory_slug?: string;
@@ -901,7 +980,7 @@ export async function searchAdsFromBackend(filters: SearchFiltersParams): Promis
     const params = new URLSearchParams();
     
     // Campos reservados y sus mappings (no son atributos JSONB)
-    const reservedFields = ['cat', 'sub', 'prov', 'province', 'q', 'min_price', 'max_price', 'limit', 'offset', 'condition', 'city'];
+    const reservedFields = ['cat', 'sub', 'prov', 'province', 'q', 'min_price', 'max_price', 'limit', 'offset', 'page', 'condition', 'city'];
     
     // Convertir filtros a query params para el backend
     if (filters.cat) params.set('cat', filters.cat);
@@ -912,8 +991,14 @@ export async function searchAdsFromBackend(filters: SearchFiltersParams): Promis
     if (filters.q) params.set('search', filters.q);
     if (filters.min_price) params.set('min_price', filters.min_price.toString());
     if (filters.max_price) params.set('max_price', filters.max_price.toString());
+    
+    // Paginación: soportar tanto page como offset
+    if (filters.page) {
+      params.set('page', filters.page.toString());
+    } else if (filters.offset) {
+      params.set('offset', filters.offset.toString());
+    }
     if (filters.limit) params.set('limit', filters.limit.toString());
-    if (filters.offset) params.set('offset', filters.offset.toString());
     
     // Pasar atributos dinámicos con prefijo attr_
     for (const [key, value] of Object.entries(filters)) {
@@ -932,7 +1017,7 @@ export async function searchAdsFromBackend(filters: SearchFiltersParams): Promis
     
     if (!response.ok) {
       console.error('❌ Error en searchAdsFromBackend:', response.status, response.statusText);
-      return { ads: [], total: 0, hasMore: false };
+      return { ads: [], total: 0, hasMore: false, pagination: undefined };
     }
 
     const data = await response.json();
@@ -944,12 +1029,13 @@ export async function searchAdsFromBackend(filters: SearchFiltersParams): Promis
       ads,
       total: data.pagination?.total || ads.length,
       hasMore: data.pagination?.hasMore || false,
+      pagination: data.pagination,
       // Incluir metadata del backend para detección automática
       meta: data.meta || undefined,
     };
   } catch (error) {
     console.error('❌ Error en searchAdsFromBackend:', error);
-    return { ads: [], total: 0, hasMore: false };
+    return { ads: [], total: 0, hasMore: false, pagination: undefined };
   }
 }
 

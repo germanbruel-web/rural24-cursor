@@ -1,0 +1,22 @@
+# robots.txt - Rural24
+# Clasificados del Agro Argentino
+# Generado: 2 Feb 2026
+
+User-agent: *
+Allow: /
+
+# Páginas indexables (SSR)
+Allow: /maquinarias-agricolas
+Allow: /ganaderia
+Allow: /insumos-agropecuarios
+Allow: /inmuebles-rurales
+Allow: /servicios-rurales
+Allow: /aviso/
+
+# Bloquear rutas de API
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+# Sitemap
+Sitemap: https://rural24.com/sitemap.xml

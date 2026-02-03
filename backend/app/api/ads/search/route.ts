@@ -46,6 +46,202 @@ function toSlug(text: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+// ====================================================================
+// MAPEO DE SINÓNIMOS: Términos comunes que deben mapear a subcategorías
+// ====================================================================
+const SYNONYM_MAP: Record<string, string> = {
+  // Bovinos
+  'toro': 'bovinos',
+  'toros': 'bovinos',
+  'vaca': 'bovinos',
+  'vacas': 'bovinos',
+  'ternero': 'bovinos',
+  'terneros': 'bovinos',
+  'ternera': 'bovinos',
+  'terneras': 'bovinos',
+  'novillo': 'bovinos',
+  'novillos': 'bovinos',
+  'vaquillona': 'bovinos',
+  'vaquillonas': 'bovinos',
+  'ganado': 'bovinos',
+  'hacienda': 'bovinos',
+  // Equinos
+  'caballo': 'equinos',
+  'caballos': 'equinos',
+  'yegua': 'equinos',
+  'yeguas': 'equinos',
+  'potrillo': 'equinos',
+  'potrillos': 'equinos',
+  'potro': 'equinos',
+  'potros': 'equinos',
+  // Ovinos
+  'oveja': 'ovinos',
+  'ovejas': 'ovinos',
+  'carnero': 'ovinos',
+  'carneros': 'ovinos',
+  'cordero': 'ovinos',
+  'corderos': 'ovinos',
+  // Porcinos
+  'cerdo': 'porcinos',
+  'cerdos': 'porcinos',
+  'chancho': 'porcinos',
+  'chanchos': 'porcinos',
+  'lechon': 'porcinos',
+  'lechones': 'porcinos',
+  // Caprinos
+  'cabra': 'caprinos',
+  'cabras': 'caprinos',
+  'chivo': 'caprinos',
+  'chivos': 'caprinos',
+  // Aves
+  'gallina': 'aves',
+  'gallinas': 'aves',
+  'pollo': 'aves',
+  'pollos': 'aves',
+  'gallo': 'aves',
+  'gallos': 'aves',
+  'pato': 'aves',
+  'patos': 'aves',
+  // Inmuebles Rurales
+  'campo': 'campos',
+  'estancia': 'campos',
+  'estancias': 'campos',
+  'quinta': 'quintas',
+  'chacra': 'chacras',
+  // Maquinarias - sinónimos adicionales
+  'tractor': 'tractores',
+  'cosechadora': 'cosechadoras',
+  'pulverizadora': 'pulverizadoras',
+  'sembradora': 'sembradoras',
+  'rastra': 'rastras',
+  'arado': 'arados',
+  'fertilizadora': 'fertilizadoras',
+  'tolva': 'tolvas',
+};
+
+function getSynonymSlug(term: string): string | null {
+  const normalized = term.toLowerCase().trim();
+  return SYNONYM_MAP[normalized] || null;
+}
+
+// ====================================================================
+// HELPER: Buscar en atributos dinámicos (field_options)
+// Retorna { subcategoryId, fieldName, fieldValue } si encuentra coincidencia
+// ====================================================================
+interface AttributeMatch {
+  subcategory_id: string | null; // null si aparece en múltiples subcategorías
+  category_id?: string | null;   // categoría común si todas las subcats son de la misma
+  field_name: string;
+  field_value: string;
+  is_unique_subcategory: boolean; // true si solo aparece en una subcategoría
+}
+
+async function findAttributeMatch(
+  supabase: ReturnType<typeof createClient>,
+  searchTerm: string
+): Promise<AttributeMatch | null> {
+  const searchLower = searchTerm.toLowerCase().trim();
+  
+  // Buscar en dynamic_attributes donde field_options contenga el término
+  // field_options es un array de strings o array de {value, label}
+  const { data: attributes, error } = await supabase
+    .from('dynamic_attributes')
+    .select('subcategory_id, field_name, field_options')
+    .eq('is_active', true)
+    .not('field_options', 'is', null);
+  
+  if (error || !attributes) {
+    console.log('⚠️ Error buscando en atributos dinámicos:', error);
+    return null;
+  }
+  
+  // Recolectar TODAS las coincidencias para ver si el valor está en múltiples subcategorías
+  const matches: { subcategory_id: string; field_name: string; field_value: string }[] = [];
+  
+  // Buscar en cada atributo si el término coincide con alguna opción
+  for (const attr of attributes) {
+    if (!attr.field_options) continue;
+    
+    const options = attr.field_options as any[];
+    for (const opt of options) {
+      // Las opciones pueden ser strings o {value, label}
+      const optValue = typeof opt === 'string' ? opt : (opt.value || opt.label || '');
+      const optLabel = typeof opt === 'string' ? opt : (opt.label || opt.value || '');
+      
+      const valueLower = optValue.toLowerCase();
+      const labelLower = optLabel.toLowerCase();
+      
+      // Coincidencia exacta o singular/plural
+      const searchSingular = searchLower.replace(/s$/, '');
+      const valueSingular = valueLower.replace(/s$/, '');
+      
+      if (
+        valueLower === searchLower ||
+        labelLower === searchLower ||
+        valueSingular === searchSingular ||
+        valueLower === searchSingular ||
+        valueSingular === searchLower
+      ) {
+        matches.push({
+          subcategory_id: attr.subcategory_id,
+          field_name: attr.field_name,
+          field_value: optValue // Valor original (con mayúsculas correctas)
+        });
+      }
+    }
+  }
+  
+  if (matches.length === 0) {
+    return null;
+  }
+  
+  // Obtener subcategorías únicas
+  const uniqueSubcategoryIds = [...new Set(matches.map(m => m.subcategory_id))];
+  const firstMatch = matches[0];
+  
+  if (uniqueSubcategoryIds.length === 1) {
+    // Solo aparece en una subcategoría - asignar subcategoría
+    console.log('✅ Atributo encontrado (subcategoría única):', {
+      field_name: firstMatch.field_name,
+      matched_value: firstMatch.field_value,
+      subcategory_id: firstMatch.subcategory_id,
+      from_search: searchTerm
+    });
+    
+    return {
+      subcategory_id: firstMatch.subcategory_id,
+      field_name: firstMatch.field_name,
+      field_value: firstMatch.field_value,
+      is_unique_subcategory: true
+    };
+  }
+  
+  // Aparece en múltiples subcategorías - ver si son de la misma categoría
+  const { data: subcats } = await supabase
+    .from('subcategories')
+    .select('id, category_id')
+    .in('id', uniqueSubcategoryIds);
+  
+  const uniqueCategoryIds = subcats ? [...new Set(subcats.map(s => s.category_id))] : [];
+  
+  console.log('✅ Atributo encontrado (múltiples subcategorías):', {
+    field_name: firstMatch.field_name,
+    matched_value: firstMatch.field_value,
+    subcategory_count: uniqueSubcategoryIds.length,
+    category_count: uniqueCategoryIds.length,
+    from_search: searchTerm
+  });
+  
+  return {
+    subcategory_id: null, // No restringir a subcategoría
+    category_id: uniqueCategoryIds.length === 1 ? uniqueCategoryIds[0] : null,
+    field_name: firstMatch.field_name,
+    field_value: firstMatch.field_value,
+    is_unique_subcategory: false
+  };
+  
+  return null;
+}
 
 // ====================================================================
 // MAIN HANDLER
@@ -71,8 +267,13 @@ export async function GET(request: NextRequest) {
     const searchQuery = searchParams.get('search') || searchParams.get('q');
     const minPrice = searchParams.get('min_price');
     const maxPrice = searchParams.get('max_price');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    
+    // Paginación: soportar tanto page/limit como offset/limit
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20'); // Reducido de 50 a 20 para mejor UX
+    const offset = searchParams.get('offset') 
+      ? parseInt(searchParams.get('offset'))
+      : (page - 1) * limit;
     
     // Extraer filtros de atributos dinámicos (prefijo attr_)
     const attributeFilters: Record<string, string> = {};
@@ -97,34 +298,50 @@ export async function GET(request: NextRequest) {
     let categoryName: string | null = null;
     let subcategoryName: string | null = null;
     let detectedFromSearch = false; // Flag para saber si se detectó automáticamente
+    let detectedAttribute: { field_name: string; field_value: string } | null = null; // Atributo detectado
 
     // ============================================================
     // 1.1 DETECCIÓN INTELIGENTE: Si hay searchQuery sin categoría/subcategoría,
-    //     intentar detectar si coincide con alguna subcategoría
+    //     intentar detectar si coincide con alguna subcategoría o sinónimo
     // ============================================================
     if (searchQuery && !categorySlug && !subcategorySlug) {
       const searchSlug = toSlug(searchQuery);
-      const searchLower = searchQuery.toLowerCase();
+      const searchLower = searchQuery.toLowerCase().trim();
       // Obtener forma singular (quitar 's' final) y plural (agregar 's')
       const searchSingular = searchLower.replace(/s$/, '');
       const searchPlural = searchLower.endsWith('s') ? searchLower : `${searchLower}s`;
       
+      // Primero: buscar en el mapa de sinónimos
+      const synonymSlug = getSynonymSlug(searchLower);
+      
       console.log('🔎 Intentando detectar subcategoría desde búsqueda:', { 
         original: searchQuery, 
         singular: searchSingular, 
-        plural: searchPlural 
+        plural: searchPlural,
+        synonymSlug 
       });
       
-      // Buscar subcategoría que coincida con el texto de búsqueda (flexible singular/plural)
+      // Construir query con sinónimos incluidos
+      let orConditions = `slug.eq.${searchSlug},slug.eq.${searchSingular},slug.eq.${searchPlural},name.ilike.%${searchSingular}%,display_name.ilike.%${searchSingular}%`;
+      if (synonymSlug) {
+        orConditions += `,slug.eq.${synonymSlug}`;
+      }
+      
+      // Buscar subcategoría que coincida con el texto de búsqueda (flexible singular/plural + sinónimos)
       const { data: matchingSubcats } = await supabase
         .from('subcategories')
         .select('id, name, display_name, slug, category_id')
-        .or(`slug.eq.${searchSlug},slug.eq.${searchSingular},slug.eq.${searchPlural},name.ilike.%${searchSingular}%,display_name.ilike.%${searchSingular}%`)
+        .or(orConditions)
         .limit(3);
       
       if (matchingSubcats && matchingSubcats.length > 0) {
-        // Usar la primera coincidencia
-        const matchedSub = matchingSubcats[0];
+        // Preferir match por sinónimo si existe
+        let matchedSub = matchingSubcats[0];
+        if (synonymSlug) {
+          const synonymMatch = matchingSubcats.find(s => s.slug === synonymSlug);
+          if (synonymMatch) matchedSub = synonymMatch;
+        }
+        
         subcategoryId = matchedSub.id;
         subcategoryName = matchedSub.display_name || matchedSub.name;
         detectedFromSearch = true;
@@ -132,7 +349,8 @@ export async function GET(request: NextRequest) {
         console.log('✅ Subcategoría detectada automáticamente:', { 
           subcategoryId, 
           subcategoryName,
-          fromSearch: searchQuery 
+          fromSearch: searchQuery,
+          viaSynonym: synonymSlug ? true : false
         });
         
         // También resolver la categoría padre
@@ -146,6 +364,83 @@ export async function GET(request: NextRequest) {
           categoryId = parentCat.id;
           categoryName = parentCat.display_name || parentCat.name;
           console.log('✅ Categoría padre resuelta:', { categoryId, categoryName });
+        }
+      }
+      
+      // Si no se encontró subcategoría, buscar en atributos dinámicos
+      if (!subcategoryId) {
+        const attrMatch = await findAttributeMatch(supabase, searchQuery);
+        
+        if (attrMatch) {
+          // Guardar info del atributo detectado para la respuesta
+          detectedAttribute = {
+            field_name: attrMatch.field_name,
+            field_value: attrMatch.field_value
+          };
+          detectedFromSearch = true;
+          
+          if (attrMatch.is_unique_subcategory && attrMatch.subcategory_id) {
+            // El atributo solo existe en una subcategoría - restringir búsqueda
+            attributeFilters[attrMatch.field_name] = attrMatch.field_value;
+            
+            // Resolver la subcategoría desde el atributo
+            const { data: subData } = await supabase
+              .from('subcategories')
+              .select('id, name, display_name, slug, category_id')
+              .eq('id', attrMatch.subcategory_id)
+              .single();
+            
+            if (subData) {
+              subcategoryId = subData.id;
+              subcategoryName = subData.display_name || subData.name;
+              
+              console.log('✅ Subcategoría detectada via atributo (única):', { 
+                subcategoryId, 
+                subcategoryName,
+                attributeField: attrMatch.field_name,
+                attributeValue: attrMatch.field_value,
+                fromSearch: searchQuery
+              });
+              
+              // Resolver categoría padre
+              const { data: parentCatFromAttr } = await supabase
+                .from('categories')
+                .select('id, name, display_name, slug')
+                .eq('id', subData.category_id)
+                .single();
+              
+              if (parentCatFromAttr) {
+                categoryId = parentCatFromAttr.id;
+                categoryName = parentCatFromAttr.display_name || parentCatFromAttr.name;
+                console.log('✅ Categoría padre resuelta via atributo:', { categoryId, categoryName });
+              }
+            }
+          } else {
+            // El atributo existe en múltiples subcategorías
+            // NO restringir subcategoría, solo categoría si todas son de la misma
+            console.log('✅ Atributo detectado en múltiples subcategorías - NO restringir sub:', { 
+              attributeField: attrMatch.field_name,
+              attributeValue: attrMatch.field_value,
+              fromSearch: searchQuery,
+              categoryId: attrMatch.category_id
+            });
+            
+            if (attrMatch.category_id) {
+              // Todas las subcategorías son de la misma categoría
+              const { data: parentCatFromAttr } = await supabase
+                .from('categories')
+                .select('id, name, display_name, slug')
+                .eq('id', attrMatch.category_id)
+                .single();
+              
+              if (parentCatFromAttr) {
+                categoryId = parentCatFromAttr.id;
+                categoryName = parentCatFromAttr.display_name || parentCatFromAttr.name;
+                console.log('✅ Categoría resuelta (múltiples subcats):', { categoryId, categoryName });
+              }
+            }
+            // NO agregar el filtro de atributo aquí porque el campo puede tener distinto nombre en cada subcat
+          }
         }
       }
     }
@@ -202,6 +497,8 @@ export async function GET(request: NextRequest) {
       .from('ads')
       .select(`
         id,
+        slug,
+        short_id,
         title,
         description,
         price,
@@ -244,9 +541,15 @@ export async function GET(request: NextRequest) {
 
     // Búsqueda por texto
     // ✅ FIX: No aplicar búsqueda de texto si ya se detectó subcategoría automáticamente
-    // porque el usuario ya encontró lo que buscaba (ej: "tractores" -> subcategoría Tractores)
-    if (searchQuery && !detectedFromSearch) {
-      query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+    // EXCEPCIÓN: Si se detectó atributo pero NO subcategoría, SÍ buscar por texto para filtrar
+    const shouldApplyTextSearch = searchQuery && (
+      !detectedFromSearch || // No se detectó nada automáticamente
+      (detectedAttribute && !subcategoryId) // Se detectó atributo pero no subcategoría específica
+    );
+    
+    if (shouldApplyTextSearch) {
+      // Buscar en título, descripción Y atributos JSONB
+      query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,attributes.cs.{"marca":"${searchQuery}"},attributes.cs.{"brand":"${searchQuery}"}`);
     }
 
     // Filtros de precio
@@ -343,10 +646,13 @@ export async function GET(request: NextRequest) {
       success: true,
       data: transformedAds,
       pagination: {
-        total: count || transformedAds.length,
+        page,
         limit,
         offset,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
         hasMore: (count || 0) > offset + limit,
+        showing: transformedAds.length,
       },
       meta: {
         category: categoryName,
@@ -358,6 +664,8 @@ export async function GET(request: NextRequest) {
         detected_from_search: detectedFromSearch,
         detected_category_slug: categoryId ? toSlug(categoryName || '') : null,
         detected_subcategory_slug: subcategoryId ? toSlug(subcategoryName || '') : null,
+        // Atributo detectado automáticamente (ej: tipobovino=Toro)
+        detected_attribute: detectedAttribute,
         elapsed_ms: elapsed,
       }
     });

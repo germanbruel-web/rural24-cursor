@@ -67,7 +67,7 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children }) 
   const defaultImage = '/images/hero/hero.1.jpeg';
 
   return (
-    <section className="relative bg-gradient-to-br from-[#f0f9f4] to-[#e8f5ed] py-36 px-4 overflow-hidden">
+    <section className="relative bg-gradient-to-br from-[#f0f9f4] to-[#e8f5ed] py-28 px-4 overflow-hidden">
       {/* Contenido del hero (buscador, texto, etc.) */}
       <div className="relative z-10">
         <div className="text-center mb-6">

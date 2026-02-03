@@ -1,35 +1,41 @@
 // BannersVipHero.tsx
 // Banner VIP en Hero - Usa el nuevo sistema banners_clean
-// Desktop: Banner destacado con imagen 1200x200, cambia en hover de categorías
-// Mobile: Imagen 480x100 con carousel si hay múltiples
+// Desktop: Banner 1200x200, cambia en hover de categorías, muestra 1 random al cargar
+// Mobile: Carrusel automático 648x100 con TODOS los banners activos
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getHeroVIPBanners, incrementBannerImpression, incrementBannerClick } from '../../services/bannersCleanService';
 import type { BannerClean } from '../../../types';
 
 interface Props {
-  category?: string; // Categoría para filtrar (del hover en desktop)
+  category?: string; // Categoría para filtrar (solo aplica en desktop)
 }
 
 // Mapeo de nombres de categorías del hover a slugs de banners_clean
-// SINCRONIZADO con tabla categories en BD (nombres EXACTOS)
 const CATEGORY_MAP: Record<string, string> = {
-  // Nombres display del frontend → nombres EXACTOS en BD banners_clean.category
   'Maquinarias': 'MAQUINARIAS AGRICOLAS',
   'Maquinarias Agrícolas': 'MAQUINARIAS AGRICOLAS',
   'Ganadería': 'GANADERIA',
   'Insumos Agropecuarios': 'INSUMOS AGROPECUARIOS',
   'Inmuebles Rurales': 'INMUEBLES RURALES',
   'Servicios Rurales': 'SERVICIOS RURALES',
-  'Guía del Campo': 'SERVICIOS RURALES', // Fallback legacy
+  'Guía del Campo': 'SERVICIOS RURALES',
 };
 
 export const BannersVipHero: React.FC<Props> = ({ category }) => {
-  const [banners, setBanners] = useState<BannerClean[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Estado compartido
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [impressionsRecorded, setImpressionsRecorded] = useState<Set<string>>(new Set());
+  
+  // Estado para DESKTOP: un solo banner a la vez
+  const [desktopBanner, setDesktopBanner] = useState<BannerClean | null>(null);
+  
+  // Estado para MOBILE: todos los banners para carrusel
+  const [mobileBanners, setMobileBanners] = useState<BannerClean[]>([]);
+  const [mobileIndex, setMobileIndex] = useState(0);
+  
+  const impressionsRecorded = useRef<Set<string>>(new Set());
+  const hasLoadedInitial = useRef(false);
 
   // Detectar mobile
   useEffect(() => {
@@ -42,54 +48,79 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
   // Mapear categoría del hover al slug
   const categorySlug = category ? CATEGORY_MAP[category] || category : undefined;
 
-  const loadBanners = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await getHeroVIPBanners(categorySlug);
-      
-      console.log('📢 BannersVipHero loaded:', { 
-        category,
-        categorySlug,
-        isMobile,
-        total: data.length 
-      });
-      
-      setBanners(data);
-      setCurrentIndex(0);
-    } catch (error) {
-      console.error('[BannersVipHero] Error loading banners:', error);
-      setBanners([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [categorySlug, isMobile]);
-
+  // Carga inicial: obtener TODOS los banners
   useEffect(() => {
-    loadBanners();
-  }, [loadBanners]);
+    if (hasLoadedInitial.current) return;
+    
+    const loadInitialBanners = async () => {
+      setLoading(true);
+      try {
+        const allBanners = await getHeroVIPBanners(undefined);
+        
+        if (allBanners.length > 0) {
+          // DESKTOP: seleccionar uno aleatorio
+          const randomIndex = Math.floor(Math.random() * allBanners.length);
+          setDesktopBanner(allBanners[randomIndex]);
+          
+          // MOBILE: filtrar los que tienen imagen mobile y guardar todos
+          const bannersWithMobile = allBanners.filter(b => b.mobile_image_url);
+          setMobileBanners(bannersWithMobile);
+          
+          hasLoadedInitial.current = true;
+          console.log('🎲 Banner desktop inicial:', allBanners[randomIndex].client_name);
+          console.log('📱 Banners mobile disponibles:', bannersWithMobile.length);
+        }
+      } catch (error) {
+        console.error('[BannersVipHero] Error loading banners:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialBanners();
+  }, []);
+
+  // DESKTOP: Cuando cambia la categoría (hover), cargar banner específico
+  useEffect(() => {
+    if (!category || isMobile) return;
+    
+    const loadCategoryBanner = async () => {
+      try {
+        const banners = await getHeroVIPBanners(categorySlug);
+        
+        if (banners.length > 0) {
+          const randomIndex = Math.floor(Math.random() * banners.length);
+          setDesktopBanner(banners[randomIndex]);
+          console.log('📢 Banner por categoría:', banners[randomIndex].client_name);
+        }
+      } catch (error) {
+        console.error('[BannersVipHero] Error loading category banner:', error);
+      }
+    };
+
+    loadCategoryBanner();
+  }, [category, categorySlug, isMobile]);
+
+  // MOBILE: Auto-rotate carrusel cada 4 segundos
+  useEffect(() => {
+    if (!isMobile || mobileBanners.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setMobileIndex(prev => (prev + 1) % mobileBanners.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [isMobile, mobileBanners.length]);
 
   // Registrar impresión del banner actual
   useEffect(() => {
-    if (banners.length === 0) return;
-    
-    const currentBanner = banners[currentIndex];
-    if (!currentBanner || impressionsRecorded.has(currentBanner.id)) return;
+    const currentBanner = isMobile ? mobileBanners[mobileIndex] : desktopBanner;
+    if (!currentBanner) return;
+    if (impressionsRecorded.current.has(currentBanner.id)) return;
 
-    // Registrar impresión (sin await para no bloquear)
     incrementBannerImpression(currentBanner.id).catch(console.error);
-    setImpressionsRecorded(prev => new Set([...prev, currentBanner.id]));
-  }, [banners, currentIndex, impressionsRecorded]);
-
-  // Auto-rotate SOLO en mobile
-  useEffect(() => {
-    if (!isMobile || banners.length <= 1) return;
-    
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [banners, isMobile]);
+    impressionsRecorded.current.add(currentBanner.id);
+  }, [isMobile, mobileIndex, mobileBanners, desktopBanner]);
 
   // Handler de click para registrar métricas
   const handleClick = async (banner: BannerClean) => {
@@ -100,69 +131,116 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
     }
   };
 
+  // Skeleton animado mientras carga
   if (loading) {
     return (
-      <div className="w-full h-[100px] md:h-[200px] bg-gray-200 animate-pulse rounded-lg" />
+      <div className={`w-full rounded-lg overflow-hidden relative bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse ${isMobile ? 'h-[100px]' : 'h-[200px]'}`}>
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skeleton-shimmer" />
+        <style>{`
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+          .skeleton-shimmer {
+            animation: shimmer 1.5s infinite;
+          }
+        `}</style>
+      </div>
     );
   }
 
-  if (banners.length === 0) {
-    return null;
+  // ====================================
+  // RENDER MOBILE: Carrusel automático
+  // ====================================
+  if (isMobile) {
+    if (mobileBanners.length === 0) return null;
+    
+    const currentBanner = mobileBanners[mobileIndex];
+    if (!currentBanner?.mobile_image_url) return null;
+
+    return (
+      <div className="w-full">
+        {/* Contenedor de imagen con bordes redondeados */}
+        <div className="relative w-full overflow-hidden rounded shadow-lg bg-gray-100">
+          {/* Contenedor del carrusel con aspect ratio fijo */}
+          <div 
+            className="relative w-full"
+            style={{ paddingBottom: '22%' }} // Aspect ratio aumentado para mayor altura visual
+          >
+            {/* Track del carrusel */}
+            <div 
+              className="absolute inset-0 flex transition-transform duration-500 ease-out will-change-transform"
+              style={{ transform: `translateX(-${mobileIndex * 100}%)` }}
+            >
+              {mobileBanners.map((banner, idx) => (
+                <a
+                  key={banner.id}
+                  href={banner.link_url || '#'}
+                  target={banner.link_url ? '_blank' : '_self'}
+                  rel="noopener noreferrer"
+                  className="relative w-full h-full flex-shrink-0"
+                  onClick={() => handleClick(banner)}
+                  aria-hidden={idx !== mobileIndex}
+                >
+                  <img
+                    src={banner.mobile_image_url!}
+                    alt={banner.client_name}
+                    loading={idx === 0 ? 'eager' : 'lazy'}
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                    style={{ 
+                      imageRendering: 'auto',
+                      WebkitBackfaceVisibility: 'hidden',
+                      backfaceVisibility: 'hidden'
+                    }}
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Indicadores FUERA de la imagen */}
+        {mobileBanners.length > 1 && (
+          <div className="flex justify-center gap-1.5 mt-2">
+            {mobileBanners.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setMobileIndex(index)}
+                className={`rounded-full transition-all duration-300 ${
+                  index === mobileIndex 
+                    ? 'bg-[#16a135] w-4 h-1.5' 
+                    : 'bg-gray-300 w-1.5 h-1.5 hover:bg-gray-400'
+                }`}
+                aria-label={`Ver banner ${index + 1}`}
+                aria-current={index === mobileIndex ? 'true' : 'false'}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
   }
 
-  const currentBanner = banners[currentIndex];
-  const imageUrl = isMobile 
-    ? currentBanner.mobile_image_url 
-    : currentBanner.desktop_image_url;
-
-  // Si no hay imagen para el dispositivo actual, no mostrar
-  if (!imageUrl) {
-    return null;
-  }
+  // ====================================
+  // RENDER DESKTOP: Un banner a la vez
+  // ====================================
+  if (!desktopBanner?.desktop_image_url) return null;
 
   return (
     <div className="relative w-full overflow-hidden shadow-lg rounded-lg group">
-      {/* Banner Image - dimensiones exactas según diseño */}
       <a
-        href={currentBanner.link_url || '#'}
-        target={currentBanner.link_url ? '_blank' : '_self'}
+        href={desktopBanner.link_url || '#'}
+        target={desktopBanner.link_url ? '_blank' : '_self'}
         rel="noopener noreferrer"
         className="block w-full"
-        onClick={() => handleClick(currentBanner)}
+        onClick={() => handleClick(desktopBanner)}
       >
         <img
-          src={imageUrl}
-          alt={currentBanner.client_name}
-          className={`w-full object-cover ${
-            isMobile ? 'h-[100px]' : 'h-[200px]'
-          }`}
+          src={desktopBanner.desktop_image_url}
+          alt={desktopBanner.client_name}
+          className="w-full h-[200px] object-cover transition-transform duration-300 group-hover:scale-[1.02]"
         />
       </a>
-
-      {/* Badge de cliente */}
-      <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-        {currentBanner.client_name}
-      </div>
-
-      {/* Indicadores SOLO en mobile con múltiples banners */}
-      {isMobile && banners.length > 1 && (
-        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-2">
-          {banners.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex 
-                  ? 'bg-white w-4' 
-                  : 'bg-white/50 hover:bg-white/75'
-              }`}
-              aria-label={`Ver banner ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Navegación por dots - sin flechas */}
     </div>
   );
 };

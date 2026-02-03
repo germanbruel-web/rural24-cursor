@@ -33,7 +33,7 @@ export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ formData = {} }) =
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-t-lg">
+      <div className="bg-[#16a135] text-white p-4 rounded-t-lg">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

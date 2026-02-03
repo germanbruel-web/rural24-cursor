@@ -2,10 +2,12 @@
 // Página de resultados con FILTROS DINÁMICOS desde Backend
 // ====================================================================
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Loader2, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import type { Product, FilterOptions, SearchFilters } from '../../types';
-import { HeroCategoryButtons } from './HeroCategoryButtons';
 import { ProductCard } from './organisms/ProductCard';
+import { ResultsBannerIntercalated } from './banners/ResultsBannerIntercalated';
+import { ResultsBannerBelowFilter } from './banners/ResultsBannerBelowFilter';
+import { SmartBreadcrumb } from './SmartBreadcrumb';
 import { useDynamicFilters, type FilterConfig, type FilterOption } from '../hooks/useDynamicFilters';
 import { useCategories } from '../hooks/useCategories';
 import { parseFilterParams, buildFilterUrl, toSlug } from '../utils/urlFilterUtils';
@@ -110,6 +112,24 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
   // Calcular un hash de todos los filtros URL para detectar cambios
   const urlFiltersHash = useMemo(() => JSON.stringify(urlFilters), [urlFilters]);
   
+  // Estado para secciones colapsables
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(['subcategoria', 'provincia', 'categoria'])
+  );
+  
+  // Estado para mostrar/ocultar filtros en mobile
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  
+  // Estado de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  // 20 resultados = mejor balance entre carga y UX
+  const RESULTS_PER_PAGE = 20;
+  
+  // Resetear página cuando cambian los filtros (excepto la primera carga)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [urlFiltersHash]);
+  
   useEffect(() => {
     const loadAds = async () => {
       setAdsLoading(true);
@@ -118,7 +138,8 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
       // Pasar TODOS los filtros URL al backend (incluidos atributos dinámicos)
       const params: SearchFiltersParams = {
         ...urlFilters, // Incluye atributos dinámicos como marca, modelo, etc.
-        limit: 100,
+        page: currentPage, // Usar paginación por página
+        limit: RESULTS_PER_PAGE, // 16 resultados por página
       };
       
       const result = await searchAdsFromBackend(params);
@@ -171,16 +192,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
       setDetectedIds({});
       setAdsLoading(false);
     }
-  }, [urlFiltersHash, results]);
-  
-  // Estado para secciones colapsables
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['subcategoria', 'provincia', 'categoria'])
-  );
-  
-  const [currentPage, setCurrentPage] = useState(1);
-  // 16 resultados = 4 cards x 4 filas
-  const RESULTS_PER_PAGE = 16;
+  }, [urlFiltersHash, results, currentPage]); // Agregar currentPage a dependencias
   
   // Toggle sección colapsable
   const toggleSection = (section: string) => {
@@ -215,7 +227,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
   // Limpiar todos los filtros
   const clearFiltersUrl = buildFilterUrl('#/search', { q: urlFilters.q });
 
-  // USAR ADS DESDE BACKEND (ya vienen filtrados)
+  // USAR ADS DESDE BACKEND (ya vienen filtrados y paginados)
   const filteredResults = backendAds;
 
   // Contar filtros activos
@@ -241,11 +253,9 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
   // Combinar en orden jerárquico
   const sortedResults = [...featuredAds, ...manualAds];
 
-  // Paginación
-  const totalPages = Math.ceil(sortedResults.length / RESULTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
-  const endIndex = startIndex + RESULTS_PER_PAGE;
-  const paginatedResults = sortedResults.slice(startIndex, endIndex);
+  // Paginación server-side: el backend ya envía la página correcta
+  const paginatedResults = sortedResults;
+  const totalPages = Math.ceil(totalFromBackend / RESULTS_PER_PAGE);
 
   const goToPage = (page: number) => {
     setCurrentPage(page);
@@ -272,43 +282,50 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Botones de categorías de homepage */}
-      <div className="bg-gradient-to-br from-[#f0f9f4] to-[#e8f5ed] py-6 border-b">
-        <div className="max-w-7xl mx-auto px-4">
-          <HeroCategoryButtons onSearch={onSearch} showCategoryButtons={false} />
-        </div>
-      </div>
-
-      {/* Info de resultados */}
+      {/* Breadcrumb y contador de resultados */}
       <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <p className="text-sm text-gray-600">
-            {/* Mostrar categoría/subcategoría resuelta desde backend o detectedMeta */}
-            {(resolvedCategory || detectedMeta?.category) && (
-              <span className="font-medium">{resolvedCategory?.name || detectedMeta?.category}</span>
-            )}
-            {(resolvedSubcategory || detectedMeta?.subcategory) && (
-              <span className="font-medium"> › {resolvedSubcategory?.name || detectedMeta?.subcategory}</span>
-            )}
-            {searchQuery && !resolvedCategory && !detectedMeta?.category && (
-              <span className="font-medium">Búsqueda: "{searchQuery}"</span>
-            )}
-            {(resolvedCategory || detectedMeta?.category || searchQuery) && ' · '}
-            {adsLoading ? (
-              <span className="text-gray-400">Cargando...</span>
-            ) : (
-              <span>{sortedResults.length} {sortedResults.length === 1 ? 'resultado' : 'resultados'}</span>
-            )}
-          </p>
+        <div className="max-w-[1400px] mx-auto px-4 py-4">
+          <SmartBreadcrumb
+            searchQuery={!detectedMeta?.category ? (urlFilters.q || searchQuery) : undefined}
+            categoryName={resolvedCategory?.name || detectedMeta?.category}
+            categorySlug={urlFilters.cat || detectedMeta?.detected_category_slug}
+            subcategoryName={resolvedSubcategory?.name || detectedMeta?.subcategory}
+            subcategorySlug={urlFilters.sub || detectedMeta?.detected_subcategory_slug}
+            resultCount={totalFromBackend}
+          />
         </div>
       </div>
 
       {/* Contenido principal */}
       <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="max-w-[1400px] mx-auto px-4 py-6">
           <div className="flex flex-col lg:flex-row gap-6">
+            
+            {/* Botón para abrir filtros en mobile */}
+            <div className="lg:hidden">
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white rounded-lg shadow-sm border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                <SlidersHorizontal className="w-5 h-5" />
+                <span>Filtros</span>
+                {activeFilterCount > 0 && (
+                  <span className="bg-[#16a135] text-white text-xs px-2 py-0.5 rounded-full">
+                    {activeFilterCount}
+                  </span>
+                )}
+                {showMobileFilters ? (
+                  <ChevronUp className="w-4 h-4 ml-auto" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 ml-auto" />
+                )}
+              </button>
+            </div>
+
             {/* Sidebar Izquierda - 20% - Filtros + Banners */}
-            <aside className="lg:w-[20%]">
+            {/* En mobile: solo visible cuando showMobileFilters=true */}
+            {/* En desktop (lg+): siempre visible */}
+            <aside className={`lg:w-[20%] ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
               {/* Filtros como Links */}
               <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
                 <div className="flex items-center justify-between mb-4">
@@ -334,7 +351,8 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
 
                 {!filtersLoading && (
                   <div className="space-y-2">
-                    {/* CATEGORÍAS - Links apilados ultra-compactos */}
+                    {/* CATEGORÍAS - Solo mostrar si NO hay detección automática de búsqueda */}
+                    {!detectedMeta?.detected_from_search && (
                     <div>
                       <button
                         onClick={() => toggleSection('categoria')}
@@ -384,9 +402,10 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                         </div>
                       )}
                     </div>
+                    )}
 
-                    {/* SUBCATEGORÍAS - Solo si hay categoría */}
-                    {(urlFilters.cat || detectedIds.categoryId) && backendSubcategories.length > 0 && (
+                    {/* SUBCATEGORÍAS - Solo si hay categoría Y NO hay detección automática */}
+                    {!detectedMeta?.detected_from_search && (urlFilters.cat || detectedIds.categoryId) && backendSubcategories.length > 0 && (
                       <div className="border-t border-gray-100 pt-2">
                         <button
                           onClick={() => toggleSection('subcategoria')}
@@ -567,44 +586,15 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                 </div>
               </div>
 
-              {/* Banners debajo de filtros */}
-              <div className="space-y-6">
-                {/* Banner 1 */}
-                <div 
-                  id="banner-results-top"
-                  className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center"
-                  style={{ height: '250px' }}
-                >
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500 font-medium">Banner 300x250</p>
-                    <p className="text-xs text-gray-400 mt-1">Espacio publicitario</p>
-                  </div>
-                </div>
-
-                {/* Banner 2 */}
-                <div 
-                  id="banner-results-middle"
-                  className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center"
-                  style={{ height: '250px' }}
-                >
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500 font-medium">Banner 300x250</p>
-                    <p className="text-xs text-gray-400 mt-1">Espacio publicitario</p>
-                  </div>
-                </div>
-
-                {/* Banner 3 */}
-                <div 
-                  id="banner-results-bottom"
-                  className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center"
-                  style={{ height: '600px' }}
-                >
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500 font-medium">Banner 300x600</p>
-                    <p className="text-xs text-gray-400 mt-1">Espacio publicitario</p>
-                  </div>
-                </div>
+              {/* Banners debajo de filtros - Solo visible en desktop o cuando filtros están abiertos en mobile */}
+              <div className="mt-6 hidden lg:block">
+                <ResultsBannerBelowFilter category={urlFilters.cat || detectedMeta?.detected_category_slug || categorySlug} />
               </div>
+              {showMobileFilters && (
+                <div className="mt-6 lg:hidden">
+                  <ResultsBannerBelowFilter category={urlFilters.cat || detectedMeta?.detected_category_slug || categorySlug} />
+                </div>
+              )}
             </aside>
 
             {/* Grid de Resultados Derecha - 80% - Cards en 4 columnas */}
@@ -628,21 +618,29 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                 <>
                   {/* Info de paginación */}
                   <div className="text-sm text-gray-600 mb-4">
-                    Mostrando {startIndex + 1}-{Math.min(endIndex, sortedResults.length)} de {sortedResults.length} resultados
+                    Mostrando {((currentPage - 1) * RESULTS_PER_PAGE) + 1}-{Math.min(currentPage * RESULTS_PER_PAGE, totalFromBackend)} de {totalFromBackend} resultados
                   </div>
                   
                   {/* Grid Responsive: Mobile 2, Tablet 3, Desktop 4 - Variante Compact */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                    {paginatedResults.map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        variant="compact"
-                        showBadges={false}
-                        showLocation={true}
-                        showProvince={true}
-                        onViewDetail={onViewDetail}
-                      />
+                    {paginatedResults.map((product, index) => (
+                      <React.Fragment key={product.id}>
+                        <ProductCard
+                          product={product}
+                          variant="compact"
+                          showBadges={false}
+                          showLocation={true}
+                          showProvince={true}
+                          onViewDetail={onViewDetail}
+                        />
+                        {/* Banner intercalado cada 8 productos */}
+                        {(index + 1) % 8 === 0 && (
+                          <ResultsBannerIntercalated 
+                            category={urlFilters.cat || detectedMeta?.detected_category_slug || categorySlug} 
+                            position={index + 1}
+                          />
+                        )}
+                      </React.Fragment>
                     ))}
                   </div>
 

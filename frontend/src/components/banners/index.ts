@@ -8,4 +8,4 @@ export { default as CategoryCarouselBanner } from './CategoryCarousel';
 export { default as HeroVIPBanner } from './HeroVIPBanner';
 export { HomepageBannerSection } from './HomepageBannerSection';
 export { ResultsBannerIntercalated } from './ResultsBannerIntercalated';
-export { ResultsBannerLateral } from './ResultsBannerLateral';
+export { ResultsBannerBelowFilter } from './ResultsBannerBelowFilter';

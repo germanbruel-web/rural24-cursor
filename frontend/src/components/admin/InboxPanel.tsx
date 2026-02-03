@@ -77,21 +77,21 @@ export const InboxPanel: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 text-white">
+        <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-1">Inbox</h1>
-              <p className="text-green-100">
+              <h1 className="text-2xl font-bold text-gray-900">Inbox</h1>
+              <p className="text-gray-500 mt-1">
                 Mensajes de tus avisos publicados
               </p>
             </div>
             <div className="text-right">
-              <div className="text-4xl font-bold">{messages.length}</div>
-              <div className="text-sm text-green-100">Total de mensajes</div>
+              <div className="text-3xl font-bold text-gray-900">{messages.length}</div>
+              <div className="text-sm text-gray-500">mensajes</div>
               {unreadCount > 0 && (
-                <div className="mt-2 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full inline-block">
+                <div className="mt-2 bg-[#16a135] text-white text-xs font-bold px-3 py-1 rounded-full inline-block">
                   {unreadCount} sin leer
                 </div>
               )}
@@ -105,7 +105,7 @@ export const InboxPanel: React.FC = () => {
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === 'all'
-                ? 'bg-green-600 text-white'
+                ? 'bg-[#16a135] text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -115,7 +115,7 @@ export const InboxPanel: React.FC = () => {
             onClick={() => setFilter('unread')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === 'unread'
-                ? 'bg-green-600 text-white'
+                ? 'bg-[#16a135] text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >

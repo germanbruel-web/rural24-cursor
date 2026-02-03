@@ -16,11 +16,15 @@ export const getProducts = async () => {
   console.log('🔍 getProducts: Starting fetch...');
   
   try {
-    // 1. Obtener avisos activos directamente
-    // La tabla ads tiene category/subcategory como VARCHAR (texto), no UUIDs
+    // 1. Obtener avisos activos con JOIN a categorías y subcategorías
+    // Esto resuelve category_id → display_name automáticamente
     const { data: ads, error: adsError } = await supabase
       .from("ads")
-      .select("*")
+      .select(`
+        *,
+        categories:category_id(id, display_name, slug),
+        subcategories:subcategory_id(id, display_name, slug)
+      `)
       .eq("status", "active")
       .order("created_at", { ascending: false });
 
@@ -32,17 +36,28 @@ export const getProducts = async () => {
       console.log(`✅ Fetched ${ads?.length || 0} ads`);
     }
 
-    // Mapear ads usando transformAdToProduct para normalización
-    // Los campos category/subcategory ya vienen como texto desde la BD
+    // Mapear ads: priorizar nombre de relación JOIN, fallback a campo directo
     const mappedAds = (ads || []).map((ad: any) => {
-      return transformAdToProduct(ad as Ad);
+      // Extraer nombres de categoría/subcategoría del JOIN
+      const categoryName = ad.categories?.display_name || ad.category || null;
+      const subcategoryName = ad.subcategories?.display_name || ad.subcategory || null;
+      
+      // Enriquecer el ad con los nombres resueltos antes de transformar
+      const enrichedAd = {
+        ...ad,
+        category: categoryName,
+        subcategory: subcategoryName,
+      };
+      
+      return transformAdToProduct(enrichedAd as Ad);
     });
 
     if (mappedAds.length > 0) {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📸 DIAGNÓSTICO IMAGEN - Primer aviso:');
+      console.log('📸 DIAGNÓSTICO - Primer aviso:');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('Título:', mappedAds[0].title);
+      console.log('Categoría:', mappedAds[0].category);
       console.log('imageUrl:', mappedAds[0].imageUrl);
       console.log('imageUrls:', mappedAds[0].imageUrls);
       console.log('¿Es placeholder?:', mappedAds[0].imageUrl === DEFAULT_PLACEHOLDER_IMAGE);

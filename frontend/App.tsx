@@ -9,7 +9,7 @@ import type { FilterOptions, SearchFilters, Banner, Ad, Product } from "./types"
 // CORE COMPONENTS (Critical Path - No Lazy Loading)
 // ============================================================
 import {
-  Header,
+  AppHeader,
   Footer,
   HeroWithCarousel,
   HeroCategoryButtons,
@@ -53,10 +53,11 @@ const BannersCleanPanel = lazy(() => import("./src/components/admin/BannersClean
 const UsersPanel = lazy(() => import("./src/components/admin/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const CategoriasAdmin = lazy(() => import("./src/components/admin/CategoriasAdmin").then(m => ({ default: m.CategoriasAdmin })));
 const AttributesAdmin = lazy(() => import("./src/components/admin/AttributesAdmin").then(m => ({ default: m.AttributesAdmin })));
-const ContentTemplatesAdmin = lazy(() => import("./src/components/admin/ContentTemplatesAdmin").then(m => ({ default: m.ContentTemplatesAdmin })));
+const TemplatesAdmin = lazy(() => import("./src/components/admin/TemplatesAdmin").then(m => ({ default: m.TemplatesAdmin })));
 const BackendSettings = lazy(() => import("./src/components/admin/BackendSettings").then(m => ({ default: m.BackendSettings })));
 const GlobalSettingsPanel = lazy(() => import("./src/components/admin/GlobalSettingsPanel"));
 const PaymentsAdminPanel = lazy(() => import("./src/components/admin/PaymentsAdminPanel"));
+const SitemapSeoPanel = lazy(() => import("./src/components/admin/SitemapSeoPanel"));
 
 // Dashboard Components (solo para usuarios autenticados)
 const MessagesPanel = lazy(() => import("./src/components/dashboard/MessagesPanel").then(m => ({ default: m.MessagesPanel })));
@@ -85,7 +86,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads';
+export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads';
 
 /**
  * Componente principal de AgroBuscador
@@ -135,6 +136,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/templates-admin') return 'templates-admin';
     if (hash === '#/backend-settings') return 'backend-settings';
     if (hash === '#/deleted-ads') return 'deleted-ads';
+    if (hash === '#/dashboard/sitemap-seo') return 'sitemap-seo';
     if (hash === '#/profile') return 'profile';
     if (hash === '#/subscription') return 'subscription';
     
@@ -175,6 +177,7 @@ const AppContent: React.FC = () => {
       'global-settings': '#/global-settings',
       'featured-queue': '#/featured-queue',
       'payments-admin': '#/payments-admin',
+      'sitemap-seo': '#/dashboard/sitemap-seo',
       'profile': '#/profile',
       'subscription': '#/subscription',
       'contacts': '#/dashboard/contacts',
@@ -483,12 +486,12 @@ const AppContent: React.FC = () => {
   console.log('🎯 Estado actual - currentPage:', currentPage, 'isSearching:', isSearching);
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'ads-management', 'banners', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin'].includes(currentPage);
+  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'ads-management', 'banners', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
     // Esperar a que cargue el perfil antes de verificar permisos en páginas protegidas
-    const isProtectedPage = ['users', 'ads-management', 'banners', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin'].includes(currentPage);
+    const isProtectedPage = ['users', 'ads-management', 'banners', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo'].includes(currentPage);
     
     if (authLoading && isProtectedPage) {
       return (
@@ -549,10 +552,11 @@ const AppContent: React.FC = () => {
                 {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersCleanPanel />}
                 {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <CategoriasAdmin />}
                 {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <AttributesAdmin />}
-                {currentPage === 'templates-admin' && canAccessPage('templates-admin', profile?.role) && <ContentTemplatesAdmin />}
+                {currentPage === 'templates-admin' && canAccessPage('templates-admin', profile?.role) && <TemplatesAdmin />}
                 {currentPage === 'backend-settings' && canAccessPage('backend-settings', profile?.role) && <BackendSettings />}
                 {currentPage === 'global-settings' && canAccessPage('global-settings', profile?.role) && <GlobalSettingsPanel />}
                 {currentPage === 'payments-admin' && canAccessPage('payments-admin', profile?.role) && <PaymentsAdminPanel />}
+                {currentPage === 'sitemap-seo' && canAccessPage('sitemap-seo', profile?.role) && <SitemapSeoPanel />}
                 {currentPage === 'settings' && (
                   <div className="bg-white rounded-lg shadow p-6">
                     <h2 className="text-2xl font-bold mb-4">Configuración</h2>
@@ -575,7 +579,7 @@ const AppContent: React.FC = () => {
   if (currentPage === 'design-showcase') {
     return (
       <div className="flex flex-col min-h-screen bg-gray-50">
-        <Header 
+        <AppHeader 
           onNavigate={(page) => {
             navigateToPage(page);
             if (page === 'home') {
@@ -612,7 +616,7 @@ const AppContent: React.FC = () => {
   if (currentPage === 'pricing') {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Header 
+        <AppHeader 
           onNavigate={(page) => {
             navigateToPage(page);
             if (page === 'home') {
@@ -633,7 +637,7 @@ const AppContent: React.FC = () => {
   if (currentPage === 'publicar-v3') {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Header 
+        <AppHeader 
           onNavigate={(page) => {
             navigateToPage(page);
             if (page === 'home') {
@@ -658,7 +662,7 @@ const AppContent: React.FC = () => {
   if (currentPage === 'test-form') {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Header 
+        <AppHeader 
           onNavigate={(page) => {
             navigateToPage(page);
             if (page === 'home') {
@@ -678,7 +682,7 @@ const AppContent: React.FC = () => {
   if (currentPage === 'how-it-works') {
     return (
       <div className="flex flex-col min-h-screen bg-white">
-        <Header 
+        <AppHeader 
           onNavigate={(page) => {
             navigateToPage(page);
             if (page === 'home') {
@@ -714,7 +718,7 @@ const AppContent: React.FC = () => {
   // Render normal para home, búsqueda y detalle
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      <Header 
+      <AppHeader 
         onNavigate={(page) => {
           navigateToPage(page);
           if (page === 'home') {
@@ -767,7 +771,7 @@ const AppContent: React.FC = () => {
 
           {/* Banner VIP Hero - DEBAJO de los botones negros */}
           <section className="relative -mt-16 z-20 px-4">
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-[1200px] mx-auto">
               <BannersVipHero category={hoveredCategory || undefined} />
             </div>
           </section>
@@ -795,7 +799,7 @@ const AppContent: React.FC = () => {
             />
           ) : (
             <section className="py-8 sm:py-12 bg-white" aria-busy="true" aria-label="Cargando avisos destacados">
-              <div className="max-w-7xl mx-auto px-3 sm:px-4">
+              <div className="max-w-[1400px] mx-auto px-3 sm:px-4">
                 <div className="h-12 bg-gray-200 rounded animate-pulse mb-6" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                   {[...Array(5)].map((_, i) => (

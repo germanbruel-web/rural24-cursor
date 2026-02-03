@@ -85,19 +85,21 @@ export const CMSImagesGallery: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl p-6 shadow-lg">
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <ImageIcon className="w-8 h-8" />
-          Galería de Imágenes CMS
-        </h1>
-        <p className="mt-2 opacity-90">
-          Todas las imágenes almacenadas en el bucket CMS
-        </p>
-        <div className="mt-4 flex items-center gap-4 text-sm">
-          <span className="bg-white/20 px-3 py-1 rounded-full">
-            {images.length} imágenes totales
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <ImageIcon className="w-6 h-6 text-gray-600" />
+            Galería de Imágenes CMS
+          </h1>
+          <p className="mt-1 text-gray-500">
+            Imágenes almacenadas en el bucket CMS
+          </p>
+        </div>
+        <div className="flex items-center gap-3 text-sm text-gray-500">
+          <span className="px-3 py-1 bg-gray-100 rounded-full">
+            {images.length} imágenes
           </span>
-          <span className="bg-white/20 px-3 py-1 rounded-full">
+          <span className="px-3 py-1 bg-gray-100 rounded-full">
             {formatFileSize(images.reduce((sum, img) => sum + img.size, 0))}
           </span>
         </div>

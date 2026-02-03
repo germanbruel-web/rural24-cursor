@@ -47,7 +47,7 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({ formData }) =>
   return (
     <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-5 py-4">
+      <div className="bg-[#16a135] text-white px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <Package className="w-5 h-5" />

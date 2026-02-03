@@ -7,6 +7,8 @@
 // CORE COMPONENTS (uso frecuente, carga inmediata)
 // ============================================================
 export { Header } from './Header';
+export { TopNav } from './TopNav';
+export { AppHeader } from './AppHeader';
 export { Footer } from './Footer';
 export { HeroWithCarousel } from './HeroWithCarousel';
 export { HeroCategoryButtons } from './HeroCategoryButtons';
@@ -17,6 +19,7 @@ export { RegisterBanner } from './RegisterBanner';
 export { AdvancedSearchBar } from './AdvancedSearchBar';
 export { DesignSystemShowcase } from './DesignSystemShowcase';
 export { DesignSystemShowcaseSimple } from './DesignSystemShowcaseSimple';
+export { SmartBreadcrumb } from './SmartBreadcrumb';
 
 // ============================================================
 // RE-EXPORT BARRELS (para imports anidados)

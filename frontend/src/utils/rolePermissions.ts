@@ -31,6 +31,7 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   'backend-settings': ['superadmin'],
   'global-settings': ['superadmin'],
   'payments-admin': ['superadmin'],
+  'sitemap-seo': ['superadmin'],
 };
 
 /**
@@ -137,7 +138,7 @@ export const MENU_STRUCTURE: MenuItem[] = [
   },
   {
     id: 'templates-admin',
-    label: 'Plantillas Contenido',
+    label: 'Autocompletado',
     allowedRoles: ['superadmin'],
   },
   {
@@ -153,6 +154,11 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'payments-admin',
     label: 'Cobranzas',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'sitemap-seo',
+    label: 'Sitemap SEO',
     allowedRoles: ['superadmin'],
   },
   

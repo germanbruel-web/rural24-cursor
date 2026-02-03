@@ -212,7 +212,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
   if (isLoading) {
     return (
       <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-xl p-8 bg-white">
             {/* Header skeleton */}
             <div className="flex items-center mb-6 w-full" style={{ minHeight: '72px' }}>
@@ -266,7 +266,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
     if (category === 'Inmuebles') {
       return (
         <section className="py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 {categoryIcon && (
@@ -326,7 +326,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
     // Para categorías vacías, mostrar skeleton de cards
     return (
       <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-xl p-4 md:p-8" style={{ backgroundColor: colors.bg }}>
             {/* Header */}
             <div className="mb-6">
@@ -375,7 +375,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
   // Renderizar el carrusel principal si hay productos
   return (
     <section className="py-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-xl p-6 md:p-10">
           {/* MOBILE: Layout vertical optimizado */}
           {isMobile ? (
@@ -463,53 +463,72 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
 
 
 
-          {/* Subcategorías con contadores totales (manuales + scrapeados) */}
+          {/* Subcategorías - SIEMPRE mostrar todas para SEO (incluso con 0 avisos) */}
           {(() => {
             // Mapear variaciones de nombres de categorías a los nombres en SUBCATEGORIES
             const categoryKey = category === 'Maquinaria' ? 'Maquinarias' : category;
-            return SUBCATEGORIES[categoryKey];
-          })() && (
-            <div className={`pt-8 mt-8 border-t-2 border-gray-200 ${isMobile ? 'px-2' : ''}`}>
-              <div className={`flex flex-wrap gap-3 items-center ${isMobile ? 'justify-start' : 'justify-center'}`}>
-                {(() => {
-                  const categoryKey = category === 'Maquinaria' ? 'Maquinarias' : category;
-                  return SUBCATEGORIES[categoryKey];
-                })()?.map((subcategory, index) => {
-                  // Contar TODOS los productos de esta subcategoría (premium + manuales)
-                  // Esto incluye tanto los que se muestran en home como los que solo están en resultados
-                  const allCategoryProducts = [...premiumProducts, ...manualProducts];
-                  const count = allCategoryProducts.filter(p => 
-                    p.subcategory?.toLowerCase() === subcategory.toLowerCase()
-                  ).length;
-                  
-                  return (
-                    <button
-                      key={subcategory}
-                      onClick={() => onViewMore?.(category, subcategory)}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all ${isMobile ? 'text-xs' : 'text-sm'} ${
-                        count > 0 
-                          ? 'bg-gradient-to-r from-[#16a135] to-[#138a2c] text-white hover:from-[#138a2c] hover:to-[#0f7023] shadow-md hover:shadow-lg transform hover:scale-105' 
-                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                      }`}
-                    >
-                      {subcategory} {count > 0 && <span className="ml-1 font-bold">({count})</span>}
-                    </button>
-                  );
-                })}
-                {(premiumProducts.length + manualProducts.length) > 0 && (
-                  <button
-                    onClick={() => onViewMore?.(category)}
+            const subcats = SUBCATEGORIES[categoryKey];
+            if (!subcats) return null;
+            
+            // Generar slug de categoría para URLs
+            const categorySlug = categoryKey
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/\s+/g, '-');
+            
+            return (
+              <div className={`pt-8 mt-8 border-t-2 border-gray-200 ${isMobile ? 'px-2' : ''}`}>
+                <div className={`flex flex-wrap gap-3 items-center ${isMobile ? 'justify-start' : 'justify-center'}`}>
+                  {subcats.map((subcategory) => {
+                    // Contar productos de esta subcategoría
+                    const allCategoryProducts = [...premiumProducts, ...manualProducts];
+                    const count = allCategoryProducts.filter(p => 
+                      p.subcategory?.toLowerCase() === subcategory.toLowerCase()
+                    ).length;
+                    
+                    // Generar slug para URL amigable
+                    const subcategorySlug = subcategory
+                      .toLowerCase()
+                      .normalize('NFD')
+                      .replace(/[\u0300-\u036f]/g, '')
+                      .replace(/\s+/g, '-');
+                    
+                    return (
+                      <a
+                        key={subcategory}
+                        href={`#/search?cat=${categorySlug}&sub=${subcategorySlug}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onViewMore?.(category, subcategory);
+                        }}
+                        className={`px-4 py-2 rounded-xl font-semibold transition-all ${isMobile ? 'text-xs' : 'text-sm'} ${
+                          count > 0 
+                            ? 'bg-gradient-to-r from-[#16a135] to-[#138a2c] text-white hover:from-[#138a2c] hover:to-[#0f7023] shadow-md hover:shadow-lg transform hover:scale-105' 
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                        }`}
+                      >
+                        {subcategory} {count > 0 && <span className="ml-1 font-bold">({count})</span>}
+                      </a>
+                    );
+                  })}
+                  <a
+                    href={`#/search?cat=${categorySlug}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onViewMore?.(category);
+                    }}
                     className={`px-6 py-2 rounded-xl font-bold bg-gray-900 text-white hover:bg-gray-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all flex items-center gap-2 ${isMobile ? 'text-xs' : 'text-sm'}`}
                   >
                     Ver todas
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                  </button>
-                )}
+                  </a>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </div>
 

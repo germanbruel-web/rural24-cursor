@@ -31,7 +31,7 @@ export const uploadService = {
       formData.append('folder', folder); // 'ads' o 'banners'
 
       // Subir vía backend API (Cloudinary)
-      const response = await fetch('http://localhost:3000/api/uploads', {
+      const response = await fetch('http://localhost:3001/api/uploads', {
         method: 'POST',
         body: formData,
       });

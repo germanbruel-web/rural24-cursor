@@ -366,7 +366,7 @@ export default function AdsManagementPanel() {
         }
       }
 
-      notify.success(`✅ ${changes.length} cambio(s) publicados. Homepage actualizada.`);
+      notify.success(`${changes.length} cambio(s) publicados. Homepage actualizada.`);
       setPendingChanges(new Map());
       
       // Recargar datos
@@ -391,7 +391,7 @@ export default function AdsManagementPanel() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         
         {/* Header */}
         <div className="mb-6">
@@ -514,7 +514,7 @@ export default function AdsManagementPanel() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-100 text-left">
                   <tr>
-                    <th className="px-4 py-3 font-medium text-gray-600 w-12">⭐</th>
+                    <th className="px-4 py-3 font-medium text-gray-600 w-12"><Star className="w-4 h-4" /></th>
                     <th className="px-4 py-3 font-medium text-gray-600">TÍTULO</th>
                     <th className="px-4 py-3 font-medium text-gray-600 w-28">PRECIO</th>
                     <th className="px-4 py-3 font-medium text-gray-600 w-24">ESTADO</th>

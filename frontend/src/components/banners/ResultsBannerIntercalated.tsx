@@ -1,10 +1,10 @@
 // ResultsBannerIntercalated.tsx
-// Banner Resultados Intercalado - Posición 3 (648x100)
-// Se inserta cada 5 productos en los resultados (random)
+// Banner Resultados Intercalado - (650x100)
+// Se inserta cada N productos en los resultados (configurable desde global_settings)
 
 import { useEffect, useState } from 'react';
-import { getResultsIntercalatedBanner } from '../../services/bannersService';
-import type { Banner } from '../../../types';
+import { getIntercalatedBanner, incrementBannerImpression, incrementBannerClick } from '../../services/bannersCleanService';
+import type { BannerClean } from '@/types';
 
 interface Props {
   category?: string;
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const ResultsBannerIntercalated: React.FC<Props> = ({ category, position }) => {
-  const [banner, setBanner] = useState<Banner | null>(null);
+  const [banner, setBanner] = useState<BannerClean | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,34 +21,62 @@ export const ResultsBannerIntercalated: React.FC<Props> = ({ category, position 
 
   const loadBanner = async () => {
     setLoading(true);
-    const data = await getResultsIntercalatedBanner(category);
-    console.log(`📢 IntercalatedBanner at position ${position}:`, data?.title);
+    const data = await getIntercalatedBanner(category);
+    console.log(`📢 IntercalatedBanner at position ${position}:`, data?.client_name);
     setBanner(data);
+    
+    // Incrementar impresión
+    if (data) {
+      incrementBannerImpression(data.id).catch(() => {});
+    }
+    
     setLoading(false);
+  };
+
+  const handleClick = () => {
+    if (banner) {
+      incrementBannerClick(banner.id).catch(() => {});
+    }
   };
 
   if (loading) {
     return (
-      <div className="col-span-full w-full h-[100px] bg-gray-200 animate-pulse rounded-lg" />
+      <div className="col-span-full flex justify-center my-4">
+        <div className="w-[650px] max-w-full h-[100px] bg-gray-200 animate-pulse rounded-lg" />
+      </div>
     );
   }
 
-  if (!banner) {
-    return null;
+  // Si no hay banner real, mostrar placeholder publicitario
+  if (!banner || !banner.desktop_image_url) {
+    return (
+      <div className="col-span-full flex justify-center my-4">
+        <a
+          href="mailto:info@rural24.com.ar?subject=Consulta%20publicidad%20en%20Rural24"
+          className="block w-[650px] max-w-full h-[100px] bg-gradient-to-r from-[#16a135] to-[#138a2e] rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.01] flex items-center justify-center"
+        >
+          <div className="text-center text-white px-4">
+            <p className="text-lg font-bold">📢 Publicite aquí</p>
+            <p className="text-sm opacity-90">Consulte en info@rural24.com.ar</p>
+          </div>
+        </a>
+      </div>
+    );
   }
 
   return (
-    <div className="col-span-full my-4">
+    <div className="col-span-full flex justify-center my-4">
       <a
         href={banner.link_url || '#'}
         target={banner.link_url ? '_blank' : '_self'}
         rel="noopener noreferrer"
-        className="block w-full rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+        onClick={handleClick}
+        className="block w-[650px] max-w-full rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
       >
         <img
-          src={banner.image_url}
-          alt={banner.title}
-          className="w-full h-[100px] object-cover hover:scale-105 transition-transform duration-300"
+          src={banner.desktop_image_url}
+          alt={banner.client_name}
+          className="w-full h-[100px] object-contain hover:scale-105 transition-transform duration-300"
         />
       </a>
     </div>

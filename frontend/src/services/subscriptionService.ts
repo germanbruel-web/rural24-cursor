@@ -6,27 +6,34 @@ import { supabase } from './supabaseClient';
 
 export interface SubscriptionPlan {
   id: string;
-  name: string; // 'free', 'premium_particular', 'premium_empresa'
+  name: string; // 'free', 'starter', 'pro', 'empresa'
   display_name: string;
-  max_ads: number;
-  max_contacts_received: number | null;
-  max_contacts_sent: number | null;
+  description?: string;
+  max_ads: number | null; // null = ilimitado
+  max_contacts_per_month: number | null; // null = ilimitado
+  max_contacts_received?: number | null;
+  max_contacts_sent?: number | null;
   max_featured_ads: number;
-  max_highlighted_ads: number;
-  can_publish_immediately: boolean;
-  has_inbox: boolean;
+  max_highlighted_ads?: number;
+  can_publish_immediately?: boolean;
+  has_inbox?: boolean;
   has_analytics: boolean;
-  has_priority_support: boolean;
+  has_priority_support?: boolean;
   has_public_profile: boolean;
   has_catalog: boolean;
-  has_multiuser: boolean;
+  has_multiuser?: boolean;
   price_monthly: number;
   price_yearly: number;
-  currency: string;
+  currency?: string;
   is_active: boolean;
   sort_order: number;
-  created_at: string;
-  updated_at: string;
+  badge_color?: string;
+  features?: string[];
+  icon_name?: string;
+  badge_text?: string;
+  is_featured?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface UserSubscription {
@@ -220,4 +227,171 @@ export function formatPrice(amount: number, currency: string = 'ARS'): string {
   const symbol = symbols[currency] || currency;
   
   return `${symbol}${amount.toLocaleString('es-AR')}`;
+}
+
+// ================================================
+// CRUD DE PLANES (SuperAdmin)
+// ================================================
+
+export interface PlanCreateInput {
+  name: string;
+  display_name: string;
+  description?: string;
+  max_ads: number | null;
+  max_contacts_per_month: number | null;
+  max_featured_ads: number;
+  has_public_profile: boolean;
+  has_catalog: boolean;
+  has_analytics: boolean;
+  price_monthly: number;
+  price_yearly: number;
+  is_active: boolean;
+  sort_order: number;
+  badge_color?: string;
+  features?: string[];
+  icon_name?: string;
+  badge_text?: string;
+  is_featured?: boolean;
+}
+
+export interface PlanUpdateInput extends Partial<PlanCreateInput> {
+  id: string;
+}
+
+/**
+ * Obtener TODOS los planes (incluyendo inactivos) - Solo SuperAdmin
+ */
+export async function getAllPlansAdmin(): Promise<SubscriptionPlan[]> {
+  const { data, error } = await supabase
+    .from('subscription_plans')
+    .select('*')
+    .order('sort_order');
+
+  if (error) {
+    console.error('❌ Error getting all plans:', error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Crear nuevo plan
+ */
+export async function createPlan(input: PlanCreateInput): Promise<{ success: boolean; plan?: SubscriptionPlan; error?: string }> {
+  try {
+    const { data, error } = await supabase
+      .from('subscription_plans')
+      .insert({
+        name: input.name,
+        display_name: input.display_name,
+        description: input.description || '',
+        max_ads: input.max_ads,
+        max_contacts_per_month: input.max_contacts_per_month,
+        max_featured_ads: input.max_featured_ads || 0,
+        has_public_profile: input.has_public_profile || false,
+        has_catalog: input.has_catalog || false,
+        has_analytics: input.has_analytics !== false,
+        price_monthly: input.price_monthly || 0,
+        price_yearly: input.price_yearly || 0,
+        is_active: input.is_active !== false,
+        sort_order: input.sort_order || 99,
+        badge_color: input.badge_color || 'gray',
+        features: input.features || [],
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Error creating plan:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, plan: data };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Actualizar plan existente
+ */
+export async function updatePlan(input: PlanUpdateInput): Promise<{ success: boolean; error?: string }> {
+  const { id, ...updates } = input;
+
+  try {
+    const { error } = await supabase
+      .from('subscription_plans')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Error updating plan:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Desactivar plan (soft delete)
+ */
+export async function deactivatePlan(planId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('subscription_plans')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq('id', planId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Reactivar plan
+ */
+export async function reactivatePlan(planId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('subscription_plans')
+      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .eq('id', planId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Contar usuarios por plan
+ */
+export async function countUsersByPlan(planId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true })
+    .eq('subscription_plan_id', planId);
+
+  if (error) {
+    console.error('❌ Error counting users:', error);
+    return 0;
+  }
+
+  return count || 0;
 }

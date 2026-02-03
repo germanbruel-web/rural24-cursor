@@ -62,6 +62,8 @@ export type CategoriesResponseDTO = z.infer<typeof CategoriesResponseSchema>;
 export const AdImageSchema = z.object({
   url: z.string().url(),
   path: z.string(),
+  sortOrder: z.number().optional(),
+  isPrimary: z.boolean().optional(),
 });
 
 // Schema for creating an ad

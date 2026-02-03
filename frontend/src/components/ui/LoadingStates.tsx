@@ -119,7 +119,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {actionLabel && onAction && (
         <button
           onClick={onAction}
-          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+          className="px-6 py-3 bg-[#16a135] hover:bg-[#138a2c] text-white rounded-lg font-medium hover:shadow-lg transition-all"
         >
           {actionLabel}
         </button>
@@ -200,7 +200,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       )}
       <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
         <div
-          className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300 ease-out"
+          className="bg-[#16a135] h-2 rounded-full transition-all duration-300 ease-out"
           style={{ width: `${clampedProgress}%` }}
         />
       </div>

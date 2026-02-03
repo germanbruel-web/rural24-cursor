@@ -64,7 +64,9 @@ const CATEGORIES = [
 
 const PLACEMENTS = [
   { value: 'hero_vip' as BannerPlacement, label: 'Hero VIP', desc: '1 por categoría (Desktop 1200x200 + Mobile 480x100)' },
-  { value: 'category_carousel' as BannerPlacement, label: 'Carrusel Categorías', desc: '4 por categoría (650x100 responsive)' }
+  { value: 'category_carousel' as BannerPlacement, label: 'Carrusel Categorías', desc: '4 por categoría (650x100 responsive)' },
+  { value: 'results_intercalated' as BannerPlacement, label: 'Intercalado Resultados', desc: 'Entre productos cada 8 cards (650x100)' },
+  { value: 'results_below_filter' as BannerPlacement, label: 'Debajo del Filtro', desc: 'Sticky bajo filtros (280x250)' }
 ];
 
 // ====================================
@@ -178,14 +180,25 @@ export default function BannersCleanPanel() {
       return;
     }
 
+    // Validación según tipo de placement
     if (formData.placement === 'hero_vip') {
       if (!formData.desktop_image_url.trim() || !formData.mobile_image_url.trim()) {
         alert('Hero VIP requiere imagen Desktop (1200x200) y Mobile (480x100)');
         return;
       }
-    } else {
+    } else if (formData.placement === 'category_carousel') {
       if (!formData.carousel_image_url.trim()) {
         alert('Carrusel requiere imagen (650x100)');
+        return;
+      }
+    } else if (formData.placement === 'results_intercalated') {
+      if (!formData.desktop_image_url.trim()) {
+        alert('Intercalado requiere imagen (650x100)');
+        return;
+      }
+    } else if (formData.placement === 'results_below_filter') {
+      if (!formData.desktop_image_url.trim()) {
+        alert('Debajo del Filtro requiere imagen (280x250)');
         return;
       }
     }
@@ -224,7 +237,7 @@ export default function BannersCleanPanel() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex justify-between items-center">
@@ -253,8 +266,9 @@ export default function BannersCleanPanel() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
               >
                 <option value="all">Todos</option>
-                <option value="hero_vip">Hero VIP</option>
-                <option value="category_carousel">Carrusel Categorías</option>
+                {PLACEMENTS.map(p => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
               </select>
             </div>
 
@@ -331,9 +345,13 @@ export default function BannersCleanPanel() {
                       <span className={`px-2 py-1 rounded text-xs font-medium ${
                         banner.placement === 'hero_vip' 
                           ? 'bg-purple-100 text-purple-700' 
-                          : 'bg-blue-100 text-blue-700'
+                          : banner.placement === 'category_carousel'
+                          ? 'bg-blue-100 text-blue-700'
+                          : banner.placement === 'results_intercalated'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-yellow-100 text-yellow-700'
                       }`}>
-                        {banner.placement === 'hero_vip' ? 'Hero VIP' : 'Carrusel'}
+                        {PLACEMENTS.find(p => p.value === banner.placement)?.label || banner.placement}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
@@ -533,7 +551,7 @@ export default function BannersCleanPanel() {
                       maxSizeMB={2}
                     />
                   </div>
-                ) : (
+                ) : formData.placement === 'category_carousel' ? (
                   <ImageUploader
                     value={formData.carousel_image_url}
                     onChange={(url) => setFormData({ ...formData, carousel_image_url: url })}
@@ -542,7 +560,25 @@ export default function BannersCleanPanel() {
                     requiredHeight={100}
                     maxSizeMB={2}
                   />
-                )}
+                ) : formData.placement === 'results_intercalated' ? (
+                  <ImageUploader
+                    value={formData.desktop_image_url}
+                    onChange={(url) => setFormData({ ...formData, desktop_image_url: url })}
+                    label="Imagen Intercalado * (650x100)"
+                    requiredWidth={650}
+                    requiredHeight={100}
+                    maxSizeMB={2}
+                  />
+                ) : formData.placement === 'results_below_filter' ? (
+                  <ImageUploader
+                    value={formData.desktop_image_url}
+                    onChange={(url) => setFormData({ ...formData, desktop_image_url: url })}
+                    label="Imagen Debajo Filtro * (280x250)"
+                    requiredWidth={280}
+                    requiredHeight={250}
+                    maxSizeMB={2}
+                  />
+                ) : null}
 
                 {/* Fechas */}
                 <div className="grid grid-cols-2 gap-4">

@@ -21,9 +21,10 @@ export class AdsRepository {
         return Result.fail(new DatabaseError('Title is required for creating an ad'));
       }
 
-      // Generar slug y short_id
-      const slug = this.generateSlug(data.title);
+      // Generar short_id primero (se usa en el slug)
       const short_id = this.generateShortId();
+      // Generar slug con short_id incluido
+      const slug = this.generateSlug(data.title, short_id);
 
       // Validar que el slug se generó correctamente
       if (!slug || slug.length === 0) {
@@ -186,14 +187,25 @@ export class AdsRepository {
    */
   async updateAd(id: string, data: AdUpdate): Promise<Result<Ad, DatabaseError | NotFoundError>> {
     try {
+      // Primero obtener el short_id actual del aviso para regenerar el slug si es necesario
+      let currentShortId: string | null = null;
+      if (data.title) {
+        const { data: existingAd } = await this.supabase
+          .from('ads')
+          .select('short_id')
+          .eq('id', id)
+          .single();
+        currentShortId = existingAd?.short_id;
+      }
+
       const updateData: any = {
         ...data,
         updated_at: new Date().toISOString(),
       };
 
-      // Si se actualiza el título, regenerar slug
-      if (data.title) {
-        updateData.slug = this.generateSlug(data.title);
+      // Si se actualiza el título, regenerar slug con el short_id existente
+      if (data.title && currentShortId) {
+        updateData.slug = this.generateSlug(data.title, currentShortId);
       }
 
       const { data: ad, error } = await this.supabase
@@ -259,14 +271,17 @@ export class AdsRepository {
   /**
    * Helpers privados
    */
-  private generateSlug(title: string): string {
-    return title
+  private generateSlug(title: string, shortId: string): string {
+    const baseSlug = title
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '') // Remover acentos
       .replace(/[^a-z0-9]+/g, '-') // Reemplazar espacios y caracteres especiales
       .replace(/^-+|-+$/g, '') // Remover guiones al inicio/fin
       .slice(0, 100); // Limitar longitud
+    
+    // Agregar shortId al final para hacer el slug único y fácil de buscar
+    return `${baseSlug}-${shortId}`;
   }
 
   private generateShortId(): string {

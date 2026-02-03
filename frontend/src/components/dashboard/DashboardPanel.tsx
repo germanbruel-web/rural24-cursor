@@ -8,7 +8,11 @@ import {
   Award,
   Users,
   Package,
-  Send
+  Send,
+  PenLine,
+  LayoutGrid,
+  Search,
+  Star
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -113,16 +117,16 @@ export const DashboardPanel: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">AVISOS Premium</h1>
-            <span className="inline-block mt-2 px-4 py-1 bg-yellow-400 text-gray-900 rounded-full font-bold text-sm">
-              ⭐ Destacado
+            <span className="inline-flex items-center gap-1 mt-2 px-4 py-1 bg-yellow-400 text-gray-900 rounded-full font-bold text-sm">
+              <Star className="w-4 h-4" /> Destacado
             </span>
           </div>
           <div className="flex items-center gap-4">
             <button
               onClick={() => window.location.hash = '#/my-ads'}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
+              className="bg-[#16a135] hover:bg-[#138a2c] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
             >
-              <span className="text-xl">📝</span>
+              <PenLine className="w-5 h-5" />
               Crear Aviso
             </button>
             <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -154,7 +158,7 @@ export const DashboardPanel: React.FC = () => {
 
         {/* Items del Dashboard - SuperAdmin */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">📊 Items del Dashboard</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><LayoutGrid className="w-5 h-5 text-gray-600" /> Items del Dashboard</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* GRUPO 1: AVISOS */}
@@ -246,9 +250,9 @@ export const DashboardPanel: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => window.location.hash = '#/my-ads'}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
+              className="bg-[#16a135] hover:bg-[#138a2c] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
             >
-              <span className="text-xl">📝</span>
+              <PenLine className="w-5 h-5" />
               Crear Aviso
             </button>
             <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -284,8 +288,8 @@ export const DashboardPanel: React.FC = () => {
         </div>
 
         {/* Info Box */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-2">🔍 Rol: Administrador de Scraping</h3>
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2"><Search className="w-5 h-5 text-gray-600" /> Rol: Administrador de Scraping</h3>
           <p className="text-sm text-gray-700">
             Este panel está diseñado exclusivamente para gestionar avisos scrapeados de fuentes externas.
             Puedes revisar, aprobar y publicar avisos automáticamente recolectados.
@@ -306,9 +310,9 @@ export const DashboardPanel: React.FC = () => {
         </div>
         <button
           onClick={() => window.location.hash = '#/my-ads'}
-          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-3"
+          className="bg-[#16a135] hover:bg-[#138a2c] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center gap-3"
         >
-          <span className="text-2xl">📝</span>
+          <PenLine className="w-6 h-6" />
           Crear Nuevo Aviso
         </button>
       </div>

@@ -20,12 +20,12 @@ export const AutoSaveIndicator: React.FC<AutoSaveIndicatorProps> = ({ lastSaved,
       const seconds = Math.floor((Date.now() - lastSaved) / 1000);
       
       if (seconds < 5) {
-        setTimeSince('Guardado ahora');
+        setTimeSince('Ahora');
       } else if (seconds < 60) {
-        setTimeSince(`Guardado hace ${seconds}s`);
+        setTimeSince(`${seconds}s`);
       } else {
         const minutes = Math.floor(seconds / 60);
-        setTimeSince(`Guardado hace ${minutes}m`);
+        setTimeSince(`${minutes}m`);
       }
     };
 
@@ -46,17 +46,17 @@ export const AutoSaveIndicator: React.FC<AutoSaveIndicatorProps> = ({ lastSaved,
 
   if (!lastSaved) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-400 px-3 py-1.5">
-        <Cloud className="w-4 h-4" />
-        <span>Sin cambios</span>
+      <div className="flex items-center gap-1 text-xs text-gray-400 px-2 py-1" title="Sin cambios">
+        <Cloud className="w-3.5 h-3.5" />
+        <span className="hidden sm:inline">Sin cambios</span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1.5 rounded-lg">
-      <Check className="w-4 h-4 flex-shrink-0" />
-      <span className="font-medium">{timeSince}</span>
+    <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded" title={`Guardado hace ${timeSince}`}>
+      <Check className="w-3.5 h-3.5 flex-shrink-0" />
+      <span className="hidden sm:inline">{timeSince}</span>
     </div>
   );
 };

@@ -43,7 +43,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
   if (isLoading) {
     return (
       <footer className="bg-black text-gray-300 py-12">
-        <div className="max-w-7xl mx-auto px-4 text-center">
+        <div className="max-w-[1400px] mx-auto px-4 text-center">
           <p className="text-gray-500">Cargando...</p>
         </div>
       </footer>
@@ -59,7 +59,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
 
   return (
     <footer className="bg-black text-gray-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
           {/* Columna 1: Contacto */}

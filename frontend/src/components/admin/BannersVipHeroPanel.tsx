@@ -88,10 +88,10 @@ export default function BannersVipHeroPanel() {
       const hasMobileFeatured = data.some(b => b.device_target === 'mobile' && b.is_featured && b.is_active);
       
       if (!hasDesktopFeatured && data.some(b => b.device_target === 'desktop')) {
-        notify.warning('⚠️ No hay banner Desktop destacado. Marcá uno como predeterminado.');
+        notify.warning('No hay banner Desktop destacado. Marcá uno como predeterminado.');
       }
       if (!hasMobileFeatured && data.some(b => b.device_target === 'mobile')) {
-        notify.warning('⚠️ No hay banner Mobile destacado. Marcá uno como predeterminado.');
+        notify.warning('No hay banner Mobile destacado. Marcá uno como predeterminado.');
       }
     } catch (error) {
       console.error('Error cargando banners:', error);
@@ -150,11 +150,11 @@ export default function BannersVipHeroPanel() {
         if (existingFeatured) {
           // Ya existe destacado, preguntar si quiere reemplazarlo O crear uno normal
           const response = window.confirm(
-            `⚠️ IMPORTANTE: Ya existe 1 banner destacado para ${deviceTarget.toUpperCase()}\n\n` +
+            `IMPORTANTE: Ya existe 1 banner destacado para ${deviceTarget.toUpperCase()}\n\n` +
             `Banner actual: "${existingFeatured.client_name || 'Sin nombre'}" (categoría: ${existingFeatured.category})\n\n` +
             `¿Querés hacer ESTE el nuevo banner destacado?\n\n` +
-            `✅ [OK] = SÍ, reemplazar el destacado con este\n` +
-            `❌ [Cancelar] = NO, crear banner NORMAL (solo aparece en hover de categoría)`
+            `[OK] = SÍ, reemplazar el destacado con este\n` +
+            `[Cancelar] = NO, crear banner NORMAL (solo aparece en hover de categoría)`
           );
           
           if (response) {
@@ -171,16 +171,16 @@ export default function BannersVipHeroPanel() {
             }
             
             isFeatured = true;
-            notify.info('✅ Banner anterior ya no es destacado. Creando nuevo destacado...');
+            notify.info('Banner anterior ya no es destacado. Creando nuevo destacado...');
           } else {
             // No quiere reemplazar, crear banner normal
             isFeatured = false;
-            notify.info('ℹ️ Creando banner normal (solo aparece en hover de categoría)');
+            notify.info('Creando banner normal (solo aparece en hover de categoría)');
           }
         } else {
           // No hay ninguno destacado, DEBE ser destacado
           isFeatured = true;
-          notify.info('ℹ️ Este será el banner predeterminado (no hay otros destacados)');
+          notify.info('Este será el banner predeterminado (no hay otros destacados)');
         }
         
         // Upload imagen
@@ -205,7 +205,7 @@ export default function BannersVipHeroPanel() {
           if (parsed) {
             expiresAt = parsed;
           } else {
-            notify.error('❌ Formato de fecha inválido');
+            notify.error('Formato de fecha inválido');
             return;
           }
         }
@@ -245,18 +245,18 @@ export default function BannersVipHeroPanel() {
           
           // Mensajes específicos por tipo de error
           if (error.message?.includes('Failed to fetch')) {
-            notify.error('❌ Sin conexión a Supabase. Verificá tu internet o que el proyecto esté activo.');
+            notify.error('Sin conexión a Supabase. Verificá tu internet o que el proyecto esté activo.');
           } else if (error.code === '23505') {
-            notify.error('⚠️ Ya existe un banner destacado para este dispositivo. Desactivá el otro primero.');
+            notify.error('Ya existe un banner destacado para este dispositivo. Desactivá el otro primero.');
           } else if (error.code === '42501') {
-            notify.error('🔒 Permisos insuficientes. Solo SuperAdmin puede crear banners.');
+            notify.error('Permisos insuficientes. Solo SuperAdmin puede crear banners.');
           } else {
             notify.error(`Error: ${error.message || 'Desconocido'}`);
           }
           throw error;
         }
         
-        notify.success(`✅ Banner ${deviceTarget} creado`);
+        notify.success(`Banner ${deviceTarget} creado`);
         loadBanners();
       } catch (error) {
         console.error('💥 Error completo:', error);
@@ -293,7 +293,7 @@ export default function BannersVipHeroPanel() {
 
         if (error) throw error;
         
-        notify.success('✅ Imagen actualizada correctamente');
+        notify.success('Imagen actualizada correctamente');
         loadBanners();
       } catch (error) {
         console.error('Error actualizando imagen:', error);
@@ -318,7 +318,7 @@ export default function BannersVipHeroPanel() {
 
       if (error) throw error;
       
-      notify.success('✅ URL actualizada');
+      notify.success('URL actualizada');
       loadBanners();
     } catch (error) {
       console.error('Error actualizando URL:', error);
@@ -338,7 +338,7 @@ export default function BannersVipHeroPanel() {
       );
       
       if (othersActive.length === 0) {
-        notify.error('❌ No podés quitar el único banner destacado. Marcá otro primero.');
+        notify.error('No podés quitar el único banner destacado. Marcá otro primero.');
         return;
       }
     }
@@ -351,7 +351,7 @@ export default function BannersVipHeroPanel() {
       if (error) {
         // Si Supabase rechaza por el constraint, mostrar mensaje claro
         if (error.message?.includes('duplicate key') || error.message?.includes('idx_featured')) {
-          notify.error('❌ Ya hay otro banner destacado. Quitale la estrella primero.');
+          notify.error('Ya hay otro banner destacado. Quitale la estrella primero.');
         } else {
           throw error;
         }

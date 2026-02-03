@@ -27,6 +27,8 @@ import { getCategories } from '../../services/v2/formsService';
 interface CategoryIcon {
   id: string;
   name: string;
+  title: string | null;
+  paragraph: string | null;
   url_light: string;
   url_dark: string | null;
   storage_path: string | null;
@@ -50,6 +52,8 @@ export const CategoryIconsCMS: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
+    title: '',
+    paragraph: '',
     file: null as File | null,
   });
   
@@ -114,14 +118,19 @@ export const CategoryIconsCMS: React.FC = () => {
 
   const handleNew = () => {
     setEditingIcon(null);
-    setFormData({ name: '', file: null });
+    setFormData({ name: '', title: '', paragraph: '', file: null });
     setPreviewUrl(null);
     setShowModal(true);
   };
 
   const handleEdit = (icon: CategoryIcon) => {
     setEditingIcon(icon);
-    setFormData({ name: icon.name, file: null });
+    setFormData({ 
+      name: icon.name, 
+      title: icon.title || '', 
+      paragraph: icon.paragraph || '', 
+      file: null 
+    });
     setPreviewUrl(icon.url_light);
     setShowModal(true);
   };
@@ -221,6 +230,8 @@ export const CategoryIconsCMS: React.FC = () => {
           .from('category_icons')
           .update({
             name: formData.name,
+            title: formData.title || null,
+            paragraph: formData.paragraph || null,
             url_light: iconUrl,
             storage_path: storagePath,
             updated_at: new Date().toISOString()
@@ -234,6 +245,8 @@ export const CategoryIconsCMS: React.FC = () => {
           .from('category_icons')
           .insert({
             name: formData.name,
+            title: formData.title || null,
+            paragraph: formData.paragraph || null,
             url_light: iconUrl,
             storage_path: storagePath
           });
@@ -255,7 +268,7 @@ export const CategoryIconsCMS: React.FC = () => {
   const closeModal = () => {
     setShowModal(false);
     setEditingIcon(null);
-    setFormData({ name: '', file: null });
+    setFormData({ name: '', title: '', paragraph: '', file: null });
     if (previewUrl && !previewUrl.startsWith('/images')) {
       URL.revokeObjectURL(previewUrl);
     }
@@ -274,35 +287,20 @@ export const CategoryIconsCMS: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl p-6 shadow-lg">
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <ImageIcon className="w-8 h-8" />
-          Iconos de Categorías
-        </h1>
-        <p className="mt-2 opacity-90">
-          Gestiona los iconos que aparecen en los botones del Hero de Homepage
-        </p>
-        <div className="mt-4 flex items-center gap-4 text-sm">
-          <span className="bg-white/20 px-3 py-1 rounded-full">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <ImageIcon className="w-6 h-6 text-gray-600" />
+            Iconos de Categorías
+          </h1>
+          <p className="mt-1 text-gray-500">
+            Iconos para los botones del Hero
+          </p>
+        </div>
+        <div className="flex items-center gap-3 text-sm text-gray-500">
+          <span className="px-3 py-1 bg-gray-100 rounded-full">
             {icons.length} iconos
           </span>
-          <span className="bg-white/20 px-3 py-1 rounded-full">
-            Solo Hero Homepage
-          </span>
-        </div>
-      </div>
-
-      {/* Info Box */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-amber-800 font-medium">¿Dónde se usan estos iconos?</p>
-            <p className="text-amber-700 text-sm mt-1">
-              Los iconos aparecen <strong>únicamente</strong> en los botones negros del Hero de la página principal.
-              Para asignar un icono a una categoría, edita la categoría desde "Gestión de Categorías".
-            </p>
-          </div>
         </div>
       </div>
 
@@ -310,7 +308,7 @@ export const CategoryIconsCMS: React.FC = () => {
       <div className="flex justify-between items-center">
         <button
           onClick={handleNew}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-[#16a135] hover:bg-[#138a2c] text-white rounded-lg font-semibold transition-colors shadow-sm"
         >
           <Plus className="w-5 h-5" />
           Nuevo Icono
@@ -376,25 +374,6 @@ export const CategoryIconsCMS: React.FC = () => {
         </div>
       )}
 
-      {/* Preview de cómo se ve en el Hero */}
-      <div className="bg-gray-900 rounded-xl p-6 mt-8">
-        <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-          <Eye className="w-5 h-5" />
-          Preview: Así se ven en el Hero
-        </h3>
-        <div className="flex flex-wrap gap-3">
-          {icons.map((icon) => (
-            <button
-              key={icon.id}
-              className="flex items-center gap-2 px-4 py-2 bg-black/50 hover:bg-black/70 border border-white/20 rounded-full text-white transition-all"
-            >
-              <img src={icon.url_light} alt="" className="w-5 h-5 object-contain" />
-              <span className="text-sm font-medium">{icon.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Modal Crear/Editar */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -424,6 +403,34 @@ export const CategoryIconsCMS: React.FC = () => {
                   placeholder="ej: Maquinarias, Ganadería..."
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
+                />
+              </div>
+
+              {/* Título */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Título (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="ej: Maquinaria agrícola de calidad"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Párrafo */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Párrafo (opcional)
+                </label>
+                <textarea
+                  value={formData.paragraph}
+                  onChange={(e) => setFormData({ ...formData, paragraph: e.target.value })}
+                  placeholder="Descripción breve de la categoría..."
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                 />
               </div>
 

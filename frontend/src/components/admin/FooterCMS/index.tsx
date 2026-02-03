@@ -147,24 +147,24 @@ export const FooterCMS: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header con acciones */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold mb-2">Configuración del Footer</h2>
-            <p className="text-blue-100">Gestiona el contenido dinámico del pie de página</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">Configuración del Footer</h2>
+            <p className="text-gray-500">Gestiona el contenido dinámico del pie de página</p>
           </div>
           
           <div className="flex gap-2">
             <button
               onClick={handleExport}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-2"
               title="Exportar configuración"
             >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Exportar</span>
             </button>
             
-            <label className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors flex items-center gap-2 cursor-pointer">
+            <label className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-2 cursor-pointer">
               <UploadIcon className="w-4 h-4" />
               <span className="hidden sm:inline">Importar</span>
               <input
@@ -178,7 +178,7 @@ export const FooterCMS: React.FC = () => {
             <button
               onClick={handleReset}
               disabled={isSaving}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
               title="Resetear a valores por defecto"
             >
               <RefreshCw className="w-4 h-4" />

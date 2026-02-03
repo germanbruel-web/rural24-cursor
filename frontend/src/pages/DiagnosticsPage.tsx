@@ -45,7 +45,7 @@ export const DiagnosticsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-lg p-8 mb-8 text-white">
           <h1 className="text-4xl font-bold mb-2">🔬 Panel de Diagnósticos</h1>

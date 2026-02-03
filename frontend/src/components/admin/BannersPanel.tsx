@@ -16,7 +16,7 @@ const BANNER_TYPES = {
       mobile: '480x100px',
     },
     location: 'homepage',
-    color: 'from-purple-600 to-pink-600',
+    color: 'bg-gray-800',
     icon: 'VIP',
   },
   homepage_category: {
@@ -28,7 +28,7 @@ const BANNER_TYPES = {
       mobile: '480x100px',
     },
     location: 'homepage',
-    color: 'from-green-600 to-emerald-600',
+    color: 'bg-gray-700',
     icon: 'CAT',
   },
   results_lateral: {
@@ -40,20 +40,32 @@ const BANNER_TYPES = {
       mobile: '320x100px',
     },
     location: 'results',
-    color: 'from-blue-600 to-cyan-600',
+    color: 'bg-gray-800',
     icon: 'LAT',
   },
   results_intercalated: {
     code: 'RI',
     label: 'Banner Intercalado Resultados',
-    description: 'Entre cards - Cada 8 resultados (2 filas)',
+    description: 'Entre cards - Intervalo configurable en Configuración Global',
     dimensions: {
       desktop: '648x100px',
       mobile: '320x100px',
     },
     location: 'results',
-    color: 'from-orange-600 to-red-600',
+    color: 'bg-gray-700',
     icon: 'INT',
+  },
+  results_below_filter: {
+    code: 'RF',
+    label: 'Banner Debajo del Filtro',
+    description: 'Debajo del sidebar de filtros - Sticky',
+    dimensions: {
+      desktop: '280x250px',
+      mobile: '320x250px',
+    },
+    location: 'results',
+    color: 'bg-gray-600',
+    icon: 'FLT',
   },
 };
 
@@ -500,7 +512,7 @@ export default function BannersPanel() {
             return (
               <div key={type} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 {/* Group Header */}
-                <div className={`bg-gradient-to-r ${typeConfig.color} px-6 py-4 text-white`}>
+                <div className={`${typeConfig.color} px-6 py-4 text-white`}>
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-xl font-bold flex items-center gap-2">

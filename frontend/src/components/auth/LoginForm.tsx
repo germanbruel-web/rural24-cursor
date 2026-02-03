@@ -27,7 +27,7 @@ export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSw
       
       // Solo mostrar el mensaje una vez por sesión
       if (lastLogin !== currentLogin) {
-        notify.success('✅ Tu cuenta ha sido verificada. Una cuenta verificada demuestra más confianza frente al mercado de agronegocios.');
+        notify.success('Tu cuenta ha sido verificada. Una cuenta verificada demuestra más confianza frente al mercado de agronegocios.');
         localStorage.setItem('last_login_shown', currentLogin);
       }
     }

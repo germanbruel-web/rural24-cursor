@@ -647,7 +647,7 @@ export const CategoriesTreeView: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[1400px] mx-auto">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
@@ -661,7 +661,7 @@ export const CategoriesTreeView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 lg:p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         {/* Header Mejorado */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -733,7 +733,7 @@ export const CategoriesTreeView: React.FC = () => {
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => openCreateModal('category')}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-[#16a135] hover:bg-[#138a2c] text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-medium"
               >
                 <Plus className="w-5 h-5" />
                 Nueva Categoría
@@ -769,7 +769,7 @@ export const CategoriesTreeView: React.FC = () => {
                     ? 'bg-green-600 text-white shadow-lg' 
                     : isExporting 
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg'
+                      : 'bg-gray-700 hover:bg-gray-800 text-white hover:shadow-lg'
                 }`}
               >
                 {isExporting ? (
@@ -903,7 +903,7 @@ export const CategoriesTreeView: React.FC = () => {
           {/* Árbol */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+              <div className="p-4 border-b bg-gray-50">
                 <div className="flex items-center gap-6 text-sm font-medium">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-blue-500"></div>
@@ -952,7 +952,7 @@ export const CategoriesTreeView: React.FC = () => {
         {showCreateModal && createModalData && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+              <div className="p-6 border-b bg-gray-800 text-white">
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-bold flex items-center gap-3">
                     <Plus className="w-7 h-7" />
@@ -1064,7 +1064,7 @@ export const CategoriesTreeView: React.FC = () => {
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-3 bg-[#16a135] hover:bg-[#138a2c] text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2"
                   >
                     <Save className="w-5 h-5" />
                     Crear

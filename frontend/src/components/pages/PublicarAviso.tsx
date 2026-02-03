@@ -55,7 +55,8 @@ import InfoBox from '../molecules/InfoBox/InfoBox';
 import TipsCard from '../molecules/TipsCard/TipsCard';
 import { AutoSaveIndicator } from '../molecules/AutoSaveIndicator';
 import { DynamicFormLoader } from '../forms/DynamicFormLoader';
-import { TemplateSuggestions } from '../forms/TemplateSuggestions';
+import { AutofillButton } from '../forms/AutofillButton';
+import type { ContentContext } from '../../utils/contentGenerator';
 
 // ====================================================================
 // DESIGN SYSTEM RURAL24 - Estilos consistentes de formularios
@@ -880,7 +881,8 @@ export default function PublicarAviso() {
 
         const ad = await adsApi.create(createData);
 
-        resultId = ad.id;
+        // Usar slug si está disponible, sino usar id
+        resultId = ad.slug || ad.id;
         
         // ✅ Eliminar draft después de publicar exitosamente
         if (draftId) {
@@ -891,7 +893,7 @@ export default function PublicarAviso() {
         notify.success('Aviso publicado exitosamente!');
       }
       
-      // Redirigir al detalle
+      // Redirigir al detalle usando el slug del aviso
       setTimeout(() => {
         window.location.hash = `#/ad/${resultId}`;
       }, 1000);
@@ -909,32 +911,54 @@ export default function PublicarAviso() {
   // ====================================================================
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
-      {/* Header Mobile con indicador de modo EDIT */}
-      <div className={`lg:hidden border-b-2 sticky top-20 z-30 ${
+      {/* Header Mobile Compacto - Solo 1 sticky element */}
+      <div className={`lg:hidden border-b sticky top-0 z-30 ${
         isEditMode 
           ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200' 
           : 'bg-white border-gray-200'
       }`}>
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between">
+        <div className="px-4 py-3">
+          {/* Row 1: Volver + Título + Badge Edit */}
+          <div className="flex items-center justify-between gap-3">
             <button
               onClick={() => window.history.back()}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-all"
+              className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-all"
             >
               <ChevronLeft className="w-5 h-5" />
-              <span className="font-medium">Volver</span>
+              <span className="text-sm font-medium">Volver</span>
             </button>
-            {isEditMode && (
-              <span className="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full">
-                EDITANDO
+            
+            <h1 className="flex-1 text-center text-base font-bold text-gray-900 truncate">
+              {isEditMode ? 'Editar Aviso' : 'Nuevo Aviso'}
+            </h1>
+            
+            {isEditMode ? (
+              <span className="px-2 py-0.5 bg-amber-500 text-white text-xs font-bold rounded-full">
+                EDIT
               </span>
+            ) : (
+              <AutoSaveIndicator lastSaved={lastSaved} />
             )}
+          </div>
+          
+          {/* Row 2: Progress bar compacta */}
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+              <span className="font-medium text-gray-900">{STEPS[currentStep - 1].title}</span>
+              <span>{currentStep}/{STEPS.length}</span>
+            </div>
+            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="bg-green-500 h-full rounded-full transition-all duration-300"
+                style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Progress Stepper */}
-      <div className={`border-b-2 sticky top-40 lg:top-0 z-20 ${
+      {/* Progress Stepper - Solo Desktop */}
+      <div className={`hidden lg:block border-b-2 sticky top-0 z-20 ${
         isEditMode 
           ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200' 
           : 'bg-white border-gray-200'
@@ -1033,44 +1057,21 @@ export default function PublicarAviso() {
               );
             })}
           </div>
-
-          {/* Mobile Stepper */}
-          <div className="lg:hidden">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-gray-900">
-                Paso {currentStep} de {STEPS.length}
-              </p>
-              <p className="text-sm text-gray-600">
-                {Math.round((currentStep / STEPS.length) * 100)}%
-              </p>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
-              />
-            </div>
-            <p className="text-center mt-3 font-semibold text-green-600">
-              {STEPS[currentStep - 1].title}
-            </p>
-            <p className="text-center text-sm text-gray-500">
-              {STEPS[currentStep - 1].description}
-            </p>
-          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 bg-gray-50">
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-gray-50">
         {/* Layout: Full width sin preview lateral */}
         <div className="max-w-4xl mx-auto">
           <div>
-            <div className="bg-gray-100 rounded-2xl shadow-xl border-2 border-gray-300 overflow-hidden">
-              <div className="p-6 sm:p-10 lg:p-12">
+            <div className="bg-white sm:bg-gray-100 rounded-xl sm:rounded-2xl shadow-sm sm:shadow-xl border sm:border-2 border-gray-200 sm:border-gray-300 overflow-hidden">
+              <div className="p-4 sm:p-10 lg:p-12">
                 {/* STEP 1: CATEGORÍA (OPTIMIZADO - ACCORDION INLINE) */}
                 {currentStep === 1 && (
-                  <div className="space-y-8">
-                    <div>
+                  <div className="space-y-4 sm:space-y-8">
+                    {/* Header - Oculto en mobile (ya está en el sticky header) */}
+                    <div className="hidden sm:block">
                       <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
                         ¿Qué vas a publicar?
                       </h2>
@@ -1080,14 +1081,14 @@ export default function PublicarAviso() {
                     </div>
 
                     {/* Grid de categorías con accordion */}
-                    <div className="space-y-4">
+                    <div className="space-y-2 sm:space-y-4">
                       {categories.map((cat) => {
                         const isExpanded = expandedCategory === cat.id;
                         const isSelected = selectedCategory === cat.id;
                         
                         return (
-                          <div key={cat.id} className="space-y-3">
-                            {/* Botón categoría */}
+                          <div key={cat.id} className="space-y-2 sm:space-y-3">
+                            {/* Botón categoría - Compacto en mobile */}
                             <button
                               onClick={() => {
                                 if (isExpanded) {
@@ -1100,25 +1101,26 @@ export default function PublicarAviso() {
                                   setSelectedSubcategory('');
                                 }
                               }}
-                              className={`${DS.cardSelectable} ${
+                              className={`w-full p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all text-left ${
                                 isSelected
-                                  ? DS.cardSelectableActive
-                                  : DS.cardSelectableDefault
+                                  ? 'border-primary-500 bg-primary-50 shadow-md'
+                                  : 'border-gray-200 hover:border-primary-400 hover:bg-primary-50'
                               }`}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex-1">
-                                  <p className="text-lg sm:text-xl font-bold text-gray-900">
+                                  <p className="text-base sm:text-xl font-bold text-gray-900">
                                     {cat.display_name}
                                   </p>
+                                  {/* Descripción oculta en mobile */}
                                   {cat.description && (
-                                    <p className="text-base sm:text-lg text-gray-600 mt-2">
+                                    <p className="hidden sm:block text-base sm:text-lg text-gray-600 mt-2">
                                       {cat.description}
                                     </p>
                                   )}
                                 </div>
                                 <ChevronRight
-                                  className={`w-6 h-6 text-primary-600 flex-shrink-0 ml-3 transition-transform ${
+                                  className={`w-5 h-5 sm:w-6 sm:h-6 text-primary-600 flex-shrink-0 ml-2 sm:ml-3 transition-transform ${
                                     isExpanded ? 'rotate-90' : ''
                                   }`}
                                 />
@@ -1127,11 +1129,11 @@ export default function PublicarAviso() {
 
                             {/* Subcategorías (accordion) */}
                             {isExpanded && subcategories.length > 0 && (
-                              <div className="space-y-3 animate-fadeIn">
-                                <p className="text-base sm:text-lg font-bold text-green-700 mb-3">
+                              <div className="space-y-2 sm:space-y-3 animate-fadeIn pl-2 sm:pl-0">
+                                <p className="text-sm sm:text-lg font-bold text-green-700 mb-2 sm:mb-3">
                                   Elegí una subcategoría:
                                 </p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3">
                                   {subcategories.map((sub) => (
                                     <button
                                       key={sub.id}
@@ -1145,13 +1147,14 @@ export default function PublicarAviso() {
                                           window.scrollTo({ top: 0, behavior: 'smooth' });
                                         }, 300);
                                       }}
-                                      className="p-4 sm:p-5 rounded-xl border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all text-left group"
+                                      className="p-3 sm:p-5 rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all text-left group"
                                     >
-                                      <p className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-green-700">
+                                      <p className="text-sm sm:text-lg font-bold text-gray-900 group-hover:text-green-700">
                                         {sub.display_name}
                                       </p>
+                                      {/* Descripción oculta en mobile */}
                                       {sub.description && (
-                                        <p className="text-sm sm:text-base text-gray-600 mt-1">
+                                        <p className="hidden sm:block text-sm sm:text-base text-gray-600 mt-1">
                                           {sub.description}
                                         </p>
                                       )}
@@ -1172,14 +1175,14 @@ export default function PublicarAviso() {
               <div className="space-y-4">
                 {/* Breadcrumb integrado en el formulario - Mobile First */}
                 {selectedCategory && selectedSubcategory && (
-                  <div className="flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg px-4 py-3">
-                    <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3">
+                    <div className="flex items-center gap-1 sm:gap-2 min-w-0">
                       <Tag className="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span className="text-sm font-medium text-green-700 truncate">
+                      <span className="text-xs sm:text-sm font-medium text-green-700 truncate">
                         {categories.find(c => c.id === selectedCategory)?.display_name}
                       </span>
                       <ChevronRight className="w-3 h-3 text-green-500 flex-shrink-0" />
-                      <span className="text-sm font-bold text-green-800 truncate">
+                      <span className="text-xs sm:text-sm font-bold text-green-800 truncate">
                         {subcategories.find(s => s.id === selectedSubcategory)?.display_name}
                       </span>
                     </div>
@@ -1293,23 +1296,15 @@ export default function PublicarAviso() {
 
             {/* STEP 4: FOTOS */}
             {currentStep === 4 && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-                    Agregá fotos
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                    Fotos
                   </h2>
-                  <p className="text-base sm:text-lg text-gray-600">
-                    Las fotos ayudan a vender más rápido. Máximo 8 fotos horizontales (16:9 o 4:3)
-                  </p>
-                  
-                  {/* Contador de imágenes subidas */}
-                  {uploadedImages.length > 0 && (
-                    <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-50 border-2 border-green-200 rounded-lg">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="font-semibold text-green-900">
-                        {uploadedImages.filter(img => img.status === 'success').length} foto{uploadedImages.filter(img => img.status === 'success').length !== 1 ? 's' : ''} lista{uploadedImages.filter(img => img.status === 'success').length !== 1 ? 's' : ''} para publicar
-                      </span>
-                    </div>
+                  {uploadedImages.filter(img => img.status === 'success').length > 0 && (
+                    <span className="text-sm text-green-600 font-medium">
+                      {uploadedImages.filter(img => img.status === 'success').length}/8
+                    </span>
                   )}
                 </div>
 
@@ -1320,74 +1315,44 @@ export default function PublicarAviso() {
                   onImagesChange={handleImagesChange}
                   existingImages={uploadedImages}
                 />
-
-                <TipsCard icon={Camera} title="Tips para mejores fotos" variant="blue">
-                  <TipsCard.Item icon={Smartphone} strong>
-                    GIRA TU CELULAR HORIZONTALMENTE (modo paisaje)
-                  </TipsCard.Item>
-                  <TipsCard.Item icon={Sun}>
-                    Usá buena luz natural (evita fotos oscuras)
-                  </TipsCard.Item>
-                  <TipsCard.Item icon={ImageIcon}>
-                    Mostrá el producto completo y detalles importantes
-                  </TipsCard.Item>
-                  <TipsCard.Item icon={Layers}>
-                    La primera foto será la portada de tu aviso
-                  </TipsCard.Item>
-                  <TipsCard.Item icon={Move}>
-                    Podés arrastrar para reordenar las fotos
-                  </TipsCard.Item>
-                  <TipsCard.Item icon={Hash}>
-                    Máximo 8 fotos por aviso
-                  </TipsCard.Item>
-                </TipsCard>
               </div>
             )}
 
             {/* STEP 5: INFORMACIÓN */}
             {currentStep === 5 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-                    Información del aviso
+              <div className="space-y-4 sm:space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                    Información
                   </h2>
-                  <p className="text-base sm:text-lg text-gray-600">
-                    Título, descripción y precio
-                  </p>
                 </div>
 
-                {/* Dropdowns de plantillas */}
-                <TemplateSuggestions
-                  categoryId={selectedCategory}
-                  subcategoryId={selectedSubcategory}
-                  typeId={attributeValues['type_id'] as string}
-                  categoria={categories.find(c => c.id === selectedCategory)?.name}
-                  subcategoria={subcategories.find(s => s.id === selectedSubcategory)?.name}
-                  tipo={attributeValues['tipo'] as string}
-                  marca={attributeValues['marca'] as string}
-                  modelo={attributeValues['modelo'] as string}
-                  año={attributeValues['año'] as string}
-                  condicion={attributeValues['condicion'] as string}
-                  provincia={province}
-                  localidad={locality}
-                  precio={price ? `${currency} ${price}` : ''}
-                  atributos={Object.entries(attributeValues).reduce((acc, [key, val]) => {
-                    if (typeof val === 'string') acc[key] = val;
-                    return acc;
-                  }, {} as Record<string, string>)}
-                  onSelectTitle={(t) => {
-                    setTitle(t);
-                    setSelectedTitleIndex(null);
-                  }}
-                  onSelectDescription={(d) => {
-                    setDescription(d);
-                    setSelectedDescIndex(null);
+                {/* Botón Autocompletar */}
+                <AutofillButton
+                  context={{
+                    categoria: categories.find(c => c.id === selectedCategory)?.name || '',
+                    categorySlug: categories.find(c => c.id === selectedCategory)?.slug || '',
+                    subcategoria: subcategories.find(s => s.id === selectedSubcategory)?.display_name || '',
+                    subcategorySlug: subcategories.find(s => s.id === selectedSubcategory)?.slug || '',
+                    marca: attributeValues['marca'] as string,
+                    modelo: attributeValues['modelo'] as string,
+                    año: attributeValues['año'] as string,
+                    condicion: attributeValues['condicion'] as string,
+                    provincia: province,
+                    localidad: locality,
+                    atributos: Object.entries(attributeValues).reduce((acc, [key, val]) => {
+                      if (typeof val === 'string') acc[key] = val;
+                      return acc;
+                    }, {} as Record<string, string>),
                   }}
                   currentTitle={title}
                   currentDescription={description}
+                  onFill={(t, d) => {
+                    setTitle(t);
+                    setDescription(d);
+                  }}
                 />
 
-                {/* Sugerencias de título */}
                 {/* Título */}
                 <div className="space-y-1.5">
                   <label className={DS.label}>

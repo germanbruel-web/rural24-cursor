@@ -73,7 +73,7 @@ export const MessagesPanel: React.FC = () => {
   const canSendMore = limits?.canSendMore ?? true;
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-[1400px] mx-auto p-6">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         {/* Header con estadísticas */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">

@@ -3,6 +3,8 @@ import React from 'react';
 
 export interface Product {
   id: string;
+  slug?: string; // URL slug SEO-friendly (ej: tractor-john-deere-abc123)
+  short_id?: string; // ID corto para URLs (últimos 6 chars del UUID)
   title: string;
   description: string;
   price?: number;
@@ -80,6 +82,8 @@ export interface SearchFilters {
 
 export interface Ad {
   id: string;
+  slug?: string; // URL slug SEO-friendly
+  short_id?: string; // ID corto para URLs
   user_id: string;
   title: string;
   description: string;
@@ -159,8 +163,8 @@ export interface UpdateAdInput extends Partial<CreateAdInput> {
 export type BannerType = 
   | 'homepage_vip'          // Banner VIP Hero (1200x200 desktop, 480x100 mobile)
   | 'homepage_category'     // Banner Categorías Homepage (650x120)
-  | 'results_lateral'       // Banner Lateral Resultados (300x600 desktop, 320x100 mobile)
-  | 'results_intercalated'  // Banner Intercalado Resultados (648x100 desktop, 320x100 mobile)
+  | 'results_intercalated'  // Banner Intercalado Resultados (650x100)
+  | 'results_below_filter'  // Banner Debajo del Filtro (280x250)
   | 'homepage_search'       // [LEGACY] Banner Buscador Dinámico
   | 'homepage_carousel';    // [LEGACY] Banner Categoría Carrusel
 
@@ -176,7 +180,7 @@ export interface Banner {
   image_url: string;
   link_url?: string;
   category?: string;  // Categoría específica (NULL = todas)
-  position?: BannerPosition;  // Posición lateral (solo results_lateral)
+  position?: BannerPosition;  // Posición (legacy)
   device_target: DeviceTarget;
   is_active: boolean;
   is_featured?: boolean;  // ⭐ Destacado: aparece predeterminadamente
@@ -221,7 +225,11 @@ export interface UpdateBannerInput {
 // NUEVOS TIPOS PARA BANNERS_CLEAN (2026-01-10)
 // ============================================
 
-export type BannerPlacement = 'hero_vip' | 'category_carousel';
+export type BannerPlacement = 
+  | 'hero_vip' 
+  | 'category_carousel'
+  | 'results_intercalated'  // Entre productos en resultados (650x100)
+  | 'results_below_filter'; // Debajo del filtro sticky (280x250)
 
 export interface BannerClean {
   id: string;

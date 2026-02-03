@@ -26,7 +26,7 @@ interface ProductCardProps {
   className?: string;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({
+export const ProductCard: React.FC<ProductCardProps> = React.memo(({
   product,
   variant = 'featured',
   onViewDetail,
@@ -64,8 +64,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       window.location.hash = `#/ad/${product.slug}`;
     } else if (product.id && product.title) {
       // Usar short_id si está disponible, sino fallback a UUID
-      const shortId = (product as any).short_id;
-      const url = getAdDetailUrl(product.title, product.id, shortId);
+      const url = getAdDetailUrl(product.title, product.id, product.short_id);
       window.location.hash = url;
     } else if (onViewDetail && product.id) {
       onViewDetail(product.id);
@@ -223,6 +222,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
     </Card>
   );
-};
+}, (prevProps, nextProps) => {
+  // Solo re-renderizar si cambia el ID del producto o las props de visualización
+  return (
+    prevProps.product.id === nextProps.product.id &&
+    prevProps.variant === nextProps.variant &&
+    prevProps.showBadges === nextProps.showBadges &&
+    prevProps.showLocation === nextProps.showLocation &&
+    prevProps.showProvince === nextProps.showProvince
+  );
+});
+
+ProductCard.displayName = 'ProductCard';
 
 export default ProductCard;

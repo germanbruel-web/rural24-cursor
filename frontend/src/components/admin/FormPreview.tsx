@@ -135,10 +135,10 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
   return (
     <div className="flex flex-col h-full bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+      <div className="p-4 border-b-2 border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Eye className="w-5 h-5 text-blue-600" />
+            <Eye className="w-5 h-5 text-gray-600" />
             <h3 className="font-bold text-gray-900">Preview en Tiempo Real</h3>
           </div>
           
@@ -148,7 +148,7 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
               onClick={() => setPreviewMode('desktop')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 previewMode === 'desktop'
-                  ? 'bg-blue-500 text-white'
+                  ? 'bg-[#16a135] text-white'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -158,7 +158,7 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
               onClick={() => setPreviewMode('mobile')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 previewMode === 'mobile'
-                  ? 'bg-blue-500 text-white'
+                  ? 'bg-[#16a135] text-white'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >

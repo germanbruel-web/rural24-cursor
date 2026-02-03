@@ -70,7 +70,7 @@ export function DesignSystemShowcaseSimple() {
         
         {/* Header Sticky con Dark Mode Toggle */}
         <header className="sticky top-0 z-50 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-green-600 dark:text-green-400">
                 Design System Rural24
@@ -90,7 +90,7 @@ export function DesignSystemShowcaseSimple() {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+        <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
           
           {/* ========== SECCIÓN 1: PALETA DE COLORES ========== */}
           <section>

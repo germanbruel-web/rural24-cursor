@@ -68,7 +68,7 @@ export const BaseLayout: React.FC<BaseLayoutProps> = ({
   // Mapear maxWidth a clases Tailwind
   const maxWidthClasses = {
     full: 'max-w-full',
-    '7xl': 'max-w-7xl',
+    '7xl': 'max-w-[1400px]',
     '6xl': 'max-w-6xl',
     '5xl': 'max-w-5xl',
     '4xl': 'max-w-4xl',

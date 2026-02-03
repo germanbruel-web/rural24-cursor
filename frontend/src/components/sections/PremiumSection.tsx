@@ -11,7 +11,7 @@ export const PremiumSection: React.FC<PremiumSectionProps> = ({ products }) => {
 
   return (
     <section className="py-12 bg-gradient-to-br from-amber-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-[#e5a21f] text-white px-4 py-2 rounded-full mb-4">

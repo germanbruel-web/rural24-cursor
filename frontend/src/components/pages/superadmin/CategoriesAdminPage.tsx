@@ -31,7 +31,7 @@ import {
 } from '../../../services/categoriesService';
 import { supabase } from '../../../services/supabaseClient';
 import { notify } from '../../../utils/notifications';
-import { Plus, Edit2, Trash2, ChevronRight, ChevronDown, Search, Link2, Unlink } from 'lucide-react';
+import { Plus, Edit2, Trash2, ChevronRight, ChevronDown, Search, Link2, Unlink, Box, Wrench } from 'lucide-react';
 import CategoryModal from '../../modals/CategoryModal';
 import DeleteConfirmModal from '../../modals/DeleteConfirmModal';
 
@@ -478,10 +478,10 @@ export default function CategoriesAdminPage() {
                   <div>
                     <span className="font-medium text-gray-700">{sub.display_name}</span>
                     {sub.has_brands && (
-                      <span className="ml-2 text-xs text-blue-600">📦 Marcas</span>
+                      <span className="ml-2 text-xs text-blue-600 flex items-center gap-1"><Box className="w-3 h-3" /> Marcas</span>
                     )}
                     {sub.has_models && (
-                      <span className="ml-2 text-xs text-purple-600">🔧 Modelos</span>
+                      <span className="ml-2 text-xs text-purple-600 flex items-center gap-1"><Wrench className="w-3 h-3" /> Modelos</span>
                     )}
                   </div>
                   <div className="flex items-center gap-1">
@@ -582,7 +582,7 @@ export default function CategoriesAdminPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-[1400px] mx-auto p-6">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Gestión de Categorías</h1>

@@ -252,7 +252,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                           Generando...
                         </>
                       ) : (
-                        <>✨ Autogenerar Título</>
+                        <>Autogenerar Título</>
                       )}
                     </button>
                     <button
@@ -270,7 +270,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                           Generando...
                         </>
                       ) : (
-                        <>✨ Autogenerar Descripción</>
+                        <>Autogenerar Descripción</>
                       )}
                     </button>
                   </div>

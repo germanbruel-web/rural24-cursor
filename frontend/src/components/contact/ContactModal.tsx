@@ -198,7 +198,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
                   <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-semibold text-amber-900 text-sm mb-1">
-                      {limits.currentSent >= limits.maxSent ? '🚫 Límite Alcanzado' : '⚠️ Límite Próximo'}
+                      {limits.currentSent >= limits.maxSent ? 'Límite Alcanzado' : 'Límite Próximo'}
                     </p>
                     <p className="text-xs text-gray-700">
                       Has enviado {limits.currentSent} de {limits.maxSent} contactos disponibles en tu plan {limits.planName}.

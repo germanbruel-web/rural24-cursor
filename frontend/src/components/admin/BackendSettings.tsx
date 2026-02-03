@@ -38,11 +38,10 @@ import {
   type FileValidationOptions 
 } from '../../utils/fileValidation';
 import { useToastHelpers } from '../../contexts/ToastContext';
-import { CMSImagesGallery } from './CMSImagesGallery';
 import { FooterCMS } from './FooterCMS';
 import { CategoryIconsCMS } from './CategoryIconsCMS';
 
-type Section = 'header' | 'footer' | 'content' | 'general' | 'gallery' | 'icons';
+type Section = 'header' | 'footer' | 'content' | 'general' | 'icons';
 
 interface SettingsBySection {
   header: SiteSetting[];
@@ -371,7 +370,7 @@ export const BackendSettings: React.FC = () => {
               flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all font-medium
               ${isUploading 
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-sm hover:shadow-md'
+                : 'bg-[#16a135] hover:bg-[#138a2c] text-white shadow-sm hover:shadow-md'
               }
             `}>
               {isUploading ? (
@@ -429,29 +428,28 @@ export const BackendSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl p-6 shadow-lg">
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <FileImage className="w-8 h-8" />
-          CMS - Gestión de Contenidos
-        </h1>
-        <p className="mt-2 opacity-90">
-          Control profesional sobre logos, imágenes y textos del sitio web
-        </p>
-        <div className="mt-4 flex items-center gap-4 text-sm">
-          <span className="bg-white/20 px-3 py-1 rounded-full">
-            {totalSettings} configuraciones totales
-          </span>
-          <span className="bg-white/20 px-3 py-1 rounded-full">
-            Solo SuperAdmin
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <FileImage className="w-6 h-6 text-gray-600" />
+            CMS - Gestión de Contenidos
+          </h1>
+          <p className="mt-1 text-gray-500">
+            Control sobre logos, imágenes y textos del sitio
+          </p>
+        </div>
+        <div className="flex items-center gap-3 text-sm text-gray-500">
+          <span className="px-3 py-1 bg-gray-100 rounded-full">
+            {totalSettings} configuraciones
           </span>
         </div>
       </div>
 
       {/* Tabs de secciones */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
-          {(['header', 'content', 'footer', 'general', 'icons', 'gallery'] as Section[]).map(section => {
-            const count = (section === 'gallery' || section === 'icons') ? 0 : settings[section as keyof SettingsBySection].length;
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+          {(['header', 'content', 'footer', 'general', 'icons'] as Section[]).map(section => {
+            const count = section === 'icons' ? 0 : settings[section as keyof SettingsBySection].length;
             return (
               <button
                 key={section}
@@ -459,22 +457,14 @@ export const BackendSettings: React.FC = () => {
                 className={`
                   px-4 py-3 rounded-lg font-medium transition-all
                   ${activeSection === section
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md scale-105'
+                    ? 'bg-[#16a135] text-white shadow-sm'
                     : 'text-gray-600 hover:bg-gray-100'
                   }
                 `}
               >
                 <div className="flex flex-col items-center gap-1">
-                  <span>
-                    {section === 'header' && '📋'}
-                    {section === 'header' && 'H'}
-                    {section === 'footer' && 'F'}
-                    {section === 'general' && 'G'}
-                    {section === 'icons' && 'I'}
-                    {section === 'gallery' && 'Gal'}
-                  </span>
                   <span className="text-sm uppercase tracking-wide">{section}</span>
-                  {section !== 'gallery' && section !== 'icons' && <span className="text-xs opacity-75">{count} items</span>}
+                  {section !== 'icons' && <span className="text-xs opacity-75">{count} items</span>}
                 </div>
               </button>
             );
@@ -498,10 +488,8 @@ export const BackendSettings: React.FC = () => {
         </div>
       </div>
 
-      {/* Mostrar galería, iconos, footer CMS o settings según la sección */}
-      {activeSection === 'gallery' ? (
-        <CMSImagesGallery />
-      ) : activeSection === 'icons' ? (
+      {/* Mostrar iconos, footer CMS o settings según la sección */}
+      {activeSection === 'icons' ? (
         <CategoryIconsCMS />
       ) : activeSection === 'footer' ? (
         <FooterCMS />

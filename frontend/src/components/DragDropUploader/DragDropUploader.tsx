@@ -215,7 +215,7 @@ export function DragDropUploader({
           } else if (isNetworkError) {
             notify.error(`🔌 Error de conexión subiendo ${file.name}. Intentamos ${maxRetries} veces sin éxito.`, 6000);
           } else {
-            notify.error(`❌ Error subiendo ${file.name}: ${error.message || 'Unknown error'}`, 5000);
+            notify.error(`Error subiendo ${file.name}: ${error.message || 'Unknown error'}`, 5000);
           }
           
           break; // Salir del loop de retry
@@ -226,7 +226,7 @@ export function DragDropUploader({
         // Solo notificar si fue exitoso después de retry
         const retriesUsed = Array.from({length: maxRetries}, (_, i) => i + 1).find((_, idx) => uploadSuccess) || 1;
         if (retriesUsed > 1) {
-          notify.success(`✅ ${file.name} subido exitosamente (después de ${retriesUsed} intentos)`, 4000);
+          notify.success(`${file.name} subido exitosamente (después de ${retriesUsed} intentos)`, 4000);
         }
       }
     }
@@ -343,7 +343,7 @@ export function DragDropUploader({
               onDragEnd={handleImageDragEnd}
             >
               {index === 0 && (
-                <span className="badge-portada">📌 Portada</span>
+                <span className="badge-portada">Portada</span>
               )}
 
               <div className="image-preview">
@@ -361,7 +361,7 @@ export function DragDropUploader({
 
               {image.status === 'error' && (
                 <div className="error-overlay">
-                  <span className="error-icon">⚠️</span>
+                  <span className="error-icon">!</span>
                   <span className="error-text">{image.error}</span>
                 </div>
               )}

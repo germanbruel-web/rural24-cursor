@@ -37,7 +37,7 @@ interface BannerSectionProps {
 export const BannerSection: React.FC<BannerSectionProps> = ({ title, children }) => {
   return (
     <section className="py-6">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-[1400px] mx-auto px-4">
         <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide">{title}</p>
         {children}
       </div>

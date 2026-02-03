@@ -127,15 +127,15 @@ export default function PaymentsAdminPanel() {
       {/* Dashboard de Métricas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Ingresos del Mes */}
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white">
+        <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-green-100 text-sm font-medium">Este Mes</span>
-            <TrendingUp className="w-5 h-5 text-green-200" />
+            <span className="text-gray-500 text-sm font-medium">Este Mes</span>
+            <TrendingUp className="w-5 h-5 text-[#16a135]" />
           </div>
-          <div className="text-2xl font-bold">
+          <div className="text-2xl font-bold text-[#16a135]">
             {formatAmount(currentMonthSummary?.total_revenue || 0)}
           </div>
-          <div className="text-sm text-green-100 mt-1">
+          <div className="text-sm text-gray-500 mt-1">
             {currentMonthSummary?.completed_count || 0} pagos completados
           </div>
         </div>

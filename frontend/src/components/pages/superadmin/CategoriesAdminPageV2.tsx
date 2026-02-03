@@ -706,7 +706,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-[1400px] mx-auto p-6">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
@@ -1237,9 +1237,9 @@ export const CategoriesAdminPageV2: React.FC = () => {
             {/* Form */}
             <div className="p-6 space-y-4">
               {/* Instructions */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-900 mb-2">📋 Instrucciones:</h3>
-                <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-2">Instrucciones:</h3>
+                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
                   <li>Pega la lista de modelos en el campo de texto</li>
                   <li>Cada modelo debe estar en una línea separada</li>
                   <li>Se creará automáticamente el nombre interno (ID) a partir del nombre visible</li>
