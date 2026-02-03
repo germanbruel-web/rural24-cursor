@@ -27,3 +27,13 @@ dist-ssr
 server/*-test-*.html
 server/*-test-*.png
 server/screenshots/
+
+# Archive - documentación obsoleta
+_archive/
+
+# Archivos temporales
+temp-*.json
+temp-*.js
+temp-*.cjs
+temp_*.sql
+debug-*.log
