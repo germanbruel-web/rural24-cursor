@@ -13,9 +13,19 @@ interface UserProfile {
   province?: string;
   location?: string;
   role: UserRole;
+  user_type?: 'particular' | 'empresa';
+  plan_name?: string;
   email_verified: boolean;
   created_at: string;
   updated_at: string;
+  // Campos unificados de perfil profesional
+  display_name?: string;
+  avatar_url?: string;
+  bio?: string;
+  services?: string;
+  privacy_mode?: 'public' | 'private';
+  profile_views?: number;
+  profile_contacts_received?: number;
 }
 
 interface AuthContextType {
@@ -29,6 +39,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: Error | null }>;
+  refreshProfile: () => Promise<void>;
   isAdmin: boolean;
 }
 
@@ -76,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const { data, error } = await supabase
         .from('users')
-        .select('*')
+        .select('*, subscription_plans(name, display_name)')
         .eq('id', userId)
         .single();
 
@@ -88,16 +99,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await createDefaultProfile(userId);
         }
       } else {
-        console.log('✅ Perfil cargado completo:', JSON.stringify(data, null, 2));
+        // Extraer el nombre del plan del JOIN
+        const planData = data.subscription_plans as { name: string; display_name: string } | null;
+        const profileWithPlan = {
+          ...data,
+          plan_name: planData?.display_name || planData?.name || 'Free',
+          subscription_plans: undefined // Limpiar el objeto anidado
+        };
+        console.log('✅ Perfil cargado completo:', JSON.stringify(profileWithPlan, null, 2));
         console.log('📝 full_name:', data.full_name);
         console.log('📝 email:', data.email);
         console.log('📝 role:', data.role);
-        setProfile(data);
+        console.log('📝 plan_name:', profileWithPlan.plan_name);
+        setProfile(profileWithPlan);
       }
     } catch (error) {
       console.error('❌ Error loading profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función para refrescar el perfil manualmente (usado en OAuth callback)
+  const refreshProfile = async () => {
+    if (user?.id) {
+      await loadUserProfile(user.id);
+    } else {
+      // Si no hay user, obtener de la sesión actual
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (currentSession?.user?.id) {
+        setUser(currentSession.user);
+        setSession(currentSession);
+        await loadUserProfile(currentSession.user.id);
+      }
     }
   };
 
@@ -322,6 +356,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resetPassword,
         updatePassword,
         updateProfile,
+        refreshProfile,
         isAdmin,
       }}
     >

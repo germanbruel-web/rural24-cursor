@@ -18,8 +18,7 @@
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
-    "clean": "turbo run clean && Remove-Item -Recurse -Force node_modules",
-    "migrate:from-agrobuscador": "node infrastructure/scripts/migrate-from-agrobuscador.js"
+    "clean": "turbo run clean && Remove-Item -Recurse -Force node_modules"
   },
   "devDependencies": {
     "@storybook/addon-a11y": "^8.6.15",

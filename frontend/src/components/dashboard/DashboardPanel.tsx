@@ -64,14 +64,6 @@ export const DashboardPanel: React.FC = () => {
           totalViews: 45678,
           totalMessages: 234,
         });
-      } else if (profile?.role === 'adminscrap') {
-        setStats({
-          totalAds: 198,
-          activeAds: 198,
-          totalViews: 0,
-          totalMessages: 0,
-          scrapedAds: 3400,
-        });
       } else if (profile?.role === 'free' || profile?.role === 'free-verificado') {
         // Para usuarios FREE, obtener contadores reales
         const { count } = await getSentContactsCount();
@@ -237,76 +229,14 @@ export const DashboardPanel: React.FC = () => {
     );
   }
 
-  // Dashboard para AdminScrap (super@clasify.com)
-  if (profile?.role === 'adminscrap') {
-    return (
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Panel de Scraping</h1>
-            <p className="text-gray-600 mt-1">Administrador de Avisos Scrapeados</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => window.location.hash = '#/my-ads'}
-              className="bg-[#16a135] hover:bg-[#138a2c] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
-            >
-              <PenLine className="w-5 h-5" />
-              Crear Aviso
-            </button>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Calendar className="w-4 h-4" />
-              <span>{new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Grid - AdminScrap */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard
-            icon={<Package className="w-8 h-8" />}
-            title="Avisos Scrapeados"
-            value={stats.scrapedAds || 0}
-            subtitle="Total recolectados"
-            color="blue"
-          />
-          <StatCard
-            icon={<Eye className="w-8 h-8" />}
-            title="Pendientes"
-            value="234"
-            subtitle="Por aprobar"
-            color="yellow"
-          />
-          <StatCard
-            icon={<Award className="w-8 h-8" />}
-            title="Aprobados"
-            value={stats.totalAds}
-            subtitle="Este mes"
-            color="green"
-          />
-        </div>
-
-        {/* Info Box */}
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2"><Search className="w-5 h-5 text-gray-600" /> Rol: Administrador de Scraping</h3>
-          <p className="text-sm text-gray-700">
-            Este panel está diseñado exclusivamente para gestionar avisos scrapeados de fuentes externas.
-            Puedes revisar, aprobar y publicar avisos automáticamente recolectados.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Dashboard para Free
+  // Dashboard para usuarios normales (Free, Starter, Pro, Empresa)
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">AVISOS FREE</h1>
-          <p className="text-gray-600 mt-1">Cuenta Gratuita</p>
+          <h1 className="text-3xl font-bold text-gray-900">Mi Dashboard</h1>
+          <p className="text-gray-600 mt-1">Plan: {profile?.plan_name || 'Free'}</p>
         </div>
         <button
           onClick={() => window.location.hash = '#/my-ads'}

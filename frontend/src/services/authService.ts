@@ -10,7 +10,7 @@ export interface RegisterPersonaInput {
   email: string;
   password: string;
   phone?: string;
-  mobile?: string;
+  // mobile eliminado - un solo campo de teléfono
 }
 
 /**
@@ -22,10 +22,8 @@ export interface RegisterEmpresaInput {
   email: string;
   password: string;
   phone?: string;
-  mobile?: string;
   companyName: string;
-  cuit: string;
-  website?: string;
+  // CUIT eliminado - se puede agregar después en el perfil
 }
 
 /**
@@ -116,9 +114,9 @@ export async function registerPersona(input: RegisterPersonaInput): Promise<Regi
     }
 
     // 2. OBTENER PLAN FREE
-    const freePlan = await getPlanByName('FREE');
+    const freePlan = await getPlanByName('free');
     if (!freePlan) {
-      console.error('❌ Plan FREE no encontrado - debe ejecutar migration 007');
+      console.error('❌ Plan free no encontrado - debe ejecutar migration 007');
       return {
         success: false,
         error: 'Configuración de planes no encontrada',
@@ -134,8 +132,8 @@ export async function registerPersona(input: RegisterPersonaInput): Promise<Regi
         last_name: input.lastName,
         full_name: `${input.firstName} ${input.lastName}`,
         phone: input.phone || null,
-        mobile: input.mobile || null,
         account_type: 'persona',
+        user_type: 'particular',
         subscription_plan_id: freePlan.id,
         email_verified: false, // Se verifica al hacer click en el email
       })
@@ -166,23 +164,12 @@ export async function registerPersona(input: RegisterPersonaInput): Promise<Regi
 /**
  * 🏢 Registrar usuario EMPRESA
  * - Asigna plan FREE por defecto
- * - Estado: pending_verification
  * - Envía email de verificación
+ * - CUIT y datos adicionales se completan en el perfil
  */
 export async function registerEmpresa(input: RegisterEmpresaInput): Promise<RegisterResult> {
   try {
-    // 1. VALIDAR CUIT
-    if (!validateCUIT(input.cuit)) {
-      return {
-        success: false,
-        error: 'CUIT inválido. Debe tener 11 dígitos (formato: XX-XXXXXXXX-X)',
-        errorCode: 'INVALID_CUIT',
-      };
-    }
-
-    const formattedCUIT = formatCUIT(input.cuit);
-
-    // 2. CREAR USUARIO EN AUTH
+    // 1. CREAR USUARIO EN AUTH
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
@@ -192,7 +179,6 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
           last_name: input.lastName,
           account_type: 'empresa',
           company_name: input.companyName,
-          cuit: formattedCUIT,
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
@@ -223,10 +209,10 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
       };
     }
 
-    // 3. OBTENER PLAN FREE
-    const freePlan = await getPlanByName('FREE');
+    // 2. OBTENER PLAN FREE
+    const freePlan = await getPlanByName('free');
     if (!freePlan) {
-      console.error('❌ Plan FREE no encontrado - debe ejecutar migration 007');
+      console.error('❌ Plan free no encontrado - debe ejecutar migration 007');
       return {
         success: false,
         error: 'Configuración de planes no encontrada',
@@ -234,7 +220,7 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
       };
     }
 
-    // 4. ACTUALIZAR PERFIL EN USERS CON DATOS DE EMPRESA
+    // 3. ACTUALIZAR PERFIL EN USERS CON DATOS DE EMPRESA
     const { error: profileError } = await supabase
       .from('users')
       .update({
@@ -242,12 +228,9 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
         last_name: input.lastName,
         full_name: `${input.firstName} ${input.lastName}`,
         phone: input.phone || null,
-        mobile: input.mobile || null,
         account_type: 'empresa',
-        company_name: input.companyName,
-        cuit: formattedCUIT,
-        website: input.website || null,
-        verification_status: 'pending_verification',
+        user_type: 'empresa',
+        display_name: input.companyName, // Nombre de empresa va en display_name
         subscription_plan_id: freePlan.id,
         email_verified: false,
       })

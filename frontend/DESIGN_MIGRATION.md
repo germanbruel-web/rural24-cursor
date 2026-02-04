@@ -416,7 +416,7 @@ export function DarkModeToggle() {
 <section className="bg-green-600 text-white py-20">
   <div className="max-w-7xl mx-auto px-4">
     <h1 className="text-5xl font-bold mb-4">
-      Bienvenido a AgroBuscador
+      Bienvenido a Rural24
     </h1>
     <p className="text-xl mb-8">
       La mejor plataforma de maquinaria agrícola
@@ -433,7 +433,7 @@ export function DarkModeToggle() {
 <section className="bg-gradient-to-br from-brand-600 to-brand-700 dark:from-brand-700 dark:to-brand-800 text-white py-20">
   <div className="container-custom">
     <h1 className="text-5xl md:text-6xl font-extrabold mb-4">
-      Bienvenido a AgroBuscador
+      Bienvenido a Rural24
     </h1>
     <p className="text-xl mb-8 text-brand-50">
       La mejor plataforma de maquinaria agrícola

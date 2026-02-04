@@ -179,13 +179,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
                   profile?.role === 'superadmin'
                     ? 'bg-green-100 text-green-800'
-                    : profile?.role === 'adminscrap'
-                    ? 'bg-blue-100 text-blue-800'
+                    : profile?.user_type === 'empresa'
+                    ? 'bg-amber-100 text-amber-800'
                     : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {profile?.role === 'superadmin' ? 'SuperAdmin' : 
-                   profile?.role === 'adminscrap' ? 'Scraping' : 'Free'}
+                  {profile?.role === 'superadmin' ? 'SuperAdmin' : profile?.plan_name || 'Free'}
                 </span>
+                {profile?.user_type === 'empresa' && profile?.role !== 'superadmin' && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-semibold">
+                    Empresa
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -258,11 +262,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                     ? 'bg-green-100 text-green-800'
                     : profile?.role === 'adminscrap'
                     ? 'bg-blue-100 text-blue-800'
+                    : profile?.user_type === 'empresa'
+                    ? 'bg-amber-100 text-amber-800'
                     : 'bg-gray-100 text-gray-800'
                 }`}>
                   {profile?.role === 'superadmin' ? 'SuperAdmin' : 
-                   profile?.role === 'adminscrap' ? 'Scraping' : 'Free'}
+                   profile?.role === 'adminscrap' ? 'Scraping' : 
+                   profile?.plan_name || 'Free'}
                 </span>
+                {profile?.user_type === 'empresa' && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-semibold">
+                    Empresa
+                  </span>
+                )}
               </div>
             </div>
           </div>

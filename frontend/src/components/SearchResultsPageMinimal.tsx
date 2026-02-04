@@ -8,6 +8,7 @@ import { ProductCard } from './organisms/ProductCard';
 import { ResultsBannerIntercalated } from './banners/ResultsBannerIntercalated';
 import { ResultsBannerBelowFilter } from './banners/ResultsBannerBelowFilter';
 import { SmartBreadcrumb } from './SmartBreadcrumb';
+import { UserFeaturedAdsBar } from './sections/UserFeaturedAdsBar';
 import { useDynamicFilters, type FilterConfig, type FilterOption } from '../hooks/useDynamicFilters';
 import { useCategories } from '../hooks/useCategories';
 import { parseFilterParams, buildFilterUrl, toSlug } from '../utils/urlFilterUtils';
@@ -620,6 +621,14 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                   <div className="text-sm text-gray-600 mb-4">
                     Mostrando {((currentPage - 1) * RESULTS_PER_PAGE) + 1}-{Math.min(currentPage * RESULTS_PER_PAGE, totalFromBackend)} de {totalFromBackend} resultados
                   </div>
+                  
+                  {/* Avisos Destacados por Usuarios - Solo en primera página */}
+                  {currentPage === 1 && (resolvedCategory?.id || detectedIds.categoryId) && (
+                    <UserFeaturedAdsBar 
+                      categoryId={resolvedCategory?.id || detectedIds.categoryId}
+                      onViewDetail={onViewDetail}
+                    />
+                  )}
                   
                   {/* Grid Responsive: Mobile 2, Tablet 3, Desktop 4 - Variante Compact */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">

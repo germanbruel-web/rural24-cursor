@@ -277,11 +277,11 @@ export interface UpdateBannerCleanInput {
 }
 
 // ================================================
-// TIPOS: Sistema de Roles (SIMPLIFICADO - 3 ROLES)
+// TIPOS: Sistema de Roles
 // ================================================
 
-// Sistema de roles: SuperAdmin, AdminScrap, Free
-export type UserRole = 'superadmin' | 'adminscrap' | 'free' | 'user' | 'admin';
+// Sistema de roles: SuperAdmin para admin, los demás usan planes
+export type UserRole = 'superadmin' | 'free' | 'user' | 'admin';
 
 // Tipo de usuario: Particular o Empresa
 export type UserType = 'particular' | 'empresa';

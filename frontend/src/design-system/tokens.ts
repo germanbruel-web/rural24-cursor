@@ -1,5 +1,5 @@
 // ====================================================================
-// DESIGN TOKENS - Sistema de diseño AgroBuscador
+// DESIGN TOKENS - Sistema de diseño Rural24
 // Mobile-first, accesibilidad y performance
 // ====================================================================
 

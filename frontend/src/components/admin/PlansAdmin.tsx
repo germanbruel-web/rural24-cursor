@@ -16,6 +16,7 @@ import {
   createPlan,
   deactivatePlan,
   reactivatePlan,
+  deletePlan,
   countUsersByPlan,
   formatPrice,
   type SubscriptionPlan,
@@ -224,6 +225,27 @@ export default function PlansAdmin() {
     setTimeout(() => setSuccess(null), 3000);
   };
 
+  // Eliminar plan permanentemente
+  const handleDelete = async (plan: PlanWithStats) => {
+    // Confirmar eliminación
+    const confirmed = window.confirm(
+      `¿Estás seguro de eliminar el plan "${plan.display_name}"?\n\nEsta acción no se puede deshacer.`
+    );
+    
+    if (!confirmed) return;
+
+    const result = await deletePlan(plan.id);
+    
+    if (result.success) {
+      setSuccess('Plan eliminado correctamente');
+      loadPlans();
+    } else {
+      setError(result.error || 'Error eliminando plan');
+    }
+    
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
   // Agregar feature
   const handleAddFeature = () => {
     if (!newFeature.trim() || !editingPlan) return;
@@ -412,13 +434,29 @@ export default function PlansAdmin() {
                   </button>
                 </td>
                 <td className="px-4 py-4 text-right">
-                  <button
-                    onClick={() => handleEdit(plan)}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    title="Editar plan"
-                  >
-                    <Edit2 className="w-4 h-4 text-gray-600" />
-                  </button>
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => handleEdit(plan)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Editar plan"
+                    >
+                      <Edit2 className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(plan)}
+                      className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                      title={plan.userCount && plan.userCount > 0 
+                        ? `No se puede eliminar: ${plan.userCount} usuarios` 
+                        : 'Eliminar plan'}
+                      disabled={plan.userCount !== undefined && plan.userCount > 0}
+                    >
+                      <Trash2 className={`w-4 h-4 ${
+                        plan.userCount && plan.userCount > 0 
+                          ? 'text-gray-300 cursor-not-allowed' 
+                          : 'text-red-500'
+                      }`} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

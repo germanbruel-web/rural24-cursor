@@ -1,4 +1,4 @@
-# 🎨 Design System Unificado - AgroBuscador
+# 🎨 Design System Unificado - Rural24
 
 ## 📐 Jerarquía Tipográfica
 

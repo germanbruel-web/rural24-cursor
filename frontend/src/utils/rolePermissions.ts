@@ -5,20 +5,20 @@ import type { UserRole } from '../../types';
  */
 export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   // Páginas públicas (todos)
-  home: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
-  'how-it-works': ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
-  'email-confirm': ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
-  publicar: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
-  'ad-detail': ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
+  home: ['superadmin', 'free', 'user', 'admin'],
+  'how-it-works': ['superadmin', 'free', 'user', 'admin'],
+  'email-confirm': ['superadmin', 'free', 'user', 'admin'],
+  publicar: ['superadmin', 'free', 'user', 'admin'],
+  'ad-detail': ['superadmin', 'free', 'user', 'admin'],
   
   // Páginas de perfil (todos los usuarios autenticados)
-  profile: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
-  subscription: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
+  profile: ['superadmin', 'free', 'user', 'admin'],
+  subscription: ['superadmin', 'free', 'user', 'admin'],
   
   // Mis avisos personales (todos los usuarios autenticados)
-  'my-ads': ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
-  contacts: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
-  inbox: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
+  'my-ads': ['superadmin', 'free', 'user', 'admin'],
+  contacts: ['superadmin', 'free', 'user', 'admin'],
+  inbox: ['superadmin', 'free', 'user', 'admin'],
   
   // Solo SuperAdmin
   users: ['superadmin'],
@@ -86,22 +86,22 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'home',
     label: 'Inicio',
-    allowedRoles: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
+    allowedRoles: ['superadmin', 'free', 'user', 'admin'],
   },
   {
     id: 'my-ads',
     label: 'Mis Avisos',
-    allowedRoles: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
+    allowedRoles: ['superadmin', 'free', 'user', 'admin'],
   },
   {
     id: 'inbox',
     label: 'Mensajes',
-    allowedRoles: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
+    allowedRoles: ['superadmin', 'free', 'user', 'admin'],
   },
   {
     id: 'profile',
     label: 'Mi Perfil',
-    allowedRoles: ['superadmin', 'adminscrap', 'free', 'user', 'admin'],
+    allowedRoles: ['superadmin', 'free', 'user', 'admin'],
   },
   
   // SECCIÓN: ADMINISTRADOR (solo SuperAdmin)

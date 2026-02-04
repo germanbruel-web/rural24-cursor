@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { UserPlus, Mail, Lock, User, AlertCircle, Phone, Building2, FileText } from 'lucide-react';
-import { registerPersona, registerEmpresa, formatCUIT, type RegisterPersonaInput, type RegisterEmpresaInput } from '../../services/authService';
+import { UserPlus, Mail, Lock, User, AlertCircle, Phone, Building2, Eye, EyeOff } from 'lucide-react';
+import { registerPersona, registerEmpresa, type RegisterPersonaInput, type RegisterEmpresaInput } from '../../services/authService';
+import { signInWithGoogle, signInWithFacebook } from '../../services/socialAuthService';
 import { Button } from '../atoms/Button';
 import FormField from '../molecules/FormField';
 
@@ -18,22 +19,20 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
   const [step, setStep] = useState<Step>(1);
   const [accountType, setAccountType] = useState<AccountType>('persona');
   
-  // Campos comunes
+  // Campos simplificados
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [mobile, setMobile] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(''); // Un solo campo de teléfono
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
-  // Campos empresa
+  // Campos empresa (solo nombre, CUIT eliminado)
   const [companyName, setCompanyName] = useState('');
-  const [cuit, setCuit] = useState('');
-  const [website, setWebsite] = useState('');
   
   // Control de estado
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'facebook' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -41,14 +40,9 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
     e.preventDefault();
     setError(null);
 
-    // Validaciones comunes
+    // Validaciones mínimas
     if (!firstName.trim() || !lastName.trim()) {
-      setError('Por favor ingresa tu nombre y apellido');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
+      setError('Por favor ingresá tu nombre y apellido');
       return;
     }
 
@@ -57,16 +51,10 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
       return;
     }
 
-    // Validaciones empresa
-    if (accountType === 'empresa') {
-      if (!companyName.trim()) {
-        setError('Por favor ingresa el nombre de la empresa');
-        return;
-      }
-      if (!cuit.trim()) {
-        setError('Por favor ingresa el CUIT de la empresa');
-        return;
-      }
+    // Validación empresa
+    if (accountType === 'empresa' && !companyName.trim()) {
+      setError('Por favor ingresá el nombre de la empresa');
+      return;
     }
 
     setLoading(true);
@@ -81,7 +69,6 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
           email: email.trim(),
           password,
           phone: phone || undefined,
-          mobile: mobile || undefined,
         };
         result = await registerPersona(input);
       } else {
@@ -91,10 +78,7 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
           email: email.trim(),
           password,
           phone: phone || undefined,
-          mobile: mobile || undefined,
           companyName: companyName.trim(),
-          cuit: cuit.trim(),
-          website: website.trim() || undefined,
         };
         result = await registerEmpresa(input);
       }
@@ -114,14 +98,41 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
     }
   };
 
-  // Auto-formatear CUIT mientras se escribe
-  const handleCuitChange = (value: string) => {
-    const cleaned = value.replace(/[-\s]/g, '');
-    if (cleaned.length <= 11 && /^\d*$/.test(cleaned)) {
-      setCuit(cleaned);
+  // 🔐 Login Social Handlers
+  const handleGoogleLogin = async () => {
+    setSocialLoading('google');
+    setError(null);
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        setError(error.message);
+      }
+      // Si no hay error, Supabase redirige automáticamente
+    } catch (err: any) {
+      setError(err.message || 'Error al conectar con Google');
+    } finally {
+      setSocialLoading(null);
     }
   };
 
+  const handleFacebookLogin = async () => {
+    setSocialLoading('facebook');
+    setError(null);
+    try {
+      const { error } = await signInWithFacebook();
+      if (error) {
+        setError(error.message);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error al conectar con Facebook');
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  // ============================================================================
+  // PANTALLA DE ÉXITO
+  // ============================================================================
   if (success) {
     return (
       <div className="w-full bg-white rounded-lg shadow-lg p-8">
@@ -160,31 +171,6 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
             </div>
           </div>
           
-          {accountType === 'empresa' && (
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-5 mb-6 text-left">
-              <div className="flex items-start gap-3">
-                <Building2 className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-amber-900 mb-2">
-                    🏢 Verificación de Empresa en Proceso
-                  </p>
-                  <p className="text-sm text-gray-700 mb-2">
-                    Nuestro equipo revisará la información de <strong>{companyName}</strong> (CUIT: {formatCUIT(cuit)}) en las próximas 24-48 horas.
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    💼 Mientras tanto, podés acceder a tu cuenta con el plan FREE (3 avisos, 3 contactos enviados/recibidos).
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 text-left">
-            <p className="text-sm text-gray-700">
-              💚 <strong>¿Por qué verificar tu email?</strong><br/>
-              <span className="text-xs">Una cuenta verificada demuestra más confianza frente al mercado de agronegocios y te permite acceder a todas las funcionalidades de la plataforma.</span>
-            </p>
-          </div>
           <Button
             onClick={() => {
               onClose?.();
@@ -201,7 +187,9 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
     );
   }
 
-  // 🎯 STEP 1: Selector de tipo de cuenta
+  // ============================================================================
+  // STEP 1: Selector de tipo de cuenta
+  // ============================================================================
   if (step === 1) {
     return (
       <div className="w-full bg-white rounded-lg shadow-lg p-6">
@@ -221,6 +209,15 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
           <p className="text-gray-600 mt-2">Seleccioná el tipo de cuenta que deseas crear</p>
         </div>
 
+        {/* Error de login social */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
+
+        {/* Selector Persona/Empresa */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {/* Card Persona */}
           <button
@@ -241,7 +238,7 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
               <div className="text-xs text-gray-500 space-y-1">
                 <p>✓ Registro rápido</p>
                 <p>✓ 3 avisos gratis</p>
-                <p>✓ 3 contactos enviados</p>
+                <p>✓ Contacto por chat</p>
               </div>
             </div>
           </button>
@@ -263,22 +260,68 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
                 Para concesionarios, revendedores y empresas
               </p>
               <div className="text-xs text-gray-500 space-y-1">
-                <p>✓ CUIT verificado</p>
                 <p>✓ Perfil profesional</p>
+                <p>✓ Métricas de contacto</p>
                 <p>✓ Mayor visibilidad</p>
               </div>
             </div>
           </button>
         </div>
 
+        {/* Separador */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-white text-gray-500">o registrate con</span>
+          </div>
+        </div>
+
+        {/* Botones Social Login */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <button
+            onClick={handleGoogleLogin}
+            disabled={socialLoading !== null}
+            className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {socialLoading === 'google' ? (
+              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+            )}
+            <span className="font-medium text-gray-700">Google</span>
+          </button>
+
+          <button
+            onClick={handleFacebookLogin}
+            disabled={socialLoading !== null}
+            className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {socialLoading === 'facebook' ? (
+              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            )}
+            <span className="font-medium text-gray-700">Facebook</span>
+          </button>
+        </div>
+
         <div className="text-center">
           <p className="text-gray-600">
-            ¿Ya tienes cuenta?{' '}
+            ¿Ya tenés cuenta?{' '}
             <button
               onClick={onSwitchToLogin}
               className="text-[#16a135] font-medium hover:underline"
             >
-              Inicia sesión aquí
+              Iniciá sesión aquí
             </button>
           </p>
         </div>
@@ -286,7 +329,9 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
     );
   }
 
-  // 🎯 STEP 2: Formulario de datos
+  // ============================================================================
+  // STEP 2: Formulario simplificado
+  // ============================================================================
   return (
     <div className="w-full bg-white rounded-lg shadow-lg p-4 sm:p-6">
       <div className="relative text-center mb-4 sm:mb-6">
@@ -322,13 +367,13 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
         <h2 className="text-2xl sm:text-3xl font-bold text-[#1b2f23]">
           Crear Cuenta {accountType === 'persona' ? 'Personal' : 'Empresarial'}
         </h2>
-        <p className="text-sm sm:text-base text-gray-600 mt-1">
-          {accountType === 'persona' ? 'Completá tus datos personales' : 'Completá los datos de tu empresa'}
+        <p className="text-sm text-gray-500 mt-1">
+          Solo necesitamos algunos datos para comenzar
         </p>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-800">{error}</p>
         </div>
@@ -359,44 +404,18 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
           />
         </div>
 
-        {/* 🏢 CAMPOS EMPRESA */}
+        {/* Nombre Empresa (solo empresa) */}
         {accountType === 'empresa' && (
-          <>
-            <FormField
-              label="Nombre de la Empresa"
-              name="companyName"
-              type="text"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              leftIcon={<Building2 size={18} />}
-              placeholder="Ej: Agropecuaria San José S.A."
-              required
-            />
-
-            <FormField
-              label="CUIT"
-              name="cuit"
-              type="text"
-              value={cuit.length === 11 ? formatCUIT(cuit) : cuit}
-              onChange={(e) => handleCuitChange(e.target.value)}
-              leftIcon={<FileText size={18} />}
-              placeholder="20-12345678-9"
-              helperText="Formato: XX-XXXXXXXX-X (11 dígitos)"
-              maxLength={13}
-              required
-            />
-
-            <FormField
-              label="Sitio Web"
-              name="website"
-              type="url"
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
-              leftIcon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>}
-              placeholder="https://www.ejemplo.com"
-              helperText="Opcional"
-            />
-          </>
+          <FormField
+            label="Nombre de la Empresa"
+            name="companyName"
+            type="text"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            leftIcon={<Building2 size={18} />}
+            placeholder="Ej: Agropecuaria San José"
+            required
+          />
         )}
 
         {/* Email */}
@@ -411,53 +430,44 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
           required
         />
 
-        {/* Teléfonos */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Teléfono (opcional, unificado) */}
+        <FormField
+          label="Teléfono"
+          name="phone"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          leftIcon={<Phone size={18} />}
+          placeholder="+54 9 11 1234-5678"
+          helperText="Opcional - Podés agregarlo después"
+        />
+
+        {/* Contraseña con toggle mostrar/ocultar */}
+        <div className="relative">
           <FormField
-            label="Celular"
-            name="mobile"
-            type="tel"
-            value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
-            leftIcon={<Phone size={18} />}
-            placeholder="+54 9 11 1234-5678"
+            label="Contraseña"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            leftIcon={<Lock size={18} />}
+            placeholder="Mínimo 6 caracteres"
+            minLength={6}
+            required
           />
-          <FormField
-            label="Teléfono Fijo"
-            name="phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            leftIcon={<Phone size={18} />}
-            placeholder="011 1234-5678"
-          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-[38px] text-gray-500 hover:text-gray-700"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
         </div>
 
-        {/* Contraseña */}
-        <FormField
-          label="Contraseña"
-          name="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          leftIcon={<Lock size={18} />}
-          placeholder="••••••••"
-          helperText="Mínimo 6 caracteres"
-          minLength={6}
-          required
-        />
-
-        {/* Confirmar Contraseña */}
-        <FormField
-          label="Confirmar Contraseña"
-          name="confirmPassword"
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          leftIcon={<Lock size={18} />}
-          placeholder="••••••••"
-          required
-        />
+        {/* Info adicional */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+          <p>💡 Podrás completar tu perfil después del registro con más datos profesionales, ubicación y servicios.</p>
+        </div>
 
         {/* Botón de envío */}
         <Button
@@ -472,14 +482,52 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
         </Button>
       </form>
 
-      <div className="mt-6 text-center">
-        <p className="text-gray-600">
-          ¿Ya tienes cuenta?{' '}
+      {/* Separador */}
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-4 bg-white text-gray-500">o registrate con</span>
+        </div>
+      </div>
+
+      {/* Social Login en Step 2 también */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <button
+          onClick={handleGoogleLogin}
+          disabled={socialLoading !== null || loading}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <span className="text-sm font-medium text-gray-700">Google</span>
+        </button>
+
+        <button
+          onClick={handleFacebookLogin}
+          disabled={socialLoading !== null || loading}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+          <span className="text-sm font-medium text-gray-700">Facebook</span>
+        </button>
+      </div>
+
+      <div className="text-center">
+        <p className="text-gray-600 text-sm">
+          ¿Ya tenés cuenta?{' '}
           <Button
             onClick={onSwitchToLogin}
             variant="link"
           >
-            Inicia sesión aquí
+            Iniciá sesión aquí
           </Button>
         </p>
       </div>

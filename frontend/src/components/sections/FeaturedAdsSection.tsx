@@ -9,10 +9,16 @@
  *     - nav: Links de subcategorías
  * 
  * Mobile First: 1col → 2col (sm) → 3col (md) → 4col (lg) → 5col (xl)
+ * 
+ * HÍBRIDO: Combina avisos destacados por:
+ * 1. Superadmin (featured_ads_queue)
+ * 2. Usuarios que pagan créditos (featured_ads)
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { Star } from 'lucide-react';
 import { getFeaturedAdsByCategories, type FeaturedAdsByCategory } from '../../services/featuredAdsService';
+import { getFeaturedForHomepage } from '../../services/userFeaturedService';
 import { ProductCard } from '../organisms/ProductCard';
 import { SubcategoriesExpressBar } from './SubcategoriesExpressBar';
 import { CategoryBannerSlider } from './CategoryBannerSlider';
@@ -32,6 +38,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
   maxAdsPerCategory = 12
 }) => {
   const [categoriesData, setCategoriesData] = useState<FeaturedAdsByCategory[]>([]);
+  const [userFeaturedByCategory, setUserFeaturedByCategory] = useState<Map<string, any[]>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,8 +46,21 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
     setLoading(true);
     setError(null);
     try {
+      // 1. Cargar destacados de superadmin
       const data = await getFeaturedAdsByCategories(maxAdsPerCategory);
       setCategoriesData(data);
+      
+      // 2. Cargar destacados de usuarios para cada categoría
+      const userFeaturedMap = new Map<string, any[]>();
+      await Promise.all(
+        data.map(async (catData) => {
+          const { data: userAds } = await getFeaturedForHomepage(catData.category_id, 10);
+          if (userAds && userAds.length > 0) {
+            userFeaturedMap.set(catData.category_id, userAds);
+          }
+        })
+      );
+      setUserFeaturedByCategory(userFeaturedMap);
     } catch (err) {
       console.error('[FeaturedAdsSection] Error loading featured ads:', err);
       setError('Error al cargar avisos destacados');
@@ -156,6 +176,58 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
                   onCategoryClick={onCategoryClick}
                 />
               </header>
+
+              {/* Avisos destacados por USUARIOS (pagados) - Antes del grid principal */}
+              {userFeaturedByCategory.get(catData.category_id)?.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-gradient-to-r from-amber-100 to-amber-50 rounded-full">
+                      <Star className="w-3 h-3 text-amber-500 fill-amber-400" />
+                      <span className="font-medium text-amber-700 text-xs">Avisos Destacados</span>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-amber-200 to-transparent" />
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
+                    {userFeaturedByCategory.get(catData.category_id)!.slice(0, 5).map((ad, adIdx) => {
+                      const firstImage = ad.images?.[0];
+                      const imageUrl = typeof firstImage === 'string' 
+                        ? firstImage 
+                        : ((firstImage as { url?: string })?.url || '');
+                      
+                      return (
+                        <div 
+                          key={ad.id}
+                          className="relative group"
+                        >
+                          {/* Borde dorado */}
+                          <div className="absolute -inset-0.5 bg-gradient-to-br from-amber-400 to-amber-500 rounded-2xl opacity-60 group-hover:opacity-100 transition-opacity" />
+                          {/* Badge */}
+                          <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full shadow">
+                            <Star className="w-2.5 h-2.5 fill-white" />
+                          </div>
+                          <div className="relative">
+                            <ProductCard
+                              product={{
+                                ...ad,
+                                category: catData.category_name,
+                                location: ad.province || ad.location || '',
+                                imageUrl,
+                                images: ad.images,
+                                sourceUrl: '',
+                                isSponsored: true,
+                              }}
+                              variant="featured"
+                              showBadges={false}
+                              showLocation={true}
+                              onViewDetail={() => onAdClick?.(ad.id)}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Grid de Productos o Skeleton si no hay avisos */}
               {hasAds ? (

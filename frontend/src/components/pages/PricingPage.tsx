@@ -207,63 +207,6 @@ export const PricingPage: React.FC = () => {
             );
           })}
         </div>
-
-        {/* FAQ */}
-        <div className="mt-16 bg-gray-50 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            Preguntas Frecuentes
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                ¿Puedo cambiar de plan en cualquier momento?
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Sí, puedes actualizar o degradar tu plan cuando lo necesites. Los cambios se aplicarán en tu próximo ciclo de facturación.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                ¿Qué métodos de pago aceptan?
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Aceptamos tarjetas de crédito, débito y transferencias bancarias. Para planes Empresa ofrecemos facturación personalizada.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                ¿Los contactos se renuevan cada mes?
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Sí, los límites de contactos se reinician automáticamente cada mes de facturación.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                ¿Qué incluye el plan Empresa?
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Contactos ilimitados, avisos ilimitados, perfil público de empresa, catálogo de productos y soporte VIP.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA Final */}
-        <div className="mt-16 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            ¿Necesitas un plan personalizado?
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Contáctanos y armamos una solución a medida para tu empresa
-          </p>
-          <button
-            onClick={() => window.location.href = '#contact'}
-            className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
-          >
-            Contactar a Ventas
-          </button>
-        </div>
       </div>
 
       {/* Auth Modal */}

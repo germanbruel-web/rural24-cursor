@@ -10,7 +10,6 @@ import { MapPin, Phone, Mail, Twitter, Facebook, Instagram, Youtube, MessageCirc
 import { useFooterConfig, useFooterCategories } from '../hooks/useFooterConfig';
 import { useSiteSetting } from '../hooks/useSiteSetting';
 import type { ContactItem, FooterLinkItem, SocialLinkItem } from '../types/footer';
-import { Button } from './atoms/Button';
 
 interface FooterProps {
   onCategoryClick?: (category: string) => void;
@@ -114,22 +113,17 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
 
           {/* Columna 2: Links Personalizados */}
           <div>
-            <h3 className="text-white font-bold mb-4 uppercase text-sm">{column2.title}</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="text-white font-semibold mb-4 uppercase text-xs tracking-wide">{column2.title}</h3>
+            <ul className="space-y-2">
               {column2.items.sort((a, b) => a.order - b.order).map(link => (
                 <li key={link.id}>
                   <a 
                     href={link.url}
                     target={link.openNewTab ? '_blank' : undefined}
                     rel={link.openNewTab ? 'noopener noreferrer' : undefined}
-                    className="inline-block"
+                    className="text-sm font-normal text-gray-400 hover:text-white transition-colors"
                   >
-                    <Button
-                      variant="link"
-                      className="text-gray-300 hover:text-white p-0 h-auto"
-                    >
-                      {link.label}
-                    </Button>
+                    {link.label}
                   </a>
                 </li>
               ))}
@@ -138,19 +132,18 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
 
           {/* Columna 3: Categorías */}
           <div>
-            <h3 className="text-white font-bold mb-4 uppercase text-sm">{column3.title}</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="text-white font-semibold mb-4 uppercase text-xs tracking-wide">{column3.title}</h3>
+            <ul className="space-y-2">
               {column3.source === 'dynamic' ? (
                 // Categorías dinámicas desde BD
                 categoriesToShow.map(cat => (
                   <li key={cat.id}>
-                    <Button
+                    <button
                       onClick={() => onCategoryClick(cat.name)}
-                      variant="link"
-                      className="text-gray-300 hover:text-white p-0 h-auto"
+                      className="text-sm font-normal text-gray-400 hover:text-white transition-colors text-left"
                     >
                       {cat.display_name || cat.name}
-                    </Button>
+                    </button>
                   </li>
                 ))
               ) : (
@@ -161,14 +154,9 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
                       href={link.url}
                       target={link.openNewTab ? '_blank' : undefined}
                       rel={link.openNewTab ? 'noopener noreferrer' : undefined}
-                      className="inline-block"
+                      className="text-sm font-normal text-gray-400 hover:text-white transition-colors"
                     >
-                      <Button
-                        variant="link"
-                        className="text-gray-300 hover:text-white p-0 h-auto"
-                      >
-                        {link.label}
-                      </Button>
+                      {link.label}
                     </a>
                   </li>
                 ))
@@ -178,24 +166,19 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
 
           {/* Columna 4: Links + Redes Sociales */}
           <div>
-            <h3 className="text-white font-bold mb-4 uppercase text-sm">{column4.title}</h3>
+            <h3 className="text-white font-semibold mb-4 uppercase text-xs tracking-wide">{column4.title}</h3>
             
             {/* Links */}
-            <ul className="space-y-2 text-sm mb-6">
+            <ul className="space-y-2 mb-6">
               {column4.links.sort((a, b) => a.order - b.order).map(link => (
                 <li key={link.id}>
                   <a 
                     href={link.url}
                     target={link.openNewTab ? '_blank' : undefined}
                     rel={link.openNewTab ? 'noopener noreferrer' : undefined}
-                    className="inline-block"
+                    className="text-sm font-normal text-gray-400 hover:text-white transition-colors"
                   >
-                    <Button
-                      variant="link"
-                      className="text-gray-300 hover:text-white p-0 h-auto"
-                    >
-                      {link.label}
-                    </Button>
+                    {link.label}
                   </a>
                 </li>
               ))}
@@ -209,7 +192,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
                   <a 
                     key={social.id}
                     href={social.url} 
-                    className="w-10 h-10 bg-[#16a135] hover:bg-[#138a2e] rounded flex items-center justify-center transition-colors" 
+                    className="w-10 h-10 bg-[#16a135] hover:bg-[#138a2e] rounded-full flex items-center justify-center transition-colors" 
                     aria-label={social.platform}
                     target="_blank"
                     rel="noopener noreferrer"

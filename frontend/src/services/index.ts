@@ -21,6 +21,10 @@ export * from './authService';
 export * from './usersService';
 export * from './contactService';
 export * from './subscriptionService';
+export * from './socialAuthService';
+
+// Featured Ads (usuario)
+export * from './userFeaturedService';
 
 // Config & Settings
 export * from './siteSettingsService';

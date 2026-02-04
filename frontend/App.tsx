@@ -17,6 +17,7 @@ import {
   AdDetailPage,
   AuthModal,
   EmailConfirmationPage,
+  OAuthCallbackPage,
   DashboardLayout,
   FeaturedAdsSection,
   HowItWorksSection,
@@ -71,6 +72,9 @@ const PricingPage = lazy(() => import("./src/components/pages/PricingPage").then
 const PublicarAviso = lazy(() => import("./src/components/pages/PublicarAviso"));
 const ExampleMigratedPage = lazy(() => import("./src/components/pages/ExampleMigratedPage").then(m => ({ default: m.ExampleMigratedPage })));
 
+// Empresa Components (Servicios Rurales B2B)
+const CompanyProfilePage = lazy(() => import("./src/components/empresa/CompanyProfilePage").then(m => ({ default: m.CompanyProfilePage })));
+
 // Dev/Test Pages (solo desarrollo)
 const TestDynamicForm = lazy(() => import("./src/pages/TestDynamicForm").then(m => ({ default: m.TestDynamicForm })));
 const APITestPage = lazy(() => import("./src/pages/APITest"));
@@ -86,10 +90,10 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads';
+export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads' | 'company-profile';
 
 /**
- * Componente principal de AgroBuscador
+ * Componente principal de Rural24 - Clasificados de Agronegocios
  */
 const App: React.FC = () => {
   return (
@@ -109,6 +113,7 @@ const AppContent: React.FC = () => {
     const hash = window.location.hash;
     
     if (hash.startsWith('#/auth/confirm')) return 'email-confirm';
+    if (hash.startsWith('#/auth/callback')) return 'auth-callback';
     if (hash === '#/how-it-works') return 'how-it-works';
     if (hash === '#/design-showcase') return 'design-showcase';
     if (hash === '#/example-migration') return 'example-migration';
@@ -331,6 +336,10 @@ const AppContent: React.FC = () => {
       }
       else if (hash === '#/subscription') {
         navigateToPage('subscription');
+      }
+      // Routing para perfil de empresa: #/empresa/:slug
+      else if (hash.startsWith('#/empresa/')) {
+        navigateToPage('company-profile');
       }
       // Routing para dashboard - redirigir a Mis Avisos
       else if (hash.startsWith('#/dashboard')) {
@@ -575,6 +584,16 @@ const AppContent: React.FC = () => {
     return <EmailConfirmationPage />;
   }
 
+  // Página de callback OAuth (Google, Facebook)
+  if (currentPage === 'auth-callback') {
+    return (
+      <OAuthCallbackPage 
+        onComplete={() => navigateToPage('home')}
+        onError={(error) => console.error('OAuth error:', error)}
+      />
+    );
+  }
+
   // Página de Design System Showcase
   if (currentPage === 'design-showcase') {
     return (
@@ -627,6 +646,27 @@ const AppContent: React.FC = () => {
         />
         <Suspense fallback={<LoadingFallback />}>
           <PricingPage />
+        </Suspense>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Página de Perfil de Empresa (B2B Servicios Rurales)
+  if (currentPage === 'company-profile') {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <AppHeader 
+          onNavigate={(page) => {
+            navigateToPage(page);
+            if (page === 'home') {
+              handleBackToHome();
+            }
+          }}
+          onSearch={handleSearch}
+        />
+        <Suspense fallback={<LoadingFallback />}>
+          <CompanyProfilePage />
         </Suspense>
         <Footer />
       </div>

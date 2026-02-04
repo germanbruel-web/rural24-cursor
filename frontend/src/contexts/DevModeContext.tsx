@@ -30,15 +30,6 @@ const DEV_USERS: DevUser[] = [
     subscription_status: 'active',
   },
   {
-    id: 'dev-adminscrap',
-    email: 'super@clasify.com',
-    full_name: 'AdminScrap (Scraping)',
-    role: 'adminscrap',
-    user_type: 'particular',
-    email_verified: true,
-    subscription_status: 'active',
-  },
-  {
     id: 'dev-free-empresa',
     email: 'empresa@dev.com',
     full_name: 'Free Empresa Dev',

@@ -5,12 +5,13 @@ import {
   getUserAdLimit,
 } from '../../services/adsService';
 import type { Ad } from '../../../types';
-import { Edit, Trash2, Eye, Plus, Package, X, Star } from 'lucide-react';
+import { Edit, Trash2, Eye, Plus, Package, X, Star, Zap } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSuperAdmin as checkIsSuperAdmin } from '../../utils/rolePermissions';
 import { supabase } from '../../services/supabaseClient';
 import { QuickEditAdModal } from './QuickEditAdModal';
+import { FeaturedAdModal } from '../dashboard';
 
 /**
  * Extraer public_id de Cloudinary URL para borrado
@@ -43,6 +44,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   const [selectedAdForView, setSelectedAdForView] = useState<Ad | null>(null);
   const [selectedAdForEdit, setSelectedAdForEdit] = useState<Ad | null>(null);
   const [selectedAdForDelete, setSelectedAdForDelete] = useState<Ad | null>(null);
+  const [selectedAdForFeatured, setSelectedAdForFeatured] = useState<Ad | null>(null);
   
   // Determinar permisos según rol
   const isSuperAdmin = checkIsSuperAdmin(profile?.role);
@@ -347,6 +349,17 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                           <Edit className="w-4 h-4" />
                         </button>
 
+                        {/* Destacar */}
+                        {ad.status === 'active' && (
+                          <button
+                            onClick={() => setSelectedAdForFeatured(ad)}
+                            className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                            title="Destacar aviso"
+                          >
+                            <Star className="w-4 h-4" />
+                          </button>
+                        )}
+
                         {/* Eliminar */}
                         <button
                           onClick={() => setSelectedAdForDelete(ad)}
@@ -467,6 +480,26 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           onSuccess={() => {
             loadData();
             notify.success('Aviso actualizado correctamente');
+          }}
+        />
+      )}
+
+      {/* Modal Destacar Aviso */}
+      {selectedAdForFeatured && (
+        <FeaturedAdModal
+          isOpen={true}
+          onClose={() => setSelectedAdForFeatured(null)}
+          ad={{
+            id: selectedAdForFeatured.id,
+            title: selectedAdForFeatured.title,
+            category_id: selectedAdForFeatured.category_id || '',
+            category_name: selectedAdForFeatured.category_name || selectedAdForFeatured.category,
+            images: selectedAdForFeatured.images
+          }}
+          onSuccess={() => {
+            setSelectedAdForFeatured(null);
+            notify.success('¡Aviso destacado exitosamente!');
+            loadData();
           }}
         />
       )}

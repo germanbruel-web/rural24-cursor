@@ -91,7 +91,6 @@ export const UsersPanel: React.FC = () => {
   const stats = {
     total: users.length,
     superadmins: users.filter(u => u.role === 'superadmin').length,
-    adminscrap: users.filter(u => u.role === 'adminscrap').length,
     free: users.filter(u => u.role === 'free').length,
     verified: users.filter(u => u.email_verified).length,
   };
@@ -187,13 +186,6 @@ export const UsersPanel: React.FC = () => {
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="text-sm text-gray-600 mb-1 flex items-center gap-1">
-            <Shield className="w-4 h-4 text-blue-500" />
-            AdminScrap
-          </div>
-          <div className="text-2xl font-bold text-blue-600">{stats.adminscrap}</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1 flex items-center gap-1">
             <Award className="w-4 h-4 text-yellow-500" />
             Premium
           </div>
@@ -240,7 +232,6 @@ export const UsersPanel: React.FC = () => {
           >
             <option value="all">Todos los roles</option>
             <option value="superadmin">SuperAdmin</option>
-            <option value="adminscrap">AdminScrap</option>
             <option value="free">Free</option>
           </select>
 
@@ -314,12 +305,6 @@ export const UsersPanel: React.FC = () => {
                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full w-fit">
                           <Crown className="w-3 h-3" />
                           SuperAdmin
-                        </span>
-                      )}
-                      {user.role === 'adminscrap' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full w-fit">
-                          <Shield className="w-3 h-3" />
-                          AdminScrap
                         </span>
                       )}
                       {user.role === 'free' && (

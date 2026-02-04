@@ -1,4 +1,4 @@
-# 🔐 SISTEMA DE AUTENTICACIÓN - AGROBUSCADOR
+# 🔐 SISTEMA DE AUTENTICACIÓN - RURAL24
 
 ## ✨ ¿Qué se implementó?
 
@@ -18,7 +18,7 @@
 ### 3. **Sistema de Notificaciones (Toast)**
 - Reemplaza todos los `alert()` por notificaciones elegantes
 - Biblioteca: `react-hot-toast`
-- Colores personalizados con paleta de AgroBuscador
+- Colores personalizados con paleta de Rural24
 - Funciones: `notify.success()`, `notify.error()`, `notify.loading()`, `notify.promise()`
 
 ### 4. **Integración en Header**
@@ -83,7 +83,7 @@ CREATE POLICY users_superadmin_all ON public.users
 2. Click en **"Regístrate aquí"**
 3. Completa el formulario:
    - Nombre: `Usuario Test`
-   - Email: `test@agrobuscador.com`
+   - Email: `test@rural24.com`
    - Contraseña: `Test123!`
    - Confirmar contraseña: `Test123!`
 4. Click en **"Crear Cuenta"**
@@ -114,7 +114,7 @@ CREATE POLICY users_superadmin_all ON public.users
 ```sql
 UPDATE public.users 
 SET role = 'super-admin' 
-WHERE email = 'test@agrobuscador.com';
+WHERE email = 'test@rural24.com';
 ```
 
 Recarga la página y verás:
@@ -126,7 +126,7 @@ Recarga la página y verás:
 ```sql
 UPDATE public.users 
 SET role = 'premium-particular' 
-WHERE email = 'test@agrobuscador.com';
+WHERE email = 'test@rural24.com';
 ```
 
 Recarga y verás:

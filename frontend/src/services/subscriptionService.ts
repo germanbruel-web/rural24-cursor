@@ -68,13 +68,13 @@ export async function getAllPlans(): Promise<SubscriptionPlan[]> {
 }
 
 /**
- * Obtener plan específico por nombre
+ * Obtener plan específico por nombre (case-insensitive)
  */
 export async function getPlanByName(planName: string): Promise<SubscriptionPlan | null> {
   const { data, error } = await supabase
     .from('subscription_plans')
     .select('*')
-    .eq('name', planName)
+    .ilike('name', planName)
     .eq('is_active', true)
     .single();
 
@@ -394,4 +394,36 @@ export async function countUsersByPlan(planId: string): Promise<number> {
   }
 
   return count || 0;
+}
+
+/**
+ * Eliminar plan permanentemente (hard delete)
+ * Solo permite eliminar si no hay usuarios con este plan
+ */
+export async function deletePlan(planId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. Verificar que no haya usuarios con este plan
+    const userCount = await countUsersByPlan(planId);
+    if (userCount > 0) {
+      return { 
+        success: false, 
+        error: `No se puede eliminar: hay ${userCount} usuario(s) con este plan. Primero migra los usuarios a otro plan.` 
+      };
+    }
+
+    // 2. Eliminar el plan
+    const { error } = await supabase
+      .from('subscription_plans')
+      .delete()
+      .eq('id', planId);
+
+    if (error) {
+      console.error('❌ Error deleting plan:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
 }

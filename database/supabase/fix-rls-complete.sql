@@ -21,7 +21,7 @@ DROP POLICY IF EXISTS "Enable delete for users based on user_id" ON public.ads;
 INSERT INTO public.users (id, email, full_name, role, email_verified, created_at, updated_at)
 VALUES (
   '00000000-0000-0000-0000-000000000000',
-  'dev@agrobuscador.com',
+  'dev@rural24.com',
   'Usuario Desarrollo',
   'admin',
   true,

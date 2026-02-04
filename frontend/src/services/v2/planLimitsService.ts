@@ -116,7 +116,7 @@ export async function getUserPlanLimits(userId?: string): Promise<PlanLimits> {
   }
 
   // SuperAdmin tiene todo ilimitado
-  if (data.role === 'superadmin' || data.role === 'adminscrap') {
+  if (data.role === 'superadmin') {
     return {
       planName: 'superadmin',
       planDisplayName: 'SuperAdmin',

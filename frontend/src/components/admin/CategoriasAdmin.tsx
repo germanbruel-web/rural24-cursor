@@ -15,12 +15,26 @@ import {
   deleteSubcategory,
   createCategoryType,
   updateCategoryType,
-  deleteCategoryType
+  deleteCategoryType,
+  checkSubcategoryDependencies,
+  checkCategoryDependencies
 } from '../../services/v2/formsService';
 import type { Category, Subcategory, CategoryType } from '../../types/v2';
-import { ChevronRight, ChevronDown, Plus, Edit2, Trash2, FolderTree, Folder, FileText } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, Edit2, Trash2, FolderTree, Folder, FileText, AlertTriangle } from 'lucide-react';
 
 type ItemType = 'category' | 'subcategory' | 'type';
+
+// Modal de confirmación de eliminación
+interface DeleteModalState {
+  isOpen: boolean;
+  item: any;
+  type: ItemType;
+  hasAds: boolean;
+  adsCount: number;
+  adsTitles: string[];
+  subcategoriesCount: number;
+  isLoading: boolean;
+}
 
 export const CategoriasAdmin: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -29,6 +43,18 @@ export const CategoriasAdmin: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [expandedSubcategories, setExpandedSubcategories] = useState<Set<string>>(new Set());
+
+  // Delete modal state
+  const [deleteModal, setDeleteModal] = useState<DeleteModalState>({
+    isOpen: false,
+    item: null,
+    type: 'category',
+    hasAds: false,
+    adsCount: 0,
+    adsTitles: [],
+    subcategoriesCount: 0,
+    isLoading: false,
+  });
 
   // Form state
   const [showForm, setShowForm] = useState(false);
@@ -204,31 +230,79 @@ export const CategoriasAdmin: React.FC = () => {
     }
   };
 
-  const handleDelete = async (item: any, type: ItemType) => {
-    const warningText = type === 'category' 
-      ? 'Esto eliminará TODAS las subcategorías, tipos y marcas relacionadas.'
-      : type === 'subcategory'
-      ? 'Esto eliminará TODOS los tipos y marcas relacionadas.'
-      : 'Esto eliminará TODAS las marcas relacionadas.';
-    
-    if (!confirm(`¿Eliminar "${item.display_name}"?\n\n${warningText}`)) {
-      return;
-    }
+  // Iniciar proceso de eliminación - verifica dependencias primero
+  const handleDeleteClick = async (item: any, type: ItemType) => {
+    setDeleteModal({
+      isOpen: true,
+      item,
+      type,
+      hasAds: false,
+      adsCount: 0,
+      adsTitles: [],
+      subcategoriesCount: 0,
+      isLoading: true,
+    });
 
+    // Verificar dependencias según el tipo
+    if (type === 'subcategory') {
+      const deps = await checkSubcategoryDependencies(item.id);
+      setDeleteModal(prev => ({
+        ...prev,
+        hasAds: deps.hasAds,
+        adsCount: deps.adsCount,
+        adsTitles: deps.adsTitles,
+        isLoading: false,
+      }));
+    } else if (type === 'category') {
+      const deps = await checkCategoryDependencies(item.id);
+      setDeleteModal(prev => ({
+        ...prev,
+        hasAds: deps.hasAds,
+        adsCount: deps.adsCount,
+        subcategoriesCount: deps.subcategoriesCount,
+        isLoading: false,
+      }));
+    } else {
+      // Para tipos, no hay dependencias de avisos
+      setDeleteModal(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  // Ejecutar eliminación
+  const confirmDelete = async (force: boolean = false) => {
+    const { item, type } = deleteModal;
+    
     try {
+      setDeleteModal(prev => ({ ...prev, isLoading: true }));
+
       if (type === 'category') {
-        await deleteCategory(item.id);
+        await deleteCategory(item.id, force);
       } else if (type === 'subcategory') {
-        await deleteSubcategory(item.id);
+        await deleteSubcategory(item.id, force);
       } else if (type === 'type') {
         await deleteCategoryType(item.id);
       }
       
+      setDeleteModal(prev => ({ ...prev, isOpen: false, isLoading: false }));
       loadData();
       alert('Eliminado exitosamente');
     } catch (error: any) {
+      setDeleteModal(prev => ({ ...prev, isLoading: false }));
       alert('Error al eliminar: ' + error.message);
     }
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModal({
+      isOpen: false,
+      item: null,
+      type: 'category',
+      hasAds: false,
+      adsCount: 0,
+      adsTitles: [],
+      subcategoriesCount: 0,
+      isLoading: false,
+    });
   };
 
   const resetForm = () => {
@@ -327,7 +401,7 @@ export const CategoriasAdmin: React.FC = () => {
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(category, 'category')}
+                          onClick={() => handleDeleteClick(category, 'category')}
                           className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
                           title="Eliminar"
                         >
@@ -380,7 +454,7 @@ export const CategoriasAdmin: React.FC = () => {
                                     <Edit2 className="w-4 h-4" />
                                   </button>
                                   <button
-                                    onClick={() => handleDelete(sub, 'subcategory')}
+                                    onClick={() => handleDeleteClick(sub, 'subcategory')}
                                     className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
                                     title="Eliminar"
                                   >
@@ -411,7 +485,7 @@ export const CategoriasAdmin: React.FC = () => {
                                           <Edit2 className="w-4 h-4" />
                                         </button>
                                         <button
-                                          onClick={() => handleDelete(type, 'type')}
+                                          onClick={() => handleDeleteClick(type, 'type')}
                                           className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
                                           title="Eliminar"
                                         >
@@ -507,6 +581,130 @@ export const CategoriasAdmin: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación de Eliminación */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+            {/* Header */}
+            <div className={`px-6 py-4 ${deleteModal.hasAds ? 'bg-amber-50 border-b border-amber-200' : 'bg-red-50 border-b border-red-200'}`}>
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-full ${deleteModal.hasAds ? 'bg-amber-100' : 'bg-red-100'}`}>
+                  {deleteModal.hasAds ? (
+                    <AlertTriangle className="w-6 h-6 text-amber-600" />
+                  ) : (
+                    <Trash2 className="w-6 h-6 text-red-600" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {deleteModal.hasAds ? 'Advertencia: Hay avisos asociados' : 'Confirmar eliminación'}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {deleteModal.type === 'category' ? 'Categoría' : 
+                     deleteModal.type === 'subcategory' ? 'Subcategoría' : 'Tipo'}
+                    : <span className="font-semibold">{deleteModal.item?.display_name}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-4">
+              {deleteModal.isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600">Verificando dependencias...</span>
+                </div>
+              ) : deleteModal.hasAds ? (
+                <div className="space-y-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <p className="text-amber-800 font-medium">
+                      ⚠️ Se encontraron {deleteModal.adsCount} aviso{deleteModal.adsCount !== 1 ? 's' : ''} publicado{deleteModal.adsCount !== 1 ? 's' : ''}
+                    </p>
+                    {deleteModal.adsTitles.length > 0 && (
+                      <ul className="mt-2 text-sm text-amber-700 list-disc list-inside">
+                        {deleteModal.adsTitles.slice(0, 3).map((title, i) => (
+                          <li key={i} className="truncate">{title}</li>
+                        ))}
+                        {deleteModal.adsCount > 3 && (
+                          <li className="text-amber-600 italic">...y {deleteModal.adsCount - 3} más</li>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+                  
+                  {deleteModal.type === 'category' && deleteModal.subcategoriesCount > 0 && (
+                    <p className="text-gray-600 text-sm">
+                      También se eliminarán <span className="font-semibold">{deleteModal.subcategoriesCount} subcategorías</span> y sus tipos.
+                    </p>
+                  )}
+                  
+                  <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600">
+                    <p className="font-medium text-gray-700 mb-1">Opciones:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li><strong>Cancelar:</strong> No eliminar nada</li>
+                      <li><strong>Forzar eliminación:</strong> Elimina TODO incluyendo avisos</li>
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-gray-700">
+                    ¿Está seguro que desea eliminar{' '}
+                    <span className="font-semibold">"{deleteModal.item?.display_name}"</span>?
+                  </p>
+                  
+                  {deleteModal.type === 'category' && (
+                    <p className="text-sm text-gray-500">
+                      Se eliminarán todas las subcategorías y tipos relacionados.
+                    </p>
+                  )}
+                  {deleteModal.type === 'subcategory' && (
+                    <p className="text-sm text-gray-500">
+                      Se eliminarán todos los tipos relacionados.
+                    </p>
+                  )}
+                  
+                  <p className="text-red-600 text-sm font-medium">
+                    Esta acción no se puede deshacer.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+              <button
+                onClick={closeDeleteModal}
+                disabled={deleteModal.isLoading}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition font-medium disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              
+              {deleteModal.hasAds ? (
+                <button
+                  onClick={() => confirmDelete(true)}
+                  disabled={deleteModal.isLoading}
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition font-medium disabled:opacity-50 flex items-center gap-2"
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                  Forzar eliminación
+                </button>
+              ) : (
+                <button
+                  onClick={() => confirmDelete(false)}
+                  disabled={deleteModal.isLoading}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium disabled:opacity-50"
+                >
+                  Eliminar
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

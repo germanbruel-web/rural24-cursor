@@ -693,28 +693,6 @@ export async function updateCategory(id: string, data: {
   }
 }
 
-/**
- * Elimina una categoría (CASCADE eliminará subcategorías y tipos relacionados)
- */
-export async function deleteCategory(id: string) {
-  try {
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('❌ Error deleting category:', error);
-      throw error;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('❌ Error in deleteCategory:', error);
-    throw error;
-  }
-}
-
 // ============================================================================
 // CRUD DE SUBCATEGORÍAS
 // ============================================================================
@@ -797,16 +775,102 @@ export async function updateSubcategory(id: string, data: {
 }
 
 /**
- * Elimina una subcategoría (CASCADE eliminará tipos relacionados)
+ * Verifica dependencias de una subcategoría (avisos asociados)
  */
-export async function deleteSubcategory(id: string) {
+export async function checkSubcategoryDependencies(id: string): Promise<{
+  hasAds: boolean;
+  adsCount: number;
+  adsTitles: string[];
+}> {
   try {
+    const { data, error, count } = await supabase
+      .from('ads')
+      .select('id, title', { count: 'exact' })
+      .eq('subcategory_id', id)
+      .limit(5);
+
+    if (error) {
+      console.error('❌ Error checking dependencies:', error);
+      return { hasAds: false, adsCount: 0, adsTitles: [] };
+    }
+
+    return {
+      hasAds: (count || 0) > 0,
+      adsCount: count || 0,
+      adsTitles: data?.map(a => a.title) || [],
+    };
+  } catch (error) {
+    console.error('❌ Error in checkSubcategoryDependencies:', error);
+    return { hasAds: false, adsCount: 0, adsTitles: [] };
+  }
+}
+
+/**
+ * Verifica dependencias de una categoría (avisos en todas sus subcategorías)
+ */
+export async function checkCategoryDependencies(id: string): Promise<{
+  hasAds: boolean;
+  adsCount: number;
+  subcategoriesCount: number;
+}> {
+  try {
+    // Obtener subcategorías de esta categoría
+    const { data: subs } = await supabase
+      .from('subcategories')
+      .select('id')
+      .eq('category_id', id);
+
+    const subIds = subs?.map(s => s.id) || [];
+    
+    if (subIds.length === 0) {
+      return { hasAds: false, adsCount: 0, subcategoriesCount: 0 };
+    }
+
+    // Contar avisos en esas subcategorías
+    const { count } = await supabase
+      .from('ads')
+      .select('id', { count: 'exact', head: true })
+      .in('subcategory_id', subIds);
+
+    return {
+      hasAds: (count || 0) > 0,
+      adsCount: count || 0,
+      subcategoriesCount: subIds.length,
+    };
+  } catch (error) {
+    console.error('❌ Error in checkCategoryDependencies:', error);
+    return { hasAds: false, adsCount: 0, subcategoriesCount: 0 };
+  }
+}
+
+/**
+ * Elimina una subcategoría con opción de forzar (elimina avisos primero)
+ */
+export async function deleteSubcategory(id: string, force: boolean = false) {
+  try {
+    // Si force=true, eliminar avisos primero
+    if (force) {
+      const { error: adsError } = await supabase
+        .from('ads')
+        .delete()
+        .eq('subcategory_id', id);
+
+      if (adsError) {
+        console.error('❌ Error deleting related ads:', adsError);
+        throw new Error('Error al eliminar avisos relacionados: ' + adsError.message);
+      }
+    }
+
     const { error } = await supabase
       .from('subcategories')
       .delete()
       .eq('id', id);
 
     if (error) {
+      // Mensaje más amigable para FK constraint
+      if (error.message.includes('foreign key constraint')) {
+        throw new Error('No se puede eliminar: hay avisos publicados en esta subcategoría. Use "Forzar eliminación" para eliminar todo.');
+      }
       console.error('❌ Error deleting subcategory:', error);
       throw error;
     }
@@ -814,6 +878,55 @@ export async function deleteSubcategory(id: string) {
     return true;
   } catch (error) {
     console.error('❌ Error in deleteSubcategory:', error);
+    throw error;
+  }
+}
+
+/**
+ * Elimina una categoría con opción de forzar (elimina avisos y subcategorías primero)
+ */
+export async function deleteCategory(id: string, force: boolean = false) {
+  try {
+    // Si force=true, eliminar avisos de todas las subcategorías primero
+    if (force) {
+      // Obtener subcategorías
+      const { data: subs } = await supabase
+        .from('subcategories')
+        .select('id')
+        .eq('category_id', id);
+
+      const subIds = subs?.map(s => s.id) || [];
+
+      if (subIds.length > 0) {
+        // Eliminar avisos de esas subcategorías
+        const { error: adsError } = await supabase
+          .from('ads')
+          .delete()
+          .in('subcategory_id', subIds);
+
+        if (adsError) {
+          console.error('❌ Error deleting related ads:', adsError);
+          throw new Error('Error al eliminar avisos relacionados: ' + adsError.message);
+        }
+      }
+    }
+
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      if (error.message.includes('foreign key constraint')) {
+        throw new Error('No se puede eliminar: hay avisos publicados en subcategorías de esta categoría. Use "Forzar eliminación" para eliminar todo.');
+      }
+      console.error('❌ Error deleting category:', error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Error in deleteCategory:', error);
     throw error;
   }
 }
