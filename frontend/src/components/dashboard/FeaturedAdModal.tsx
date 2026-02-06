@@ -27,12 +27,13 @@ import {
 } from 'lucide-react';
 import { 
   getUserCredits, 
-  checkAvailability, 
+  getMonthlyAvailability,
   createUserFeaturedAd,
   checkPromoStatus,
   claimPromoCredits,
   type FeaturedPlacement,
   type AvailabilityCheck,
+  type MonthlyAvailabilityDay,
   type UserFeaturedCredits,
   type PromoStatus
 } from '../../services/userFeaturedService';
@@ -43,7 +44,8 @@ interface FeaturedAdModalProps {
   ad: {
     id: string;
     title: string;
-    category_id: string;
+    category_id?: string;
+    subcategory_id?: string;
     category_name?: string;
     images?: any[];
   };
@@ -65,13 +67,23 @@ const PLACEMENT_OPTIONS: { value: FeaturedPlacement; label: string; icon: React.
   }
 ];
 
+const CREDIT_COSTS: Record<FeaturedPlacement, number> = {
+  homepage: 4,
+  results: 1,
+  detail: 1
+};
+
+const DURATION_DAYS = 30;
+
 export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: FeaturedAdModalProps) {
   // Estados
   const [step, setStep] = useState<'placement' | 'date' | 'confirm'>('placement');
   const [selectedPlacement, setSelectedPlacement] = useState<FeaturedPlacement | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   const [credits, setCredits] = useState<UserFeaturedCredits | null>(null);
   const [availability, setAvailability] = useState<AvailabilityCheck | null>(null);
+  const [monthAvailability, setMonthAvailability] = useState<MonthlyAvailabilityDay[]>([]);
   const [loading, setLoading] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,17 +101,45 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
       setStep('placement');
       setSelectedPlacement(null);
       setSelectedDate('');
+      setSelectedMonth(new Date());
       setAvailability(null);
+      setMonthAvailability([]);
       setError(null);
     }
   }, [isOpen]);
 
-  // Verificar disponibilidad cuando cambian placement o fecha
+  // Cargar disponibilidad mensual al cambiar placement o mes
   useEffect(() => {
-    if (selectedPlacement && selectedDate && ad.category_id) {
-      checkSlotAvailability();
+    if (selectedPlacement && ad.category_id) {
+      loadMonthAvailability();
     }
-  }, [selectedPlacement, selectedDate]);
+  }, [selectedPlacement, selectedMonth, ad.category_id]);
+
+  // Limpiar fecha si cambia el mes
+  useEffect(() => {
+    if (!selectedDate) return;
+    const current = new Date(`${selectedDate}T12:00:00`);
+    if (current.getFullYear() !== selectedMonth.getFullYear() || current.getMonth() !== selectedMonth.getMonth()) {
+      setSelectedDate('');
+      setAvailability(null);
+    }
+  }, [selectedMonth, selectedDate]);
+
+  // Actualizar disponibilidad del dia seleccionado
+  useEffect(() => {
+    if (!selectedDate) return;
+    const selectedDay = new Date(`${selectedDate}T12:00:00`).getDate();
+    const dayInfo = monthAvailability.find(day => day.day === selectedDay);
+    if (dayInfo) {
+      setAvailability({
+        is_available: dayInfo.is_available,
+        slots_total: dayInfo.slots_total,
+        slots_used: dayInfo.slots_used,
+        slots_available: dayInfo.slots_available,
+        next_available_date: dayInfo.is_available ? selectedDate : null
+      });
+    }
+  }, [selectedDate, monthAvailability]);
 
   const loadPromoStatus = async () => {
     console.log('🎁 [FeaturedAdModal] Cargando estado de promoción...');
@@ -135,20 +175,24 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
     setLoading(false);
   };
 
-  const checkSlotAvailability = async () => {
-    if (!selectedPlacement || !selectedDate || !ad.category_id) return;
-    
+  const loadMonthAvailability = async () => {
+    if (!selectedPlacement || !ad.category_id) return;
+
     setCheckingAvailability(true);
-    const { data, error } = await checkAvailability(
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth() + 1;
+    const { data, error } = await getMonthlyAvailability(
       selectedPlacement,
       ad.category_id,
-      selectedDate
+      year,
+      month
     );
-    
+
     if (error) {
-      setError('Error al verificar disponibilidad');
+      setError('Error al cargar disponibilidad mensual');
+      setMonthAvailability([]);
     } else {
-      setAvailability(data);
+      setMonthAvailability(data || []);
     }
     setCheckingAvailability(false);
   };
@@ -158,6 +202,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
     // Setear fecha de hoy por defecto
     const today = new Date().toISOString().split('T')[0];
     setSelectedDate(today);
+    setSelectedMonth(new Date());
     setStep('date');
   };
 
@@ -189,9 +234,12 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
   };
 
   // Calcular fecha mínima (hoy)
-  const minDate = new Date().toISOString().split('T')[0];
+  const minDate = new Date();
   // Fecha máxima: 30 días adelante
-  const maxDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const maxDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const creditCost = selectedPlacement ? CREDIT_COSTS[selectedPlacement] : 0;
+  // Validar datos mínimos: categoría Y subcategoría obligatorias
+  const hasCategoryData = Boolean(ad.category_id && ad.subcategory_id);
 
   if (!isOpen) return null;
 
@@ -301,10 +349,10 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               </div>
               <h4 className="text-lg font-bold text-gray-900 mb-2">Sin créditos disponibles</h4>
               <p className="text-gray-600 mb-4">
-                Necesitás al menos 1 crédito para destacar tu aviso.
+                Necesitás créditos disponibles para destacar tu aviso.
               </p>
               <a 
-                href="#/pricing"
+                href="#/checkout"
                 className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-xl font-bold transition-colors"
               >
                 <Zap className="w-5 h-5" />
@@ -317,12 +365,27 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               <h4 className="font-semibold text-gray-900 mb-3">
                 ¿Dónde querés destacar tu aviso?
               </h4>
+
+              {!hasCategoryData && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 rounded-lg text-sm text-red-700">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Categoría y subcategoría requeridas</p>
+                    <p className="text-xs mt-0.5">Este aviso debe tener categoría y subcategoría asignadas antes de poder destacarse.</p>
+                  </div>
+                </div>
+              )}
               
               {PLACEMENT_OPTIONS.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => handlePlacementSelect(option.value)}
-                  className="w-full p-4 border-2 border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50 transition-all text-left flex items-start gap-4 group"
+                  disabled={!hasCategoryData || creditsAvailable < CREDIT_COSTS[option.value]}
+                  className={`w-full p-4 border-2 rounded-xl transition-all text-left flex items-start gap-4 group ${
+                    hasCategoryData && creditsAvailable >= CREDIT_COSTS[option.value]
+                      ? 'border-gray-200 hover:border-amber-400 hover:bg-amber-50'
+                      : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
+                  }`}
                 >
                   <div className="w-12 h-12 bg-gray-100 group-hover:bg-amber-100 rounded-lg flex items-center justify-center text-gray-500 group-hover:text-amber-600 transition-colors">
                     {option.icon}
@@ -330,6 +393,12 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                   <div className="flex-1">
                     <h5 className="font-semibold text-gray-900">{option.label}</h5>
                     <p className="text-sm text-gray-500">{option.description}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Costo: {option.value === 'homepage' ? '4 créditos' : '1 crédito'}
+                    </p>
+                    {creditsAvailable < CREDIT_COSTS[option.value] && (
+                      <p className="text-xs text-red-500 mt-1">Créditos insuficientes</p>
+                    )}
                   </div>
                 </button>
               ))}
@@ -353,32 +422,111 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4 inline mr-2" />
-                  Fecha de inicio
-                </label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  min={minDate}
-                  max={maxDate}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                />
-                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+              <div className="border border-gray-200 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <Calendar className="w-4 h-4" />
+                    {selectedMonth.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1))}
+                      className="px-2 py-1 text-xs rounded border border-gray-200 hover:bg-gray-50"
+                    >
+                      ←
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1))}
+                      className="px-2 py-1 text-xs rounded border border-gray-200 hover:bg-gray-50"
+                    >
+                      →
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-7 gap-1 text-xs text-center text-gray-500 mb-2">
+                  {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day) => (
+                    <div key={day} className="py-1">{day}</div>
+                  ))}
+                </div>
+
+                {checkingAvailability ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="w-5 h-5 animate-spin text-amber-500 mr-2" />
+                    <span className="text-sm text-gray-600">Cargando disponibilidad...</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-7 gap-1">
+                    {(() => {
+                      const year = selectedMonth.getFullYear();
+                      const month = selectedMonth.getMonth();
+                      const daysInMonth = new Date(year, month + 1, 0).getDate();
+                      const firstDay = new Date(year, month, 1).getDay();
+                      const offset = (firstDay + 6) % 7;
+
+                      const cells = [] as JSX.Element[];
+                      for (let i = 0; i < offset; i += 1) {
+                        cells.push(<div key={`empty-${i}`} />);
+                      }
+
+                      for (let day = 1; day <= daysInMonth; day += 1) {
+                        const date = new Date(year, month, day, 12, 0, 0);
+                        const isBeforeMin = date < new Date(minDate.toDateString());
+                        const isAfterMax = date > maxDate;
+                        const dayInfo = monthAvailability.find((item) => item.day === day);
+                        const isAvailable = Boolean(dayInfo?.is_available);
+                        const isDisabled = isBeforeMin || isAfterMax || !isAvailable;
+                        const isoDate = date.toISOString().split('T')[0];
+                        const isSelected = selectedDate === isoDate;
+
+                        cells.push(
+                          <button
+                            key={`day-${day}`}
+                            type="button"
+                            disabled={isDisabled}
+                            onClick={() => handleDateChange(isoDate)}
+                            className={`h-9 rounded-md text-sm font-medium transition-colors ${
+                              isSelected
+                                ? 'bg-amber-500 text-white'
+                                : isDisabled
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'bg-green-50 text-green-800 hover:bg-green-100'
+                            }`}
+                            title={
+                              isDisabled
+                                ? 'Sin disponibilidad'
+                                : `Disponibles: ${dayInfo?.slots_available ?? 0}`
+                            }
+                          >
+                            {day}
+                          </button>
+                        );
+                      }
+
+                      return cells;
+                    })()}
+                  </div>
+                )}
+
+                <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded bg-green-200" /> Disponible
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded bg-gray-200" /> Ocupado
+                  </span>
+                </div>
+
+                <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  Tu aviso estará destacado por 15 días desde esta fecha
+                  Tu aviso estará destacado por {DURATION_DAYS} días desde esta fecha
                 </p>
               </div>
 
               {/* Disponibilidad */}
-              {checkingAvailability ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="w-5 h-5 animate-spin text-amber-500 mr-2" />
-                  <span className="text-sm text-gray-600">Verificando disponibilidad...</span>
-                </div>
-              ) : availability && (
+              {availability && (
                 <div className={`p-4 rounded-xl ${availability.is_available ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
                   {availability.is_available ? (
                     <div className="flex items-start gap-3">
@@ -395,12 +543,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                       <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-semibold text-red-800">Sin lugares disponibles</p>
-                        <p className="text-sm text-red-700">
-                          Todos los slots están ocupados para esta fecha.
-                          {availability.next_available_date && (
-                            <> Próxima fecha disponible: <strong>{new Date(availability.next_available_date).toLocaleDateString('es-AR')}</strong></>
-                          )}
-                        </p>
+                        <p className="text-sm text-red-700">Todos los slots están ocupados para esta fecha.</p>
                       </div>
                     </div>
                   )}
@@ -456,12 +599,14 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                 
                 <div className="flex justify-between items-center py-2 border-b border-gray-200">
                   <span className="text-gray-600">Duración:</span>
-                  <span className="font-semibold text-gray-900">15 días</span>
+                  <span className="font-semibold text-gray-900">{DURATION_DAYS} días</span>
                 </div>
                 
                 <div className="flex justify-between items-center py-2 bg-amber-100 -mx-5 px-5 rounded-b-xl">
                   <span className="text-gray-700 font-medium">Costo:</span>
-                  <span className="font-bold text-xl text-amber-700">1 crédito</span>
+                  <span className="font-bold text-xl text-amber-700">
+                    {creditCost} crédito{creditCost > 1 ? 's' : ''}
+                  </span>
                 </div>
               </div>
 
@@ -502,7 +647,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               </button>
 
               <p className="text-xs text-center text-gray-500">
-                Se descontará 1 crédito de tu cuenta
+                Se descontará {creditCost} crédito{creditCost > 1 ? 's' : ''} de tu cuenta
               </p>
             </div>
           )}

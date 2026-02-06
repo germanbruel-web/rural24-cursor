@@ -5,24 +5,26 @@ import type { UserRole } from '../../types';
  */
 export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   // Páginas públicas (todos)
-  home: ['superadmin', 'free', 'user', 'admin'],
-  'how-it-works': ['superadmin', 'free', 'user', 'admin'],
-  'email-confirm': ['superadmin', 'free', 'user', 'admin'],
-  publicar: ['superadmin', 'free', 'user', 'admin'],
-  'ad-detail': ['superadmin', 'free', 'user', 'admin'],
+  home: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+  'how-it-works': ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+  'email-confirm': ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+  publicar: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+  'ad-detail': ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
   
   // Páginas de perfil (todos los usuarios autenticados)
-  profile: ['superadmin', 'free', 'user', 'admin'],
-  subscription: ['superadmin', 'free', 'user', 'admin'],
+  profile: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+  subscription: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
   
   // Mis avisos personales (todos los usuarios autenticados)
-  'my-ads': ['superadmin', 'free', 'user', 'admin'],
-  contacts: ['superadmin', 'free', 'user', 'admin'],
-  inbox: ['superadmin', 'free', 'user', 'admin'],
+  'my-ads': ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+  contacts: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+  inbox: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
   
-  // Solo SuperAdmin
-  users: ['superadmin'],
-  'ads-management': ['superadmin'], // Panel unificado de gestión de avisos
+  // Admin y SuperAdmin (Revendedores)
+  users: ['superadmin', 'admin'], // Crear/gestionar usuarios
+  'ads-management': ['superadmin', 'admin'], // Crear/gestionar avisos para clientes
+  
+  // Solo SuperAdmin (Configuración del sistema)
   banners: ['superadmin'],
   settings: ['superadmin'],
   'categories-admin': ['superadmin'],
@@ -30,6 +32,7 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   'templates-admin': ['superadmin'],
   'backend-settings': ['superadmin'],
   'global-settings': ['superadmin'],
+  'featured-ads-admin': ['superadmin'],
   'payments-admin': ['superadmin'],
   'sitemap-seo': ['superadmin'],
 };
@@ -65,6 +68,13 @@ export function isSuperAdmin(userRole?: UserRole): boolean {
 }
 
 /**
+ * Verifica si el usuario es Admin o SuperAdmin (Revendedor)
+ */
+export function isAdmin(userRole?: UserRole): boolean {
+  return userRole === 'admin' || userRole === 'superadmin';
+}
+
+/**
  * Verifica si el usuario es Free (no puede acceder a paneles admin)
  */
 export function isFreeUser(userRole?: UserRole): boolean {
@@ -86,40 +96,48 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'home',
     label: 'Inicio',
-    allowedRoles: ['superadmin', 'free', 'user', 'admin'],
+    allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
   },
   {
     id: 'my-ads',
     label: 'Mis Avisos',
-    allowedRoles: ['superadmin', 'free', 'user', 'admin'],
+    allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
   },
   {
     id: 'inbox',
     label: 'Mensajes',
-    allowedRoles: ['superadmin', 'free', 'user', 'admin'],
+    allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
   },
   {
     id: 'profile',
     label: 'Mi Perfil',
-    allowedRoles: ['superadmin', 'free', 'user', 'admin'],
+    allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
   },
   
-  // SECCIÓN: ADMINISTRADOR (solo SuperAdmin)
+  // SECCIÓN: REVENDEDORES (Admin y SuperAdmin)
   {
-    id: 'divider-admin',
-    label: '--- ADMINISTRADOR ---',
-    allowedRoles: ['superadmin'],
+    id: 'divider-reseller',
+    label: '--- GESTIÓN DE CLIENTES ---',
+    allowedRoles: ['superadmin', 'admin'],
     divider: true,
   },
   {
     id: 'users',
     label: 'Usuarios',
-    allowedRoles: ['superadmin'],
+    allowedRoles: ['superadmin', 'admin'],
   },
   {
     id: 'ads-management',
     label: 'Gestión de Avisos',
+    allowedRoles: ['superadmin', 'admin'],
+  },
+  
+  // SECCIÓN: CONFIGURACIÓN DEL SISTEMA (solo SuperAdmin)
+  {
+    id: 'divider-admin',
+    label: '--- ADMINISTRADOR ---',
     allowedRoles: ['superadmin'],
+    divider: true,
   },
   {
     id: 'banners',
@@ -152,6 +170,11 @@ export const MENU_STRUCTURE: MenuItem[] = [
     allowedRoles: ['superadmin'],
   },
   {
+    id: 'featured-ads-admin',
+    label: 'Destacados Admin',
+    allowedRoles: ['superadmin'],
+  },
+  {
     id: 'payments-admin',
     label: 'Cobranzas',
     allowedRoles: ['superadmin'],
@@ -162,7 +185,7 @@ export const MENU_STRUCTURE: MenuItem[] = [
     allowedRoles: ['superadmin'],
   },
   
-  // SECCIÓN: HERRAMIENTAS DE DESARROLLO
+  // SECCIÓN: HERRAMIENTAS DE DESARROLLO (solo SuperAdmin)
   {
     id: 'divider-dev',
     label: '--- DEV TOOLS ---',

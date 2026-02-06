@@ -16,6 +16,7 @@ export { BackendSettings } from './BackendSettings';
 export { default as GlobalSettingsPanel } from './GlobalSettingsPanel';
 export { default as PaymentsAdminPanel } from './PaymentsAdminPanel';
 export { default as PlansAdmin } from './PlansAdmin';
+export { default as SuperAdminFeaturedPanel } from './SuperAdminFeaturedPanel';
 
 // Componentes secundarios (solo exportar si se usan externamente)
 // export { BannersPanel } from './BannersPanel';

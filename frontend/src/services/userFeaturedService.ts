@@ -79,6 +79,14 @@ export interface AvailabilityCheck {
   next_available_date: string | null;
 }
 
+export interface MonthlyAvailabilityDay {
+  day: number;
+  is_available: boolean;
+  slots_total: number;
+  slots_used: number;
+  slots_available: number;
+}
+
 export interface CreateFeaturedResult {
   success: boolean;
   featured_id: string | null;
@@ -179,7 +187,7 @@ export async function checkAvailability(
   placement: FeaturedPlacement,
   categoryId: string,
   startDate: string,
-  durationDays: number = 15
+  durationDays: number = 30
 ): Promise<{ data: AvailabilityCheck | null; error: Error | null }> {
   try {
     const { data, error } = await supabase.rpc('check_featured_availability', {
@@ -200,6 +208,34 @@ export async function checkAvailability(
     return { data: result, error: null };
   } catch (error) {
     return { data: null, error: error as Error };
+  }
+}
+
+/**
+ * Obtener disponibilidad mensual para calendario
+ */
+export async function getMonthlyAvailability(
+  placement: FeaturedPlacement,
+  categoryId: string,
+  year: number,
+  month: number
+): Promise<{ data: MonthlyAvailabilityDay[]; error: Error | null }> {
+  try {
+    const { data, error } = await supabase.rpc('get_featured_month_availability', {
+      p_placement: placement,
+      p_category_id: categoryId,
+      p_year: year,
+      p_month: month
+    });
+
+    if (error) {
+      console.error('Error getting monthly availability:', error);
+      return { data: [], error };
+    }
+
+    return { data: (data || []) as MonthlyAvailabilityDay[], error: null };
+  } catch (error) {
+    return { data: [], error: error as Error };
   }
 }
 

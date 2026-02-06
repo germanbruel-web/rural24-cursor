@@ -124,10 +124,12 @@ export async function registerPersona(input: RegisterPersonaInput): Promise<Regi
       };
     }
 
-    // 3. ACTUALIZAR PERFIL EN USERS
+    // 3. CREAR/ACTUALIZAR PERFIL EN USERS
     const { error: profileError } = await supabase
       .from('users')
-      .update({
+      .upsert({
+        id: authData.user.id,
+        email: input.email,
         first_name: input.firstName,
         last_name: input.lastName,
         full_name: `${input.firstName} ${input.lastName}`,
@@ -135,9 +137,14 @@ export async function registerPersona(input: RegisterPersonaInput): Promise<Regi
         account_type: 'persona',
         user_type: 'particular',
         subscription_plan_id: freePlan.id,
-        email_verified: false, // Se verifica al hacer click en el email
-      })
-      .eq('id', authData.user.id);
+        role: 'free',
+        email_verified: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
+        ignoreDuplicates: false
+      });
 
     if (profileError) {
       console.error('❌ Error actualizando perfil:', profileError);
@@ -220,21 +227,28 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
       };
     }
 
-    // 3. ACTUALIZAR PERFIL EN USERS CON DATOS DE EMPRESA
+    // 3. CREAR/ACTUALIZAR PERFIL EN USERS CON DATOS DE EMPRESA
     const { error: profileError } = await supabase
       .from('users')
-      .update({
+      .upsert({
+        id: authData.user.id,
+        email: input.email,
         first_name: input.firstName,
         last_name: input.lastName,
         full_name: `${input.firstName} ${input.lastName}`,
         phone: input.phone || null,
         account_type: 'empresa',
         user_type: 'empresa',
-        display_name: input.companyName, // Nombre de empresa va en display_name
+        display_name: input.companyName,
         subscription_plan_id: freePlan.id,
+        role: 'free',
         email_verified: false,
-      })
-      .eq('id', authData.user.id);
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
+        ignoreDuplicates: false
+      });
 
     if (profileError) {
       console.error('❌ Error actualizando perfil empresa:', profileError);
