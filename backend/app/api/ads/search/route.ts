@@ -137,7 +137,7 @@ interface AttributeMatch {
 }
 
 async function findAttributeMatch(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   searchTerm: string
 ): Promise<AttributeMatch | null> {
   const searchLower = searchTerm.toLowerCase().trim();
@@ -220,7 +220,7 @@ async function findAttributeMatch(
   const { data: subcats } = await supabase
     .from('subcategories')
     .select('id, category_id')
-    .in('id', uniqueSubcategoryIds);
+    .in('id', uniqueSubcategoryIds) as { data: any[] | null; error: any };
   
   const uniqueCategoryIds = subcats ? [...new Set(subcats.map(s => s.category_id))] : [];
   
@@ -271,8 +271,9 @@ export async function GET(request: NextRequest) {
     // Paginación: soportar tanto page/limit como offset/limit
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20'); // Reducido de 50 a 20 para mejor UX
-    const offset = searchParams.get('offset') 
-      ? parseInt(searchParams.get('offset'))
+    const offsetParam = searchParams.get('offset');
+    const offset = offsetParam 
+      ? parseInt(offsetParam)
       : (page - 1) * limit;
     
     // Extraer filtros de atributos dinámicos (prefijo attr_)

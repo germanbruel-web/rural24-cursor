@@ -194,7 +194,7 @@ export class AdsRepository {
           .from('ads')
           .select('short_id')
           .eq('id', id)
-          .single();
+          .single() as { data: any | null; error: any };
         currentShortId = existingAd?.short_id;
       }
 

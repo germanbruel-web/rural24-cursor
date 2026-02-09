@@ -56,7 +56,7 @@ let cachedData: {
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
-async function getCachedData(supabase: ReturnType<typeof createClient>) {
+async function getCachedData(supabase: any) {
   const now = Date.now();
   
   if (cachedData && (now - cachedData.cachedAt) < CACHE_TTL) {
