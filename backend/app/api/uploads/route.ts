@@ -15,6 +15,7 @@ import { rateLimiter } from '@/infrastructure/rate-limiter';
 import { uploadToCloudinary } from '@/infrastructure/cloudinary.service';
 import { validateImageAspectRatio } from '@/domain/images/service';
 import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
+import { logger } from '@/infrastructure/logger';
 import sharp from 'sharp';
 
 // Tipos MIME permitidos (SOLO IMÁGENES)
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
     const rateLimitCheck = rateLimiter.check(clientIP);
 
     if (!rateLimitCheck.allowed) {
-      console.warn(`[RATE LIMIT] IP: ${clientIP} - ${rateLimitCheck.reason}`);
+      logger.warn(`[RATE LIMIT] IP: ${clientIP} - ${rateLimitCheck.reason}`);
       
       return NextResponse.json(
         {
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
     const honeypot = formData.get('website') || formData.get('url') || formData.get('homepage');
     
     if (honeypot && typeof honeypot === 'string' && honeypot.trim() !== '') {
-      console.warn(`[BOT DETECTED] IP: ${clientIP} - Honeypot filled: "${honeypot}"`);
+      logger.warn(`[BOT DETECTED] IP: ${clientIP} - Honeypot filled: "${honeypot}"`);      
       
       // No revelar que es honeypot, dar error genérico
       return NextResponse.json(
@@ -116,9 +117,8 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File;
     const folder = (formData.get('folder') as string) || 'ads';
 
-    console.log(`[DEBUG] FormData keys:`, Array.from(formData.keys()));
-    console.log(`[DEBUG] Folder received:`, folder);
-    console.log(`[DEBUG] Folder type:`, typeof folder);
+    logger.debug(`[Uploads] FormData keys:`, Array.from(formData.keys()));
+    logger.debug(`[Uploads] Folder:`, folder);
 
     if (!file) {
       return NextResponse.json(
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     // 4. VALIDAR TIPO MIME
     const mimeValidation = validateMimeType(file.type);
     if (!mimeValidation.valid) {
-      console.warn(`[INVALID MIME] IP: ${clientIP} - Type: ${file.type}`);
+      logger.warn(`[INVALID MIME] IP: ${clientIP} - Type: ${file.type}`);
       
       return NextResponse.json(
         { error: mimeValidation.reason },
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!aspectValidation.valid) {
-          console.warn(`[INVALID ASPECT] IP: ${clientIP} - Ratio: ${aspectValidation.ratio.toFixed(2)}:1`);
+          logger.warn(`[INVALID ASPECT] IP: ${clientIP} - Ratio: ${aspectValidation.ratio.toFixed(2)}:1`);
           
           return NextResponse.json(
             { 
@@ -175,16 +175,16 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        console.log(`[VALID ASPECT] ${width}x${height} - Ratio: ${aspectValidation.ratio.toFixed(2)}:1`);
+        logger.debug(`[VALID ASPECT] ${width}x${height} - Ratio: ${aspectValidation.ratio.toFixed(2)}:1`);
       } catch (sharpError: any) {
-        console.error(`[SHARP ERROR] Failed to process image:`, sharpError);
+        logger.error(`[SHARP ERROR] Failed to process image:`, sharpError);
         return NextResponse.json(
           { error: 'Failed to process image', details: sharpError.message },
           { status: 400 }
         );
       }
     } else {
-      console.log(`[BANNER UPLOAD] Skipping aspect ratio validation for banners folder`);
+      logger.debug(`[Uploads] Banner folder — skipping aspect ratio validation`);
     }
 
     // 8. UPLOAD A CLOUDINARY
@@ -194,10 +194,7 @@ export async function POST(request: NextRequest) {
     rateLimiter.record(clientIP);
 
     const duration = Date.now() - startTime;
-    console.log(`[SUCCESS] Upload completed in ${duration}ms`);
-    console.log(`[SUCCESS] Result from Cloudinary:`, result);
-    console.log(`[SUCCESS] result.url:`, result.url);
-    console.log(`[SUCCESS] result.path:`, result.path);
+    logger.info(`[Uploads] Upload completed in ${duration}ms — ${result.url}`);
 
     const responseData = {
       url: result.url,
@@ -208,7 +205,7 @@ export async function POST(request: NextRequest) {
       bytes: result.bytes
     };
 
-    console.log(`[SUCCESS] Sending response:`, responseData);
+    logger.debug(`[Uploads] Response:`, responseData);
 
     return NextResponse.json(responseData, {
       headers: {
@@ -218,7 +215,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     const duration = Date.now() - startTime;
-    console.error(`[ERROR] Upload failed after ${duration}ms:`, error);
+    logger.error(`[Uploads] Upload failed after ${duration}ms:`, error);
     
     return NextResponse.json(
       { 

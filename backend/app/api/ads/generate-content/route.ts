@@ -35,10 +35,10 @@ export async function POST(request: NextRequest) {
       province 
     } = body;
 
-    console.log('🪄 [generate-content] Generando contenido para:', {
+    // Debug only
+    if (process.env.NODE_ENV !== 'production') console.log('[generate-content] Generando contenido para:', {
       category: category_name,
       subcategory: subcategory_name,
-      attributes: Object.keys(attributes)
     });
 
     // ============================================

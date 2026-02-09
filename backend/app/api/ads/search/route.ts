@@ -9,6 +9,7 @@ export const runtime = 'edge';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+const isDev = process.env.NODE_ENV !== 'production';
 
 // ====================================================================
 // TIPOS
@@ -151,7 +152,7 @@ async function findAttributeMatch(
     .not('field_options', 'is', null);
   
   if (error || !attributes) {
-    console.log('⚠️ Error buscando en atributos dinámicos:', error);
+    isDev && console.log('⚠️ Error buscando en atributos dinámicos:', error);
     return null;
   }
   
@@ -201,7 +202,7 @@ async function findAttributeMatch(
   
   if (uniqueSubcategoryIds.length === 1) {
     // Solo aparece en una subcategoría - asignar subcategoría
-    console.log('✅ Atributo encontrado (subcategoría única):', {
+    isDev && console.log('✅ Atributo encontrado (subcategoría única):', {
       field_name: firstMatch.field_name,
       matched_value: firstMatch.field_value,
       subcategory_id: firstMatch.subcategory_id,
@@ -224,7 +225,7 @@ async function findAttributeMatch(
   
   const uniqueCategoryIds = subcats ? [...new Set(subcats.map(s => s.category_id))] : [];
   
-  console.log('✅ Atributo encontrado (múltiples subcategorías):', {
+  isDev && console.log('Atributo encontrado (múltiples subcategorías):', {
     field_name: firstMatch.field_name,
     matched_value: firstMatch.field_value,
     subcategory_count: uniqueSubcategoryIds.length,
@@ -285,9 +286,9 @@ export async function GET(request: NextRequest) {
       }
     });
     
-    console.log('🔍 /api/ads/search - Attribute filters:', attributeFilters);
+    isDev && console.log('🔍 /api/ads/search - Attribute filters:', attributeFilters);
 
-    console.log('🔍 /api/ads/search - Params:', { 
+    isDev && console.log('🔍 /api/ads/search - Params:', { 
       categorySlug, subcategorySlug, provinceSlug, searchQuery 
     });
 
@@ -315,7 +316,7 @@ export async function GET(request: NextRequest) {
       // Primero: buscar en el mapa de sinónimos
       const synonymSlug = getSynonymSlug(searchLower);
       
-      console.log('🔎 Intentando detectar subcategoría desde búsqueda:', { 
+      isDev && console.log('🔎 Intentando detectar subcategoría desde búsqueda:', { 
         original: searchQuery, 
         singular: searchSingular, 
         plural: searchPlural,
@@ -347,7 +348,7 @@ export async function GET(request: NextRequest) {
         subcategoryName = matchedSub.display_name || matchedSub.name;
         detectedFromSearch = true;
         
-        console.log('✅ Subcategoría detectada automáticamente:', { 
+        isDev && console.log('✅ Subcategoría detectada automáticamente:', { 
           subcategoryId, 
           subcategoryName,
           fromSearch: searchQuery,
@@ -364,7 +365,7 @@ export async function GET(request: NextRequest) {
         if (parentCat) {
           categoryId = parentCat.id;
           categoryName = parentCat.display_name || parentCat.name;
-          console.log('✅ Categoría padre resuelta:', { categoryId, categoryName });
+          isDev && console.log('✅ Categoría padre resuelta:', { categoryId, categoryName });
         }
       }
       
@@ -395,7 +396,7 @@ export async function GET(request: NextRequest) {
               subcategoryId = subData.id;
               subcategoryName = subData.display_name || subData.name;
               
-              console.log('✅ Subcategoría detectada via atributo (única):', { 
+              isDev && console.log('✅ Subcategoría detectada via atributo (única):', { 
                 subcategoryId, 
                 subcategoryName,
                 attributeField: attrMatch.field_name,
@@ -413,13 +414,13 @@ export async function GET(request: NextRequest) {
               if (parentCatFromAttr) {
                 categoryId = parentCatFromAttr.id;
                 categoryName = parentCatFromAttr.display_name || parentCatFromAttr.name;
-                console.log('✅ Categoría padre resuelta via atributo:', { categoryId, categoryName });
+                isDev && console.log('✅ Categoría padre resuelta via atributo:', { categoryId, categoryName });
               }
             }
           } else {
             // El atributo existe en múltiples subcategorías
             // NO restringir subcategoría, solo categoría si todas son de la misma
-            console.log('✅ Atributo detectado en múltiples subcategorías - NO restringir sub:', { 
+            isDev && console.log('✅ Atributo detectado en múltiples subcategorías - NO restringir sub:', { 
               attributeField: attrMatch.field_name,
               attributeValue: attrMatch.field_value,
               fromSearch: searchQuery,
@@ -437,7 +438,7 @@ export async function GET(request: NextRequest) {
               if (parentCatFromAttr) {
                 categoryId = parentCatFromAttr.id;
                 categoryName = parentCatFromAttr.display_name || parentCatFromAttr.name;
-                console.log('✅ Categoría resuelta (múltiples subcats):', { categoryId, categoryName });
+                isDev && console.log('✅ Categoría resuelta (múltiples subcats):', { categoryId, categoryName });
               }
             }
             // NO agregar el filtro de atributo aquí porque el campo puede tener distinto nombre en cada subcat
@@ -463,7 +464,7 @@ export async function GET(request: NextRequest) {
         const catData = exactMatch || categories[0];
         categoryId = catData.id;
         categoryName = catData.display_name || catData.name;
-        console.log('✅ Categoría encontrada:', { categoryId, categoryName, slug: catData.slug });
+        isDev && console.log('✅ Categoría encontrada:', { categoryId, categoryName, slug: catData.slug });
       } else {
         console.warn('⚠️ Categoría no encontrada para slug:', categorySlug);
       }
@@ -485,7 +486,7 @@ export async function GET(request: NextRequest) {
         const subData = exactMatch || subcategories[0];
         subcategoryId = subData.id;
         subcategoryName = subData.display_name || subData.name;
-        console.log('✅ Subcategoría encontrada:', { subcategoryId, subcategoryName, slug: subData.slug });
+        isDev && console.log('✅ Subcategoría encontrada:', { subcategoryId, subcategoryName, slug: subData.slug });
       } else {
         console.warn('⚠️ Subcategoría no encontrada para slug:', subcategorySlug);
       }
@@ -572,7 +573,7 @@ export async function GET(request: NextRequest) {
         .map(w => w.charAt(0).toUpperCase() + w.slice(1))
         .join(' ');
       
-      console.log(`  📦 Filtrando por atributo: ${attrName} = ${attrValue} (buscando: ${searchValue})`);
+      isDev && console.log(`  📦 Filtrando por atributo: ${attrName} = ${attrValue} (buscando: ${searchValue})`);
       
       // Si es columna directa, filtrar directamente
       if (directColumns.includes(attrName)) {
@@ -641,7 +642,7 @@ export async function GET(request: NextRequest) {
     });
 
     const elapsed = Date.now() - startTime;
-    console.log(`✅ /api/ads/search - ${transformedAds.length} avisos en ${elapsed}ms`);
+    isDev && console.log(`✅ /api/ads/search - ${transformedAds.length} avisos en ${elapsed}ms`);
 
     return NextResponse.json({
       success: true,

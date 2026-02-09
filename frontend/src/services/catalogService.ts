@@ -488,3 +488,162 @@ export async function validateCatalogSelection(
 
   return true;
 }
+
+// =====================================================
+// MAQUINARIAS - Tablas independientes por categoría
+// =====================================================
+
+export async function getMaquinariasSubcategories() {
+  const { data, error } = await supabase
+    .from('maquinarias_subcategorias')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order');
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getMaquinariasBrands() {
+  const { data, error } = await supabase
+    .from('maquinarias_marcas')
+    .select('*')
+    .eq('is_active', true)
+    .order('display_name');
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getMaquinariasBrandsBySubcategory(subcategoryId: string) {
+  const { data, error } = await supabase
+    .from('maquinarias_modelos')
+    .select(`
+      marca_id,
+      maquinarias_marcas!inner (
+        id,
+        name,
+        display_name,
+        is_active
+      )
+    `)
+    .eq('subcategoria_id', subcategoryId)
+    .eq('is_active', true)
+    .eq('maquinarias_marcas.is_active', true);
+
+  if (error) throw error;
+
+  const uniqueBrands = new Map();
+  data?.forEach(item => {
+    const brand = (item as any).maquinarias_marcas;
+    if (brand && !uniqueBrands.has(brand.id)) {
+      uniqueBrands.set(brand.id, brand);
+    }
+  });
+
+  return Array.from(uniqueBrands.values()).sort((a, b) =>
+    a.display_name.localeCompare(b.display_name)
+  );
+}
+
+export async function getMaquinariasModels(brandId: string, subcategoryId?: string) {
+  let query = supabase
+    .from('maquinarias_modelos')
+    .select('*')
+    .eq('marca_id', brandId)
+    .eq('is_active', true);
+
+  if (subcategoryId) {
+    query = query.eq('subcategoria_id', subcategoryId);
+  }
+
+  const { data, error } = await query.order('display_name');
+  if (error) throw error;
+  return data || [];
+}
+
+// =====================================================
+// GANADERÍA - Usa sistema unificado
+// =====================================================
+
+export async function getGanaderiaSubcategories() {
+  const { data: categoryData, error: categoryError } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('name', 'ganaderia')
+    .single();
+
+  if (categoryError || !categoryData) return [];
+
+  const { data, error } = await supabase
+    .from('subcategories')
+    .select('*')
+    .eq('category_id', categoryData.id)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getGanaderiaRazas(subcategoryId: string) {
+  const { data, error } = await supabase
+    .from('category_types')
+    .select('*')
+    .eq('subcategory_id', subcategoryId)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+// =====================================================
+// INSUMOS - Usa sistema unificado
+// =====================================================
+
+export async function getInsumosSubcategories() {
+  const { data: categoryData, error: categoryError } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('name', 'insumos')
+    .single();
+
+  if (categoryError || !categoryData) return [];
+
+  const { data, error } = await supabase
+    .from('subcategories')
+    .select('*')
+    .eq('category_id', categoryData.id)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getInsumosBrands() {
+  const { data, error } = await supabase
+    .from('insumos_marcas')
+    .select('*')
+    .eq('is_active', true)
+    .order('display_name');
+
+  if (error) throw error;
+  return data || [];
+}
+
+// =====================================================
+// LEGACY HELPERS
+// =====================================================
+
+export async function getAllModels() {
+  const { data, error } = await supabase
+    .from('models')
+    .select('*')
+    .eq('is_active', true)
+    .order('display_name');
+
+  if (error) throw error;
+  return data || [];
+}

@@ -261,7 +261,8 @@ export async function GET(request: NextRequest) {
     }
     
     const elapsed = Date.now() - startTime;
-    console.log(`🔍 /api/search/suggestions - "${query}" en ${elapsed}ms (cached: ${wasCached})`);
+    // Performance log — dev only
+    if (process.env.NODE_ENV !== 'production') console.log(`/api/search/suggestions - "${query}" en ${elapsed}ms (cached: ${wasCached})`);
     
     return NextResponse.json({
       query,

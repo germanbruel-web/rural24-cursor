@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
       // Asegurar que el user_id sea el del usuario autenticado
       body.user_id = user.id;
 
-      console.log('📦 Body recibido:', JSON.stringify(body, null, 2));
+      // Sensitive data — only log in dev
+      if (process.env.NODE_ENV !== 'production') console.log('[Ads] Body recibido:', JSON.stringify(body, null, 2));
 
     // Validar schema básico con Zod
     const validationResult = AdCreateSchema.safeParse(body);
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
         return acc;
       }, {} as Record<string, string>);
 
-      console.error('❌ Validation errors:', errors);
+      // Validation errors returned to client — no need to log in prod
 
       return NextResponse.json(
         {

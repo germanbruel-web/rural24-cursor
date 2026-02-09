@@ -16,7 +16,7 @@ import {
   getGanaderiaRazas,
   getInsumosSubcategories,
   getInsumosBrands
-} from '../services/catalogServiceClean';
+} from '../services/catalogService';
 
 // =====================================================
 // TIPOS

@@ -13,7 +13,7 @@ import {
   getGanaderiaRazas,
   getInsumosSubcategories,
   getInsumosBrands
-} from './catalogServiceClean';
+} from './catalogService';
 
 export interface CatalogJSON {
   version: string;

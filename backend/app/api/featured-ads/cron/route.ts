@@ -50,7 +50,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('🕐 [CRON] Ejecutando activación de destacados...');
+    // Log only in dev
+    if (process.env.NODE_ENV !== 'production') console.log('[CRON] Ejecutando activación de destacados...');
 
     // Llamar a la función RPC que activa pendientes y expira vencidos
     const { data, error } = await supabase.rpc('activate_pending_featured_ads');
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     }
 
     const activatedCount = data || 0;
-    console.log(`✅ [CRON] Destacados activados: ${activatedCount}`);
+    if (process.env.NODE_ENV !== 'production') console.log(`[CRON] Destacados activados: ${activatedCount}`);
 
     // También contar cuántos expiraron (ya lo hace la función, pero logueamos)
     const { count: expiredCount } = await supabase

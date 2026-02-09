@@ -30,7 +30,7 @@ import {
   getGanaderiaRazas,
   getInsumosSubcategories,
   getInsumosBrands
-} from '../../../services/catalogServiceClean';
+} from '../../../services/catalogService';
 import { supabase } from '../../../services/supabaseClient';
 import { generateRealisticSpecs } from '../../../services/aiModelGenerator';
 import { generateCatalogJSON, downloadCatalogJSON, getCatalogStats } from '../../../services/catalogExportService';

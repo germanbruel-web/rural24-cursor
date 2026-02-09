@@ -30,7 +30,8 @@ export async function DELETE(request: NextRequest) {
 
       const result = await deleteManyFromCloudinary(publicIds);
 
-      console.log(`[DELETE BATCH] ${result.success}/${publicIds.length} deleted`);
+      // Debug only
+      if (process.env.NODE_ENV !== 'production') console.log(`[DELETE BATCH] ${result.success}/${publicIds.length} deleted`);
 
       return NextResponse.json({
         success: result.success,
@@ -53,7 +54,7 @@ export async function DELETE(request: NextRequest) {
       const success = await deleteFromCloudinary(publicId);
 
       if (success) {
-        console.log(`[DELETE] ${publicId} deleted`);
+        if (process.env.NODE_ENV !== 'production') console.log(`[DELETE] ${publicId} deleted`);
         return NextResponse.json({ success: true });
       } else {
         return NextResponse.json(

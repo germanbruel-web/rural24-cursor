@@ -419,7 +419,8 @@ export async function GET(request: NextRequest) {
             options,
           });
           
-          console.log(`✅ Filtro inferido: ${attrName} con ${options.length} opciones`);
+          // Debug only
+          if (process.env.NODE_ENV !== 'production') console.log(`Filtro inferido: ${attrName} con ${options.length} opciones`);
         }
       }
     }
