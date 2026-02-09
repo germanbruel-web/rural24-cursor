@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AdsService } from '@/domain/ads/service';
 import { AdCreateSchema, AdFiltersSchema } from '@/types/schemas';
 import { ValidationError } from '@/domain/shared/errors';
+import { withAuth, withOptionalAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
 // NO declarar runtime = 'edge' - Cloudinary requiere Node.js
 
@@ -17,10 +18,14 @@ import { ValidationError } from '@/domain/shared/errors';
  * POST /api/ads - Crear nuevo anuncio
  */
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+  return withAuth(request, async (user: AuthUser) => {
+    try {
+      const body = await request.json();
 
-    console.log('📦 Body recibido:', JSON.stringify(body, null, 2));
+      // Asegurar que el user_id sea el del usuario autenticado
+      body.user_id = user.id;
+
+      console.log('📦 Body recibido:', JSON.stringify(body, null, 2));
 
     // Validar schema básico con Zod
     const validationResult = AdCreateSchema.safeParse(body);
@@ -83,7 +88,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
+    } catch (error) {
     console.error('Error creating ad:', error);
     return NextResponse.json(
       {
@@ -92,7 +97,8 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
-  }
+    }
+  });
 }
 
 /**

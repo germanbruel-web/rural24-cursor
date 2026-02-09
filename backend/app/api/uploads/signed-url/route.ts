@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCloudinaryClient, getCloudinaryConfig } from '@/infrastructure/cloudinary/client';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 import { z } from 'zod';
 
 const SignedUrlRequestSchema = z.object({
@@ -13,7 +14,8 @@ const SignedUrlRequestSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  try {
+  return withAuth(request, async (_user: AuthUser) => {
+    try {
     const body = await request.json();
 
     // Validar request
@@ -98,5 +100,6 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
-  }
+    }
+  });
 }

@@ -1,14 +1,17 @@
 /**
  * DELETE /api/uploads
  * Elimina imagen de Cloudinary (hard delete)
+ * Requiere autenticación
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteFromCloudinary, deleteManyFromCloudinary } from '@/infrastructure/cloudinary.service';
 import { extractCloudinaryPublicId } from '@/domain/images/service';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
 export async function DELETE(request: NextRequest) {
-  try {
+  return withAuth(request, async (_user: AuthUser) => {
+    try {
     const body = await request.json();
     const { url, urls } = body;
 
@@ -65,11 +68,12 @@ export async function DELETE(request: NextRequest) {
       { status: 400 }
     );
 
-  } catch (error: any) {
+    } catch (error: any) {
     console.error('[DELETE ERROR]', error);
     return NextResponse.json(
       { error: error.message || 'Delete failed' },
       { status: 500 }
     );
-  }
+    }
+  });
 }

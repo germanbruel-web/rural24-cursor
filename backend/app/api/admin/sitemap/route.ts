@@ -10,50 +10,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// ============================================================
-// HELPERS
-// ============================================================
-async function verifyAdmin(request: NextRequest): Promise<{ isAdmin: boolean; userId?: string }> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return { isAdmin: false };
-  }
-  
-  const token = authHeader.split(' ')[1];
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  
-  if (error || !user) {
-    return { isAdmin: false };
-  }
-  
-  // Verificar rol superadmin
-  const { data: userData } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-  
-  return { 
-    isAdmin: userData?.role === 'superadmin',
-    userId: user.id 
-  };
-}
+const supabase = getSupabaseClient();
 
 // ============================================================
 // GET - Lista de avisos con estado sitemap
 // ============================================================
 export async function GET(request: NextRequest) {
-  const { isAdmin } = await verifyAdmin(request);
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  return withAuth(request, async (_user: AuthUser) => {
   
   const { searchParams } = new URL(request.url);
   const filter = searchParams.get('filter') || 'all'; // all, in_sitemap, not_in_sitemap
@@ -128,17 +94,14 @@ export async function GET(request: NextRequest) {
     },
     summary
   });
+  }, { roles: ['superadmin'] });
 }
 
 // ============================================================
 // POST - Agregar aviso al sitemap
 // ============================================================
 export async function POST(request: NextRequest) {
-  const { isAdmin, userId } = await verifyAdmin(request);
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  
+  return withAuth(request, async (user: AuthUser) => {
   const body = await request.json();
   const { adId } = body;
   
@@ -151,7 +114,7 @@ export async function POST(request: NextRequest) {
     .update({
       in_sitemap: true,
       sitemap_added_at: new Date().toISOString(),
-      sitemap_added_by: userId
+      sitemap_added_by: user.id
     })
     .eq('id', adId)
     .select()
@@ -166,16 +129,14 @@ export async function POST(request: NextRequest) {
     message: 'Aviso agregado al sitemap',
     ad: data 
   });
+  }, { roles: ['superadmin'] });
 }
 
 // ============================================================
 // DELETE - Quitar aviso del sitemap
 // ============================================================
 export async function DELETE(request: NextRequest) {
-  const { isAdmin } = await verifyAdmin(request);
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  return withAuth(request, async (_user: AuthUser) => {
   
   const { searchParams } = new URL(request.url);
   const adId = searchParams.get('adId');
@@ -204,4 +165,5 @@ export async function DELETE(request: NextRequest) {
     message: 'Aviso removido del sitemap',
     ad: data 
   });
+  }, { roles: ['superadmin'] });
 }

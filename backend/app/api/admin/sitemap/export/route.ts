@@ -6,40 +6,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-async function verifyAdmin(request: NextRequest): Promise<boolean> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return false;
-  }
-  
-  const token = authHeader.split(' ')[1];
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  
-  if (error || !user) {
-    return false;
-  }
-  
-  const { data: userData } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-  
-  return userData?.role === 'superadmin';
-}
+const supabase = getSupabaseClient();
 
 export async function GET(request: NextRequest) {
-  const isAdmin = await verifyAdmin(request);
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  return withAuth(request, async (_user: AuthUser) => {
   
   const { searchParams } = new URL(request.url);
   const format = searchParams.get('format') || 'csv'; // csv o json
@@ -121,4 +94,5 @@ export async function GET(request: NextRequest) {
       'Content-Disposition': `attachment; filename="sitemap-rural24-${new Date().toISOString().split('T')[0]}.csv"`
     }
   });
+  }, { roles: ['superadmin'] });
 }

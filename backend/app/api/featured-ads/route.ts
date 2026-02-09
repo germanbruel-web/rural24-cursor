@@ -6,11 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = getSupabaseClient();
 
 // Configuración: cantidad de destacados POR CATEGORÍA
 const MAX_FEATURED_PER_CATEGORY = 10;
@@ -128,7 +127,8 @@ export async function GET(request: NextRequest) {
  * El category_id se obtiene automáticamente del aviso
  */
 export async function POST(request: NextRequest) {
-  try {
+  return withAuth(request, async (_user: AuthUser) => {
+    try {
     const body = await request.json();
     const { ad_id, expires_at, reason } = body;
 
@@ -194,9 +194,10 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, data });
-  } catch (err: any) {
+    } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
-  }
+    }
+  }, { roles: ['superadmin'] });
 }
 
 /**
@@ -204,7 +205,8 @@ export async function POST(request: NextRequest) {
  * Desactiva un aviso destacado (solo SuperAdmin)
  */
 export async function DELETE(request: NextRequest) {
-  try {
+  return withAuth(request, async (_user: AuthUser) => {
+    try {
     const { searchParams } = new URL(request.url);
     const ad_id = searchParams.get('ad_id');
 
@@ -228,7 +230,8 @@ export async function DELETE(request: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, data });
-  } catch (err: any) {
+    } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
-  }
+    }
+  }, { roles: ['superadmin'] });
 }

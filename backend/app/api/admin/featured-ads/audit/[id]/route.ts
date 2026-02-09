@@ -4,37 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-/**
- * Verificar si el usuario es SuperAdmin
- */
-async function isSuperAdmin(request: NextRequest): Promise<boolean> {
-  try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) return false;
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    
-    if (error || !user) return false;
-
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    return userData?.role === 'superadmin';
-  } catch (error) {
-    console.error('❌ Error verificando SuperAdmin:', error);
-    return false;
-  }
-}
+const supabase = getSupabaseClient();
 
 /**
  * GET /api/admin/featured-ads/audit/[id]
@@ -42,18 +15,11 @@ async function isSuperAdmin(request: NextRequest): Promise<boolean> {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  return withAuth(request, async (_user: AuthUser) => {
   try {
-    // Verificar permisos
-    if (!(await isSuperAdmin(request))) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden. SuperAdmin required.' },
-        { status: 403 }
-      );
-    }
-
-    const { id } = params;
+    const { id } = await params;
 
     // Obtener historial de auditoría
     const { data, error } = await supabase
@@ -77,4 +43,5 @@ export async function GET(
       { status: 500 }
     );
   }
+  }, { roles: ['superadmin'] });
 }

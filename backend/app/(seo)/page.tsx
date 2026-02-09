@@ -22,6 +22,8 @@ import {
   JsonLdItemList
 } from './utils/ssr-components';
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 // ============================================================
 // METADATA
 // ============================================================
@@ -111,7 +113,7 @@ export default async function HomePage() {
                     readOnly
                   />
                   <a 
-                    href="http://localhost:5173/#/buscar"
+                    href={`${FRONTEND_URL}/#/buscar`}
                     className="bg-primary-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-600"
                   >
                     Buscar
@@ -145,7 +147,7 @@ export default async function HomePage() {
                     ⭐ Avisos Destacados
                   </h2>
                   <a 
-                    href="http://localhost:5173/#/destacados"
+                    href={`${FRONTEND_URL}/#/destacados`}
                     className="text-primary-600 font-medium hover:text-primary-700"
                   >
                     Ver todos →
@@ -166,7 +168,7 @@ export default async function HomePage() {
                     🆕 Publicados Recientemente
                   </h2>
                   <a 
-                    href="http://localhost:5173/#/recientes"
+                    href={`${FRONTEND_URL}/#/recientes`}
                     className="text-primary-600 font-medium hover:text-primary-700"
                   >
                     Ver todos →
@@ -188,7 +190,7 @@ export default async function HomePage() {
                 Publicá tu aviso gratis y llegá a miles de compradores del agro argentino.
               </p>
               <a 
-                href="http://localhost:5173/#/publicar-aviso"
+                href={`${FRONTEND_URL}/#/publicar-aviso`}
                 className="inline-block bg-yellow-900 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-yellow-800 transition-colors"
               >
                 Publicar Aviso Gratis

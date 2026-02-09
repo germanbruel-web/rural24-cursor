@@ -3,13 +3,10 @@
  * Rural24 SEO-First Architecture
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '';
-
-export function getSupabase() {
-  return createClient(supabaseUrl, supabaseKey);
+function getSupabase() {
+  return getSupabaseClient();
 }
 
 // ============================================================

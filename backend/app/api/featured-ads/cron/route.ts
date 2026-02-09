@@ -9,14 +9,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = getSupabaseClient();
 
-// Secret para proteger el endpoint (configurar en env)
-const CRON_SECRET = process.env.CRON_SECRET || 'rural24-cron-secret-2026';
+// Secret para proteger el endpoint (DEBE estar configurado en env)
+const CRON_SECRET = process.env.CRON_SECRET;
+
+if (!CRON_SECRET) {
+  console.warn('⚠️ CRON_SECRET no configurado en variables de entorno');
+}
 
 /**
  * GET /api/featured-ads/cron
@@ -33,18 +35,14 @@ export async function GET(request: NextRequest) {
   try {
     // Verificar autenticación
     const cronSecret = request.headers.get('X-Cron-Secret');
-    const authHeader = request.headers.get('Authorization');
     
     // Permitir acceso si:
-    // 1. Tiene el X-Cron-Secret correcto
-    // 2. Es una llamada de Supabase (Authorization: Bearer service_role_key)
-    // 3. Es localhost (desarrollo)
+    // 1. Tiene el X-Cron-Secret correcto (requerido en producción)
+    // 2. Es localhost (solo desarrollo)
     const isLocalhost = request.headers.get('host')?.includes('localhost');
-    const hasValidSecret = cronSecret === CRON_SECRET;
-    const isSupabaseCall = authHeader?.startsWith('Bearer ') && 
-                          authHeader.includes(supabaseServiceKey.substring(0, 20));
+    const hasValidSecret = CRON_SECRET && cronSecret === CRON_SECRET;
     
-    if (!isLocalhost && !hasValidSecret && !isSupabaseCall) {
+    if (!isLocalhost && !hasValidSecret) {
       console.warn('⚠️ CRON unauthorized access attempt');
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },

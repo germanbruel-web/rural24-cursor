@@ -13,11 +13,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = getSupabaseClient();
 
 // Configuración de slots por placement
 const MAX_SLOTS: Record<string, number> = {
@@ -27,48 +26,12 @@ const MAX_SLOTS: Record<string, number> = {
 };
 
 /**
- * Verificar si el usuario es SuperAdmin
- */
-async function isSuperAdmin(request: NextRequest): Promise<{ id: string; email: string } | null> {
-  try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) return null;
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    
-    if (error || !user) return null;
-
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role, email')
-      .eq('id', user.id)
-      .single();
-
-    if (userData?.role !== 'superadmin') return null;
-
-    return { id: user.id, email: userData.email };
-  } catch (error) {
-    console.error('❌ Error verificando SuperAdmin:', error);
-    return null;
-  }
-}
-
-/**
  * POST /api/admin/featured-ads/manual
  * Activar featured manual (sin crédito)
  */
 export async function POST(request: NextRequest) {
+  return withAuth(request, async (admin: AuthUser) => {
   try {
-    // 1. Verificar permisos SuperAdmin
-    const admin = await isSuperAdmin(request);
-    if (!admin) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden. SuperAdmin required.' },
-        { status: 403 }
-      );
-    }
-
     // 2. Parsear body
     const body = await request.json();
     const { ad_id, placement, scheduled_start, duration_days, reason } = body;
@@ -227,4 +190,5 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  }, { roles: ['superadmin'] });
 }

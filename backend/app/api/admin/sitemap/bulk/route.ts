@@ -12,43 +12,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-async function verifyAdmin(request: NextRequest): Promise<{ isAdmin: boolean; userId?: string }> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return { isAdmin: false };
-  }
-  
-  const token = authHeader.split(' ')[1];
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  
-  if (error || !user) {
-    return { isAdmin: false };
-  }
-  
-  const { data: userData } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-  
-  return { 
-    isAdmin: userData?.role === 'superadmin',
-    userId: user.id 
-  };
-}
+const supabase = getSupabaseClient();
 
 export async function POST(request: NextRequest) {
-  const { isAdmin, userId } = await verifyAdmin(request);
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  return withAuth(request, async (user: AuthUser) => {
   
   const body = await request.json();
   const { action, adIds } = body;
@@ -69,7 +39,7 @@ export async function POST(request: NextRequest) {
     ? {
         in_sitemap: true,
         sitemap_added_at: new Date().toISOString(),
-        sitemap_added_by: userId
+        sitemap_added_by: user.id
       }
     : {
         in_sitemap: false,
@@ -93,4 +63,5 @@ export async function POST(request: NextRequest) {
     affected: data?.length || 0,
     ads: data
   });
+  }, { roles: ['superadmin'] });
 }

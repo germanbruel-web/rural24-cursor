@@ -8,6 +8,8 @@
 import React from 'react';
 import { formatPrice, getImageUrl, getAdUrl, truncateText } from './ssr-data';
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 // ============================================================
 // DESIGN TOKENS
 // ============================================================
@@ -124,7 +126,7 @@ export function SSRHeader() {
           
           {/* CTA */}
           <a 
-            href="http://localhost:5173/#/publicar-aviso" 
+            href={`${FRONTEND_URL}/#/publicar-aviso`} 
             className="bg-primary-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-600 transition-colors"
           >
             Publicar Gratis

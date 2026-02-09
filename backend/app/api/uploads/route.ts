@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter } from '@/infrastructure/rate-limiter';
 import { uploadToCloudinary } from '@/infrastructure/cloudinary.service';
 import { validateImageAspectRatio } from '@/domain/images/service';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 import sharp from 'sharp';
 
 // Tipos MIME permitidos (SOLO IMÁGENES)
@@ -70,7 +71,8 @@ function validateMimeType(mimeType: string): { valid: boolean; reason?: string }
 }
 
 export async function POST(request: NextRequest) {
-  const startTime = Date.now();
+  return withAuth(request, async (_user: AuthUser) => {
+    const startTime = Date.now();
   
   try {
     // 1. RATE LIMITING por IP
@@ -226,5 +228,6 @@ export async function POST(request: NextRequest) {
       },
       { status: error.http_code || 500 }
     );
-  }
+    }
+  });
 }

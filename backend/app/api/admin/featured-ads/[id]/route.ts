@@ -6,39 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-/**
- * Verificar si el usuario es SuperAdmin
- */
-async function isSuperAdmin(request: NextRequest): Promise<{ id: string; email: string; full_name: string } | null> {
-  try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) return null;
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    
-    if (error || !user) return null;
-
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role, email, full_name')
-      .eq('id', user.id)
-      .single();
-
-    if (userData?.role !== 'superadmin') return null;
-
-    return { id: user.id, email: userData.email, full_name: userData.full_name };
-  } catch (error) {
-    console.error('❌ Error verificando SuperAdmin:', error);
-    return null;
-  }
-}
+const supabase = getSupabaseClient();
 
 /**
  * GET /api/admin/featured-ads/[id]
@@ -46,19 +17,12 @@ async function isSuperAdmin(request: NextRequest): Promise<{ id: string; email: 
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  return withAuth(request, async (admin: AuthUser) => {
   try {
-    // Verificar permisos
-    const admin = await isSuperAdmin(request);
-    if (!admin) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden. SuperAdmin required.' },
-        { status: 403 }
-      );
-    }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Obtener featured con JOINs
     const { data, error } = await supabase
@@ -83,6 +47,7 @@ export async function GET(
       { status: 500 }
     );
   }
+  }, { roles: ['superadmin'] });
 }
 
 /**
@@ -91,19 +56,11 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  return withAuth(request, async (admin: AuthUser) => {
   try {
-    // Verificar permisos
-    const admin = await isSuperAdmin(request);
-    if (!admin) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden. SuperAdmin required.' },
-        { status: 403 }
-      );
-    }
-
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { scheduled_start, expires_at, duration_days, placement, reason } = body;
 
@@ -225,6 +182,7 @@ export async function PATCH(
       { status: 500 }
     );
   }
+  }, { roles: ['superadmin'] });
 }
 
 /**
@@ -238,19 +196,11 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  return withAuth(request, async (admin: AuthUser) => {
   try {
-    // Verificar permisos
-    const admin = await isSuperAdmin(request);
-    if (!admin) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden. SuperAdmin required.' },
-        { status: 403 }
-      );
-    }
-
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { reason, refund_credits } = body;
 
@@ -390,4 +340,5 @@ export async function DELETE(
       { status: 500 }
     );
   }
+  }, { roles: ['superadmin'] });
 }

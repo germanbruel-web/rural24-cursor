@@ -3,21 +3,18 @@
  * 
  * Obtiene todos los usuarios del sistema.
  * Usa service_role para bypass de RLS.
- * Solo accesible por superadmin (validar en frontend).
+ * Solo accesible por superadmin (auth guard en backend).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
-// Cliente con service_role para bypass de RLS
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-);
+const supabaseAdmin = getSupabaseClient();
 
 export async function GET(request: NextRequest) {
-  try {
+  return withAuth(request, async (_user: AuthUser) => {
+    try {
     // Obtener usuarios
     const { data: users, error: usersError } = await supabaseAdmin
       .from('users')
@@ -59,13 +56,14 @@ export async function GET(request: NextRequest) {
       count: usersWithAds.length
     });
 
-  } catch (error) {
+    } catch (error) {
     console.error('❌ Error in /api/admin/users:', error);
     return NextResponse.json(
       { success: false, error: 'Error interno del servidor' },
       { status: 500 }
     );
-  }
+    }
+  }, { roles: ['superadmin'] });
 }
 
 /**
@@ -74,7 +72,8 @@ export async function GET(request: NextRequest) {
  * Actualiza un usuario (full_name, role, etc.)
  */
 export async function PATCH(request: NextRequest) {
-  try {
+  return withAuth(request, async (_user: AuthUser) => {
+    try {
     const body = await request.json();
     const { user_id, ...updates } = body;
 
@@ -105,11 +104,12 @@ export async function PATCH(request: NextRequest) {
       data
     });
 
-  } catch (error) {
+    } catch (error) {
     console.error('❌ Error in PATCH /api/admin/users:', error);
     return NextResponse.json(
       { success: false, error: 'Error interno del servidor' },
       { status: 500 }
     );
-  }
+    }
+  }, { roles: ['superadmin'] });
 }

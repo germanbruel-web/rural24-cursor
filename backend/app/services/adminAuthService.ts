@@ -7,19 +7,9 @@
  * Actualiza TANTO auth.users COMO public.users
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!, // ⚠️ Requiere service role key (SERVIDOR SOLAMENTE)
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
-    },
-  }
-);
+const supabaseAdmin = getSupabaseClient();
 
 interface VerifyEmailResponse {
   success: boolean;

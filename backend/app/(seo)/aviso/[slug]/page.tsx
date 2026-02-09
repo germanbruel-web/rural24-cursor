@@ -26,6 +26,8 @@ import {
   JsonLdProduct
 } from '../../utils/ssr-components';
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 // ============================================================
 // TYPES
 // ============================================================
@@ -228,14 +230,14 @@ export default async function AdDetailPage({ params }: Props) {
                 
                 {/* Botón de contacto - redirige a SPA */}
                 <a 
-                  href={`http://localhost:5173/#/aviso/${slug}`}
+                  href={`${FRONTEND_URL}/#/aviso/${slug}`}
                   className="block w-full bg-primary-500 text-white text-center font-semibold py-3 px-4 rounded-lg hover:bg-primary-600 transition-colors mb-3"
                 >
                   Ver contacto del vendedor
                 </a>
                 
                 <a 
-                  href={`http://localhost:5173/#/aviso/${slug}?action=whatsapp`}
+                  href={`${FRONTEND_URL}/#/aviso/${slug}?action=whatsapp`}
                   className="block w-full bg-green-500 text-white text-center font-semibold py-3 px-4 rounded-lg hover:bg-green-600 transition-colors"
                 >
                   📱 Contactar por WhatsApp

@@ -11,15 +11,7 @@
  */
 
 import { MetadataRoute } from 'next';
-import { createClient } from '@supabase/supabase-js';
-
-// ============================================================
-// SUPABASE CLIENT
-// ============================================================
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
 
 // ============================================================
 // HELPER FUNCTIONS
@@ -31,6 +23,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
  * - Máximo 500 para performance
  */
 async function getIndexableAds() {
+  const supabase = getSupabaseClient();
   const { data } = await supabase
     .from('ads')
     .select('slug, short_id, updated_at, featured, is_premium')
