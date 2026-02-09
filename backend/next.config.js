@@ -3,8 +3,13 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   reactStrictMode: true,
-  
+
+  // Output standalone para Vercel (optimiza cold starts)
+  output: 'standalone',
+
   async headers() {
+    // En producción: usar FRONTEND_URL del env; en dev: localhost:5173
+    const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
     return [
       {
         source: '/api/:path*',

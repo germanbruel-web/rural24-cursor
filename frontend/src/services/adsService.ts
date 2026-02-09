@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient';
 import type { Ad, CreateAdInput, UpdateAdInput } from '../../types';
 import type { Product } from '../../types';
 import { DEFAULT_PLACEHOLDER_IMAGE } from '../constants/defaultImages';
+import { API_URL } from '../config/apiConfig';
 
 /**
  * Transformar Ad (de Supabase) a Product (para UI)
