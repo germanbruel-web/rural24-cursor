@@ -805,21 +805,20 @@ const AppContent: React.FC = () => {
       ) : (
         // VISTA DE INICIO
         <main className="flex-1">
-          {/* Hero con botones de categorías */}
-          <HeroWithCarousel>
+          {/* Hero con título, banner y botones */}
+          <HeroWithCarousel 
+            bannerSlot={
+              <div className="max-w-[1200px] mx-auto">
+                <BannersVipHero category={hoveredCategory || undefined} />
+              </div>
+            }
+          >
             <HeroCategoryButtons 
               onSearch={handleAdvancedSearch} 
               onCategoryHover={setHoveredCategory}
               onBannerChange={setCurrentBanner}
             />
           </HeroWithCarousel>
-
-          {/* Banner VIP Hero - DEBAJO de los botones negros */}
-          <section className="relative -mt-16 z-20 px-4">
-            <div className="max-w-[1200px] mx-auto">
-              <BannersVipHero category={hoveredCategory || undefined} />
-            </div>
-          </section>
 
           {/* Sección Cómo Funciona */}
           <HowItWorksSection onRegisterClick={() => setShowAuthModal(true)} />

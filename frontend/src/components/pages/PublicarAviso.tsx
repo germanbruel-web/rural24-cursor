@@ -272,7 +272,7 @@ export default function PublicarAviso() {
       console.log('🪄 Generando contenido con contexto:', context);
 
       // Llamada al endpoint (futuro: backend con LLM)
-      const response = await fetch('/api/ads/generate-content', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/ads/generate-content`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(context),

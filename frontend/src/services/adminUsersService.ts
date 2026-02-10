@@ -8,6 +8,8 @@
 
 import { supabase } from './supabaseClient';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 interface VerifyEmailResult {
   success: boolean;
   message: string;
@@ -36,7 +38,7 @@ export async function verifyUserEmailAsAdmin(userId: string): Promise<VerifyEmai
     }
 
     // 2️⃣ Llamar endpoint admin
-    const response = await fetch('/api/admin/verify-email', {
+    const response = await fetch(`${API_URL}/api/admin/verify-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

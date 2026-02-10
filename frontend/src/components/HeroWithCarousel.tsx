@@ -5,9 +5,10 @@ import { getActiveHeroImages, type HeroImage } from '../services/heroImagesServi
 
 interface HeroWithCarouselProps {
   children: React.ReactNode;
+  bannerSlot?: React.ReactNode;
 }
 
-export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children }) => {
+export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, bannerSlot }) => {
   const [images, setImages] = useState<HeroImage[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,6 +79,11 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children }) 
             Miles de productos agrícolas, maquinarias y servicios en un solo lugar
           </p>
         </div>
+        {bannerSlot && (
+          <div className="mb-6">
+            {bannerSlot}
+          </div>
+        )}
         {children}
       </div>
     </section>
