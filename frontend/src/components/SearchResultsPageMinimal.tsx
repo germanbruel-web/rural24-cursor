@@ -15,10 +15,7 @@ import { parseFilterParams, buildFilterUrl, toSlug } from '../utils/urlFilterUti
 import { searchAdsFromBackend, type SearchFiltersParams } from '../services/adsService';
 
 interface SearchResultsPageMinimalProps {
-  results: Product[];
-  searchQuery?: string;
-  categorySlug?: string;
-  subcategorySlug?: string;
+  results: Product[]; // Solo para fallback legacy
   onBack: () => void;
   onSearch: (filters: SearchFilters) => void;
   filterOptions: FilterOptions;
@@ -28,9 +25,6 @@ interface SearchResultsPageMinimalProps {
 
 export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> = ({
   results,
-  searchQuery,
-  categorySlug,
-  subcategorySlug,
   onBack,
   onSearch,
   filterOptions,
@@ -87,8 +81,8 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
     loading: filtersLoading,
     reload: reloadFilters
   } = useDynamicFilters({ 
-    categorySlug: urlFilters.cat || categorySlug, 
-    subcategorySlug: urlFilters.sub || subcategorySlug,
+    categorySlug: urlFilters.cat, 
+    subcategorySlug: urlFilters.sub,
     provinceSlug: urlFilters.prov,
     // ✅ FIX: Pasar IDs detectados para cargar atributos dinámicos
     categoryId: detectedIds.categoryId,
@@ -287,7 +281,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
       <div className="border-b bg-white">
         <div className="max-w-[1400px] mx-auto px-4 py-4">
           <SmartBreadcrumb
-            searchQuery={!detectedMeta?.category ? (urlFilters.q || searchQuery) : undefined}
+            searchQuery={!detectedMeta?.category ? urlFilters.q : undefined}
             categoryName={resolvedCategory?.name || detectedMeta?.category}
             categorySlug={urlFilters.cat || detectedMeta?.detected_category_slug}
             subcategoryName={resolvedSubcategory?.name || detectedMeta?.subcategory}
@@ -589,11 +583,11 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
 
               {/* Banners debajo de filtros - Solo visible en desktop o cuando filtros están abiertos en mobile */}
               <div className="mt-6 hidden lg:block">
-                <ResultsBannerBelowFilter category={urlFilters.cat || detectedMeta?.detected_category_slug || categorySlug} />
+                <ResultsBannerBelowFilter category={urlFilters.cat || detectedMeta?.detected_category_slug} />
               </div>
               {showMobileFilters && (
                 <div className="mt-6 lg:hidden">
-                  <ResultsBannerBelowFilter category={urlFilters.cat || detectedMeta?.detected_category_slug || categorySlug} />
+                  <ResultsBannerBelowFilter category={urlFilters.cat || detectedMeta?.detected_category_slug} />
                 </div>
               )}
             </aside>
@@ -645,7 +639,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                         {/* Banner intercalado cada 8 productos */}
                         {(index + 1) % 8 === 0 && (
                           <ResultsBannerIntercalated 
-                            category={urlFilters.cat || detectedMeta?.detected_category_slug || categorySlug} 
+                            category={urlFilters.cat || detectedMeta?.detected_category_slug} 
                             position={index + 1}
                           />
                         )}

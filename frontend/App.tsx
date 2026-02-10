@@ -786,10 +786,8 @@ const AppContent: React.FC = () => {
       ) : isSearching ? (
         // VISTA DE BÚSQUEDA - Página minimalista estilo Google
         <SearchResultsPageMinimal
+          key={window.location.hash}
           results={searchResults}
-          searchQuery={searchFilters.query}
-          categorySlug={searchFilters.categories?.[0]?.toLowerCase().replace(/\s+/g, '-')}
-          subcategorySlug={searchFilters.subcategories?.[0]?.toLowerCase().replace(/\s+/g, '-')}
           onBack={handleBackToHome}
           onSearch={handleAdvancedSearch}
           filterOptions={filterOptions}
