@@ -18,7 +18,7 @@
   "crons": [
     {
       "path": "/api/featured-ads/cron",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }
