@@ -1,6 +1,7 @@
-// src/services/bannersService.ts
 import { supabase } from './supabaseClient';
 import type { Banner, CreateBannerInput, UpdateBannerInput, BannerType } from '../../types';
+
+const isDev = import.meta.env.DEV;
 
 /**
  * Verificar si el usuario es SuperAdmin
@@ -9,11 +10,11 @@ async function isSuperAdmin(): Promise<boolean> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.log('❌ No hay usuario autenticado');
+      isDev && console.log('❌ No hay usuario autenticado');
       return false;
     }
 
-    console.log('👤 Usuario autenticado:', user.id, user.email);
+    isDev && console.log('👤 Usuario autenticado:', user.id, user.email);
 
     const { data, error } = await supabase
       .from('users')
@@ -26,7 +27,7 @@ async function isSuperAdmin(): Promise<boolean> {
       return false;
     }
 
-    console.log('🔐 Rol del usuario:', data?.role);
+    isDev && console.log('🔐 Rol del usuario:', data?.role);
     return data?.role === 'superadmin';
   } catch (error) {
     console.error('❌ Error en isSuperAdmin:', error);
@@ -41,16 +42,16 @@ async function isSuperAdmin(): Promise<boolean> {
  */
 export async function createBanner(input: CreateBannerInput): Promise<{ banner: Banner | null; error: any }> {
   try {
-    console.log('🔐 Verificando permisos SuperAdmin...');
+    isDev && console.log('🔐 Verificando permisos SuperAdmin...');
     const isAdmin = await isSuperAdmin();
-    console.log('✅ Permisos verificados:', isAdmin);
+    isDev && console.log('✅ Permisos verificados:', isAdmin);
     
     if (!isAdmin) {
       console.error('❌ Acceso denegado - No es SuperAdmin');
       return { banner: null, error: { message: 'Acceso denegado. Solo SuperAdmin', code: 'FORBIDDEN' } };
     }
 
-    console.log('📤 Enviando INSERT a Supabase:', input);
+    isDev && console.log('📤 Enviando INSERT a Supabase:', input);
     
     const { data, error } = await supabase
       .from('banners')
@@ -66,7 +67,7 @@ export async function createBanner(input: CreateBannerInput): Promise<{ banner: 
       return { banner: null, error };
     }
     
-    console.log('✅ Banner creado exitosamente:', data);
+    isDev && console.log('✅ Banner creado exitosamente:', data);
     return { banner: data as Banner, error: null };
   } catch (error) {
     console.error('💥 Excepción capturada en createBanner:', error);

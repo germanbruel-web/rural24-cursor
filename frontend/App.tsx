@@ -33,7 +33,8 @@ import { useAuth, CategoryProvider, ToastProvider } from "./src/contexts";
 // ============================================================
 // SERVICES
 // ============================================================
-import { smartSearch, getPremiumProducts, getHomepageBanners } from "./src/services";
+import { smartSearch, getPremiumProducts } from "./src/services";
+import { getHeroVIPBanners } from "./src/services/bannersCleanService";
 import { getSettingNumber } from "./src/services/v2/globalSettingsService";
 
 // ============================================================
@@ -375,15 +376,14 @@ const AppContent: React.FC = () => {
   // ❌ ELIMINADO: getPremiumAds() + getActiveAds() cargaban ~200+ filas
   // que nunca se renderizan en homepage. Las búsquedas usan backend API directamente.
 
-  // Cargar todos los banners para carousel en mobile
+  // Cargar todos los banners para carousel en mobile (usa caché 60s de bannersCleanService)
   React.useEffect(() => {
     if (!isMobile) return;
 
     const loadAllBanners = async () => {
       try {
-        const banners = await getHomepageBanners(undefined);
-        // Filtrar solo mobile si es necesario
-        const mobileBanners = banners.filter(b => b.device_target === 'mobile' || b.device_target === 'both');
+        const banners = await getHeroVIPBanners(undefined) as unknown as Banner[];
+        const mobileBanners = banners.filter(b => (b as any).device_target === 'mobile' || (b as any).device_target === 'both' || !(b as any).device_target);
         setAllBanners(mobileBanners);
       } catch (error) {
         console.error('❌ Error loading banners for mobile carousel:', error);

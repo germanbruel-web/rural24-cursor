@@ -1,6 +1,8 @@
 import { supabase } from './supabaseClient';
 import { categoryCache, cacheKeys } from '../utils/categoryCache';
 
+const isDev = import.meta.env.DEV;
+
 // =====================================================
 // CATALOG MASTER - NUEVO SISTEMA CON CACHÉ
 // =====================================================
@@ -18,11 +20,11 @@ export const getCategoryIcons = async (): Promise<CategoryIcon[]> => {
   const cached = categoryCache.get(cacheKey);
   
   if (cached) {
-    console.log('✅ Iconos desde caché');
+    isDev && console.log('✅ Iconos desde caché');
     return cached;
   }
 
-  console.log('🔍 Cargando iconos desde BD...');
+  isDev && console.log('🔍 Cargando iconos desde BD...');
   const { data, error } = await supabase
     .from('category_icons')
     .select('id, name, url_light, url_dark')
@@ -35,22 +37,21 @@ export const getCategoryIcons = async (): Promise<CategoryIcon[]> => {
   
   // Guardar en caché por 1 hora
   categoryCache.set(cacheKey, data, 1000 * 60 * 60);
-  console.log('✅ Iconos cargados:', data?.length || 0);
+  isDev && console.log('✅ Iconos cargados:', data?.length || 0);
   return data || [];
 };
 
 // CATEGORÍAS
 export const getCategories = async () => {
-  // Intentar obtener del caché
   const cacheKey = cacheKeys.categories();
   const cached = categoryCache.get(cacheKey);
   
   if (cached) {
-    console.log('✅ Categorías desde caché');
+    isDev && console.log('✅ Categorías desde caché');
     return cached;
   }
 
-  console.log('🔍 Cargando categorías desde BD...');
+  isDev && console.log('🔍 Cargando categorías desde BD...');
   const { data, error } = await supabase
     .from('categories')
     .select('*')
@@ -64,22 +65,21 @@ export const getCategories = async () => {
   
   // Guardar en caché por 30 minutos
   categoryCache.set(cacheKey, data, 1000 * 60 * 30);
-  console.log('✅ Categorías cargadas:', data?.length || 0);
+  isDev && console.log('✅ Categorías cargadas:', data?.length || 0);
   return data || [];
 };
 
 // SUBCATEGORÍAS
 export const getSubcategories = async (categoryId: string) => {
-  // Intentar obtener del caché
   const cacheKey = cacheKeys.subcategories(categoryId);
   const cached = categoryCache.get(cacheKey);
   
   if (cached) {
-    console.log('✅ Subcategorías desde caché');
+    isDev && console.log('✅ Subcategorías desde caché');
     return cached;
   }
 
-  console.log('🔍 Cargando subcategorías para categoría:', categoryId);
+  isDev && console.log('🔍 Cargando subcategorías para categoría:', categoryId);
   const { data, error } = await supabase
     .from('subcategories')
     .select('*')
@@ -94,22 +94,21 @@ export const getSubcategories = async (categoryId: string) => {
   
   // Guardar en caché por 20 minutos
   categoryCache.set(cacheKey, data, 1000 * 60 * 20);
-  console.log('✅ Subcategorías cargadas:', data?.length || 0);
+  isDev && console.log('✅ Subcategorías cargadas:', data?.length || 0);
   return data || [];
 };
 
 // MARCAS POR SUBCATEGORÍA
 export const getBrandsBySubcategory = async (subcategoryId: string) => {
-  // Intentar obtener del caché
   const cacheKey = cacheKeys.brands(subcategoryId);
   const cached = categoryCache.get(cacheKey);
   
   if (cached) {
-    console.log('✅ Marcas desde caché');
+    isDev && console.log('✅ Marcas desde caché');
     return cached;
   }
 
-  console.log('🔍 Cargando marcas para subcategoría:', subcategoryId);
+  isDev && console.log('🔍 Cargando marcas para subcategoría:', subcategoryId);
   
   try {
     // Intentar con subcategory_brands (tabla M2M)
@@ -132,7 +131,7 @@ export const getBrandsBySubcategory = async (subcategoryId: string) => {
       
       // Guardar en caché por 20 minutos
       categoryCache.set(cacheKey, brands, 1000 * 60 * 20);
-      console.log('✅ Marcas cargadas desde M2M:', brands.length);
+      isDev && console.log('✅ Marcas cargadas desde M2M:', brands.length);
       return brands;
     }
     
@@ -153,7 +152,7 @@ export const getBrandsBySubcategory = async (subcategoryId: string) => {
     const brands = allBrands || [];
     // Guardar en caché por 20 minutos
     categoryCache.set(cacheKey, brands, 1000 * 60 * 20);
-    console.log('✅ Marcas cargadas (todas):', brands.length);
+    isDev && console.log('✅ Marcas cargadas (todas):', brands.length);
     return brands;
     
   } catch (error) {
@@ -170,11 +169,11 @@ export const getModels = async (brandId: string) => {
   const cached = categoryCache.get(cacheKey);
   
   if (cached) {
-    console.log('✅ Modelos desde caché');
+    isDev && console.log('✅ Modelos desde caché');
     return cached;
   }
 
-  console.log('🔍 Cargando modelos para marca:', brandId);
+  isDev && console.log('🔍 Cargando modelos para marca:', brandId);
   const { data, error } = await supabase
     .from('models')
     .select('*')
@@ -189,7 +188,7 @@ export const getModels = async (brandId: string) => {
   
   // Guardar en caché por 20 minutos
   categoryCache.set(cacheKey, data, 1000 * 60 * 20);
-  console.log('✅ Modelos cargados:', data?.length || 0);
+  isDev && console.log('✅ Modelos cargados:', data?.length || 0);
   return data || [];
 };
 

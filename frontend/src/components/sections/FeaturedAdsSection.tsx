@@ -19,6 +19,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Star } from 'lucide-react';
 import { getFeaturedAdsByCategories, type FeaturedAdsByCategory } from '../../services/featuredAdsService';
 import { getFeaturedForHomepage } from '../../services/userFeaturedService';
+import { useCategories } from '../../contexts/CategoryContext';
 import { ProductCard } from '../organisms/ProductCard';
 import { SubcategoriesExpressBar } from './SubcategoriesExpressBar';
 import { CategoryBannerSlider } from './CategoryBannerSlider';
@@ -41,13 +42,17 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
   const [userFeaturedByCategory, setUserFeaturedByCategory] = useState<Map<string, any[]>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { categories: contextCategories } = useCategories();
 
   const loadFeaturedAds = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // 1. Cargar destacados de superadmin
-      const data = await getFeaturedAdsByCategories(maxAdsPerCategory);
+      // 1. Cargar destacados de superadmin (pasar categorías del context para evitar query duplicado)
+      const cats = contextCategories.length > 0 
+        ? contextCategories.map(c => ({ id: c.id, name: c.name, display_name: c.display_name, icon: undefined, slug: c.slug }))
+        : undefined;
+      const data = await getFeaturedAdsByCategories(maxAdsPerCategory, cats);
       setCategoriesData(data);
       
       // 2. Cargar destacados de usuarios para cada categoría
@@ -67,7 +72,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [maxAdsPerCategory]);
+  }, [maxAdsPerCategory, contextCategories]);
 
   useEffect(() => {
     loadFeaturedAds();

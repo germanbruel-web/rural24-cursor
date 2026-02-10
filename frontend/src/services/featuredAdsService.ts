@@ -7,6 +7,9 @@
 
 import { supabase } from './supabaseClient';
 import type { Ad } from '../../types';
+import { getCategoryCarouselBanners } from './bannersCleanService';
+
+const isDev = import.meta.env.DEV;
 
 // ========== API NUEVA: featured_ads_queue ==========
 
@@ -190,24 +193,32 @@ export interface FeaturedAdsByCategory {
 /**
  * Obtiene avisos destacados agrupados por categoría principal
  * @param limit Número máximo de avisos por categoría (default: 12)
+ * @param preloadedCategories Categorías precargadas desde CategoryContext (evita query duplicado)
  */
 export async function getFeaturedAdsByCategories(
-  limit: number = 12
+  limit: number = 12,
+  preloadedCategories?: Array<{ id: string; name: string; display_name: string; icon?: string; slug: string }>
 ): Promise<FeaturedAdsByCategory[]> {
   try {
-    console.log('🔍 getFeaturedAdsByCategories - START');
+    isDev && console.log('🔍 getFeaturedAdsByCategories - START');
     
-    // 1. Obtener todas las categorías activas (incluir slug)
-    const { data: categories, error: catError } = await supabase
-      .from('categories')
-      .select('id, name, display_name, icon, slug')
-      .eq('is_active', true)
-      .order('sort_order');
+    // 1. Usar categorías precargadas o hacer query
+    let categories = preloadedCategories || null;
+    
+    if (!categories) {
+      const { data, error: catError } = await supabase
+        .from('categories')
+        .select('id, name, display_name, icon, slug')
+        .eq('is_active', true)
+        .order('sort_order');
+      isDev && console.log('📦 Categories fetched:', { count: data?.length, error: catError });
+      if (catError) throw catError;
+      categories = data;
+    } else {
+      isDev && console.log('📦 Categories from context:', categories.length);
+    }
 
-    console.log('📦 Categories fetched:', { count: categories?.length, error: catError });
-
-    if (catError) throw catError;
-    if (!categories) return [];
+    if (!categories || categories.length === 0) return [];
 
     // 2. Por cada categoría, obtener avisos destacados, subcategorías y banner
     const results = await Promise.all(
@@ -226,21 +237,11 @@ export async function getFeaturedAdsByCategories(
         // Filtrar expirados en JavaScript (más confiable)
         const now = new Date();
         const ads = (rawAds || []).filter(ad => {
-          if (!ad.featured_until) return true; // Sin fecha = válido
-          return new Date(ad.featured_until) > now; // Fecha futura = válido
+          if (!ad.featured_until) return true;
+          return new Date(ad.featured_until) > now;
         }).slice(0, limit);
 
-        console.log(`📋 Ads for ${cat.name}:`, { raw: rawAds?.length, filtered: ads.length, error: adsError });
-        
-        // DEBUG: Ver atributos del primer ad
-        if (ads?.[0]) {
-          console.log(`🔍 [DEBUG] Primer ad de ${cat.name}:`, {
-            id: ads[0].id,
-            title: ads[0].title?.substring(0, 30),
-            attributes: ads[0].attributes,
-            dynamic_fields: ads[0].dynamic_fields
-          });
-        }
+        isDev && console.log(`📋 Ads for ${cat.name}:`, { raw: rawAds?.length, filtered: ads.length });
 
         if (adsError) {
           console.error(`❌ Error fetching ads for ${cat.name}:`, adsError);
@@ -258,7 +259,6 @@ export async function getFeaturedAdsByCategories(
           console.error(`❌ Error fetching subcategories for ${cat.name}:`, subError);
         }
 
-        // Crear mapa de subcategorías para enriquecer los ads
         const subcategoryMap = new Map(
           (subcategories || []).map(s => [s.id, s.display_name || s.name])
         );
@@ -287,93 +287,49 @@ export async function getFeaturedAdsByCategories(
           };
         });
 
-        // 2b-bis. Contar avisos activos por subcategoría
-        const subcategoriesWithCounts = await Promise.all(
-          (subcategories || []).map(async (sub) => {
-            const { count, error: countError } = await supabase
-              .from('ads')
-              .select('*', { count: 'exact', head: true })
-              .eq('subcategory_id', sub.id)
-              .eq('status', 'active');
-
-            if (countError) {
-              console.error(`❌ Error counting ads for subcategory ${sub.name}:`, countError);
-            }
-
-            return {
-              id: sub.id,
-              name: sub.display_name || sub.name,
-              slug: sub.slug || sub.name,
-              ads_count: count || 0,
-              icon: sub.icon
-            };
-          })
-        );
-
-        // Mapear nombre de categoría a slug de banners_clean
-        // SINCRONIZADO con tabla categories en BD (nombres EXACTOS)
-        // El valor debe coincidir con banners_clean.category
-        const categorySlugMap: Record<string, string> = {
-          // Variantes de Maquinarias (EXACTO de BD: "Maquinarias Agrícolas")
-          'Maquinarias Agrícolas': 'MAQUINARIAS AGRICOLAS',  // Con tilde í
-          'Maquinarias Agricolas': 'MAQUINARIAS AGRICOLAS',  // Sin tilde
-          'Maquinaria Agrícola': 'MAQUINARIAS AGRICOLAS',
-          'Maquinarias': 'MAQUINARIAS AGRICOLAS',
-          'MAQUINARIAS AGRICOLAS': 'MAQUINARIAS AGRICOLAS',
-          // Ganadería
-          'Ganadería': 'GANADERIA',
-          'Ganaderia': 'GANADERIA',
-          'GANADERIA': 'GANADERIA',
-          // Insumos
-          'Insumos Agropecuarios': 'INSUMOS AGROPECUARIOS',
-          'INSUMOS AGROPECUARIOS': 'INSUMOS AGROPECUARIOS',
-          // Inmuebles
-          'Inmuebles Rurales': 'INMUEBLES RURALES',
-          'INMUEBLES RURALES': 'INMUEBLES RURALES',
-          // Servicios Rurales (antes Guía del Campo)
-          'Servicios Rurales': 'SERVICIOS RURALES',
-          'SERVICIOS RURALES': 'SERVICIOS RURALES',
-          // Fallback para compatibilidad con datos legacy
-          'Guia Comercial': 'SERVICIOS RURALES',
-          'Guía Comercial': 'SERVICIOS RURALES',
-          'Guía del Campo': 'SERVICIOS RURALES',
-          'GUIA DEL CAMPO': 'SERVICIOS RURALES',
-        };
-        const catDisplayName = cat.display_name || cat.name;
-        const bannerCategorySlug = categorySlugMap[catDisplayName] || categorySlugMap[cat.name] || cat.name.toLowerCase();
-
-        console.log(`🎯 Buscando banners carousel para: ${catDisplayName} -> slug: ${bannerCategorySlug}`);
-
-        // 2c. Obtener banners activos de banners_clean (nueva tabla)
-        const { data: bannersData, error: bannerError } = await supabase
-          .from('banners_clean')
-          .select('id, carousel_image_url, link_url, client_name, category')
-          .eq('placement', 'category_carousel')
-          .eq('is_active', true)
-          .or(`category.eq.all,category.eq.${bannerCategorySlug}`)
-          .order('created_at', { ascending: false })
-          .limit(4);
-
-        console.log(`📢 Banners encontrados para ${catDisplayName}:`, bannersData?.length || 0, bannersData);
-
-        if (bannerError) {
-          console.error(`❌ Error fetching banners for ${cat.name}:`, bannerError);
+        // 2b-bis. Contar avisos activos por subcategoría (BATCHED: 1 query instead of N)
+        const subcatIds = (subcategories || []).map(s => s.id);
+        let countMap = new Map<string, number>();
+        
+        if (subcatIds.length > 0) {
+          const { data: adCounts, error: countError } = await supabase
+            .from('ads')
+            .select('subcategory_id')
+            .in('subcategory_id', subcatIds)
+            .eq('status', 'active');
+          
+          if (countError) {
+            console.error(`❌ Error batch counting ads for ${cat.name}:`, countError);
+          } else {
+            (adCounts || []).forEach(row => {
+              countMap.set(row.subcategory_id, (countMap.get(row.subcategory_id) || 0) + 1);
+            });
+          }
         }
+        
+        const subcategoriesWithCounts = (subcategories || []).map(sub => ({
+          id: sub.id,
+          name: sub.display_name || sub.name,
+          slug: sub.slug || sub.name,
+          ads_count: countMap.get(sub.id) || 0,
+          icon: sub.icon
+        }));
 
-        // Transformar al formato esperado por CategoryBannerSlider
-        const banners = (bannersData || []).map(b => ({
+        // 2c. Obtener banners carousel (usa caché de bannersCleanService - 1 query total)
+        const catDisplayName = cat.display_name || cat.name;
+        const carouselBanners = await getCategoryCarouselBanners(catDisplayName);
+        isDev && console.log(`📢 Banners carousel para ${catDisplayName}:`, carouselBanners.length);
+
+        const banners = carouselBanners.map(b => ({
           id: b.id,
           image_url: b.carousel_image_url || '',
           link_url: b.link_url,
           title: b.client_name
         }));
 
-        // Generar slug normalizado: usar slug de BD, o generar desde name
         const normalizedSlug = cat.slug || cat.name.toLowerCase()
           .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
           .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-        
-        console.log(`📌 Categoría ${cat.display_name}: slug BD=${cat.slug}, normalizado=${normalizedSlug}`);
         
         return {
           category_id: cat.id,
@@ -388,8 +344,7 @@ export async function getFeaturedAdsByCategories(
     );
 
     const allResults = results;
-    const withAds = results.filter(r => r.ads.length > 0);
-    console.log('✅ Final results:', { totalCategories: allResults.length, withAds: withAds.length });
+    isDev && console.log('✅ Featured results:', { categories: allResults.length, withAds: results.filter(r => r.ads.length > 0).length });
 
     // 3. Devolver TODAS las categorías (incluso sin avisos) para scroll y SEO
     return allResults;

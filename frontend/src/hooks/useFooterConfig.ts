@@ -18,6 +18,7 @@ export function useFooterConfig() {
   const [config, setConfig] = useState<FooterConfig>(DEFAULT_FOOTER_CONFIG);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isDev = import.meta.env.DEV;
 
   useEffect(() => {
     let mounted = true;
@@ -31,13 +32,13 @@ export function useFooterConfig() {
         
         if (mounted) {
           setConfig(footerConfig);
-          console.log('✅ Footer config cargado en hook');
+          isDev && console.log('✅ Footer config cargado en hook');
         }
       } catch (err) {
         console.error('❌ Error en useFooterConfig:', err);
         if (mounted) {
           setError(err instanceof Error ? err.message : 'Error desconocido');
-          setConfig(DEFAULT_FOOTER_CONFIG); // Fallback
+          setConfig(DEFAULT_FOOTER_CONFIG);
         }
       } finally {
         if (mounted) {
@@ -63,6 +64,7 @@ export function useFooterConfig() {
 export function useFooterCategories(limit: number = 6) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const isDev = import.meta.env.DEV;
 
   useEffect(() => {
     let mounted = true;
@@ -74,12 +76,12 @@ export function useFooterCategories(limit: number = 6) {
         
         if (mounted) {
           setCategories(cats);
-          console.log(`✅ ${cats.length} categorías cargadas para footer`);
+          isDev && console.log(`✅ ${cats.length} categorías cargadas para footer`);
         }
       } catch (err) {
         console.error('❌ Error en useFooterCategories:', err);
         if (mounted) {
-          setCategories([]); // Fallback vacío
+          setCategories([]);
         }
       } finally {
         if (mounted) {

@@ -8,6 +8,8 @@
 import { supabase } from './supabaseClient';
 import { getSetting, updateSetting } from './siteSettingsService';
 import { getCategories } from './categoriesService';
+
+const isDev = import.meta.env.DEV;
 import type {
   FooterConfig,
   ContactItem,
@@ -44,7 +46,7 @@ export async function getFooterConfig(): Promise<FooterConfig> {
       return DEFAULT_FOOTER_CONFIG;
     }
     
-    console.log('✅ Footer config cargado desde BD');
+    isDev && console.log('✅ Footer config cargado desde BD');
     return config;
     
   } catch (error) {
@@ -73,7 +75,7 @@ export async function updateFooterConfig(config: FooterConfig): Promise<boolean>
     });
     
     if (result) {
-      console.log('✅ Footer config actualizado');
+      isDev && console.log('✅ Footer config actualizado');
     }
     
     return result;

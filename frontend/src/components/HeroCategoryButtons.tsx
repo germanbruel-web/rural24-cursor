@@ -4,8 +4,9 @@ import { ALL_CATEGORIES } from '../constants/categories';
 import { PROVINCES } from '../constants/locations';
 import type { SearchFilters, Product, Banner } from '../../types';
 import { useProducts } from '../hooks/useProducts';
-import { getHomepageBanners } from '../services/bannersService';
-import { getCategories, getCategoryIcons, type CategoryIcon } from '../services/categoriesService';
+import { getHeroVIPBanners } from '../services/bannersCleanService';
+import { getCategoryIcons, type CategoryIcon } from '../services/categoriesService';
+import { useCategories } from '../contexts/CategoryContext';
 
 // Mapeo de iconos por slug de categoría (FALLBACK si no hay en BD)
 const CATEGORY_ICON_MAP: Record<string, string> = {
@@ -41,17 +42,7 @@ interface Suggestion {
   icon?: string;
 }
 
-// Tipo para categoría de BD
-interface CategoryFromDB {
-  id: string;
-  name: string;
-  display_name: string;
-  slug: string;
-  icon?: string;
-  sort_order?: number;
-}
-
-export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({ 
+export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
   onSearch, 
   showCategoryButtons = true, 
   onCategoryHover, 
@@ -65,27 +56,27 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
   const [selectedLocationIndex, setSelectedLocationIndex] = useState(-1);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [categoryBanners, setCategoryBanners] = useState<Record<string, Banner[]>>({});
-  const [categories, setCategories] = useState<CategoryFromDB[]>([]);
+  const { categories: contextCategories } = useCategories();
   const [categoryIcons, setCategoryIcons] = useState<CategoryIcon[]>([]);
-  const [allBanners, setAllBanners] = useState<Banner[]>([]); // Todos los banners para random
-  const [defaultBanner, setDefaultBanner] = useState<Banner | null>(null); // Banner random inicial
+  const [allBanners, setAllBanners] = useState<Banner[]>([]);
+  const [defaultBanner, setDefaultBanner] = useState<Banner | null>(null);
   const { products } = useProducts();
 
-  // Cargar categorías e iconos desde BD al montar
+  // Mapear categorías del context al formato local
+  const categories = contextCategories.map(c => ({
+    id: c.id,
+    name: c.name,
+    display_name: c.display_name,
+    slug: c.slug,
+    icon: undefined as string | undefined,
+    sort_order: c.sort_order
+  }));
+
+  // Cargar iconos desde BD al montar (categorías vienen del context)
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [cats, icons] = await Promise.all([
-          getCategories(),
-          getCategoryIcons()
-        ]);
-        setCategories(cats || []);
-        setCategoryIcons(icons || []);
-      } catch (error) {
-        console.error('Error cargando datos:', error);
-      }
-    };
-    loadData();
+    getCategoryIcons()
+      .then(icons => setCategoryIcons(icons || []))
+      .catch(err => console.error('Error cargando iconos:', err));
   }, []);
 
   const loadBannerForCategory = async (category: string) => {
@@ -99,7 +90,7 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
     }
 
     try {
-      const banners = await getHomepageBanners(category);
+      const banners = await getHeroVIPBanners(category) as unknown as Banner[];
       setCategoryBanners(prev => ({ ...prev, [category]: banners }));
       
       if (onBannerChange) {
@@ -138,8 +129,7 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
   useEffect(() => {
     const loadInitialBanner = async () => {
       try {
-        // Cargar TODOS los banners VIP (sin filtro de categoría)
-        const banners = await getHomepageBanners(undefined);
+        const banners = await getHeroVIPBanners(undefined) as unknown as Banner[];
         
         if (banners.length > 0) {
           setAllBanners(banners);
@@ -151,7 +141,7 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
           setDefaultBanner(randomBanner);
           
           if (onBannerChange) {
-            console.log('🎲 Banner random inicial:', randomBanner.title);
+            import.meta.env.DEV && console.log('🎲 Banner random inicial:', randomBanner.title);
             onBannerChange(randomBanner);
           }
         }
