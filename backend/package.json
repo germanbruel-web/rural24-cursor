@@ -5,7 +5,7 @@
     "dev": "next dev --port 3001 --hostname 0.0.0.0",
     "dev:debug": "NODE_OPTIONS='--inspect' next dev --port 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port $PORT",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
