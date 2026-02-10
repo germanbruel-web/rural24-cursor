@@ -9,7 +9,7 @@
 
 **Marketplace moderno para compra y venta de maquinaria agrícola, vehículos rurales y equipamiento agropecuario.**
 
-[Demo](https://rural24.vercel.app) • [Documentación](#-documentación) • [Instalación](#-instalación-rápida)
+[Demo](https://rural24.onrender.com) • [Documentación](#-documentación) • [Instalación](#-instalación-rápida)
 
 </div>
 
@@ -88,7 +88,7 @@
 |----------|-----|
 | **Supabase** | PostgreSQL + Auth + RLS |
 | **Cloudinary** | CDN de Imágenes |
-| **Vercel** | Hosting Frontend |
+| **Render** | Hosting Frontend + Backend |
 | **TurboRepo** | Monorepo Management |
 
 ---

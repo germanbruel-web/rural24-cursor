@@ -4,7 +4,7 @@ const nextConfig = {
   compress: true,
   reactStrictMode: true,
 
-  // Output standalone para producción (optimiza cold starts en Vercel)
+  // Output standalone para producción (optimiza cold starts en Render)
   // Solo activar en build, no en dev (agrega overhead al compilador)
   ...(process.env.NODE_ENV === 'production' ? { output: 'standalone' } : {}),
 
