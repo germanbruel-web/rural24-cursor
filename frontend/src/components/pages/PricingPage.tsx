@@ -3,6 +3,7 @@ import { Check, X, Sparkles, Zap, Building2, Gift, Megaphone, Send, RefreshCw } 
 import { useAuth } from '../../contexts/AuthContext';
 import AuthModal from '../auth/AuthModal';
 import { getAllPlans, formatPrice, type SubscriptionPlan } from '../../services/subscriptionService';
+import { navigateTo } from '../../hooks/useNavigate';
 
 // Iconos por nombre
 const PLAN_ICONS: Record<string, React.ReactNode> = {
@@ -58,7 +59,7 @@ export const PricingPage: React.FC = () => {
       return;
     }
 
-    window.location.hash = '#/subscription';
+    navigateTo('/subscription');
   };
 
   // Formatear límite

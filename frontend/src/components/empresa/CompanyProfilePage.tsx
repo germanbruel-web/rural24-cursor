@@ -27,6 +27,7 @@ import {
   getCompanyProfileBySlug,
   getCatalogsByCompany
 } from '../../services/companyProfileService';
+import { navigateTo } from '../../hooks/useNavigate';
 
 // ============================================================================
 // COMPONENTE
@@ -99,12 +100,12 @@ export function CompanyProfilePage() {
         <p className="text-gray-600 mb-6">
           La empresa que buscas no existe o fue desactivada.
         </p>
-        <a
-          href="#/search?cat=servicios-rurales"
+        <button
+          onClick={() => navigateTo('/search', { cat: 'servicios-rurales' })}
           className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
         >
           Ver Servicios Rurales
-        </a>
+        </button>
       </div>
     );
   }
@@ -134,13 +135,13 @@ export function CompanyProfilePage() {
         
         {/* Back button */}
         <div className="absolute top-4 left-4">
-          <a
-            href="#/search?cat=servicios-rurales"
+          <button
+            onClick={() => navigateTo('/search', { cat: 'servicios-rurales' })}
             className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur rounded-xl text-gray-700 hover:bg-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver
-          </a>
+          </button>
         </div>
       </div>
 

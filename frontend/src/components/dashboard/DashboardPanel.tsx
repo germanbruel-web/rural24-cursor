@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSentContactsCount, getMyReceivedContactsCount } from '../../services/contactService';
+import { navigateTo } from '../../hooks/useNavigate';
 import { 
   Eye, 
   MessageSquare, 
@@ -115,7 +116,7 @@ export const DashboardPanel: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => window.location.hash = '#/my-ads'}
+              onClick={() => navigateTo('/my-ads')}
               className="bg-[#16a135] hover:bg-[#138a2c] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
             >
               <PenLine className="w-5 h-5" />
@@ -158,14 +159,14 @@ export const DashboardPanel: React.FC = () => {
               <div className="text-xs font-semibold text-gray-500 uppercase mb-2 px-2">Avisos</div>
               <div className="space-y-1">
                 <button
-                  onClick={() => window.location.hash = '#/my-ads'}
+                  onClick={() => navigateTo('/my-ads')}
                   className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Package className="w-4 h-4" />
                   Mis Avisos
                 </button>
                 <button
-                  onClick={() => window.location.hash = '#/deleted-ads'}
+                  onClick={() => navigateTo('/deleted-ads')}
                   className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <MessageSquare className="w-4 h-4" />
@@ -179,7 +180,7 @@ export const DashboardPanel: React.FC = () => {
               <div className="text-xs font-semibold text-gray-500 uppercase mb-2 px-2">Mensajes</div>
               <div className="space-y-1">
                 <button
-                  onClick={() => window.location.hash = '#/inbox'}
+                  onClick={() => navigateTo('/inbox')}
                   className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <MessageSquare className="w-4 h-4" />
@@ -193,7 +194,7 @@ export const DashboardPanel: React.FC = () => {
               <div className="text-xs font-semibold text-gray-500 uppercase mb-2 px-2">Usuarios</div>
               <div className="space-y-1">
                 <button
-                  onClick={() => window.location.hash = '#/users'}
+                  onClick={() => navigateTo('/users')}
                   className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Users className="w-4 h-4" />
@@ -207,14 +208,14 @@ export const DashboardPanel: React.FC = () => {
               <div className="text-xs font-semibold text-gray-500 uppercase mb-2 px-2">Otros</div>
               <div className="space-y-1">
                 <button
-                  onClick={() => window.location.hash = '#/categories-admin'}
+                  onClick={() => navigateTo('/categories-admin')}
                   className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Package className="w-4 h-4" />
                   Gestión categorias
                 </button>
                 <button
-                  onClick={() => window.location.hash = '#/banners'}
+                  onClick={() => navigateTo('/banners')}
                   className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Award className="w-4 h-4" />
@@ -239,7 +240,7 @@ export const DashboardPanel: React.FC = () => {
           <p className="text-gray-600 mt-1">Plan: {profile?.plan_name || 'Free'}</p>
         </div>
         <button
-          onClick={() => window.location.hash = '#/my-ads'}
+          onClick={() => navigateTo('/my-ads')}
           className="bg-[#16a135] hover:bg-[#138a2c] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center gap-3"
         >
           <PenLine className="w-6 h-6" />
@@ -270,7 +271,7 @@ export const DashboardPanel: React.FC = () => {
           subtitle="Mensajes recibidos"
           color="purple"
           isClickable={stats.totalMessages > 0}
-          onClick={stats.totalMessages > 0 ? () => window.location.hash = '#/dashboard/contacts' : undefined}
+          onClick={stats.totalMessages > 0 ? () => navigateTo('/dashboard/contacts') : undefined}
         />
         <StatCard
           icon={<Send className="w-8 h-8" />}
@@ -293,13 +294,13 @@ export const DashboardPanel: React.FC = () => {
                 Revisa y responde a tus interesados
               </p>
             </div>
-            <a
-              href="#/dashboard/contacts"
+            <button
+              onClick={(e) => { e.preventDefault(); navigateTo('/dashboard/contacts'); }}
               className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
             >
               <MessageSquare className="w-5 h-5" />
               Ver Contactos
-            </a>
+            </button>
           </div>
         </div>
       )}

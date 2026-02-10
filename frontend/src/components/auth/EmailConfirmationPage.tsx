@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { navigateTo } from '../../hooks/useNavigate';
 
 export const EmailConfirmationPage = () => {
   const { user } = useAuth();
@@ -19,7 +20,7 @@ export const EmailConfirmationPage = () => {
         setStatus('success');
         // Redirigir al login después de 3 segundos
         setTimeout(() => {
-          window.location.hash = '#/';
+          navigateTo('/');
           // Trigger auth modal with login view
           const event = new CustomEvent('openAuthModal', { detail: { view: 'login' } });
           window.dispatchEvent(event);
@@ -27,7 +28,7 @@ export const EmailConfirmationPage = () => {
       } else if (user) {
         setStatus('success');
         setTimeout(() => {
-          window.location.hash = '#/';
+          navigateTo('/');
           const event = new CustomEvent('openAuthModal', { detail: { view: 'login' } });
           window.dispatchEvent(event);
         }, 2000);
@@ -82,7 +83,7 @@ export const EmailConfirmationPage = () => {
           </p>
           <button
             onClick={() => {
-              window.location.hash = '#/';
+              navigateTo('/');
               const event = new CustomEvent('openAuthModal', { detail: { view: 'login' } });
               window.dispatchEvent(event);
             }}
@@ -106,7 +107,7 @@ export const EmailConfirmationPage = () => {
           El link de verificación es inválido o ha expirado. Por favor, intentá registrarte nuevamente.
         </p>
         <button
-          onClick={() => (window.location.hash = '#/')}
+          onClick={() => (navigateTo('/'))}
           className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
         >
           Volver al Inicio

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Code, LogOut } from 'lucide-react';
+import { navigateTo } from '../hooks/useNavigate';
 
 export const DevModePanel: React.FC = () => {
   const { user, userRole, isLoading, signOut } = useAuth();
@@ -69,10 +70,10 @@ export const DevModePanel: React.FC = () => {
       <div className="mt-3 pt-3 border-t border-purple-700 text-xs">
         <strong>Quick Links:</strong>
         <div className="flex gap-2 mt-1">
-          <a href="#/my-ads" className="bg-purple-700 px-2 py-1 rounded hover:bg-purple-600">Mis Avisos</a>
+          <button onClick={() => navigateTo('/my-ads')} className="bg-purple-700 px-2 py-1 rounded hover:bg-purple-600">Mis Avisos</button>
           {userRole === 'superadmin' && (
             <>
-              <a href="#" onClick={() => window.location.hash = '#/my-ads'} className="bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500">Admin</a>
+              <button onClick={() => navigateTo('/my-ads')} className="bg-yellow-600 px-2 py-1 rounded hover:bg-yellow-500">Admin</button>
             </>
           )}
         </div>

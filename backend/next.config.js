@@ -4,8 +4,9 @@ const nextConfig = {
   compress: true,
   reactStrictMode: true,
 
-  // Output standalone para Vercel (optimiza cold starts)
-  output: 'standalone',
+  // Output standalone para producción (optimiza cold starts en Vercel)
+  // Solo activar en build, no en dev (agrega overhead al compilador)
+  ...(process.env.NODE_ENV === 'production' ? { output: 'standalone' } : {}),
 
   async headers() {
     // En producción: usar FRONTEND_URL del env; en dev: localhost:5173

@@ -2,6 +2,8 @@
 // URL FILTER UTILS - Manejo de filtros via query params GET
 // ====================================================================
 
+import { navigateTo } from '../hooks/useNavigate';
+
 export interface FilterParams {
   q?: string;           // Búsqueda por texto
   cat?: string;         // Categoría (slug)
@@ -64,7 +66,7 @@ export function navigateWithFilters(
   updates: Partial<FilterParams> = {}
 ): void {
   const url = buildFilterUrl(basePath, filters, updates);
-  window.location.hash = url;
+  navigateTo(url.startsWith('#') ? url.substring(1) : url);
 }
 
 /**

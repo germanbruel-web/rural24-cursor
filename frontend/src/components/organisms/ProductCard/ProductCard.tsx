@@ -14,6 +14,7 @@ import { useProductImage, getProductLabel } from '../../../hooks/useProductImage
 import { getAdDetailUrl } from '../../../utils/slugUtils';
 import { cn } from '../../../design-system/utils';
 import { DEFAULT_PLACEHOLDER_IMAGE } from '../../../constants/defaultImages';
+import { navigateTo } from '../../../hooks/useNavigate';
 
 interface ProductCardProps {
   product: Product;
@@ -61,11 +62,11 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
     if ((e.target as HTMLElement).closest('button')) return;
     
     if (product.slug) {
-      window.location.hash = `#/ad/${product.slug}`;
+      navigateTo(`/ad/${product.slug}`);
     } else if (product.id && product.title) {
       // Usar short_id si está disponible, sino fallback a UUID
       const url = getAdDetailUrl(product.title, product.id, product.short_id);
-      window.location.hash = url;
+      navigateTo(url.replace('#', ''));
     } else if (onViewDetail && product.id) {
       onViewDetail(product.id);
     }

@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { ChevronRight, Home } from 'lucide-react';
+import { navigateTo } from '../hooks/useNavigate';
 
 interface BreadcrumbSegment {
   label: string;
@@ -68,7 +69,7 @@ export const SmartBreadcrumb: React.FC<SmartBreadcrumbProps> = ({
     if (href && onNavigate) {
       onNavigate(href);
     } else if (href) {
-      window.location.hash = href.replace('#', '');
+      navigateTo(href.replace('#', ''));
     }
   };
 

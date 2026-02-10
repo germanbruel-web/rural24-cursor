@@ -6,6 +6,8 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { categoryCache, cacheKeys } from '../utils/categoryCache';
+
+const isDev = import.meta.env.DEV;
 import { 
   getCategories,
   getMaquinariasSubcategories,
@@ -112,7 +114,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const loadCategories = useCallback(async () => {
     // Si ya están cargadas, no hacer nada
     if (categories.length > 0) {
-      console.log('📦 Categorías ya cargadas en memoria');
+      isDev && console.log('📦 Categorías ya cargadas en memoria');
       return;
     }
 
@@ -123,13 +125,13 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // ==========================================
       // CARGAR DESDE SUPABASE CON CACHÉ
       // ==========================================
-      console.log('🔍 Cargando categorías desde Supabase...');
+      isDev && console.log('🔍 Cargando categorías desde Supabase...');
       
       // Verificar cache primero
       const cached = categoryCache.get<Category[]>(cacheKeys.categories());
       
       if (cached) {
-        console.log('✅ Categorías cargadas desde caché');
+        isDev && console.log('✅ Categorías cargadas desde caché');
         setCategories(cached);
         setIsLoading(false);
         return;
@@ -142,7 +144,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setCategories(data);
       categoryCache.set(cacheKeys.categories(), data, 1000 * 60 * 30); // 30 minutos
       
-      console.log('✅ Categorías cargadas exitosamente:', data.length);
+      isDev && console.log('✅ Categorías cargadas exitosamente:', data.length);
       
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al cargar categorías';
@@ -160,7 +162,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const loadSubcategories = useCallback(async (categoryId: string): Promise<Subcategory[]> => {
     // Si ya están cargadas, retornarlas
     if (subcategoriesByCategory[categoryId]) {
-      console.log(`📦 Subcategorías de ${categoryId} ya cargadas`);
+      isDev && console.log(`📦 Subcategorías de ${categoryId} ya cargadas`);
       return subcategoriesByCategory[categoryId];
     }
 
@@ -177,7 +179,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const category = categories.find(c => c.id === categoryId);
     const categoryName = category?.name || '';
     
-    console.log(`🔍 Cargando subcategorías para ${categoryName}...`);
+    isDev && console.log(`🔍 Cargando subcategorías para ${categoryName}...`);
     
     let data: Subcategory[] = [];
     
@@ -193,7 +195,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       data = subs.map(s => ({ ...s, category_id: categoryId }));
     } else {
       // Fallback a tablas viejas para otras categorías
-      console.warn(`⚠️ Categoría ${categoryName} aún usa tablas legacy`);
+      isDev && console.warn(`⚠️ Categoría ${categoryName} aún usa tablas legacy`);
       data = [] as Subcategory[];
     }
     
@@ -211,7 +213,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const loadBrands = useCallback(async (subcategoryId: string): Promise<Brand[]> => {
     // Si ya están cargadas, retornarlas
     if (brandsBySubcategory[subcategoryId]) {
-      console.log(`📦 Marcas/Razas de ${subcategoryId} ya cargadas`);
+      isDev && console.log(`📦 Marcas/Razas de ${subcategoryId} ya cargadas`);
       return brandsBySubcategory[subcategoryId];
     }
 
@@ -232,7 +234,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const category = categories.find(c => c.id === subcategory?.category_id);
     const categoryName = category?.name || '';
     
-    console.log(`🔍 Cargando marcas/razas para ${categoryName} - ${subcategoryId}...`);
+    isDev && console.log(`🔍 Cargando marcas/razas para ${categoryName} - ${subcategoryId}...`);
     
     let data: Brand[] = [];
     
@@ -246,7 +248,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } else if (categoryName === 'insumos') {
       data = await getInsumosBrands();
     } else {
-      console.warn(`⚠️ Categoría ${categoryName} aún usa tablas legacy`);
+      isDev && console.warn(`⚠️ Categoría ${categoryName} aún usa tablas legacy`);
       data = [];
     }
     
@@ -269,7 +271,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     // Si ya están cargados, retornarlos
     if (modelsByBrand[cacheKey]) {
-      console.log(`📦 Modelos de ${brandId} ya cargados`);
+      isDev && console.log(`📦 Modelos de ${brandId} ya cargados`);
       return modelsByBrand[cacheKey];
     }
 
@@ -282,7 +284,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     // Cargar modelos para maquinarias (con o sin filtro de subcategoría)
-    console.log(`🔍 Cargando modelos para marca ${brandId}${subcategoryId ? ` y subcategoría ${subcategoryId}` : ''}...`);
+    isDev && console.log(`🔍 Cargando modelos para marca ${brandId}${subcategoryId ? ` y subcategoría ${subcategoryId}` : ''}...`);
     const data = await getMaquinariasModels(brandId, subcategoryId) as Model[];
     
     // Guardar en estado y caché
@@ -347,7 +349,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // =====================================================
 
   const invalidateCache = useCallback((scope: 'all' | 'categories' | 'subcategories' | 'brands' | 'models' = 'all') => {
-    console.log(`🗑️ Invalidando caché: ${scope}`);
+    isDev && console.log(`🗑️ Invalidando caché: ${scope}`);
     
     switch (scope) {
       case 'categories':
@@ -377,7 +379,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const refreshCategories = useCallback(async () => {
-    console.log('🔄 Refrescando categorías...');
+    isDev && console.log('🔄 Refrescando categorías...');
     invalidateCache('categories');
     await loadCategories();
   }, [invalidateCache, loadCategories]);
@@ -387,7 +389,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // =====================================================
 
   useEffect(() => {
-    console.log('🎯 CategoryContext montado - iniciando carga automática');
+    isDev && console.log('🎯 CategoryContext montado - iniciando carga automática');
     loadCategories();
   }, []); // Sin dependencias para que solo se ejecute una vez
 

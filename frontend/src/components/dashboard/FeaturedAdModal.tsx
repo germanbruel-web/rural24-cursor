@@ -25,6 +25,7 @@ import {
   Info,
   Gift
 } from 'lucide-react';
+import { navigateTo } from '../../hooks/useNavigate';
 import { 
   getUserCredits, 
   getMonthlyAvailability,
@@ -351,13 +352,13 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               <p className="text-gray-600 mb-4">
                 Necesitás créditos disponibles para destacar tu aviso.
               </p>
-              <a 
-                href="#/checkout"
+              <button 
+                onClick={() => navigateTo('/checkout')}
                 className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-xl font-bold transition-colors"
               >
                 <Zap className="w-5 h-5" />
                 Comprar créditos
-              </a>
+              </button>
             </div>
           ) : step === 'placement' ? (
             /* Paso 1: Elegir placement */

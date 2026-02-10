@@ -7,6 +7,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDevMode } from '../contexts/DevModeContext';
 import { canAccessPage } from '../utils/rolePermissions';
+import { navigateTo } from '../hooks/useNavigate';
 import { Button } from './atoms/Button';
 import AuthModal from './auth/AuthModal';
 import { 
@@ -65,7 +66,7 @@ export const TopNav: React.FC<TopNavProps> = ({
       setIsLoggingOut(true);
       setShowUserMenu(false);
       await signOut();
-      window.location.hash = '#/';
+      navigateTo('/');
       setTimeout(() => window.location.reload(), 100);
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
@@ -115,7 +116,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               </button>
               
               <button
-                onClick={() => window.location.hash = '#/publicar'}
+                onClick={() => navigateTo('/publicar')}
                 className="px-3 py-1.5 text-sm font-medium text-[#16a135] hover:text-[#138a2e] hover:bg-green-50 rounded-md transition-colors flex items-center gap-1.5"
               >
                 <PlusCircle size={14} />
@@ -357,7 +358,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               </button>
               
               <button
-                onClick={() => { window.location.hash = '#/publicar'; onCloseMobileMenu?.(); }}
+                onClick={() => { navigateTo('/publicar'); onCloseMobileMenu?.(); }}
                 className="w-full text-left px-3 py-3 text-base font-semibold text-[#16a135] bg-green-50 hover:bg-green-100 rounded-lg flex items-center gap-3"
               >
                 <PlusCircle size={20} />

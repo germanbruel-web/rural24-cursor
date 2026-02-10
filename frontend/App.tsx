@@ -33,7 +33,7 @@ import { useAuth, CategoryProvider, ToastProvider } from "./src/contexts";
 // ============================================================
 // SERVICES
 // ============================================================
-import { smartSearch, getPremiumProducts, getPremiumAds, getActiveAds, getHomepageBanners } from "./src/services";
+import { smartSearch, getPremiumProducts, getHomepageBanners } from "./src/services";
 import { getSettingNumber } from "./src/services/v2/globalSettingsService";
 
 // ============================================================
@@ -41,6 +41,7 @@ import { getSettingNumber } from "./src/services/v2/globalSettingsService";
 // ============================================================
 import { extractIdFromUrl, canAccessPage } from "./src/utils";
 import { PROVINCES, ALL_CATEGORIES } from "./src/constants";
+import { navigateTo } from './src/hooks/useNavigate';
 
 // ============================================================
 // LAZY LOADED COMPONENTS (Code Splitting - Mejora LCP)
@@ -155,9 +156,6 @@ const AppContent: React.FC = () => {
   
   // ⚡ Wrapper para setCurrentPage que persiste en localStorage
   const navigateToPage = useCallback((page: Page) => {
-    console.log('🧭 Navegando a:', page);
-    console.log('👤 Usuario actual:', profile?.email, 'Rol:', profile?.role);
-    console.log('🔐 Puede acceder a categories-admin?', canAccessPage('categories-admin', profile?.role));
     setCurrentPage(page);
     
     // Guardar en localStorage para persistir al refrescar
@@ -223,8 +221,7 @@ const AppContent: React.FC = () => {
     return window.location.hash.startsWith('#/search');
   });
   const [activeFilters, setActiveFilters] = useState({});
-  const [premiumAds, setPremiumAds] = useState<Product[]>([]);
-  const [activeAds, setActiveAds] = useState<Product[]>([]);
+  // premiumAds y activeAds eliminados — no se renderizan en homepage
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [currentBanner, setCurrentBanner] = useState<Banner | null>(null);
   const [allBanners, setAllBanners] = useState<Banner[]>([]);
@@ -343,7 +340,7 @@ const AppContent: React.FC = () => {
       }
       // Routing para dashboard - redirigir a Mis Avisos
       else if (hash.startsWith('#/dashboard')) {
-        window.location.hash = '#/my-ads';
+        navigateTo('/my-ads');
         return;
       }
       // Si no hay hash, mantener la página actual (ya inicializada desde localStorage)
@@ -375,18 +372,8 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Cargar avisos premium y activos al montar
-  React.useEffect(() => {
-    const loadAds = async () => {
-      const [premium, active] = await Promise.all([
-        getPremiumAds(),
-        getActiveAds()
-      ]);
-      setPremiumAds(premium);
-      setActiveAds(active);
-    };
-    loadAds();
-  }, []);
+  // ❌ ELIMINADO: getPremiumAds() + getActiveAds() cargaban ~200+ filas
+  // que nunca se renderizan en homepage. Las búsquedas usan backend API directamente.
 
   // Cargar todos los banners para carousel en mobile
   React.useEffect(() => {
@@ -440,20 +427,19 @@ const AppContent: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Búsqueda inteligente con filtros avanzados
+  // Búsqueda inteligente con filtros avanzados (legacy client-side)
   const handleAdvancedSearch = useCallback(
-    (filters: SearchFilters) => {
-      console.log('🔍 Búsqueda iniciada con filtros:', filters);
+    async (filters: SearchFilters) => {
+      // Cargar productos si aún no están (lazy load)
+      if (products.length === 0) await refetch();
+      
       setSearchFilters(filters);
       const filtered = smartSearch(products, filters);
-      console.log('✅ Resultados encontrados:', filtered.length);
       setSearchResults(filtered);
-      setIsSearching(true); // Cambiar a vista de resultados
-      console.log('📄 isSearching activado');
-      // Scroll al top cuando se va a resultados
+      setIsSearching(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
-    [products]
+    [products, refetch]
   );
 
   // Búsqueda simple - Navegar a URL con query para que el backend resuelva
@@ -462,7 +448,7 @@ const AppContent: React.FC = () => {
       // Convertir query a slug para URL amigable
       const slug = query.trim().toLowerCase().replace(/\s+/g, '-');
       // Navegar a página de búsqueda con el query como parámetro
-      window.location.hash = `#/search?q=${encodeURIComponent(query.trim())}`;
+      navigateTo('/search', { q: query.trim() });
       // También activar estado de búsqueda para mostrar la página correcta
       setIsSearching(true);
       setSearchFilters({ query: query.trim() });
@@ -481,7 +467,7 @@ const AppContent: React.FC = () => {
 
   const filterOptions: FilterOptions = useMemo(() => getFilterOptions(), [getFilterOptions]);
 
-  // Obtener productos premium
+  // Obtener productos premium (solo usado en búsqueda)
   const premiumProducts = useMemo(() => getPremiumProducts(products), [products]);
 
   // Usar TODAS las categorías y provincias disponibles (no solo las de productos existentes)
@@ -492,7 +478,10 @@ const AppContent: React.FC = () => {
     [products]
   );
 
-  console.log('🎯 Estado actual - currentPage:', currentPage, 'isSearching:', isSearching);
+  // Estado actual de la app (solo en dev)
+  if (import.meta.env.DEV) {
+    console.log('🎯 Estado actual - currentPage:', currentPage, 'isSearching:', isSearching);
+  }
 
   // Determinar si debe usar Dashboard Layout
   const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'ads-management', 'banners', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo'].includes(currentPage);
@@ -518,7 +507,7 @@ const AppContent: React.FC = () => {
       // Redirigir a home si no tiene permisos
       setTimeout(() => {
         navigateToPage('home');
-        window.location.hash = '#/';
+        navigateTo('/');
       }, 0);
       
       return (
@@ -529,7 +518,7 @@ const AppContent: React.FC = () => {
             <button 
               onClick={() => {
                 navigateToPage('home');
-                window.location.hash = '#/';
+                navigateTo('/');
               }}
               className="px-4 py-2 bg-[#16a135] text-white rounded-lg hover:bg-[#0e7d25]"
             >
@@ -728,7 +717,7 @@ const AppContent: React.FC = () => {
             if (page === 'home') {
               handleBackToHome();
             } else if (page === 'how-it-works') {
-              window.location.hash = '#/how-it-works';
+              navigateTo('/how-it-works');
             }
           }}
           onSearch={handleSearch}
@@ -764,7 +753,7 @@ const AppContent: React.FC = () => {
           if (page === 'home') {
             handleBackToHome();
           } else if (page === 'how-it-works') {
-            window.location.hash = '#/how-it-works';
+            navigateTo('/how-it-works');
           }
         }}
         onSearch={handleSearch}
@@ -774,7 +763,7 @@ const AppContent: React.FC = () => {
         <AdDetailPage 
           adId={selectedAdId} 
           onBack={() => {
-            window.location.hash = '#/';
+            navigateTo('/');
           }}
           onSearch={handleAdvancedSearch}
         />
@@ -794,7 +783,7 @@ const AppContent: React.FC = () => {
             setSearchResults(filtered);
           }}
           onViewDetail={(adId) => {
-            window.location.hash = `#/ad/${adId}`;
+            navigateTo(`/ad/${adId}`);
           }}
         />
       ) : (
@@ -827,13 +816,13 @@ const AppContent: React.FC = () => {
               onAdClick={(adId) => {
                 setSelectedAdId(adId);
                 setCurrentPage('ad-detail');
-                window.location.hash = `#/ad/${adId}`;
+                navigateTo(`/ad/${adId}`);
               }}
               onCategoryClick={(categorySlug) => {
-                window.location.hash = `#/search?cat=${categorySlug}`;
+                navigateTo('/search', { cat: categorySlug });
               }}
               onSubcategoryClick={(catSlug, subSlug) => {
-                window.location.hash = `#/search?cat=${catSlug}&sub=${subSlug}`;
+                navigateTo('/search', { cat: catSlug, sub: subSlug });
               }}
               maxAdsPerCategory={homepageFeaturedLimit}
             />

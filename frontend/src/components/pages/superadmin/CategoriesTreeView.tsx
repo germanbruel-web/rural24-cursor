@@ -34,6 +34,7 @@ import {
 import { supabase } from '../../../services/supabaseClient';
 import { generateRealisticSpecs } from '../../../services/aiModelGenerator';
 import { generateCatalogJSON, downloadCatalogJSON, getCatalogStats } from '../../../services/catalogExportService';
+import { navigateTo } from '../../../hooks/useNavigate';
 
 interface TreeNode {
   id: string;
@@ -677,7 +678,7 @@ export const CategoriesTreeView: React.FC = () => {
               </p>
             </div>
             <button
-              onClick={() => window.location.hash = '#/my-ads'}
+              onClick={() => navigateTo('/my-ads')}
               className="px-6 py-3 bg-white shadow-md text-gray-700 rounded-xl hover:shadow-lg transition-all flex items-center gap-2 font-medium"
             >
               <ChevronRight className="w-5 h-5 rotate-180" />

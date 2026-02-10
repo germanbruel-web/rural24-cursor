@@ -12,6 +12,7 @@ import { isSuperAdmin as checkIsSuperAdmin } from '../../utils/rolePermissions';
 import { supabase } from '../../services/supabaseClient';
 import { QuickEditAdModal } from './QuickEditAdModal';
 import { FeaturedAdModal } from '../dashboard';
+import { navigateTo } from '../../hooks/useNavigate';
 
 /**
  * Extraer public_id de Cloudinary URL para borrado
@@ -260,7 +261,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           )}
         </div>
         <button
-          onClick={() => window.location.hash = '#/publicar-v2'}
+          onClick={() => navigateTo('/publicar-v2')}
           disabled={!isSuperAdmin && adLimit.current >= adLimit.limit}
           className="bg-gradient-to-r from-[#16a135] to-[#138a2c] hover:from-[#138a2c] hover:to-[#0e7d25] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
@@ -314,7 +315,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           </p>
           {filterStatus === 'all' && adLimit.current < adLimit.limit && (
             <button
-              onClick={() => window.location.hash = '#/publicar-v2'}
+              onClick={() => navigateTo('/publicar-v2')}
               className="px-6 py-3 bg-[#16a135] text-white rounded-xl hover:bg-[#0e7d25] transition-colors inline-flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />

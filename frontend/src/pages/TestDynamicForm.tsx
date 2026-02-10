@@ -7,6 +7,7 @@ import { DynamicForm } from '../components/DynamicForm';
 import type { DynamicAttribute } from '../services/catalogService';
 import { supabase } from '../services/supabaseClient';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { navigateTo } from '../hooks/useNavigate';
 
 export function TestDynamicForm() {
   const [attributes, setAttributes] = useState<DynamicAttribute[]>([]);
@@ -136,7 +137,7 @@ export function TestDynamicForm() {
       );
       
       if (confirmed) {
-        window.location.hash = `#/ad/${adData.id}`;
+        navigateTo(`/ad/${adData.id}`);
       }
       
     } catch (err) {

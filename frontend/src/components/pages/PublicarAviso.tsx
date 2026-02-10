@@ -44,6 +44,7 @@ import { SimpleImageUploader, UploadedImage } from '../SimpleImageUploader/Simpl
 import { validateTitle, validateDescription } from '../../utils/contentValidator';
 import type { ValidationResult } from '../../utils/contentValidator';
 import { DraftManager, updateDraftURL, parseDraftURL, type DraftState } from '../../utils/draftManager';
+import { navigateTo } from '../../hooks/useNavigate';
 
 // Design System Components
 import { Button } from '../../design-system/components/Button';
@@ -489,7 +490,7 @@ export default function PublicarAviso() {
       // Validar permisos: solo dueño o superadmin
       if (ad.user_id !== profile?.id && profile?.role !== 'superadmin') {
         notify.error('No tienes permiso para editar este aviso');
-        window.location.hash = '#/my-ads';
+        navigateTo('/my-ads');
         return;
       }
 
@@ -528,7 +529,7 @@ export default function PublicarAviso() {
     } catch (error: any) {
       console.error('Error cargando aviso:', error);
       notify.error('Error cargando aviso');
-      window.location.hash = '#/my-ads';
+      navigateTo('/my-ads');
     } finally {
       setLoading(false);
     }
@@ -895,7 +896,7 @@ export default function PublicarAviso() {
       
       // Redirigir al detalle usando el slug del aviso
       setTimeout(() => {
-        window.location.hash = `#/ad/${resultId}`;
+        navigateTo(`/ad/${resultId}`);
       }, 1000);
 
     } catch (error: any) {

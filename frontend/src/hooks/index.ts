@@ -20,3 +20,6 @@ export { useFooterConfig } from './useFooterConfig';
 export { useImageUpload } from './useImageUpload';
 export { useProductImage } from './useProductImage';
 export { OfflineBanner, useOnlineStatus } from './useOnlineStatus';
+
+// Navigation
+export { useNavigate, navigateTo, buildHashUrl } from './useNavigate';

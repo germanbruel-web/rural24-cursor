@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { handleOAuthCallback, createOAuthUserProfile } from '../../services/socialAuthService';
 import { useAuth } from '../../contexts/AuthContext';
+import { navigateTo } from '../../hooks/useNavigate';
 
 interface OAuthCallbackPageProps {
   onComplete?: () => void;
@@ -56,7 +57,7 @@ export default function OAuthCallbackPage({ onComplete, onError }: OAuthCallback
 
         // 4. Redirigir al home después de un breve delay
         setTimeout(() => {
-          window.location.hash = '#/';
+          navigateTo('/');
           onComplete?.();
         }, 1500);
 
@@ -110,7 +111,7 @@ export default function OAuthCallbackPage({ onComplete, onError }: OAuthCallback
               </p>
               <button
                 onClick={() => {
-                  window.location.hash = '#/';
+                  navigateTo('/');
                 }}
                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getAllPlans, formatPrice, type SubscriptionPlan } from '../../services/subscriptionService';
+import { navigateTo } from '../../hooks/useNavigate';
 
 // ============================================================================
 // TIPOS
@@ -245,7 +246,7 @@ export const CheckoutPage: React.FC = () => {
 
   // Proceder al pago
   const handleCheckout = () => {
-    window.location.hash = '#/checkout/payment';
+    navigateTo('/checkout/payment');
   };
 
   return (

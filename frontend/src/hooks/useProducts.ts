@@ -1,5 +1,7 @@
 // src/hooks/useProducts.ts
-import { useEffect, useState, useCallback } from "react";
+// ⚡ OPTIMIZADO: No carga al montar — solo cuando se llama refetch()
+// Elimina ~200 filas de Supabase en cada visita a homepage
+import { useState, useCallback, useRef } from "react";
 import { getProducts } from "../services/getProducts";
 import type { FilterOptions } from "../../types";
 import { PROVINCES } from "../constants/locations";
@@ -7,28 +9,28 @@ import { ALL_CATEGORIES, ALL_SUBCATEGORIES } from "../constants/categories";
 
 export function useProducts() {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const loaded = useRef(false);
 
   const loadProducts = useCallback(async () => {
+    // Si ya se cargaron, no volver a cargar
+    if (loaded.current) return;
+    
     try {
       setLoading(true);
       setError(null);
       const data = await getProducts();
-      console.log('✅ Products loaded:', data.length);
       setProducts(data);
+      loaded.current = true;
     } catch (err) {
       console.error('❌ Error loading products:', err);
       setError(err instanceof Error ? err : new Error('Unknown error'));
-      setProducts([]); // Establecer array vacío en caso de error
+      setProducts([]);
     } finally {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
 
   const getFilterOptions = useCallback((): FilterOptions => {
     // Usar todas las categorías y provincias disponibles, no solo las que aparecen en productos

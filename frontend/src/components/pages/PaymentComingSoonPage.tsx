@@ -15,6 +15,7 @@ import {
   Mail,
   Bell
 } from 'lucide-react';
+import { navigateTo } from '../../hooks/useNavigate';
 
 export const PaymentComingSoonPage: React.FC = () => {
   const [email, setEmail] = React.useState('');
@@ -167,7 +168,7 @@ export const PaymentComingSoonPage: React.FC = () => {
               Podés empezar a usar Rural24 con el <strong>plan gratuito</strong> y reclamar <strong>3 créditos gratis</strong> para destacar tus avisos desde "Mis Avisos" en tu dashboard.
             </p>
             <button
-              onClick={() => window.location.hash = '#/dashboard'}
+              onClick={() => navigateTo('/dashboard')}
               className="mt-4 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
             >
               Ir al Dashboard

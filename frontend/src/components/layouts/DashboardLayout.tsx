@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMenuItems } from '../../utils/rolePermissions';
+import { navigateTo } from '../../hooks/useNavigate';
 // import { RLSDebugBanner } from '../common/RLSDebugBanner'; // Comentado - RLS ya está configurado correctamente
 import {
   LayoutDashboard,
@@ -208,7 +209,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <button
             onClick={async () => {
               await signOut();
-              window.location.hash = '#/';
+              navigateTo('/');
               setTimeout(() => window.location.reload(), 100);
             }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
@@ -293,7 +294,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               onClick={async () => {
                 setMobileMenuOpen(false);
                 await signOut();
-                window.location.hash = '#/';
+                navigateTo('/');
                 setTimeout(() => window.location.reload(), 100);
               }}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"

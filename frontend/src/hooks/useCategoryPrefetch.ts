@@ -48,7 +48,7 @@ export function useCategoryPrefetch(config: PrefetchConfig = {}) {
       setProgress(0);
 
       try {
-        console.log('🚀 Iniciando pre-fetch inteligente...');
+        import.meta.env.DEV && console.log('🚀 Iniciando pre-fetch inteligente...');
 
         // Paso 1: Asegurar que categorías están cargadas (10%)
         if (categories.length === 0) {
@@ -108,7 +108,7 @@ export function useCategoryPrefetch(config: PrefetchConfig = {}) {
           setProgress(100);
         }
 
-        console.log('✅ Pre-fetch completado:', preloadedItems);
+        import.meta.env.DEV && console.log('✅ Pre-fetch completado:', preloadedItems);
 
       } catch (error) {
         console.error('❌ Error en pre-fetch:', error);

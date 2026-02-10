@@ -1,5 +1,6 @@
 import React from 'react';
 import { HelpCircle, FileText, DollarSign, Tag, Users, Camera, Ban, Mail, Shield } from 'lucide-react';
+import { navigateTo } from '../../hooks/useNavigate';
 
 interface FAQItem {
   icon: React.ReactNode;
@@ -127,12 +128,12 @@ export const HowItWorksPage: React.FC = () => {
           <p className="text-xl text-green-50 mb-8">
             Publicá tu primer aviso gratis en menos de 3 minutos
           </p>
-          <a 
-            href="#/"
+          <button 
+            onClick={() => navigateTo('/')}
             className="inline-block bg-white hover:bg-gray-100 text-[#16a135] px-10 py-4 rounded-lg font-bold text-lg transition-all hover:scale-105 shadow-lg"
           >
             🚀 Publicar ahora
-          </a>
+          </button>
         </div>
       </section>
     </div>
