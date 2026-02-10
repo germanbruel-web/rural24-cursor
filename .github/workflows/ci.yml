@@ -1,0 +1,79 @@
+name: Rural24 CI
+
+on:
+  push:
+    branches: [main, rural24-deploy]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ============================================
+  # QUALITY GATE — runs on every push/PR
+  # ============================================
+  quality:
+    name: Lint, Type-check & Build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Backend checks
+      - name: Backend type-check
+        working-directory: backend
+        run: npx tsc --noEmit
+
+      - name: Backend build
+        working-directory: backend
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+          SUPABASE_SERVICE_ROLE_KEY: placeholder
+          FRONTEND_URL: https://rural24.com
+        run: npm run build
+
+      # Frontend checks  
+      - name: Frontend build
+        working-directory: frontend
+        env:
+          VITE_API_URL: https://api.rural24.com
+          VITE_SUPABASE_URL: https://placeholder.supabase.co
+          VITE_SUPABASE_ANON_KEY: placeholder
+        run: npm run build
+
+  # ============================================
+  # SECURITY — check for leaked secrets
+  # ============================================
+  security:
+    name: Security scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "Checking for potential secret leaks..."
+          # Check for common secret patterns (Supabase service role keys start with eyJ)
+          if grep -r "eyJ" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.json" \
+            --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=dist .; then
+            echo "::warning::Potential hardcoded JWT/key found. Review the matches above."
+          fi
+          # Check for hardcoded localhost in production files (excluding configs and examples)
+          LOCALHOST_COUNT=$(grep -r "localhost" --include="*.ts" --include="*.tsx" \
+            --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=dist \
+            --exclude="*.config.*" --exclude="*.example" -l . | wc -l)
+          echo "Files with localhost references: $LOCALHOST_COUNT"

@@ -56,40 +56,46 @@ type OptionalAuthHandler = (user: AuthUser | null) => Promise<NextResponse>;
 // ============================================================
 
 async function extractUser(request: NextRequest): Promise<AuthUser | null> {
-  const authHeader = request.headers.get('authorization');
+  try {
+    const authHeader = request.headers.get('authorization');
 
-  if (!authHeader?.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
+      return null;
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (!token) return null;
+
+    const supabase = getSupabaseClient();
+
+    // Verificar token con Supabase Auth
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return null;
+    }
+
+    // Obtener perfil del usuario con su rol
+    const { data: profile } = await supabase
+      .from('users')
+      .select('id, email, role, full_name')
+      .eq('id', user.id)
+      .single<{ id: string; email: string; role: string; full_name: string | null }>();
+
+    if (!profile) {
+      return null;
+    }
+
+    return {
+      id: profile.id,
+      email: profile.email,
+      role: normalizeRole(profile.role),
+      full_name: profile.full_name,
+    };
+  } catch (error) {
+    // Network errors, Supabase downtime, etc. — fail closed (no auth)
+    console.error('[auth-guard] Error extracting user:', error instanceof Error ? error.message : error);
     return null;
   }
-
-  const token = authHeader.split(' ')[1];
-  if (!token) return null;
-
-  const supabase = getSupabaseClient();
-
-  // Verificar token con Supabase Auth
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-  if (authError || !user) {
-    return null;
-  }
-
-  // Obtener perfil del usuario con su rol
-  const { data: profile } = await supabase
-    .from('users')
-    .select('id, email, role, full_name')
-    .eq('id', user.id)
-    .single<{ id: string; email: string; role: string; full_name: string | null }>();
-
-  if (!profile) {
-    return null;
-  }
-
-  return {
-    id: profile.id,
-    email: profile.email,
-    role: normalizeRole(profile.role),
-    full_name: profile.full_name,
-  };
 }
 
 /**

@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
   
   // Backend API URL configurable (default: 3001 para evitar conflictos)
   const apiUrl = env.VITE_API_URL || 'http://localhost:3001';
+  const isProduction = mode === 'production';
 
   return {
     server: {
@@ -29,6 +30,25 @@ export default defineConfig(({ mode }) => {
       },
     },
     plugins: [react()],
+    build: {
+      // Optimización de producción
+      sourcemap: isProduction ? 'hidden' : true,
+      // Chunk splitting strategy para mejor caching
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Vendor chunk — cambia poco, se cachea agresivamente
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-supabase': ['@supabase/supabase-js'],
+            'vendor-ui': ['lucide-react', '@heroicons/react', 'clsx', 'tailwind-merge'],
+          },
+        },
+      },
+      // Target modern browsers
+      target: 'es2020',
+      // Reportar tamaño de chunks
+      chunkSizeWarningLimit: 500,
+    },
     define: {
       // Exponer Supabase
       'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),

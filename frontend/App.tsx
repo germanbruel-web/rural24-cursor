@@ -77,11 +77,11 @@ const ExampleMigratedPage = lazy(() => import("./src/components/pages/ExampleMig
 // Empresa Components (Servicios Rurales B2B)
 const CompanyProfilePage = lazy(() => import("./src/components/empresa/CompanyProfilePage").then(m => ({ default: m.CompanyProfilePage })));
 
-// Dev/Test Pages (solo desarrollo)
-const TestDynamicForm = lazy(() => import("./src/pages/TestDynamicForm").then(m => ({ default: m.TestDynamicForm })));
-const APITestPage = lazy(() => import("./src/pages/APITest"));
-const DiagnosticsPage = lazy(() => import("./src/pages/DiagnosticsPage").then(m => ({ default: m.DiagnosticsPage })));
-const DesignSystemShowcaseSimple = lazy(() => import("./src/components/DesignSystemShowcaseSimple").then(m => ({ default: m.DesignSystemShowcaseSimple })));
+// Dev/Test Pages (solo desarrollo - bloqueadas en producción)
+const TestDynamicForm = import.meta.env.DEV ? lazy(() => import("./src/pages/TestDynamicForm").then(m => ({ default: m.TestDynamicForm }))) : null;
+const APITestPage = import.meta.env.DEV ? lazy(() => import("./src/pages/APITest")) : null;
+const DiagnosticsPage = import.meta.env.DEV ? lazy(() => import("./src/pages/DiagnosticsPage").then(m => ({ default: m.DiagnosticsPage }))) : null;
+const DesignSystemShowcaseSimple = import.meta.env.DEV ? lazy(() => import("./src/components/DesignSystemShowcaseSimple").then(m => ({ default: m.DesignSystemShowcaseSimple }))) : null;
 
 // ============================================================
 // LOADING FALLBACK COMPONENT
@@ -583,8 +583,12 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Página de Design System Showcase
+  // Página de Design System Showcase (solo dev)
   if (currentPage === 'design-showcase') {
+    if (!import.meta.env.DEV || !DesignSystemShowcaseSimple) {
+      navigateToPage('home');
+      return null;
+    }
     return (
       <div className="flex flex-col min-h-screen bg-gray-50">
         <AppHeader 
@@ -687,8 +691,12 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Página de prueba: Formulario Dinámico
+  // Página de prueba: Formulario Dinámico (solo dev)
   if (currentPage === 'test-form') {
+    if (!import.meta.env.DEV || !TestDynamicForm) {
+      navigateToPage('home');
+      return null;
+    }
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <AppHeader 
@@ -734,13 +742,21 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Página de prueba de API
+  // Página de prueba de API (solo dev)
   if (currentPage === 'api-test') {
+    if (!import.meta.env.DEV || !APITestPage) {
+      navigateToPage('home');
+      return null;
+    }
     return <Suspense fallback={<LoadingFallback />}><APITestPage /></Suspense>;
   }
 
-  // Página de diagnósticos de imágenes
+  // Página de diagnósticos de imágenes (solo dev)
   if (currentPage === 'diagnostics') {
+    if (!import.meta.env.DEV || !DiagnosticsPage) {
+      navigateToPage('home');
+      return null;
+    }
     return <Suspense fallback={<LoadingFallback />}><DiagnosticsPage /></Suspense>;
   }
 

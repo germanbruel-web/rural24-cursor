@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
 interface GenerateContentRequest {
   category_id: string;
@@ -25,43 +26,43 @@ interface GenerateContentResponse {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const body: GenerateContentRequest = await request.json();
-    
-    const { 
-      category_name, 
-      subcategory_name, 
-      attributes, 
-      province 
-    } = body;
+  return withAuth(request, async (_user: AuthUser) => {
+    try {
+      const body: GenerateContentRequest = await request.json();
+      
+      const { 
+        category_name, 
+        subcategory_name, 
+        attributes, 
+        province 
+      } = body;
 
-    // Debug only
-    if (process.env.NODE_ENV !== 'production') console.log('[generate-content] Generando contenido para:', {
-      category: category_name,
-      subcategory: subcategory_name,
-    });
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[generate-content] Generando contenido para:', {
+          category: category_name,
+          subcategory: subcategory_name,
+        });
+      }
 
-    // ============================================
-    // V1: GENERACIÓN CON PLANTILLAS
-    // ============================================
-    
-    const titles = generateTitles(category_name, subcategory_name, attributes);
-    const description = generateDescription(category_name, subcategory_name, attributes, province);
+      const titles = generateTitles(category_name, subcategory_name, attributes);
+      const description = generateDescription(category_name, subcategory_name, attributes, province);
 
-    const response: GenerateContentResponse = {
-      titles,
-      description
-    };
+      const response: GenerateContentResponse = {
+        titles,
+        description
+      };
 
-    return NextResponse.json(response);
+      return NextResponse.json(response);
 
-  } catch (error: any) {
-    console.error('[generate-content] Error:', error);
-    return NextResponse.json(
-      { error: 'Error generando contenido', details: error.message },
-      { status: 500 }
-    );
-  }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[generate-content] Error:', message);
+      return NextResponse.json(
+        { error: 'Error generando contenido' },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 // ============================================

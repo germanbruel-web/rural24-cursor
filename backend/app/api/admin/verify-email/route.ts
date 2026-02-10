@@ -13,7 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/infrastructure/supabase/client';
-import { verifyEmailAsAdmin } from '../services/adminAuthService';
+import { verifyEmailAsAdmin } from '@/app/services/adminAuthService';
 
 const supabaseAdmin = getSupabaseClient();
 
