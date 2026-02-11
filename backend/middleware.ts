@@ -1,100 +1,40 @@
 /**
- * Next.js Global Middleware
- * ==========================
- * Aplica seguridad y rate limiting a TODAS las requests
+ * Next.js Global Middleware - REFACTORED
+ * =======================================
+ * Usa abstracciones desacopladas para fácil swap Memory ↔ Redis
  * 
  * Funciones:
- * 1. Security Headers (X-Frame-Options, CSP, etc.)
- * 2. Rate Limiting global por IP (120 req/min)
+ * 1. Rate Limiting (via adapter: memory o Redis)
+ * 2. Security Headers (X-Frame-Options, CSP, etc.)
  * 3. CORS preflight handling
  * 4. Request logging
  */
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { initRateLimiter, getRateLimiter } from '@/infrastructure/rate-limiter-adapter';
 
-// Rate Limiter In-Memory (simple sliding window)
-interface RateLimitEntry {
-  requests: number[];
-  blockedUntil?: number;
-}
-
-const rateLimitStore = new Map<string, RateLimitEntry>();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 min
-const RATE_LIMIT_MAX_REQUESTS = 120; // 120 req/min
-const BLOCK_DURATION = 15 * 60 * 1000; // 15 min block
-
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetAt: number; reason?: string } {
-  const now = Date.now();
-  let entry = rateLimitStore.get(ip);
-
-  // Si está bloqueado, verificar si ya pasó el tiempo
-  if (entry?.blockedUntil) {
-    if (now < entry.blockedUntil) {
-      return {
-        allowed: false,
-        remaining: 0,
-        resetAt: entry.blockedUntil,
-        reason: `Bloqueado hasta ${new Date(entry.blockedUntil).toLocaleTimeString()}`
-      };
-    }
-    // Desbloquear
-    entry = { requests: [] };
-    rateLimitStore.set(ip, entry);
-  }
-
-  // Inicializar si no existe
-  if (!entry) {
-    entry = { requests: [] };
-    rateLimitStore.set(ip, entry);
-  }
-
-  // Limpiar requests fuera de la ventana
-  entry.requests = entry.requests.filter(timestamp => (now - timestamp) < RATE_LIMIT_WINDOW);
-
-  // Verificar límite
-  if (entry.requests.length >= RATE_LIMIT_MAX_REQUESTS) {
-    entry.blockedUntil = now + BLOCK_DURATION;
-    rateLimitStore.set(ip, entry);
-    return {
-      allowed: false,
-      remaining: 0,
-      resetAt: entry.blockedUntil,
-      reason: `Límite de ${RATE_LIMIT_MAX_REQUESTS} req/min excedido. Bloqueado por 15 minutos`
-    };
-  }
-
-  // Registrar request
-  entry.requests.push(now);
-  rateLimitStore.set(ip, entry);
-
-  return {
-    allowed: true,
-    remaining: RATE_LIMIT_MAX_REQUESTS - entry.requests.length,
-    resetAt: now + RATE_LIMIT_WINDOW
-  };
-}
-
-// Cleanup cada 10 minutos
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, entry] of rateLimitStore.entries()) {
-    if (entry.requests.length === 0 && (!entry.blockedUntil || now > entry.blockedUntil)) {
-      rateLimitStore.delete(ip);
-    }
-  }
-}, 10 * 60 * 1000);
+// Inicializar Rate Limiter al startup (singleton)
+// Auto-detecta Redis si process.env.REDIS_ENABLED='true'
+initRateLimiter({
+  windowMs: 60 * 1000, // 1 min
+  maxRequests: 120, // 120 req/min
+  blockDuration: 15 * 60 * 1000, // 15 min block
+  // redisClient: redisClient, // Descomentar cuando tengas Redis
+});
 
 /**
  * Middleware ejecutado en TODAS las requests
  */
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const ip = getClientIP(request);
 
   // ===========================================
-  // 1. RATE LIMITING GLOBAL
+  // 1. RATE LIMITING GLOBAL (via adapter)
   // ===========================================
+  
+  const rateLimiter = getRateLimiter();
   
   // Excluir health check y paths públicos de rate limiting
   const shouldRateLimit = 
@@ -103,7 +43,7 @@ export function middleware(request: NextRequest) {
     !pathname.includes('/api/config/');
 
   if (shouldRateLimit) {
-    const limitCheck = checkRateLimit(ip);
+    const limitCheck = await rateLimiter.check(ip);
     
     if (!limitCheck.allowed) {
       console.warn(`[RATE LIMIT] IP ${ip} blocked on ${pathname}`);
@@ -118,7 +58,7 @@ export function middleware(request: NextRequest) {
           status: 429,
           headers: {
             'Retry-After': String(Math.ceil((limitCheck.resetAt - Date.now()) / 1000)),
-            'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
+            'X-RateLimit-Limit': '120',
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': String(limitCheck.resetAt),
           },
