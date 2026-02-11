@@ -222,50 +222,36 @@ export const SubscriptionPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Pricing Toggle */}
+      {/* Aviso de Lanzamiento */}
       {!isPremium && (
-        <div className="flex justify-center">
-          <div className="bg-gray-100 rounded-lg p-1 inline-flex">
-            <button
-              onClick={() => setSelectedPeriod('monthly')}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                selectedPeriod === 'monthly'
-                  ? 'bg-white text-gray-900 shadow'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Mensual
-            </button>
-            <button
-              onClick={() => setSelectedPeriod('yearly')}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors relative ${
-                selectedPeriod === 'yearly'
-                  ? 'bg-white text-gray-900 shadow'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Anual
-              <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                -17%
-              </span>
-            </button>
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">🚀 Etapa de Lanzamiento</h3>
+            <p className="text-gray-700 text-lg mb-2">
+              Durante esta etapa, <strong>todos los usuarios tienen acceso gratuito</strong>.
+            </p>
+            <p className="text-gray-600">
+              Los planes Premium con funcionalidades exclusivas estarán disponibles próximamente.
+            </p>
           </div>
         </div>
       )}
 
-      {/* Pricing Cards */}
+      {/* Pricing Cards - Temporalmente deshabilitados */}
       {!isPremium && (
         <div className="grid md:grid-cols-2 gap-6">
-          {availablePlans.map((plan) => (
+          {availablePlans.map((plan) => {
+            const isComingSoon = true; // Todos los planes premium están deshabilitados
+            return (
             <div
               key={plan.id}
-              className={`bg-white rounded-lg shadow-lg border-2 overflow-hidden transition-transform hover:scale-105 ${
+              className={`bg-white rounded-lg shadow-lg border-2 overflow-hidden opacity-50 cursor-not-allowed ${
                 plan.popular ? 'border-[#16a135]' : 'border-gray-200'
               }`}
             >
               {plan.popular && (
-                <div className="bg-gradient-to-r from-[#16a135] to-[#0e7d25] text-white text-center py-2 font-bold text-sm">
-                  ⭐ MÁS POPULAR
+                <div className="bg-gradient-to-r from-gray-400 to-gray-500 text-white text-center py-2 font-bold text-sm">
+                  🔒 PRÓXIMAMENTE
                 </div>
               )}
 
@@ -286,18 +272,13 @@ export const SubscriptionPanel: React.FC = () => {
 
                 <div className="mb-6">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold text-gray-900">
-                      ${plan.price.toLocaleString()}
-                    </span>
-                    <span className="text-gray-600">
-                      /{plan.period === 'monthly' ? 'mes' : 'año'}
+                    <span className="text-2xl font-bold text-gray-400">
+                      Próximamente
                     </span>
                   </div>
-                  {plan.period === 'yearly' && (
-                    <p className="text-sm text-green-600 mt-1">
-                      Ahorrás $9998 al año
-                    </p>
-                  )}
+                  <p className="text-sm text-gray-400 mt-1">
+                    Precio por confirmar
+                  </p>
                 </div>
 
                 <ul className="space-y-3 mb-6">
@@ -316,29 +297,14 @@ export const SubscriptionPanel: React.FC = () => {
                 </ul>
 
                 <button
-                  onClick={() => handleSubscribe(plan.id)}
-                  disabled={processing}
-                  className={`w-full py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 ${
-                    plan.popular
-                      ? 'bg-[#16a135] text-white hover:bg-[#0e7d25]'
-                      : 'bg-gray-900 text-white hover:bg-gray-800'
-                  } disabled:opacity-50`}
+                  disabled={true}
+                  className="w-full py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 bg-gray-300 text-gray-500 cursor-not-allowed"
                 >
-                  {processing ? (
-                    <>
-                      <RefreshCw className="w-5 h-5 animate-spin" />
-                      Procesando...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-5 h-5" />
-                      Elegir plan
-                    </>
-                  )}
+                  🔒 Próximamente
                 </button>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
 

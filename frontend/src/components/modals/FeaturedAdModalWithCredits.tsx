@@ -5,13 +5,16 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { X, Sparkles, Clock, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Sparkles, Clock, AlertCircle, Loader2, CheckCircle2, ShoppingCart, Gift, Calendar } from 'lucide-react';
 import {
   activateFeaturedWithCredits,
   getCreditsConfig,
-  getUserCredits
+  getUserCredits,
+  getDaysRemainingInBillingPeriod
 } from '../../services/creditsService';
 import { supabase } from '../../services/supabaseClient';
+import BuyCreditsModal from './BuyCreditsModal';
+import RedeemCouponModal from './RedeemCouponModal';
 
 interface Props {
   isOpen: boolean;
@@ -36,6 +39,11 @@ export const FeaturedAdModalWithCredits: React.FC<Props> = ({
   const [user, setUser] = useState<any>(null);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Estados para modales adicionales
+  const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
+  const [showRedeemCouponModal, setShowRedeemCouponModal] = useState(false);
+  const [daysRemainingInPeriod, setDaysRemainingInPeriod] = useState<number>(30);
 
   useEffect(() => {
     if (isOpen) {
@@ -56,13 +64,15 @@ export const FeaturedAdModalWithCredits: React.FC<Props> = ({
 
     setUser(authUser);
 
-    const [configData, creditsData] = await Promise.all([
+    const [configData, creditsData, daysRemaining] = await Promise.all([
       getCreditsConfig(),
-      getUserCredits(authUser.id)
+      getUserCredits(authUser.id),
+      getDaysRemainingInBillingPeriod(authUser.id)
     ]);
 
     setConfig(configData);
     setCredits(creditsData);
+    setDaysRemainingInPeriod(daysRemaining);
     setLoading(false);
   };
 
@@ -74,7 +84,18 @@ export const FeaturedAdModalWithCredits: React.FC<Props> = ({
     return found || { credits_needed: 1, label: '7 días', duration_days: 7 };
   };
 
+  // Filtrar duraciones según días restantes en el periodo
+  const getAvailableDurations = () => {
+    if (!config || !config.featured_durations) return [];
+    
+    // Filtrar solo las duraciones que caben en el periodo restante
+    return config.featured_durations.filter(
+      (d: any) => d.duration_days <= daysRemainingInPeriod
+    );
+  };
+
   const durationConfig = getCurrentDurationConfig();
+  const availableDurations = getAvailableDurations();
   const canAfford = credits?.balance >= (durationConfig?.credits_needed || 0);
 
   const handleActivate = async () => {
@@ -145,6 +166,60 @@ export const FeaturedAdModalWithCredits: React.FC<Props> = ({
             </div>
 
             {/* ============================================
+                BALANCE Y PERIODO
+                ============================================ */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-blue-200">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-gray-600">Tus créditos:</span>
+                <span className="text-2xl font-black text-blue-600">
+                  {credits?.balance || 0}
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 mb-4">
+                <Calendar className="w-4 h-4" />
+                <span>
+                  Tu periodo termina en <strong className="text-amber-700">{daysRemainingInPeriod} días</strong>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setShowBuyCreditsModal(true)}
+                  className="flex items-center justify-center gap-2 py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all text-xs sm:text-sm"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Comprar
+                </button>
+                
+                <button
+                  onClick={() => setShowRedeemCouponModal(true)}
+                  className="flex items-center justify-center gap-2 py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-all text-xs sm:text-sm"
+                >
+                  <Gift className="w-4 h-4" />
+                  Canjear
+                </button>
+              </div>
+            </div>
+
+            {/* ============================================
+                AVISO SI HAY DURACIONES FILTRADAS
+                ============================================ */}
+            {availableDurations.length < (config?.featured_durations?.length || 0) && (
+              <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-amber-700 text-sm">
+                    Opciones limitadas por tu periodo
+                  </p>
+                  <p className="text-xs text-amber-600 mt-1">
+                    Solo podés destacar por hasta {daysRemainingInPeriod} días. Las opciones más largas estarán disponibles cuando se renueve tu periodo.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ============================================
                 SELECTOR DE DURACIÓN
                 ============================================ */}
             <div>
@@ -153,7 +228,7 @@ export const FeaturedAdModalWithCredits: React.FC<Props> = ({
               </h3>
 
               <div className="space-y-2 sm:space-y-3">
-                {config?.featured_durations?.map((duration: any) => {
+                {availableDurations.map((duration: any) => {
                   const isSelected = selectedDuration === duration.duration_days;
                   const creditNeeded = duration.credits_needed;
                   const price = config.credit_base_price * creditNeeded;
@@ -302,6 +377,27 @@ export const FeaturedAdModalWithCredits: React.FC<Props> = ({
           </div>
         )}
       </div>
+
+      {/* ============================================
+          MODALES ADICIONALES
+          ============================================ */}
+      <BuyCreditsModal
+        isOpen={showBuyCreditsModal}
+        onClose={() => setShowBuyCreditsModal(false)}
+        onSuccess={() => {
+          setShowBuyCreditsModal(false);
+          loadData(); // Recargar datos para actualizar el balance
+        }}
+      />
+
+      <RedeemCouponModal
+        isOpen={showRedeemCouponModal}
+        onClose={() => setShowRedeemCouponModal(false)}
+        onSuccess={(creditsGranted, newBalance) => {
+          setShowRedeemCouponModal(false);
+          loadData(); // Recargar datos para actualizar el balance
+        }}
+      />
     </div>
   );
 };

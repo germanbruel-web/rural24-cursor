@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSentContactsCount, getMyReceivedContactsCount } from '../../services/contactService';
 import { navigateTo } from '../../hooks/useNavigate';
+import { UserCreditsPanel } from './UserCreditsPanel';
 import { 
   Eye, 
   MessageSquare, 
@@ -281,6 +282,9 @@ export const DashboardPanel: React.FC = () => {
           color="yellow"
         />
       </div>
+
+      {/* Sistema de Créditos */}
+      {profile?.id && <UserCreditsPanel userId={profile.id} />}
 
       {/* Quick Actions for FREE users */}
       {stats.totalMessages > 0 && (

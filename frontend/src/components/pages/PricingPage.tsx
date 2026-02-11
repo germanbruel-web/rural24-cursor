@@ -118,18 +118,33 @@ export const PricingPage: React.FC = () => {
 
       {/* Pricing Cards */}
       <div className="max-w-[1400px] mx-auto px-4 py-12">
+        {/* Aviso de Lanzamiento */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-8 text-center">
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">🚀 Etapa de Lanzamiento</h3>
+          <p className="text-gray-700 text-lg">
+            Durante esta etapa, <strong>todos los usuarios tienen acceso gratuito al plan Starter</strong>.
+          </p>
+          <p className="text-gray-600 mt-2">
+            Los planes Premium estarán disponibles próximamente con funcionalidades exclusivas.
+          </p>
+        </div>
+
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan) => {
             const colors = getPlanColors(plan);
             const isFeatured = (plan as any).is_featured || plan.name === 'pro';
             const badgeText = (plan as any).badge_text || (plan.name === 'pro' ? 'Más Popular' : plan.name === 'empresa' ? 'Premium' : '');
             const features = Array.isArray(plan.features) ? plan.features : [];
+            const isStarter = plan.name === 'free' || plan.name === 'starter';
+            const isComingSoon = !isStarter;
 
             return (
               <div
                 key={plan.id}
-                className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all hover:shadow-2xl hover:scale-105 ${
-                  isFeatured ? 'ring-4 ring-green-500 ring-opacity-50' : ''
+                className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all ${
+                  isComingSoon ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-2xl hover:scale-105'
+                } ${
+                  isFeatured && !isComingSoon ? 'ring-4 ring-green-500 ring-opacity-50' : ''
                 }`}
               >
                 {/* Badge */}
@@ -152,16 +167,29 @@ export const PricingPage: React.FC = () => {
                   <p className="text-gray-600 text-sm mb-4">{plan.description || ''}</p>
 
                   {/* Price */}
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black text-gray-900">
-                        {plan.price_monthly === 0 ? 'Gratis' : formatPrice(plan.price_monthly)}
-                      </span>
+                  {isStarter ? (
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-black text-green-600">
+                          Gratis
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Durante el lanzamiento
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {plan.price_monthly === 0 ? 'Para siempre' : 'por mes'}
-                    </p>
-                  </div>
+                  ) : (
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold text-gray-400">
+                          Próximamente
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Precio por confirmar
+                      </p>
+                    </div>
+                  )}
 
                   {/* Key Metrics */}
                   <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
@@ -194,14 +222,17 @@ export const PricingPage: React.FC = () => {
 
                   {/* CTA Button */}
                   <button
-                    onClick={() => handleSelectPlan(plan.name)}
+                    onClick={() => !isComingSoon && handleSelectPlan(plan.name)}
+                    disabled={isComingSoon}
                     className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
-                      isFeatured
+                      isComingSoon
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        : isFeatured
                         ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
                     }`}
                   >
-                    {getCtaText(plan)}
+                    {isComingSoon ? '🔒 Próximamente' : getCtaText(plan)}
                   </button>
                 </div>
               </div>

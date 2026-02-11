@@ -384,3 +384,212 @@ export async function getMembershipPlans() {
     return [];
   }
 }
+
+// ============================================
+// PERIODO DE FACTURACIÓN
+// ============================================
+
+/**
+ * Calcular días restantes en el periodo de facturación del usuario
+ * El periodo es de 30 días desde la última recarga mensual o el registro
+ */
+export async function getDaysRemainingInBillingPeriod(userId: string): Promise<number> {
+  try {
+    // Obtener créditos del usuario para verificar last_monthly_reset
+    const credits = await getUserCredits(userId);
+    
+    if (!credits) {
+      // Si no tiene registro, asumir que tiene 30 días
+      return 30;
+    }
+
+    // Determinar la fecha de inicio del periodo
+    let periodStartDate: Date;
+    
+    if (credits.last_monthly_reset) {
+      periodStartDate = new Date(credits.last_monthly_reset);
+    } else {
+      // Si nunca tuvo reset, buscar fecha de registro del usuario
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('created_at')
+        .eq('id', userId)
+        .single();
+
+      if (error || !userData) {
+        console.error('Error obteniendo fecha de usuario:', error);
+        return 30; // Default a 30 días
+      }
+
+      periodStartDate = new Date(userData.created_at);
+    }
+
+    // Calcular fecha de fin del periodo (30 días después del inicio)
+    const periodEndDate = new Date(periodStartDate);
+    periodEndDate.setDate(periodEndDate.getDate() + 30);
+
+    // Calcular días restantes
+    const now = new Date();
+    const daysRemaining = Math.ceil((periodEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Retornar al menos 1 día si el periodo ya expiró (será renovado pronto)
+    return Math.max(1, daysRemaining);
+  } catch (error) {
+    console.error('Error en getDaysRemainingInBillingPeriod:', error);
+    return 30; // Default en caso de error
+  }
+}
+
+// ============================================
+// CUPONES
+// ============================================
+
+export interface CouponValidation {
+  valid: boolean;
+  credits?: number;
+  description?: string;
+  error?: string;
+}
+
+/**
+ * Validar un cupón antes de canjearlo
+ * @param code - Código del cupón (ej: WELCOME2026, PROMO50)
+ */
+export async function validateCoupon(code: string): Promise<CouponValidation> {
+  try {
+    // Por ahora, validación básica de cupones hardcodeados
+    // En el futuro esto consultaría una tabla coupon_codes
+    const upperCode = code.toUpperCase().trim();
+
+    // Cupones predefinidos
+    const knownCoupons: { [key: string]: { credits: number; description: string } } = {
+      'WELCOME2026': { credits: 3, description: 'Bienvenida - 3 créditos gratis' },
+      'PROMO50': { credits: 2, description: 'Promoción especial - 2 créditos' },
+      'FLASH10': { credits: 1, description: 'Cupón flash - 1 crédito' }
+    };
+
+    if (knownCoupons[upperCode]) {
+      const coupon = knownCoupons[upperCode];
+      return {
+        valid: true,
+        credits: coupon.credits,
+        description: coupon.description
+      };
+    }
+
+    return {
+      valid: false,
+      error: 'Cupón inválido o expirado'
+    };
+  } catch (error) {
+    console.error('Error validando cupón:', error);
+    return {
+      valid: false,
+      error: 'Error al validar cupón'
+    };
+  }
+}
+
+/**
+ * Canjear cupón de créditos
+ * @param userId - ID del usuario
+ * @param code - Código del cupón
+ */
+export async function redeemCoupon(
+  userId: string,
+  code: string
+): Promise<{
+  success: boolean;
+  creditsGranted?: number;
+  newBalance?: number;
+  error?: string;
+}> {
+  try {
+    // Primero validar el cupón
+    const validation = await validateCoupon(code);
+    
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: validation.error || 'Cupón inválido'
+      };
+    }
+
+    // Verificar si el usuario ya usó este cupón
+    const { data: existingUse, error: checkError } = await supabase
+      .from('credit_transactions')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('type', 'promo_grant')
+      .ilike('description', `%${code}%`)
+      .limit(1);
+
+    if (checkError) {
+      console.error('Error verificando uso previo:', checkError);
+      return {
+        success: false,
+        error: 'Error al verificar cupón'
+      };
+    }
+
+    if (existingUse && existingUse.length > 0) {
+      return {
+        success: false,
+        error: 'Este cupón ya fue canjeado anteriormente'
+      };
+    }
+
+    // Obtener balance actual
+    const currentCredits = await getUserCredits(userId);
+    const currentBalance = currentCredits?.balance || 0;
+    const creditsToGrant = validation.credits || 0;
+    const newBalance = currentBalance + creditsToGrant;
+
+    // Actualizar balance
+    const { error: updateError } = await supabase
+      .from('user_credits')
+      .upsert({
+        user_id: userId,
+        balance: newBalance,
+        monthly_allowance: currentCredits?.monthly_allowance || 0,
+        last_monthly_reset: currentCredits?.last_monthly_reset || null
+      });
+
+    if (updateError) {
+      console.error('Error actualizando balance:', updateError);
+      return {
+        success: false,
+        error: 'Error al otorgar créditos'
+      };
+    }
+
+    // Registrar transacción
+    const { error: txError } = await supabase
+      .from('credit_transactions')
+      .insert({
+        user_id: userId,
+        type: 'promo_grant',
+        amount: creditsToGrant,
+        balance_after: newBalance,
+        description: `Cupón canjeado: ${code} - ${validation.description}`,
+        promo_code: code.toUpperCase()
+      });
+
+    if (txError) {
+      console.error('Error registrando transacción:', txError);
+      // No retornar error aquí, los créditos ya fueron otorgados
+    }
+
+    return {
+      success: true,
+      creditsGranted: creditsToGrant,
+      newBalance: newBalance
+    };
+  } catch (error) {
+    console.error('Error en redeemCoupon:', error);
+    return {
+      success: false,
+      error: 'Error inesperado al canjear cupón'
+    };
+  }
+}

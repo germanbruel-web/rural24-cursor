@@ -13,36 +13,48 @@ import {
   calculateCreditPrice
 } from '../../services/creditsService';
 import { supabase } from '../../services/supabaseClient';
+import BuyCreditsModal from '../modals/BuyCreditsModal';
+import RedeemCouponModal from '../modals/RedeemCouponModal';
 
 interface Props {
+  userId?: string;
   onOpenBuyCredits?: () => void;
 }
 
-export const UserCreditsPanel: React.FC<Props> = ({ onOpenBuyCredits }) => {
+export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) => {
   const [credits, setCredits] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [config, setConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  
+  // Estados para modales
+  const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
+  const [showRedeemCouponModal, setShowRedeemCouponModal] = useState(false);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [userId]);
 
   const loadData = async () => {
     setLoading(true);
     
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (!authUser) {
-      setLoading(false);
-      return;
+    // Usar el userId pasado como prop o obtenerlo de auth
+    let currentUserId = userId;
+    
+    if (!currentUserId) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        setLoading(false);
+        return;
+      }
+      currentUserId = authUser.id;
+      setUser(authUser);
     }
 
-    setUser(authUser);
-
     const [creditsData, transData, configData] = await Promise.all([
-      getUserCredits(authUser.id),
-      getCreditTransactions(authUser.id, 20),
+      getUserCredits(currentUserId),
+      getCreditTransactions(currentUserId, 20),
       getCreditsConfig()
     ]);
 
@@ -115,7 +127,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ onOpenBuyCredits }) => {
             return (
               <button
                 key={qty}
-                onClick={onOpenBuyCredits}
+                onClick={() => setShowBuyCreditsModal(true)}
                 className={`p-3 sm:p-6 rounded-xl border-2 transition-all text-center ${
                   isRecommended
                     ? 'border-green-600 bg-green-50 shadow-lg scale-100 hover:scale-105'
@@ -142,11 +154,33 @@ export const UserCreditsPanel: React.FC<Props> = ({ onOpenBuyCredits }) => {
         </div>
 
         <button
-          onClick={onOpenBuyCredits}
+          onClick={() => setShowBuyCreditsModal(true)}
           className="w-full py-3 sm:py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
         >
           <ShoppingCart className="w-5 h-5" />
           Comprar Créditos
+        </button>
+      </section>
+
+      {/* ============================================
+          CANJEAR CUPÓN
+          ============================================ */}
+      <section className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 sm:p-8 shadow-lg border border-amber-200">
+        <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+          <Gift className="w-6 h-6 sm:w-7 sm:h-7 text-amber-600" />
+          Canjear Cupón
+        </h3>
+        
+        <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+          ¿Tenés un cupón de descuento o promoción? Canjealo acá para obtener créditos gratis.
+        </p>
+
+        <button
+          onClick={() => setShowRedeemCouponModal(true)}
+          className="w-full py-3 sm:py-4 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
+        >
+          <Gift className="w-5 h-5" />
+          Canjear Cupón
         </button>
       </section>
 
@@ -207,6 +241,27 @@ export const UserCreditsPanel: React.FC<Props> = ({ onOpenBuyCredits }) => {
           </div>
         )}
       </section>
+
+      {/* ============================================
+          MODALES
+          ============================================ */}
+      <BuyCreditsModal
+        isOpen={showBuyCreditsModal}
+        onClose={() => setShowBuyCreditsModal(false)}
+        onSuccess={() => {
+          setShowBuyCreditsModal(false);
+          loadData(); // Recargar datos para actualizar el balance
+        }}
+      />
+
+      <RedeemCouponModal
+        isOpen={showRedeemCouponModal}
+        onClose={() => setShowRedeemCouponModal(false)}
+        onSuccess={(creditsGranted, newBalance) => {
+          setShowRedeemCouponModal(false);
+          loadData(); // Recargar datos para actualizar el balance
+        }}
+      />
     </div>
   );
 };
