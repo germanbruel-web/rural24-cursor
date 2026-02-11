@@ -16,13 +16,21 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Star } from 'lucide-react';
-import { getFeaturedAdsByCategories, type FeaturedAdsByCategory } from '../../services/featuredAdsService';
+import { Star, Sparkles } from 'lucide-react';
 import { getFeaturedForHomepage } from '../../services/userFeaturedService';
 import { useCategories } from '../../contexts/CategoryContext';
 import { ProductCard } from '../organisms/ProductCard';
 import { SubcategoriesExpressBar } from './SubcategoriesExpressBar';
 import { CategoryBannerSlider } from './CategoryBannerSlider';
+import { supabase } from '../../services/supabaseClient';
+
+interface CategoryWithBanners {
+  category_id: string;
+  category_name: string;
+  category_slug: string;
+  banners: any[];
+  subcategories: any[];
+}
 
 interface FeaturedAdsSectionProps {
   onAdClick?: (adId: string) => void;
@@ -36,10 +44,10 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
   onAdClick, 
   onCategoryClick,
   onSubcategoryClick,
-  maxAdsPerCategory = 12
+  maxAdsPerCategory = 10  // Límite unificado: 10 slots
 }) => {
-  const [categoriesData, setCategoriesData] = useState<FeaturedAdsByCategory[]>([]);
-  const [userFeaturedByCategory, setUserFeaturedByCategory] = useState<Map<string, any[]>>(new Map());
+  const [categoriesData, setCategoriesData] = useState<CategoryWithBanners[]>([]);
+  const [featuredByCategory, setFeaturedByCategory] = useState<Map<string, any[]>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { categories: contextCategories } = useCategories();
@@ -48,24 +56,64 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
     setLoading(true);
     setError(null);
     try {
-      // 1. Cargar destacados de superadmin (pasar categorías del context para evitar query duplicado)
-      const cats = contextCategories.length > 0 
-        ? contextCategories.map(c => ({ id: c.id, name: c.name, display_name: c.display_name, icon: undefined, slug: c.slug }))
-        : undefined;
-      const data = await getFeaturedAdsByCategories(maxAdsPerCategory, cats);
-      setCategoriesData(data);
+      // 1. Cargar categorías con banners y subcategorías
+      const categories = contextCategories.length > 0 ? contextCategories : [];
       
-      // 2. Cargar destacados de usuarios para cada categoría
-      const userFeaturedMap = new Map<string, any[]>();
+      if (categories.length === 0) {
+        const { data: catsData } = await supabase
+          .from('categories')
+          .select('id, name, display_name, slug')
+          .eq('is_active', true)
+          .order('sort_order');
+        categories.push(...(catsData || []));
+      }
+
+      // 2. Para cada categoría, cargar banners + subcategorías + destacados unificados
+      const categoriesWithData = await Promise.all(
+        categories.map(async (cat) => {
+          // Banners
+          const { data: banners } = await supabase
+            .from('banners')
+            .select('*')
+            .eq('category_id', cat.id)
+            .eq('is_active', true)
+            .order('sort_order');
+
+          // Subcategorías
+          const { data: subcategories } = await supabase
+            .from('subcategories')
+            .select('id, name, display_name, slug, sort_order')
+            .eq('category_id', cat.id)
+            .eq('is_active', true)
+            .order('sort_order');
+
+          return {
+            category_id: cat.id,
+            category_name: cat.display_name || cat.name,
+            category_slug: cat.slug,
+            banners: banners || [],
+            subcategories: (subcategories || []).map(s => ({
+              id: s.id,
+              name: s.display_name || s.name,
+              slug: s.slug
+            }))
+          };
+        })
+      );
+
+      setCategoriesData(categoriesWithData);
+      
+      // 3. Cargar destacados UNIFICADOS (user + superadmin) para cada categoría
+      const featuredMap = new Map<string, any[]>();
       await Promise.all(
-        data.map(async (catData) => {
-          const { data: userAds } = await getFeaturedForHomepage(catData.category_id, 10);
-          if (userAds && userAds.length > 0) {
-            userFeaturedMap.set(catData.category_id, userAds);
+        categoriesWithData.map(async (catData) => {
+          const { data: featuredAds } = await getFeaturedForHomepage(catData.category_id, maxAdsPerCategory);
+          if (featuredAds && featuredAds.length > 0) {
+            featuredMap.set(catData.category_id, featuredAds);
           }
         })
       );
-      setUserFeaturedByCategory(userFeaturedMap);
+      setFeaturedByCategory(featuredMap);
     } catch (err) {
       console.error('[FeaturedAdsSection] Error loading featured ads:', err);
       setError('Error al cargar avisos destacados');
@@ -140,14 +188,14 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
     >
       <div className="max-w-[1400px] mx-auto px-3 sm:px-4">
 
-        {/* Por cada categoría (incluso sin avisos) */}
+        {/* Por cada categoría */}
         {categoriesData.map((catData, idx) => {
           // IDs dinámicos para cada bloque
           const blockId = `HomePage_bloque_Cat_${catData.category_id}`;
           const gridId = `HomePage_grid_Cat_${catData.category_id}`;
           const bannerId = `HomePage_banner_Cat_${catData.category_id}`;
-          const hasAds = catData.ads.length > 0;
-          const hasUserAds = (userFeaturedByCategory.get(catData.category_id) || []).length > 0;
+          const featuredAds = featuredByCategory.get(catData.category_id) || [];
+          const hasFeaturedAds = featuredAds.length > 0;
           
           return (
             <article 
@@ -183,61 +231,31 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
                 />
               </header>
 
-              {/* Avisos destacados por USUARIOS (pagados) - Antes del grid principal */}
-              {userFeaturedByCategory.get(catData.category_id)?.length > 0 && (
-                <div className="mb-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
-                    {userFeaturedByCategory.get(catData.category_id)!.slice(0, 5).map((ad, adIdx) => {
-                      const firstImage = ad.images?.[0];
-                      const imageUrl = typeof firstImage === 'string' 
-                        ? firstImage 
-                        : ((firstImage as { url?: string })?.url || '');
-                      
-                      return (
-                        <div
-                          key={ad.id}
-                          className="relative group"
-                        >
-                          {/* Badge destacado */}
-                          <div className="absolute -top-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded z-10">
-                            ⚡ Destacado
-                          </div>
-                          <div className="relative border border-green-500 rounded-xl overflow-hidden">
-                            <ProductCard
-                              product={{
-                                ...ad,
-                                category: catData.category_name,
-                                location: ad.province || ad.location || '',
-                                imageUrl,
-                                images: ad.images,
-                                sourceUrl: '',
-                                isSponsored: true,
-                              }}
-                              variant="featured"
-                              showBadges={false}
-                              showLocation={true}
-                              onViewDetail={() => onAdClick?.(ad.id)}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+              {/* Subtítulo: Avisos Destacados */}
+              {hasFeaturedAds && (
+                <div className="flex items-center gap-2 mb-4 sm:mb-5">
+                  <Star className="w-5 h-5 text-yellow-500" fill="currentColor" />
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-700">
+                    Avisos Destacados
+                  </h3>
+                  <span className="text-xs sm:text-sm text-gray-500">
+                    ({featuredAds.length})
+                  </span>
                 </div>
               )}
 
-              {/* Grid de Productos o Skeleton si no hay avisos */}
-              {hasAds ? (
+              {/* Grid de Avisos Destacados Unificados */}
+              {hasFeaturedAds ? (
                 <div 
                   id={gridId}
                   className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4"
                 >
-                  {catData.ads.map((ad, adIdx) => {
+                  {featuredAds.map((ad, adIdx) => {
                     // Extraer URL de imagen correctamente
                     const firstImage = ad.images?.[0];
                     const imageUrl = typeof firstImage === 'string' 
                       ? firstImage 
-                      : ((firstImage as { url?: string })?.url || ad.image_urls?.[0] || '');
+                      : ((firstImage as { url?: string })?.url || '');
                     
                     return (
                       <div 
@@ -249,11 +267,11 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
                           product={{
                             ...ad,
                             category: catData.category_name,
-                            location: ad.location || '',
+                            location: ad.province || ad.location || '',
                             imageUrl,
                             images: ad.images,
                             sourceUrl: '',
-                            isSponsored: (ad as any).is_premium || false,
+                            isSponsored: true,
                           }}
                           variant="featured"
                           showBadges={true}
@@ -264,34 +282,15 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
                     );
                   })}
                 </div>
-              ) : hasUserAds ? (
-                <div className="mb-3 sm:mb-4">
-                  <p className="text-xs text-gray-500">Sin destacados del equipo en esta categoría.</p>
-                </div>
               ) : (
-                /* Skeleton animado cuando no hay avisos */
+                /* Skeleton cuando no hay avisos destacados */
                 <div className="mb-3 sm:mb-4">
                   <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 sm:p-8 border border-gray-200">
                     <div className="text-center mb-6">
+                      <Sparkles className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                       <p className="text-gray-500 text-sm sm:text-base">
                         Próximamente avisos destacados en esta categoría
                       </p>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <div 
-                          key={i} 
-                          className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border border-gray-100 animate-pulse"
-                        >
-                          <div className="w-full aspect-[4/3] bg-gray-200" />
-                          <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                            <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4" />
-                            <div className="h-3 sm:h-4 bg-gray-200 rounded w-1/2" />
-                            <div className="h-5 sm:h-6 bg-gray-200 rounded w-1/3 mt-3" />
-                            <div className="h-8 sm:h-10 bg-gray-200 rounded mt-3" />
-                          </div>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>

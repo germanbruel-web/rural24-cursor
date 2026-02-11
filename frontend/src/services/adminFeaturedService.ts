@@ -32,6 +32,12 @@ export interface AdminFeaturedAd {
   status: FeaturedStatus;
   priority: number | null;
   credit_consumed: boolean;
+  is_manual: boolean; // ✨ NUEVO: indica si fue activado manualmente por superadmin
+  manual_activated_by: string | null; // ✨ NUEVO: ID del superadmin que activó
+  manual_activator_email: string | null; // ✨ NUEVO: email del admin (JOIN)
+  manual_activator_name: string | null; // ✨ NUEVO: nombre del admin (JOIN)
+  requires_payment: boolean; // ✨ NUEVO: si requiere pago
+  admin_notes: string | null; // ✨ NUEVO: notas administrativas
   refunded: boolean;
   cancelled_by: string | null;
   cancelled_reason: string | null;

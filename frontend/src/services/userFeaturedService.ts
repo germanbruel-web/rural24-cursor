@@ -454,6 +454,13 @@ export async function getFeaturedForHomepage(
       return { data: [], error: null };
     }
 
+    // Debug: Log origen de destacados (opcional - comentar en producción)
+    if (process.env.NODE_ENV === 'development') {
+      const userPaid = featuredIds.filter((f: any) => !f.is_manual).length;
+      const adminManual = featuredIds.filter((f: any) => f.is_manual).length;
+      console.log(`[Featured Homepage] Total: ${featuredIds.length} | Usuario: ${userPaid} | Admin: ${adminManual}`);
+    }
+
     // Obtener los avisos completos
     const adIds = featuredIds.map((f: any) => f.ad_id);
     const { data: ads, error: adsError } = await supabase
@@ -498,6 +505,13 @@ export async function getFeaturedForResults(
 
     if (!featuredIds || featuredIds.length === 0) {
       return { data: [], error: null };
+    }
+
+    // Debug: Log origen de destacados (opcional - comentar en producción)
+    if (process.env.NODE_ENV === 'development') {
+      const userPaid = featuredIds.filter((f: any) => !f.is_manual).length;
+      const adminManual = featuredIds.filter((f: any) => f.is_manual).length;
+      console.log(`[Featured Results] Total: ${featuredIds.length} | Usuario: ${userPaid} | Admin: ${adminManual}`);
     }
 
     // Obtener los avisos completos

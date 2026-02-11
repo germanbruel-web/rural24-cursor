@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, DollarSign, ArrowLeft, Phone, Mail, User, Settings, CheckCircle, Check } from 'lucide-react';
+import { MapPin, Calendar, DollarSign, ArrowLeft, Phone, Mail, User, Settings, CheckCircle, Check, Star } from 'lucide-react';
 import { DocumentTextIcon, InformationCircleIcon, Cog6ToothIcon, CheckBadgeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import type { Ad, SearchFilters } from '../../types';
 import { getAdById } from '../services/adsService';
@@ -1062,19 +1062,16 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
       )}
 
       {/* Avisos Destacados */}
-      {ad?.category_id && (
+      {ad?.category_id && featuredAds.length > 0 && (
         <div className="bg-white border-t border-gray-200">
           <div className="max-w-[1400px] mx-auto px-4 py-12">
-            <div className="mb-6">
+            {/* Título con icono Lucide */}
+            <div className="flex items-center gap-2 mb-6">
+              <Star className="w-6 h-6 text-yellow-500" fill="currentColor" />
               <h2 className="text-2xl font-bold text-gray-900">
                 Avisos Destacados
               </h2>
-              {loadingFeatured && (
-                <p className="text-gray-600 mt-1">Cargando...</p>
-              )}
-              {!loadingFeatured && featuredAds.length === 0 && (
-                <p className="text-gray-600 mt-1">No hay avisos destacados en esta categoría</p>
-              )}
+              <span className="text-sm text-gray-500">({featuredAds.length})</span>
             </div>
             
             {loadingFeatured ? (
@@ -1083,7 +1080,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                   <div key={i} className="bg-gray-100 rounded-xl h-64 animate-pulse" />
                 ))}
               </div>
-            ) : featuredAds.length > 0 ? (
+            ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {featuredAds.map((featuredAd) => {
                   const firstImage = featuredAd.images?.[0];
@@ -1092,35 +1089,29 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     : ((firstImage as { url?: string })?.url || '');
                   
                   return (
-                    <div key={featuredAd.id} className="relative group">
-                      {/* Badge destacado */}
-                      <div className="absolute -top-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded z-10">
-                        ⚡ Destacado
-                      </div>
-                      <div className="border border-green-500 rounded-xl overflow-hidden">
-                        <ProductCard 
-                          key={featuredAd.id} 
-                          product={{
-                            ...featuredAd,
-                            id: featuredAd.id,
-                            title: featuredAd.title,
-                            price: featuredAd.price,
-                            currency: featuredAd.currency || 'ARS',
-                            category: featuredAd.categories?.name || '',
-                            location: featuredAd.province || featuredAd.location || '',
-                            imageUrl,
-                            images: featuredAd.images,
-                            sourceUrl: '',
-                          }}
-                          variant="compact"
-                          showProvince={true}
-                        />
-                      </div>
+                    <div key={featuredAd.id}>
+                      <ProductCard 
+                        product={{
+                          ...featuredAd,
+                          id: featuredAd.id,
+                          title: featuredAd.title,
+                          price: featuredAd.price,
+                          currency: featuredAd.currency || 'ARS',
+                          category: featuredAd.categories?.name || '',
+                          location: featuredAd.province || featuredAd.location || '',
+                          imageUrl,
+                          images: featuredAd.images,
+                          sourceUrl: '',
+                          isSponsored: true,
+                        }}
+                        variant="compact"
+                        showProvince={true}
+                      />
                     </div>
                   );
                 })}
               </div>
-            ) : null}
+            )}
           </div>
         </div>
       )}
