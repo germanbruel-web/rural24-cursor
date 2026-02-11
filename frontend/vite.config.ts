@@ -36,11 +36,43 @@ export default defineConfig(({ mode }) => {
       // Chunk splitting strategy para mejor caching
       rollupOptions: {
         output: {
-          manualChunks: {
-            // Vendor chunk — cambia poco, se cachea agresivamente
-            'vendor-react': ['react', 'react-dom'],
-            'vendor-supabase': ['@supabase/supabase-js'],
-            'vendor-ui': ['lucide-react', '@heroicons/react', 'clsx', 'tailwind-merge'],
+          manualChunks(id) {
+            // Vendor chunks (librerías externas)
+            if (id.includes('node_modules')) {
+              // React core
+              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+                return 'vendor-react';
+              }
+              // Supabase
+              if (id.includes('@supabase')) {
+                return 'vendor-supabase';
+              }
+              // UI Libraries
+              if (id.includes('lucide-react') || id.includes('@heroicons') || 
+                  id.includes('clsx') || id.includes('tailwind-merge')) {
+                return 'vendor-ui';
+              }
+              // DnD Kit (usado solo en admin)
+              if (id.includes('@dnd-kit')) {
+                return 'vendor-dnd';
+              }
+              // Axios + HTTP clients
+              if (id.includes('axios')) {
+                return 'vendor-http';
+              }
+              // Resto de node_modules
+              return 'vendor-other';
+            }
+
+            // Feature-based chunks (código de la app)
+            // Shared code (services, utils, hooks, contexts, constants) - fusionado para evitar circular dependencies
+            if (id.includes('/src/services/') || 
+                id.includes('/src/utils/') || 
+                id.includes('/src/hooks/') || 
+                id.includes('/src/contexts/') || 
+                id.includes('/src/constants/')) {
+              return 'shared';
+            }
           },
         },
       },

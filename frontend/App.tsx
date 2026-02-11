@@ -11,17 +11,10 @@ import type { FilterOptions, SearchFilters, Banner, Ad, Product } from "./types"
 import {
   AppHeader,
   Footer,
-  HeroWithCarousel,
-  HeroCategoryButtons,
-  SearchResultsPageMinimal,
-  AdDetailPage,
   AuthModal,
   EmailConfirmationPage,
   OAuthCallbackPage,
   DashboardLayout,
-  FeaturedAdsSection,
-  HowItWorksSection,
-  BannersVipHero,
 } from "./src/components";
 
 // ============================================================
@@ -48,6 +41,11 @@ import { navigateTo } from './src/hooks/useNavigate';
 // LAZY LOADED COMPONENTS (Code Splitting - Mejora LCP)
 // Componentes pesados que no se necesitan en el render inicial
 // ============================================================
+
+// Main Pages (NUEVO - Route-based code splitting)
+const HomePage = lazy(() => import("./src/pages/HomePage"));
+const SearchPage = lazy(() => import("./src/pages/SearchPage"));
+const AdDetailPageLazy = lazy(() => import("./src/pages/AdDetailPage"));
 
 // Admin Panel Components (solo para admins)
 const MyAdsPanel = lazy(() => import("./src/components/admin/MyAdsPanel"));
@@ -776,92 +774,29 @@ const AppContent: React.FC = () => {
       />
 
       {currentPage === 'ad-detail' && selectedAdId ? (
-        <AdDetailPage 
-          adId={selectedAdId} 
-          onBack={() => {
-            navigateTo('/');
-          }}
-          onSearch={handleAdvancedSearch}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <AdDetailPageLazy />
+        </Suspense>
       ) : isSearching ? (
-        // VISTA DE BÚSQUEDA - Página minimalista estilo Google
-        <SearchResultsPageMinimal
-          key={window.location.hash}
-          results={searchResults}
-          onBack={handleBackToHome}
-          onSearch={handleAdvancedSearch}
-          filterOptions={filterOptions}
-          onFilter={(filters) => {
-            setActiveFilters(filters);
-            const filtered = smartSearch(products, { ...searchFilters, ...filters });
-            setSearchResults(filtered);
-          }}
-          onViewDetail={(adId) => {
-            navigateTo(`/ad/${adId}`);
-          }}
-        />
+        // VISTA DE BÚSQUEDA - Lazy loaded  
+        <Suspense fallback={<LoadingFallback />}>
+          <SearchPage />
+        </Suspense>
       ) : (
-        // VISTA DE INICIO
-        <main className="flex-1">
-          {/* Hero con título, banner y botones */}
-          <HeroWithCarousel 
-            bannerSlot={
-              <div className="max-w-[1200px] mx-auto">
-                <BannersVipHero category={hoveredCategory || undefined} />
-              </div>
-            }
-          >
-            <HeroCategoryButtons 
-              onSearch={handleAdvancedSearch} 
-              onCategoryHover={setHoveredCategory}
-              onBannerChange={setCurrentBanner}
-            />
-          </HeroWithCarousel>
-
-          {/* Sección Cómo Funciona */}
-          <HowItWorksSection onRegisterClick={() => setShowAuthModal(true)} />
-
-          {/* 🌟 Avisos Destacados por Categoría (Seleccionados por Superadmin) */}
-          {/* Setting dinámico para cantidad de avisos destacados */}
-          {/** UX: loading skeleton si el setting no está listo **/}
-          {typeof homepageFeaturedLimit === 'number' ? (
-            <FeaturedAdsSection
-              onAdClick={(adId) => {
-                setSelectedAdId(adId);
-                setCurrentPage('ad-detail');
-                navigateTo(`/ad/${adId}`);
-              }}
-              onCategoryClick={(categorySlug) => {
-                navigateTo('/search', { cat: categorySlug });
-              }}
-              onSubcategoryClick={(catSlug, subSlug) => {
-                navigateTo('/search', { cat: catSlug, sub: subSlug });
-              }}
-              maxAdsPerCategory={homepageFeaturedLimit}
-            />
-          ) : (
-            <section className="py-8 sm:py-12 bg-white" aria-busy="true" aria-label="Cargando avisos destacados">
-              <div className="max-w-[1400px] mx-auto px-3 sm:px-4">
-                <div className="h-12 bg-gray-200 rounded animate-pulse mb-6" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                      <div className="w-full aspect-[4/3] bg-gray-200 animate-pulse" />
-                      <div className="p-3 space-y-2">
-                        <div className="h-3 bg-gray-200 rounded animate-pulse" />
-                        <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse" />
-                        <div className="h-5 bg-gray-200 rounded w-1/2 animate-pulse mt-3" />
-                        <div className="h-8 bg-gray-200 rounded animate-pulse mt-3" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Sistema de avisos destacados dinámico - ya integrado arriba con FeaturedAdsSection */}
-        </main>
+        // VISTA DE INICIO - Lazy loaded
+        <Suspense fallback={<LoadingFallback />}>
+          <HomePage 
+            onShowAuthModal={() => setShowAuthModal(true)}
+            onSearch={handleAdvancedSearch}
+            onCategoryHover={setHoveredCategory}
+            onBannerChange={setCurrentBanner}
+            onAdClick={(adId) => {
+              setSelectedAdId(adId);
+              setCurrentPage('ad-detail');
+            }}
+            hoveredCategory={hoveredCategory}
+          />
+        </Suspense>
       )}
 
       {/* Botón flotante Scroll to Top */}
