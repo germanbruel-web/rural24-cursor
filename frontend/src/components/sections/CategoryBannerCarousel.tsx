@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
+import { optimizeCloudinaryUrl } from '../../utils/imageOptimizer';
 
 interface Banner {
   id: string;
@@ -95,7 +96,7 @@ export const CategoryBannerSlider: React.FC<CategoryBannerSliderProps> = memo(({
         className="block w-full h-full"
       >
         <img
-          src={currentBanner.image_url}
+          src={optimizeCloudinaryUrl(currentBanner.image_url, { width: 650, quality: 'auto:good' })}
           alt={currentBanner.title}
           className="w-full h-full object-cover"
           loading="lazy"

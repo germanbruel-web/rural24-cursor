@@ -18,7 +18,7 @@ import {
 import { getHeroVIPBanners } from '../services/bannersCleanService';
 import { getSettingNumber } from '../services/v2/globalSettingsService';
 import { navigateTo } from '../hooks/useNavigate';
-import type { Banner } from '../../types';
+import type { Banner, BannerClean } from '../../types';
 
 interface HomePageProps {
   onShowAuthModal?: () => void;
@@ -37,7 +37,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   onAdClick,
   hoveredCategory,
 }) => {
-  const [heroBanners, setHeroBanners] = useState<Banner[]>([]);
+  const [heroBanners, setHeroBanners] = useState<BannerClean[]>([]);
   const [featuredLimit, setFeaturedLimit] = useState<number | null>(null);
 
   // Cargar banners del hero

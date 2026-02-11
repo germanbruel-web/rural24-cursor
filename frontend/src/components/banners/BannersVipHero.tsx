@@ -6,6 +6,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { getHeroVIPBanners, incrementBannerImpression, incrementBannerClick } from '../../services/bannersCleanService';
 import type { BannerClean } from '../../../types';
+import { optimizeCloudinaryUrl } from '../../utils/imageOptimizer';
 
 interface Props {
   category?: string; // Categoría para filtrar (solo aplica en desktop)
@@ -183,7 +184,7 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
                   aria-hidden={idx !== mobileIndex}
                 >
                   <img
-                    src={banner.mobile_image_url!}
+                    src={optimizeCloudinaryUrl(banner.mobile_image_url!, { width: 650, quality: 'auto:good' })}
                     alt={banner.client_name}
                     loading={idx === 0 ? 'eager' : 'lazy'}
                     className="absolute inset-0 w-full h-full object-cover object-center"
@@ -236,7 +237,7 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
         onClick={() => handleClick(desktopBanner)}
       >
         <img
-          src={desktopBanner.desktop_image_url}
+          src={optimizeCloudinaryUrl(desktopBanner.desktop_image_url, { width: 1200, quality: 'auto:good' })}
           alt={desktopBanner.client_name}
           className="w-full h-[200px] object-cover transition-transform duration-300 group-hover:scale-[1.02]"
         />

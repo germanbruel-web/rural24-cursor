@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Banner } from '../../types';
+import { optimizeCloudinaryUrl } from '../utils/imageOptimizer';
 
 interface DynamicBannerProps {
   banner: Banner | null;
@@ -35,7 +36,7 @@ export const DynamicBanner: React.FC<DynamicBannerProps> = ({ banner, position, 
       >
         {/* Imagen del banner */}
         <img
-          src={banner.image_url}
+          src={optimizeCloudinaryUrl(banner.image_url, { width: 1200, quality: 'auto:good' })}
           alt={banner.title}
           className="w-full h-auto object-cover"
           loading="lazy"
