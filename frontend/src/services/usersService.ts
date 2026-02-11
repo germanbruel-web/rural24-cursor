@@ -3,6 +3,26 @@ import type { UserRole, UserType } from '../../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+/**
+ * Helper: Obtener headers con autenticación Bearer
+ * @returns Headers con Authorization o null si no hay sesión
+ */
+async function getAuthHeaders(): Promise<HeadersInit | null> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    console.error('❌ No hay sesión activa para autenticar');
+    return null;
+  }
+
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${session.access_token}`,
+  };
+}
+
 export interface UserData {
   id: string;
   email: string;
@@ -41,13 +61,36 @@ export interface UpdateUserData {
 /**
  * Obtener todos los usuarios con conteo de avisos
  * Usa API del backend con service_role para bypass de RLS
+ * Requiere autenticación Bearer (superadmin)
  */
 export const getAllUsers = async (): Promise<{ data: UserData[] | null; error: Error | null }> => {
   try {
     console.log('📥 Cargando usuarios desde API backend...');
 
-    const response = await fetch(`${API_BASE}/api/admin/users`);
+    // 🔐 Obtener headers con token de autenticación
+    const headers = await getAuthHeaders();
+    if (!headers) {
+      return { 
+        data: null, 
+        error: new Error('No autenticado. Se requiere token Bearer válido.') 
+      };
+    }
+
+    // 📡 Fetch con autenticación
+    const response = await fetch(`${API_BASE}/api/admin/users`, {
+      method: 'GET',
+      headers,
+    });
+
     const json = await response.json();
+
+    if (!response.ok) {
+      console.error('❌ Error HTTP:', response.status, json.error);
+      return { 
+        data: null, 
+        error: new Error(json.error || `Error HTTP ${response.status}`) 
+      };
+    }
 
     if (!json.success) {
       console.error('❌ Error loading users:', json.error);
@@ -148,22 +191,35 @@ export const updateUser = async (userId: string, updates: UpdateUserData): Promi
 
 /**
  * Cambiar rol de usuario
+ * Usa API del backend para bypass de RLS
+ * Requiere autenticación Bearer (superadmin)
  */
 export const updateUserRole = async (userId: string, newRole: UserRole): Promise<{ error: Error | null }> => {
   try {
     console.log('👑 Cambiando rol de usuario:', userId, 'a', newRole);
 
-    const { error } = await supabase
-      .from('users')
-      .update({
-        role: newRole,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId);
+    // 🔐 Obtener headers con token
+    const headers = await getAuthHeaders();
+    if (!headers) {
+      return { error: new Error('No autenticado') };
+    }
 
-    if (error) {
-      console.error('❌ Error updating role:', error);
-      return { error };
+    // 📡 Llamar API del backend
+    const response = await fetch(`${API_BASE}/api/admin/users`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ 
+        user_id: userId, 
+        role: newRole,
+        updated_at: new Date().toISOString()
+      }),
+    });
+
+    const json = await response.json();
+
+    if (!response.ok || !json.success) {
+      console.error('❌ Error updating role:', json.error);
+      return { error: new Error(json.error || 'Error al actualizar rol') };
     }
 
     console.log('✅ Rol actualizado a:', newRole);
@@ -176,42 +232,35 @@ export const updateUserRole = async (userId: string, newRole: UserRole): Promise
 
 /**
  * Verificar email manualmente (SuperAdmin)
- * Actualiza tanto la tabla users como auth.users
+ * Usa API del backend para bypass de RLS
+ * Requiere autenticación Bearer (superadmin)
  */
 export const verifyUserEmail = async (userId: string): Promise<{ error: Error | null }> => {
   try {
     console.log('✅ Verificando email del usuario:', userId);
 
-    // 1. Actualizar en tabla users
-    const { error: usersError } = await supabase
-      .from('users')
-      .update({
-        email_verified: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId);
-
-    if (usersError) {
-      console.error('❌ Error verificando en users:', usersError);
-      return { error: usersError };
+    // 🔐 Obtener headers con token
+    const headers = await getAuthHeaders();
+    if (!headers) {
+      return { error: new Error('No autenticado') };
     }
 
-    // 2. Actualizar en auth.users (requiere admin)
-    try {
-      const { error: authError } = await supabase.auth.admin.updateUserById(
-        userId,
-        { email_confirm: true }
-      );
+    // 📡 Llamar API del backend
+    const response = await fetch(`${API_BASE}/api/admin/users`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ 
+        user_id: userId, 
+        email_verified: true,
+        updated_at: new Date().toISOString()
+      }),
+    });
 
-      if (authError) {
-        console.warn('⚠️ No se pudo actualizar auth.users (puede requerir permisos adicionales):', authError);
-        // No retornar error, solo advertencia
-      } else {
-        console.log('✅ Email verificado en auth.users');
-      }
-    } catch (authError) {
-      console.warn('⚠️ Error actualizando auth.users:', authError);
-      // Continuar aunque falle el auth
+    const json = await response.json();
+
+    if (!response.ok || !json.success) {
+      console.error('❌ Error verifying email:', json.error);
+      return { error: new Error(json.error || 'Error al verificar email') };
     }
 
     console.log('✅ Email verificado exitosamente');
@@ -225,30 +274,29 @@ export const verifyUserEmail = async (userId: string): Promise<{ error: Error | 
 /**
  * Eliminar usuario (Solo SuperAdmin)
  * CUIDADO: Esto elimina el usuario y todos sus datos
+ * NOTA: Usa supabase.auth.admin que requiere service_role
+ * TODO: Migrar a endpoint backend DELETE /api/admin/users/:userId
  */
 export const deleteUser = async (userId: string): Promise<{ error: Error | null }> => {
   try {
     console.log('🗑️ Eliminando usuario:', userId);
 
-    // Primero eliminar de la tabla users (el CASCADE se encargará de auth.users)
-    const { error: deleteError } = await supabase
-      .from('users')
-      .delete()
-      .eq('id', userId);
+    // NOTA: auth.admin.deleteUser requiere service_role key en el cliente
+    // Esto funciona si SUPABASE_SERVICE_ROLE_KEY está configurado
+    // En producción, migrar a endpoint backend con withAuth guard
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
 
     if (deleteError) {
       console.error('❌ Error deleting user:', deleteError);
       return { error: deleteError };
     }
 
-    // También intentar eliminar del auth (requiere permisos de admin)
-    try {
-      await supabase.auth.admin.deleteUser(userId);
-    } catch (authError) {
-      console.warn('⚠️ No se pudo eliminar del auth (puede ser normal):', authError);
-    }
-
-    console.log('✅ Usuario eliminado');
+    // El CASCADE en la BD eliminará automáticamente:
+    // - Perfil en tabla users
+    // - Anuncios del usuario
+    // - Mensajes
+    // - Otros datos relacionados
+    console.log('✅ Usuario eliminado (CASCADE eliminará datos relacionados)');
     return { error: null };
   } catch (error) {
     console.error('❌ Error en deleteUser:', error);
