@@ -24,16 +24,19 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   users: ['superadmin', 'admin'], // Crear/gestionar usuarios
   'ads-management': ['superadmin', 'admin'], // Crear/gestionar avisos para clientes
   
-  // Solo SuperAdmin (Configuración del sistema)
+  // Solo SuperAdmin - Publicidad
   banners: ['superadmin'],
+  'featured-ads': ['superadmin'],
+  coupons: ['superadmin'],
+  'payments-admin': ['superadmin'],
+  
+  // Solo SuperAdmin - Backend
   settings: ['superadmin'],
   'categories-admin': ['superadmin'],
   'attributes-admin': ['superadmin'],
   'templates-admin': ['superadmin'],
   'backend-settings': ['superadmin'],
   'global-settings': ['superadmin'],
-  'featured-ads-admin': ['superadmin'],
-  'payments-admin': ['superadmin'],
   'sitemap-seo': ['superadmin'],
 };
 
@@ -92,11 +95,14 @@ export interface MenuItem {
 }
 
 export const MENU_STRUCTURE: MenuItem[] = [
-  // SECCIÓN: GENERAL
+  // ============================================================
+  // SECCIÓN: MI CUENTA (Usuario personal)
+  // ============================================================
   {
-    id: 'home',
-    label: 'Inicio',
+    id: 'divider-mi-cuenta',
+    label: 'MI CUENTA',
     allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+    divider: true,
   },
   {
     id: 'my-ads',
@@ -113,35 +119,59 @@ export const MENU_STRUCTURE: MenuItem[] = [
     label: 'Mi Perfil',
     allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
   },
-  
-  // SECCIÓN: REVENDEDORES (Admin y SuperAdmin)
   {
-    id: 'divider-reseller',
-    label: '--- GESTIÓN DE CLIENTES ---',
-    allowedRoles: ['superadmin', 'admin'],
-    divider: true,
-  },
-  {
-    id: 'users',
-    label: 'Usuarios',
-    allowedRoles: ['superadmin', 'admin'],
-  },
-  {
-    id: 'ads-management',
-    label: 'Gestión de Avisos',
-    allowedRoles: ['superadmin', 'admin'],
+    id: 'subscription',
+    label: 'Mi Plan (Créditos)',
+    allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
   },
   
-  // SECCIÓN: CONFIGURACIÓN DEL SISTEMA (solo SuperAdmin)
+  // ============================================================
+  // SECCIÓN: PUBLICIDAD (solo SuperAdmin)
+  // ============================================================
   {
-    id: 'divider-admin',
-    label: '--- ADMINISTRADOR ---',
+    id: 'divider-publicidad',
+    label: 'PUBLICIDAD',
     allowedRoles: ['superadmin'],
     divider: true,
   },
   {
     id: 'banners',
     label: 'Banners',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'featured-ads',
+    label: 'Avisos Destacados',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'coupons',
+    label: 'Cupones',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'payments-admin',
+    label: 'Cobranzas',
+    allowedRoles: ['superadmin'],
+  },
+  
+  // ============================================================
+  // SECCIÓN: BACKEND (solo SuperAdmin)
+  // ============================================================
+  {
+    id: 'divider-backend',
+    label: 'BACKEND',
+    allowedRoles: ['superadmin'],
+    divider: true,
+  },
+  {
+    id: 'users',
+    label: 'Gestión de Usuarios',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'ads-management',
+    label: 'Gestión de Avisos',
     allowedRoles: ['superadmin'],
   },
   {
@@ -170,41 +200,8 @@ export const MENU_STRUCTURE: MenuItem[] = [
     allowedRoles: ['superadmin'],
   },
   {
-    id: 'featured-ads-admin',
-    label: 'Destacados Admin',
-    allowedRoles: ['superadmin'],
-  },
-  {
-    id: 'payments-admin',
-    label: 'Cobranzas',
-    allowedRoles: ['superadmin'],
-  },
-  {
     id: 'sitemap-seo',
-    label: 'Sitemap SEO',
-    allowedRoles: ['superadmin'],
-  },
-  
-  // SECCIÓN: HERRAMIENTAS DE DESARROLLO (solo SuperAdmin)
-  {
-    id: 'divider-dev',
-    label: '--- DEV TOOLS ---',
-    allowedRoles: ['superadmin'],
-    divider: true,
-  },
-  {
-    id: 'diagnostics',
-    label: 'Diagnósticos',
-    allowedRoles: ['superadmin'],
-  },
-  {
-    id: 'design-showcase',
-    label: 'Design System',
-    allowedRoles: ['superadmin'],
-  },
-  {
-    id: 'example-migration',
-    label: 'Migration Guide',
+    label: 'Sitemap',
     allowedRoles: ['superadmin'],
   },
 ];

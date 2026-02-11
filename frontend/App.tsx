@@ -59,6 +59,7 @@ const BackendSettings = lazy(() => import("./src/components/admin/BackendSetting
 const GlobalSettingsPanel = lazy(() => import("./src/components/admin/GlobalSettingsPanel"));
 const PaymentsAdminPanel = lazy(() => import("./src/components/admin/PaymentsAdminPanel"));
 const SitemapSeoPanel = lazy(() => import("./src/components/admin/SitemapSeoPanel"));
+const SuperAdminFeaturedPanel = lazy(() => import("./src/components/admin/SuperAdminFeaturedPanel").then(m => ({ default: m.SuperAdminFeaturedPanel })));
 
 // Dashboard Components (solo para usuarios autenticados)
 const MessagesPanel = lazy(() => import("./src/components/dashboard/MessagesPanel").then(m => ({ default: m.MessagesPanel })));
@@ -90,7 +91,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads' | 'company-profile';
+export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads' | 'coupons' | 'company-profile';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -136,6 +137,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/ads-management') return 'ads-management';
     if (hash === '#/banners') return 'banners';
     if (hash === '#/featured-ads') return 'featured-ads';
+    if (hash === '#/coupons') return 'coupons';
     if (hash === '#/categories-admin') return 'categories-admin';
     if (hash === '#/attributes-admin') return 'attributes-admin';
     if (hash === '#/templates-admin') return 'templates-admin';
@@ -482,7 +484,7 @@ const AppContent: React.FC = () => {
   }
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'ads-management', 'banners', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo'].includes(currentPage);
+  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'ads-management', 'banners', 'featured-ads', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
@@ -551,6 +553,14 @@ const AppContent: React.FC = () => {
                 {currentPage === 'templates-admin' && canAccessPage('templates-admin', profile?.role) && <TemplatesAdmin />}
                 {currentPage === 'backend-settings' && canAccessPage('backend-settings', profile?.role) && <BackendSettings />}
                 {currentPage === 'global-settings' && canAccessPage('global-settings', profile?.role) && <GlobalSettingsPanel />}
+                {currentPage === 'featured-ads' && canAccessPage('featured-ads', profile?.role) && <SuperAdminFeaturedPanel />}
+                {currentPage === 'coupons' && canAccessPage('coupons', profile?.role) && (
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="text-2xl font-bold mb-4">Gestión de Cupones</h2>
+                    <p className="text-gray-600">Panel de cupones en desarrollo...</p>
+                    <p className="text-sm text-gray-500 mt-2">📋 Cupones actuales: WELCOME2026, PROMO50, FLASH10</p>
+                  </div>
+                )}
                 {currentPage === 'payments-admin' && canAccessPage('payments-admin', profile?.role) && <PaymentsAdminPanel />}
                 {currentPage === 'sitemap-seo' && canAccessPage('sitemap-seo', profile?.role) && <SitemapSeoPanel />}
                 {currentPage === 'settings' && (
