@@ -1,0 +1,32 @@
+{
+  "recommendations": [
+    // ========================================
+    // CORE DEVELOPMENT (LIGHTWEIGHT)
+    // ========================================
+    "dbaeumer.vscode-eslint",        // Linting (1 language server)
+    "esbenp.prettier-vscode",         // Formatting (ligero)
+    "prisma.prisma",                  // Prisma ORM (necesario)
+    
+    // ========================================
+    // GIT (LIGERO - picks naturales)
+    // ========================================
+    "eamodio.gitlens",                // Git history y blame (optimizado)
+    
+    // ========================================
+    // OPCIONAL: Productividad
+    // ========================================
+    "usernamehw.errorlens",           // Inline errors (muy ligero)
+    "christian-kohler.path-intellisense", // Path autocomplete
+    "bradlc.vscode-tailwindcss"       // Tailwind IntelliSense
+  ],
+  
+  "unwantedRecommendations": [
+    // ========================================
+    // HEAVY EXTENSIONS (evitar si no usás)
+    // ========================================
+    "googlecloudtools.cloudcode",     // 400MB+ de procesos si no usás GCP
+    "ms-vscode.vscode-typescript-next", // TS nightly (conflictos + overhead)
+    "ms-azuretools.vscode-docker",    // Si no usás Docker local
+    "ms-kubernetes-tools.vscode-kubernetes-tools" // Si no usás K8s
+  ]
+}

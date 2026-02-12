@@ -1,0 +1,69 @@
+# ============================================================================
+# GitHub Actions: Cron Job para Featured Ads Cleanup
+# ============================================================================
+# Ejecuta cada hora el endpoint que activa destacados pendientes y expira vencidos
+# 
+# Ventajas:
+#   - ✅ Completamente GRATIS e ilimitado
+#   - ✅ No requiere plan Pro de Render
+#   - ✅ Logs auditables en GitHub
+#   - ✅ Fácil de debuggear
+#
+# Setup:
+#   1. Ir a GitHub Repo → Settings → Secrets and variables → Actions
+#   2. Crear secret: CRON_SECRET (copiar desde Render o generar nuevo)
+#   3. Commit este archivo → GitHub ejecutará automáticamente
+# ============================================================================
+
+name: Featured Ads Cleanup Cron
+
+on:
+  # Ejecutar cada hora en punto
+  schedule:
+    - cron: '0 * * * *'  # Cada hora a las :00
+  
+  # Permitir ejecución manual desde GitHub UI
+  workflow_dispatch:
+
+jobs:
+  cleanup-featured-ads:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Activate pending and expire old featured ads
+        run: |
+          echo "🚀 Ejecutando featured ads cleanup..."
+          
+          response=$(curl -X POST https://rural24-backend.onrender.com/api/featured-ads/cron \
+            -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -w "\nHTTP_STATUS:%{http_code}" \
+            -s)
+          
+          http_status=$(echo "$response" | grep "HTTP_STATUS" | cut -d':' -f2)
+          body=$(echo "$response" | sed '/HTTP_STATUS/d')
+          
+          echo "📊 Response Status: $http_status"
+          echo "📦 Response Body: $body"
+          
+          if [ "$http_status" -eq 200 ] || [ "$http_status" -eq 201 ]; then
+            echo "✅ Cron ejecutado exitosamente"
+            exit 0
+          else
+            echo "❌ Error en cron (HTTP $http_status)"
+            exit 1
+          fi
+      
+      - name: Log execution time
+        if: always()
+        run: |
+          echo "⏰ Ejecutado: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+# ============================================================================
+# ALTERNATIVA: Ejecutar cada 2 horas (menos frecuente)
+# ============================================================================
+# Si querés reducir frecuencia (aunque GitHub Actions es gratis):
+# schedule:
+#   - cron: '0 */2 * * *'  # Cada 2 horas
+#   - cron: '0 0,6,12,18 * * *'  # 4 veces al día (00:00, 06:00, 12:00, 18:00)
+#   - cron: '0 0 * * *'  # Una vez al día a medianoche

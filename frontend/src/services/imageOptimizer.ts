@@ -301,13 +301,13 @@ export class ImageOptimizer {
     }
 
     // Validar extensión
-    const validExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+    const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'heic', 'heif'];
     const extension = file.name.split('.').pop()?.toLowerCase();
     
     if (!extension || !validExtensions.includes(extension)) {
       return { 
         valid: false, 
-        error: 'Solo se aceptan imágenes JPG, PNG o WebP' 
+        error: 'Solo se aceptan imágenes JPG, PNG, WebP, AVIF o HEIC' 
       };
     }
 

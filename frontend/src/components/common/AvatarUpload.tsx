@@ -44,9 +44,9 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
   const handleFileSelect = async (file: File) => {
     // Validar tipo
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/heic'];
     if (!validTypes.includes(file.type)) {
-      alert('Formato no válido. Use JPG, PNG o WEBP.');
+      alert('Formato no válido. Use JPG, PNG, WebP, AVIF o HEIC.');
       return;
     }
 
@@ -188,7 +188,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/avif,image/heic"
         onChange={handleInputChange}
         className="hidden"
         disabled={disabled}

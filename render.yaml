@@ -1,0 +1,77 @@
+# ============================================================================
+# Render Configuration - rural24
+# ============================================================================
+# Docs: https://render.com/docs/yaml-spec
+
+services:
+  # Backend (Next.js)
+  - type: web
+    name: rural24-backend
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CRON_SECRET
+        generateValue: true  # Genera secret automáticamente
+    healthCheckPath: /api/health
+
+  # Frontend (Vite)
+  - type: web
+    name: rural24-frontend
+    runtime: static
+    region: oregon
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_BACKEND_URL
+        value: https://rural24-backend.onrender.com
+
+# ============================================================================
+# CRON JOBS (Plan Free - 1 job gratis)
+# ============================================================================
+# Ejecuta activate_pending_featured_ads() cada hora
+# Limpia avisos expirados y activa los pendientes
+
+jobs:
+  - type: cron
+    name: featured-ads-cleanup
+    plan: free
+    schedule: "0 * * * *"  # Cada hora en punto (formato cron)
+    buildCommand: echo "Cron job preparado"
+    startCommand: >
+      curl -X POST https://rural24-backend.onrender.com/api/featured-ads/cron
+      -H "X-Cron-Secret: ${CRON_SECRET}"
+      -H "Content-Type: application/json"
+    envVars:
+      - key: CRON_SECRET
+        sync: false  # Debe coincidir con el del backend
+
+# ============================================================================
+# ALTERNATIVA: Si no funciona el cron job, usar external cron
+# ============================================================================
+# Opción 1: GitHub Actions (gratis, ilimitado)
+#   - Crear .github/workflows/cron-featured.yml
+#   - Llamar al endpoint cada hora
+#
+# Opción 2: cron-job.org (gratis, hasta 50 jobs)
+#   - URL: https://rural24-backend.onrender.com/api/featured-ads/cron
+#   - Headers: X-Cron-Secret: tu_secret_generado
+#   - Schedule: 0 * * * * (cada hora)
+#
+# Opción 3: EasyCron (gratis, 100 ejecuciones/día)
+#   - Por si Render Cron no está disponible en plan Free actual

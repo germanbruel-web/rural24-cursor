@@ -68,17 +68,10 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
         categories.push(...(catsData || []));
       }
 
-      // 2. Para cada categoría, cargar banners + subcategorías + destacados unificados
+      // 2. Para cada categoría, cargar subcategorías + destacados unificados
+      // NOTA: Banners se manejan vía CategoryBannerSlider (tabla banners_clean)
       const categoriesWithData = await Promise.all(
         categories.map(async (cat) => {
-          // Banners
-          const { data: banners } = await supabase
-            .from('banners')
-            .select('*')
-            .eq('category_id', cat.id)
-            .eq('is_active', true)
-            .order('sort_order');
-
           // Subcategorías
           const { data: subcategories } = await supabase
             .from('subcategories')
@@ -91,7 +84,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
             category_id: cat.id,
             category_name: cat.display_name || cat.name,
             category_slug: cat.slug,
-            banners: banners || [],
+            banners: [], // Banners manejados por CategoryBannerSlider
             subcategories: (subcategories || []).map(s => ({
               id: s.id,
               name: s.display_name || s.name,

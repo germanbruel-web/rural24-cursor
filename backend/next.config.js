@@ -14,6 +14,29 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
+  // ⚡ OPTIMIZACIÓN: Webpack watching y build incremental
+  webpack: (config, { dev, isServer }) => {
+    if (dev) {
+      // File watching optimizado
+      config.watchOptions = {
+        ignored: /node_modules/,
+        poll: false, // Event-based en lugar de polling
+        aggregateTimeout: 300, // Debounce: esperar 300ms antes de recompilar
+      };
+      
+      // Reducir chunks en dev para rebuilds más rápidos
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: false,
+        runtimeChunk: false,
+      };
+      
+      // Sourcemaps más rápidos en dev
+      config.devtool = 'cheap-module-source-map';
+    }
+    return config;
+  },
+
   async headers() {
     // En producción: usar FRONTEND_URL del env; en dev: localhost:5173
     const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';

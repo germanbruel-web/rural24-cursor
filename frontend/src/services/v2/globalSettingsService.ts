@@ -55,9 +55,14 @@ export async function getSetting<T = any>(key: string, defaultValue?: T): Promis
     .from('global_settings')
     .select('value, value_type')
     .eq('key', key)
-    .single();
+    .maybeSingle(); // Cambiado de .single() a .maybeSingle() para evitar error si no existe
 
-  if (error || !data) {
+  if (error) {
+    console.warn(`Setting "${key}" error:`, error.message);
+    return defaultValue as T;
+  }
+
+  if (!data) {
     console.warn(`Setting "${key}" not found, using default:`, defaultValue);
     return defaultValue as T;
   }

@@ -1,405 +1,336 @@
-import React, { useState } from 'react';
+/**
+ * SubscriptionPanel - Mi Plan
+ * Gestión de Suscripción + Créditos de Publicidad
+ * Design System RURAL24 - Mobile First
+ */
+
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
-  CreditCard, 
-  Calendar, 
-  CheckCircle, 
-  Award,
-  TrendingUp,
-  RefreshCw,
-  Download,
-  AlertCircle,
+  Sparkles, 
+  Coins, 
+  ShoppingCart, 
+  Gift, 
+  CheckCircle,
+  Clock,
   Zap,
-  Crown,
-  Building
+  Loader2,
+  Info,
+  Star,
+  Image,
+  LayoutGrid,
+  TrendingUp,
+  AlertCircle
 } from 'lucide-react';
-import { notify } from '../../utils/notifications';
+import {
+  getUserCredits,
+  getCreditsConfig,
+  getCreditTransactions
+} from '../../services/creditsService';
+import { supabase } from '../../services/supabaseClient';
+import BuyCreditsModal from '../modals/BuyCreditsModal';
+import RedeemCouponModal from '../modals/RedeemCouponModal';
 
-interface PlanFeature {
-  name: string;
-  included: boolean;
-}
-
-interface PricingPlan {
-  id: string;
-  name: string;
-  price: number;
-  period: 'monthly' | 'yearly';
-  userType: 'particular' | 'empresa';
-  features: PlanFeature[];
-  popular?: boolean;
-}
-
-const PRICING_PLANS: PricingPlan[] = [
-  {
-    id: 'premium-particular-monthly',
-    name: 'Premium Particular',
-    price: 4999,
-    period: 'monthly',
-    userType: 'particular',
-    features: [
-      { name: 'Avisos ilimitados', included: true },
-      { name: 'Destacados en homepage', included: true },
-      { name: 'Badge Premium visible', included: true },
-      { name: 'Inbox de mensajes ilimitado', included: true },
-      { name: 'Estadísticas avanzadas', included: true },
-      { name: 'Soporte prioritario', included: false },
-      { name: 'Logo de empresa', included: false },
-    ],
-  },
-  {
-    id: 'premium-particular-yearly',
-    name: 'Premium Particular Anual',
-    price: 49990,
-    period: 'yearly',
-    userType: 'particular',
-    features: [
-      { name: 'Avisos ilimitados', included: true },
-      { name: 'Destacados en homepage', included: true },
-      { name: 'Badge Premium visible', included: true },
-      { name: 'Inbox de mensajes ilimitado', included: true },
-      { name: 'Estadísticas avanzadas', included: true },
-      { name: '2 meses gratis', included: true },
-      { name: 'Soporte prioritario', included: false },
-    ],
-    popular: true,
-  },
-  {
-    id: 'premium-empresa-monthly',
-    name: 'Premium Empresa',
-    price: 9999,
-    period: 'monthly',
-    userType: 'empresa',
-    features: [
-      { name: 'Avisos ilimitados', included: true },
-      { name: 'Destacados en homepage', included: true },
-      { name: 'Badge Premium + Logo empresa', included: true },
-      { name: 'Inbox de mensajes ilimitado', included: true },
-      { name: 'Estadísticas avanzadas', included: true },
-      { name: 'Soporte prioritario 24/7', included: true },
-      { name: 'Múltiples usuarios', included: true },
-    ],
-  },
-  {
-    id: 'premium-empresa-yearly',
-    name: 'Premium Empresa Anual',
-    price: 99990,
-    period: 'yearly',
-    userType: 'empresa',
-    features: [
-      { name: 'Avisos ilimitados', included: true },
-      { name: 'Destacados en homepage', included: true },
-      { name: 'Badge Premium + Logo empresa', included: true },
-      { name: 'Inbox de mensajes ilimitado', included: true },
-      { name: 'Estadísticas avanzadas', included: true },
-      { name: 'Soporte prioritario 24/7', included: true },
-      { name: 'Múltiples usuarios', included: true },
-      { name: '2 meses gratis', included: true },
-    ],
-    popular: true,
-  },
-];
+// Design System Components
+import { Button } from '../atoms/Button';
+import { Badge } from '../atoms/Badge';
+import { Card, CardHeader, CardBody } from '../molecules/Card';
 
 export const SubscriptionPanel: React.FC = () => {
   const { profile } = useAuth();
-  const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'yearly'>('monthly');
-  const [processing, setProcessing] = useState(false);
+  const [credits, setCredits] = useState<any>(null);
+  const [config, setConfig] = useState<any>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  
+  // Modales
+  const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
+  const [showRedeemCouponModal, setShowRedeemCouponModal] = useState(false);
 
-  const isPremium = profile?.role === 'premium';
-  const isActive = profile?.subscription_status === 'active';
-  const userType = profile?.user_type || 'particular';
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  // Calcular fecha de renovación (ejemplo)
-  const renewalDate = new Date();
-  renewalDate.setMonth(renewalDate.getMonth() + 1);
-
-  const currentPlan = isPremium 
-    ? PRICING_PLANS.find(p => p.userType === userType && p.period === 'monthly')
-    : null;
-
-  const availablePlans = PRICING_PLANS.filter(p => p.period === selectedPeriod);
-
-  const handleSubscribe = async (planId: string) => {
-    setProcessing(true);
-    try {
-      // TODO: Integrar con Mercado Pago o payment provider
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      notify.success('Redirigiendo a la pasarela de pago...');
-      // Aquí iría la redirección a Mercado Pago
-    } catch (error) {
-      notify.error('Error al procesar el pago');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleCancelSubscription = async () => {
-    if (!confirm('¿Estás seguro de cancelar tu suscripción? Perderás todos los beneficios premium al finalizar el período actual.')) {
+  const loadData = async () => {
+    setLoading(true);
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) {
+      setLoading(false);
       return;
     }
+    setUser(authUser);
 
-    try {
-      // TODO: Implementar cancelación
-      notify.success('Suscripción cancelada. Seguirás teniendo acceso hasta el final del período.');
-    } catch (error) {
-      notify.error('Error al cancelar suscripción');
-    }
+    const [creditsData, configData, transData] = await Promise.all([
+      getUserCredits(authUser.id),
+      getCreditsConfig(),
+      getCreditTransactions(authUser.id, 5)
+    ]);
+
+    setCredits(creditsData);
+    setConfig(configData);
+    setTransactions(transData);
+    setLoading(false);
   };
 
-  const handleDownloadInvoice = (invoiceId: string) => {
-    // TODO: Implementar descarga de factura
-    notify.info('Descargando factura...');
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-10 h-10 text-green-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Suscripción</h1>
-        <p className="text-gray-600 mt-1">
-          {isPremium ? 'Gestiona tu plan Premium' : 'Elige el plan perfecto para tu negocio'}
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6">
+      {/* ============================================
+          HEADER MINIMALISTA
+          ============================================ */}
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Plan</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Gestiona tu suscripción y créditos
         </p>
       </div>
 
-      {/* Current Subscription (si tiene) */}
-      {isPremium && isActive && (
-        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-lg p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg flex items-center justify-center text-white">
-                {userType === 'empresa' ? <Building className="w-6 h-6" /> : <Award className="w-6 h-6" />}
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  Plan {userType === 'empresa' ? 'Empresa' : 'Particular'} Premium
-                </h2>
-                <p className="text-sm text-gray-700">Suscripción activa</p>
-              </div>
-            </div>
-            <span className="px-4 py-2 bg-green-500 text-white rounded-full font-bold text-sm flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
-              Activo
-            </span>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white/60 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">Precio mensual</div>
-              <div className="text-2xl font-bold text-gray-900">
-                ${currentPlan?.price.toLocaleString()}
-              </div>
-            </div>
-            <div className="bg-white/60 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">Próxima renovación</div>
-              <div className="text-lg font-bold text-gray-900">
-                {renewalDate.toLocaleDateString('es-AR')}
-              </div>
-            </div>
-            <div className="bg-white/60 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">Método de pago</div>
-              <div className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-gray-600" />
-                <span className="text-sm text-gray-900">•••• 4242</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <button className="px-4 py-2 bg-[#16a135] text-white rounded-lg hover:bg-[#0e7d25] transition-colors flex items-center gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Cambiar plan
-            </button>
-            <button className="px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors border border-gray-300">
-              Actualizar método de pago
-            </button>
-            <button 
-              onClick={handleCancelSubscription}
-              className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-            >
-              Cancelar suscripción
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Aviso de Lanzamiento */}
-      {!isPremium && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">🚀 Etapa de Lanzamiento</h3>
-            <p className="text-gray-700 text-lg mb-2">
-              Durante esta etapa, <strong>todos los usuarios tienen acceso gratuito</strong>.
-            </p>
-            <p className="text-gray-600">
-              Los planes Premium con funcionalidades exclusivas estarán disponibles próximamente.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Pricing Cards - Temporalmente deshabilitados */}
-      {!isPremium && (
-        <div className="grid md:grid-cols-2 gap-6">
-          {availablePlans.map((plan) => {
-            const isComingSoon = true; // Todos los planes premium están deshabilitados
-            return (
-            <div
-              key={plan.id}
-              className={`bg-white rounded-lg shadow-lg border-2 overflow-hidden opacity-50 cursor-not-allowed ${
-                plan.popular ? 'border-[#16a135]' : 'border-gray-200'
-              }`}
-            >
-              {plan.popular && (
-                <div className="bg-gradient-to-r from-gray-400 to-gray-500 text-white text-center py-2 font-bold text-sm">
-                  🔒 PRÓXIMAMENTE
+      {/* ============================================
+          GRID PRINCIPAL - 2 COLUMNAS
+          ============================================ */}
+      <div className="grid lg:grid-cols-5 gap-4 sm:gap-6">
+        
+        {/* ============================================
+            COLUMNA IZQUIERDA: PLAN + CRÉDITOS (3/5)
+            ============================================ */}
+        <div className="lg:col-span-3 space-y-4 sm:space-y-6">
+          
+          {/* MI PLAN ACTUAL - Card Minimalista */}
+          <Card variant="outlined" padding="lg" className="hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-white" />
                 </div>
-              )}
-
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  {plan.userType === 'empresa' ? (
-                    <Building className="w-8 h-8 text-[#16a135]" />
-                  ) : (
-                    <Award className="w-8 h-8 text-[#16a135]" />
-                  )}
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
-                    <p className="text-sm text-gray-600">
-                      {plan.userType === 'empresa' ? 'Para empresas' : 'Para particulares'}
-                    </p>
-                  </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Plan Starter</h2>
+                  <Badge variant="success" size="sm" className="mt-1">
+                    Activo
+                  </Badge>
                 </div>
-
-                <div className="mb-6">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-gray-400">
-                      Próximamente
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-400 mt-1">
-                    Precio por confirmar
-                  </p>
-                </div>
-
-                <ul className="space-y-3 mb-6">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      {feature.included ? (
-                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" />
-                      )}
-                      <span className={feature.included ? 'text-gray-900' : 'text-gray-400'}>
-                        {feature.name}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  disabled={true}
-                  className="w-full py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 bg-gray-300 text-gray-500 cursor-not-allowed"
-                >
-                  🔒 Próximamente
-                </button>
               </div>
-            </div>
-          )})}
-        </div>
-      )}
-
-      {/* Benefits Section */}
-      <div className="bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg p-8 text-white">
-        <h2 className="text-2xl font-bold mb-6">¿Por qué elegir Premium?</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          <div>
-            <TrendingUp className="w-10 h-10 mb-3" />
-            <h3 className="font-bold text-lg mb-2">Mayor Visibilidad</h3>
-            <p className="text-green-100 text-sm">
-              Tus avisos aparecen destacados en la homepage y en los primeros resultados de búsqueda
-            </p>
-          </div>
-          <div>
-            <Award className="w-10 h-10 mb-3" />
-            <h3 className="font-bold text-lg mb-2">Badge Premium</h3>
-            <p className="text-green-100 text-sm">
-              Destácate de la competencia con el badge dorado que genera confianza
-            </p>
-          </div>
-          <div>
-            <Zap className="w-10 h-10 mb-3" />
-            <h3 className="font-bold text-lg mb-2">Sin Límites</h3>
-            <p className="text-green-100 text-sm">
-              Publica avisos ilimitados y recibe todas las consultas sin restricciones
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Billing History (si es premium) */}
-      {isPremium && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Historial de Facturación</h3>
-          <div className="space-y-3">
-            {[
-              { id: '1', date: '2024-11-01', amount: 4999, status: 'paid' },
-              { id: '2', date: '2024-10-01', amount: 4999, status: 'paid' },
-              { id: '3', date: '2024-09-01', amount: 4999, status: 'paid' },
-            ].map((invoice) => (
-              <div
-                key={invoice.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled
+                className="text-gray-400 cursor-not-allowed"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      ${invoice.amount.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {new Date(invoice.date).toLocaleDateString('es-AR')}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleDownloadInvoice(invoice.id)}
-                  className="px-4 py-2 text-[#16a135] hover:bg-green-50 rounded-lg transition-colors flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Descargar
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+                Próximamente
+              </Button>
+            </div>
 
-      {/* FAQ */}
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Preguntas Frecuentes</h3>
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-semibold text-gray-900 mb-1">¿Puedo cancelar en cualquier momento?</h4>
-            <p className="text-sm text-gray-600">
-              Sí, puedes cancelar tu suscripción cuando quieras. Seguirás teniendo acceso a los beneficios hasta el final del período pagado.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-semibold text-gray-900 mb-1">¿Qué métodos de pago aceptan?</h4>
-            <p className="text-sm text-gray-600">
-              Aceptamos tarjetas de crédito, débito y Mercado Pago.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-semibold text-gray-900 mb-1">¿Puedo cambiar de plan?</h4>
-            <p className="text-sm text-gray-600">
-              Sí, puedes cambiar de plan en cualquier momento. El cambio se aplicará en el próximo ciclo de facturación.
-            </p>
-          </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+              {[
+                { label: 'Avisos', value: '∞', icon: <CheckCircle className="w-4 h-4" /> },
+                { label: 'Mensajes', value: '∞', icon: <CheckCircle className="w-4 h-4" /> },
+                { label: 'Categorías', value: '∞', icon: <CheckCircle className="w-4 h-4" /> },
+                { label: 'Soporte', value: '24/7', icon: <CheckCircle className="w-4 h-4" /> }
+              ].map((item, idx) => (
+                <div key={idx} className="flex flex-col items-center gap-1">
+                  <div className="text-green-600">{item.icon}</div>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">{item.value}</p>
+                  <p className="text-xs text-gray-500">{item.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Banner lanzamiento compacto */}
+            <Card variant="ghost" padding="sm" className="mt-4 bg-amber-50 border border-amber-200">
+              <div className="flex items-center gap-2 text-xs sm:text-sm">
+                <Info className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <p className="text-gray-700">
+                  <strong>Etapa de lanzamiento:</strong> Acceso gratuito para todos
+                </p>
+              </div>
+            </Card>
+          </Card>
+
+          {/* BALANCE DE CRÉDITOS - Estilo Fintech */}
+          <Card variant="elevated" padding="none" className="overflow-hidden bg-gradient-to-br from-cyan-500 to-blue-600">
+            <div className="p-6 sm:p-8">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-cyan-100 text-xs sm:text-sm font-medium uppercase tracking-wide">
+                  Balance de Créditos
+                </p>
+                <Coins className="w-5 h-5 text-white/60" />
+              </div>
+              
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-4xl sm:text-6xl font-black text-white leading-none">
+                  {credits?.balance || 0}
+                </span>
+                <span className="text-lg sm:text-xl text-cyan-100 font-medium">
+                  créditos
+                </span>
+              </div>
+
+              <p className="text-cyan-100 text-xs sm:text-sm">
+                1 crédito = 7 días de visibilidad destacada
+              </p>
+
+              <div className="mt-6 pt-6 border-t border-white/20 grid grid-cols-2 gap-3">
+                <Button
+                  variant="primary"
+                  size="md"
+                  fullWidth
+                  onClick={() => setShowBuyCreditsModal(true)}
+                  className="bg-white text-cyan-600 hover:bg-cyan-50"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Comprar
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="md"
+                  fullWidth
+                  onClick={() => setShowRedeemCouponModal(true)}
+                  className="border-white/40 text-white hover:bg-white/10"
+                >
+                  <Gift className="w-4 h-4" />
+                  Cupón
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* ============================================
+            COLUMNA DERECHA: PAQUETES + HISTORIAL (2/5)
+            ============================================ */}
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          
+          {/* PAQUETES DE CRÉDITOS - Grid compacto */}
+          <Card variant="outlined" padding="md">
+            <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-green-600" />
+              Paquetes
+            </h3>
+
+            <div className="grid grid-cols-2 gap-2">
+              {config && [1, 2, 3, 4].map(qty => {
+                const price = config.credit_base_price * qty;
+                const isPopular = qty === 3;
+                return (
+                  <Card
+                    key={qty}
+                    variant="ghost"
+                    padding="sm"
+                    className={`cursor-pointer transition-all hover:scale-105 text-center border-2 ${
+                      isPopular
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-gray-200 hover:border-green-300'
+                    }`}
+                    onClick={() => setShowBuyCreditsModal(true)}
+                  >
+                    {isPopular && (
+                      <Badge variant="success" size="sm" className="mb-1 w-full justify-center text-xs">
+                        Popular
+                      </Badge>
+                    )}
+                    <div className="text-2xl font-black text-green-600">{qty}</div>
+                    <div className="text-xs text-gray-500 mb-1">
+                      {qty === 1 ? 'crédito' : 'créditos'}
+                    </div>
+                    <div className="text-sm font-bold text-gray-900">
+                      ${price.toLocaleString('es-AR')}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* ÚLTIMOS MOVIMIENTOS - Lista compacta */}
+          {transactions.length > 0 && (
+            <Card variant="outlined" padding="md">
+              <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-gray-600" />
+                Movimientos
+              </h3>
+              
+              <div className="space-y-2">
+                {transactions.slice(0, 4).map(tx => (
+                  <div
+                    key={tx.id}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0 mr-3">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {tx.description}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(tx.created_at).toLocaleDateString('es-AR', { 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </p>
+                    </div>
+                    <Badge 
+                      variant={tx.amount > 0 ? 'success' : 'danger'} 
+                      size="sm"
+                    >
+                      {tx.amount > 0 ? '+' : ''}{tx.amount}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* INFO RÁPIDA - Equivalencias */}
+          <Card variant="ghost" padding="sm" className="bg-blue-50 border border-blue-200">
+            <div className="flex items-start gap-2">
+              <TrendingUp className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="text-xs text-gray-700 space-y-1">
+                <p className="font-semibold text-blue-900">Equivalencias:</p>
+                {config && [
+                  { credits: 1, days: 7 },
+                  { credits: 2, days: 15 },
+                  { credits: 3, days: 30 },
+                  { credits: 4, days: 60 }
+                ].map(({ credits, days }) => (
+                  <p key={credits}>
+                    <span className="font-medium">{credits} {credits === 1 ? 'crédito' : 'créditos'}</span> = {days} días
+                  </p>
+                ))}
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
+
+      {/* ============================================
+          MODALES
+          ============================================ */}
+      <BuyCreditsModal
+        isOpen={showBuyCreditsModal}
+        onClose={() => setShowBuyCreditsModal(false)}
+        onSuccess={() => {
+          setShowBuyCreditsModal(false);
+          loadData();
+        }}
+      />
+
+      <RedeemCouponModal
+        isOpen={showRedeemCouponModal}
+        onClose={() => setShowRedeemCouponModal(false)}
+        onSuccess={(creditsGranted, newBalance) => {
+          setShowRedeemCouponModal(false);
+          loadData();
+        }}
+      />
     </div>
   );
 };
+
+export default SubscriptionPanel;

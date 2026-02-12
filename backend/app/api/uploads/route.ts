@@ -24,8 +24,9 @@ const ALLOWED_MIME_TYPES = [
   'image/jpg',
   'image/png',
   'image/webp',
-  'image/heic', // iOS photos
-  'image/heif', // iOS photos
+  'image/avif',  // Modern format (better compression)
+  'image/heic',  // iOS photos
+  'image/heif',  // iOS photos
 ];
 
 // Tipos bloqueados explícitamente
@@ -64,7 +65,7 @@ function validateMimeType(mimeType: string): { valid: boolean; reason?: string }
   if (!ALLOWED_MIME_TYPES.includes(mimeType.toLowerCase())) {
     return {
       valid: false,
-      reason: `Formato de imagen no soportado: ${mimeType}. Formatos permitidos: JPG, PNG, WebP, HEIC`
+      reason: `Formato de imagen no soportado: ${mimeType}. Formatos permitidos: JPG, PNG, WebP, AVIF, HEIC`
     };
   }
 

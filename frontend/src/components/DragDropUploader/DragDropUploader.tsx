@@ -1,12 +1,13 @@
 /**
  * DragDropUploader Component
  * Upload profesional con drag & drop, reorder y preview
+ * Incluye moderación automática de contenido (NSFW.js)
  */
 
 import React, { useState, useRef, DragEvent } from 'react';
 import { uploadsApi } from '../../services/api/uploads';
 import { notify } from '../../utils/notifications';
-import { validateImageBeforeUpload } from '../../utils/imageValidation';
+import { useImageValidation } from '../../hooks/useImageValidation';
 import './DragDropUploader.css';
 
 export interface UploadedImage {
@@ -36,6 +37,9 @@ export function DragDropUploader({
   const [isDragging, setIsDragging] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Validación básica de imágenes (sin ML)
+  const { validateImage, isValidating } = useImageValidation();
 
   const handleDragEnter = (e: DragEvent) => {
     e.preventDefault();
@@ -84,24 +88,31 @@ export function DragDropUploader({
     // ✨ VALIDACIÓN PREVENTIVA - Validar ANTES de agregar a la lista
     console.log(`[DragDropUploader] 🔍 Validando ${filesToProcess.length} archivos...`);
     const validFiles: File[] = [];
-    
+
     for (const file of filesToProcess) {
-      const validation = await validateImageBeforeUpload(file);
+      // Validación básica (formato, tamaño, dimensiones)
+      const validation = await validateImage(file);
       
-      if (!validation.valid) {
-        notify.error(`${file.name}: ${validation.message}`, 6000);
+      if (!validation.isValid) {
+        notify.error(`${file.name}: ${validation.errors[0]}`, 6000);
         console.log(`[DragDropUploader] ❌ Validación fallida:`, {
           file: file.name,
-          reason: validation.message,
-          dimensions: validation.dimensions
+          errors: validation.errors
         });
-      } else {
-        validFiles.push(file);
-        console.log(`[DragDropUploader] ✅ Archivo válido:`, {
-          file: file.name,
-          dimensions: validation.dimensions
-        });
+        continue;
       }
+
+      // Mostrar warnings (no bloquean)
+      if (validation.warnings.length > 0) {
+        notify.warning(validation.warnings[0], 3000);
+      }
+
+      // Archivo válido
+      validFiles.push(file);
+      console.log(`[DragDropUploader] ✅ Archivo válido:`, {
+        file: file.name,
+        metadata: validation.metadata
+      });
     }
 
     if (validFiles.length === 0) {

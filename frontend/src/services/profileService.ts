@@ -148,10 +148,10 @@ export async function uploadAvatar(file: File): Promise<{ url: string | null; er
     }
 
     const fileExt = file.name.split('.').pop()?.toLowerCase();
-    const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'heic'];
     
     if (!fileExt || !allowedExts.includes(fileExt)) {
-      return { url: null, error: new Error('Formato de imagen no válido. Use JPG, PNG o WEBP.') };
+      return { url: null, error: new Error('Formato de imagen no válido. Use JPG, PNG, WebP, AVIF o HEIC.') };
     }
 
     // Limitar tamaño a 2MB

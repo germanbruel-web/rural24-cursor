@@ -1,6 +1,7 @@
 /**
  * SimpleImageUploader - Upload simple con input file nativo
  * Reemplaza DragDropUploader por feedback UX claro y código mantenible
+ * Incluye moderación automática de contenido (NSFW.js)
  * 
  * CONFIGURACIÓN IMAGEN PREDETERMINADA:
  * 1. Subir imagen al CMS Backend (Dashboard Superadmin)
@@ -13,6 +14,8 @@ import React, { useState, useEffect } from 'react';
 import { Upload, X, AlertCircle, Loader, Star } from 'lucide-react';
 import { uploadsApi } from '../../services/api';
 import { notify } from '../../utils/notifications';
+import { useImageValidation } from '../../hooks/useImageValidation';
+import { useImageCompression } from '../../hooks/useImageCompression';
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -51,6 +54,12 @@ export const SimpleImageUploader: React.FC<Props> = ({
 }) => {
   const [images, setImages] = useState<UploadedImage[]>(existingImages);
   const [uploading, setUploading] = useState(false);
+
+  // Validación básica de imágenes (sin ML)
+  const { validateImage, isValidating } = useImageValidation();
+  
+  // Compresión automática de imágenes grandes
+  const { compressImage, isCompressing, progress } = useImageCompression();
 
   // Configurar sensores para drag & drop
   const sensors = useSensors(
@@ -92,11 +101,30 @@ export const SimpleImageUploader: React.FC<Props> = ({
       return;
     }
 
-    // Validar tamaño (5MB por imagen)
-    const MAX_SIZE = 5 * 1024 * 1024;
-    const oversized = files.filter(f => f.size > MAX_SIZE);
-    if (oversized.length > 0) {
-      notify.error(`Foto muy grande (máx 5MB)`);
+    // Validación básica client-side (formato, tamaño, dimensiones)
+    const validFiles: File[] = [];
+    for (const file of files) {
+      const validation = await validateImage(file);
+      
+      if (!validation.isValid) {
+        // Mostrar primer error
+        notify.error(validation.errors[0], 5000);
+        console.log(`[SimpleUploader] ❌ Validación falló:`, {
+          file: file.name,
+          errors: validation.errors
+        });
+        continue;
+      }
+
+      // Mostrar warnings (no bloquean)
+      if (validation.warnings.length > 0) {
+        notify.warning(validation.warnings[0], 3000);
+      }
+      
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) {
       return;
     }
 
@@ -104,7 +132,7 @@ export const SimpleImageUploader: React.FC<Props> = ({
 
     // Crear previews locales inmediatamente
     const startIndex = images.length;
-    const newImages: UploadedImage[] = files.map((file, idx) => ({
+    const newImages: UploadedImage[] = validFiles.map((file, idx) => ({
       file,
       preview: URL.createObjectURL(file),
       status: 'uploading' as const,
@@ -117,12 +145,26 @@ export const SimpleImageUploader: React.FC<Props> = ({
     setImages(updatedImages);
 
     // Upload secuencial con feedback
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    for (let i = 0; i < validFiles.length; i++) {
+      let file = validFiles[i]; // let (no const) para reasignar si se comprime
       const imageIndex = images.length + i;
 
       try {
-        console.log(`[SimpleUploader] 📤 Uploading ${i + 1}/${files.length}: ${file.name}`);
+        // 🗜️ COMPRIMIR si es necesaria
+        const originalSize = file.size;
+        if (originalSize > 2 * 1024 * 1024) { // >2MB
+          console.log(`[SimpleUploader] 🗜️ Comprimiendo imagen ${i + 1}...`);
+          notify.info('Optimizando imagen...', 2000);
+          
+          const compressionResult = await compressImage(file);
+          
+          if (compressionResult.success && compressionResult.compressedFile) {
+            file = compressionResult.compressedFile;
+            console.log(`[SimpleUploader] ✅ Compresión: ${(originalSize / 1024 / 1024).toFixed(2)}MB → ${(file.size / 1024 / 1024).toFixed(2)}MB (-${compressionResult.reductionPercent}%)`);
+          }
+        }
+        
+        console.log(`[SimpleUploader] 📤 Uploading ${i + 1}/${validFiles.length}: ${file.name}`);
         
         const result = await uploadsApi.uploadImage(file, folder);
         
