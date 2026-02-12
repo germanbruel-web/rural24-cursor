@@ -34,7 +34,7 @@ export interface RegisterResult {
   userId?: string;
   needsVerification?: boolean;
   error?: string;
-  errorCode?: 'EMAIL_EXISTS' | 'WEAK_PASSWORD' | 'INVALID_CUIT' | 'UNKNOWN';
+  errorCode?: 'EMAIL_EXISTS' | 'WEAK_PASSWORD' | 'INVALID_CUIT' | 'RATE_LIMIT' | 'UNKNOWN';
 }
 
 /**

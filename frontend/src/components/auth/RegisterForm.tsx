@@ -84,7 +84,16 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
       }
 
       if (!result.success) {
-        setError(result.error || 'Error al registrarse');
+        // Manejar diferentes tipos de errores
+        if (result.errorCode === 'RATE_LIMIT') {
+          setError('RATE_LIMIT');
+        } else if (result.errorCode === 'EMAIL_EXISTS') {
+          setError('Este email ya está registrado. ¿Querés iniciar sesión?');
+        } else if (result.errorCode === 'WEAK_PASSWORD') {
+          setError('La contraseña debe tener al menos 6 caracteres');
+        } else {
+          setError(result.error || 'Error al registrarse');
+        }
         setLoading(false);
         return;
       }
@@ -211,9 +220,47 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
 
         {/* Error de login social */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="mb-4">
+            {error === 'RATE_LIMIT' ? (
+              // UI especial para rate limit
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4">
+                <div className="flex items-start gap-3 mb-3">
+                  <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-bold text-amber-900 mb-2">Demasiados registros</h4>
+                    <p className="text-sm text-amber-800 mb-3">
+                      Se alcanzó el límite de cuentas nuevas por hora. Esto es una medida de seguridad.
+                    </p>
+                    <div className="bg-white rounded-md p-3 border border-amber-200 mb-3">
+                      <p className="text-sm font-semibold text-gray-900 mb-2">⏰ Opciones disponibles:</p>
+                      <ul className="text-sm text-gray-700 space-y-1.5">
+                        <li className="flex items-start gap-2">
+                          <span className="text-amber-600 font-bold">1.</span>
+                          <span>Intentá nuevamente en <strong>30-60 minutos</strong></span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-amber-600 font-bold">2.</span>
+                          <span>Usá <strong>Google o Facebook</strong> (botones abajo)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-amber-600 font-bold">3.</span>
+                          <span>Si ya tenés cuenta, <button onClick={onSwitchToLogin} className="text-[#16a135] font-semibold underline">iniciá sesión aquí</button></span>
+                        </li>
+                      </ul>
+                    </div>
+                    <p className="text-xs text-amber-700">
+                      💡 <strong>Recomendación:</strong> El registro con Google/Facebook es instantáneo y más rápido.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Error normal
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -373,9 +420,51 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="mb-4">
+          {error === 'RATE_LIMIT' ? (
+            // UI especial para rate limit en Step 2
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4">
+              <div className="flex items-start gap-3 mb-3">
+                <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-bold text-amber-900 mb-2">⚠️ Límite temporal alcanzado</h4>
+                  <p className="text-sm text-amber-800 mb-3">
+                    Por seguridad, hay un límite de registros por hora. No te preocupes, no perdiste tus datos.
+                  </p>
+                  <div className="bg-white rounded-md p-3 border border-amber-200 mb-3">
+                    <p className="text-sm font-semibold text-gray-900 mb-2">✅ Qué podés hacer ahora:</p>
+                    <ul className="text-sm text-gray-700 space-y-1.5">
+                      <li className="flex items-start gap-2">
+                        <span className="text-green-600 font-bold">↓</span>
+                        <span><strong>Registrate con Google o Facebook</strong> (botones abajo, es instantáneo)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-amber-600">⏰</span>
+                        <span>O esperá <strong>30-60 minutos</strong> y volvé a intentar</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-600">🔑</span>
+                        <span>Si ya tenés cuenta: <button onClick={onSwitchToLogin} className="text-[#16a135] font-semibold underline">Iniciá sesión</button></span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Error normal
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-red-800">{error}</p>
+                {error.includes('ya está registrado') && (
+                  <button onClick={onSwitchToLogin} className="text-[#16a135] font-semibold text-sm underline mt-1">
+                    Ir a iniciar sesión
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
