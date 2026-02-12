@@ -416,7 +416,10 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
                   value={province}
                   onChange={(e) => {
                     setProvince(e.target.value);
-                    setLocality('');
+                    if (locality) {
+                      setLocality('');
+                      trackFieldChange('location');
+                    }
                     trackFieldChange('province');
                   }}
                   className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-primary-500 ${
@@ -435,14 +438,18 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
                   value={locality}
                   onChange={(e) => {
                     setLocality(e.target.value);
-                    trackFieldChange('locality');
+                    trackFieldChange('location');
                   }}
                   disabled={!province}
                   className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50 ${
-                    modifiedFields.has('locality') ? 'border-primary-500 ring-1 ring-primary-100' : 'border-gray-300'
+                    modifiedFields.has('location') ? 'border-primary-500 ring-1 ring-primary-100' : 'border-gray-300'
                   }`}
                 >
                   <option value="">Seleccionar...</option>
+                  {/* Mostrar localidad actual si no está en la lista */}
+                  {locality && !LOCALITIES_BY_PROVINCE[province]?.includes(locality) && (
+                    <option value={locality}>{locality}</option>
+                  )}
                   {LOCALITIES_BY_PROVINCE[province]?.map((loc) => (
                     <option key={loc} value={loc}>{loc}</option>
                   ))}

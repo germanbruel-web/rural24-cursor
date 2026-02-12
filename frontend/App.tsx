@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, Suspense, lazy, useEffect } from "react";
+import { HelmetProvider } from 'react-helmet-async';
 
 // ============================================================
 // TYPES
@@ -59,7 +60,7 @@ const BackendSettings = lazy(() => import("./src/components/admin/BackendSetting
 const GlobalSettingsPanel = lazy(() => import("./src/components/admin/GlobalSettingsPanel"));
 const PaymentsAdminPanel = lazy(() => import("./src/components/admin/PaymentsAdminPanel"));
 const SitemapSeoPanel = lazy(() => import("./src/components/admin/SitemapSeoPanel"));
-const SuperAdminFeaturedPanel = lazy(() => import("./src/components/admin/SuperAdminFeaturedPanel").then(m => ({ default: m.SuperAdminFeaturedPanel })));
+const SuperAdminFeaturedPanel = lazy(() => import("./src/components/admin/SuperAdminFeaturedPanel"));
 
 // Dashboard Components (solo para usuarios autenticados)
 const MessagesPanel = lazy(() => import("./src/components/dashboard/MessagesPanel").then(m => ({ default: m.MessagesPanel })));
@@ -98,12 +99,14 @@ export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 
  */
 const App: React.FC = () => {
   return (
-    <ToastProvider>
-      <CategoryProvider>
-        <OfflineBanner />
-        <AppContent />
-      </CategoryProvider>
-    </ToastProvider>
+    <HelmetProvider>
+      <ToastProvider>
+        <CategoryProvider>
+          <OfflineBanner />
+          <AppContent />
+        </CategoryProvider>
+      </ToastProvider>
+    </HelmetProvider>
   );
 };
 

@@ -4,7 +4,8 @@
 // Desktop: Logo (izq) | Buscador (centro) | Clima (der)
 
 import React, { useState } from 'react';
-import { Search, X, Sun, Cloud, Wind, Thermometer, Menu } from 'lucide-react';
+import { Sun, Cloud, Wind, Thermometer, Menu, X } from 'lucide-react';
+import { GlobalSearchBar } from './GlobalSearchBar';
 import type { Page } from '../../App';
 
 interface HeaderProps {
@@ -20,19 +21,16 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleMobileMenu,
   showMobileMenuButton = true 
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   
   // Logo estático para evitar latencia
   const LOGO_PATH = '/images/logos/rural24-dark.webp';
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim() && onSearch) {
-      onSearch(searchQuery.trim());
-      setSearchQuery('');
-      setShowMobileSearch(false);
+  const handleSearch = (query: string) => {
+    if (onSearch) {
+      onSearch(query);
     }
+    setShowMobileSearch(false);
   };
 
   return (
@@ -55,93 +53,37 @@ export const Header: React.FC<HeaderProps> = ({
             />
           </button>
           
-          {/* Buscador - Centro (Desktop) */}
-          <div className="hidden sm:block flex-1 max-w-2xl mx-auto">
-            <form onSubmit={handleSubmit} className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar tractores, cosechadoras, campos..."
-                className="w-full pl-10 pr-20 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16a135] focus:border-transparent transition-all bg-gray-50 hover:bg-white"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-14 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full transition-colors"
-                >
-                  <X className="w-4 h-4 text-gray-400" />
-                </button>
-              )}
-              <button
-                type="submit"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-[#16a135] hover:bg-[#138a2e] text-white text-sm font-medium rounded-md transition-colors"
-              >
-                Buscar
-              </button>
-            </form>
-          </div>
+          {/* Buscador Global - Centro (Desktop) */}
+          <GlobalSearchBar
+            onSearch={handleSearch}
+            placeholder="Tractores, campos, semillas..."
+            className="hidden sm:block flex-1 max-w-2xl mx-auto"
+          />
 
-          {/* Buscador móvil - Expandible */}
           {showMobileSearch ? (
-            <form onSubmit={handleSubmit} className="sm:hidden flex-1 flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar..."
-                  autoFocus
-                  className="w-full pl-3 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16a135]"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2"
-                  >
-                    <X className="w-4 h-4 text-gray-400" />
-                  </button>
-                )}
-              </div>
-              <button
-                type="submit"
-                className="px-3 py-2 bg-[#16a135] text-white text-sm font-medium rounded-lg"
-              >
-                <Search className="w-4 h-4" />
-              </button>
+            /* Buscador Mobile - Expandido */
+            <div className="sm:hidden flex-1 flex gap-2 items-center">
+              <GlobalSearchBar
+                onSearch={handleSearch}
+                placeholder="Buscar..."
+                autoFocus
+                className="flex-1"
+              />
               <button
                 type="button"
                 onClick={() => setShowMobileSearch(false)}
-                className="p-2 text-gray-500"
+                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
-            </form>
+            </div>
           ) : (
             <>
-              {/* Icono búsqueda mobile */}
-              <button
-                className="sm:hidden flex-1 flex items-center justify-center gap-2 py-2 px-3 text-gray-500 bg-gray-100 rounded-lg"
-                onClick={() => setShowMobileSearch(true)}
-              >
-                <Search className="w-4 h-4" />
-                <span className="text-sm text-gray-400">Buscar...</span>
-              </button>
-
-              {/* Widget Clima - Desktop */}
-              <div className="hidden lg:flex items-center gap-3 text-sm text-gray-600 flex-shrink-0">
-                <div className="flex items-center gap-1" title="Temperatura">
-                  <Sun className="w-4 h-4 text-yellow-500" />
-                  <span className="font-medium">24°C</span>
-                </div>
-                <div className="w-px h-4 bg-gray-300" />
-                <div className="flex items-center gap-1" title="Condición">
-                  <Cloud className="w-4 h-4 text-gray-400" />
-                  <span>Parcial</span>
-                </div>
+              {/* Clima - Derecha (Desktop) */}
+              <div className="hidden lg:flex items-center gap-2 text-sm text-gray-500 flex-shrink-0">
+                <Sun className="w-4 h-4 text-yellow-500" />
+                <span>28°</span>
+                <Cloud className="w-4 h-4 text-gray-400" />
                 <div className="w-px h-4 bg-gray-300" />
                 <div className="flex items-center gap-1" title="Viento">
                   <Wind className="w-4 h-4 text-blue-400" />

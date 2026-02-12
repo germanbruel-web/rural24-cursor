@@ -1,3 +1,17 @@
+/**
+ * @deprecated Este componente está deprecado.
+ * Usar GlobalSearchBar en su lugar.
+ * 
+ * SearchBar.tsx contiene datos hardcodeados (POPULAR_SUGGESTIONS)
+ * que ya no se mantienen actualizados.
+ * 
+ * Migración:
+ * import { GlobalSearchBar } from './GlobalSearchBar';
+ * <GlobalSearchBar onSearch={handleSearch} />
+ * 
+ * Pendiente de eliminación: Marzo 2026
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { SearchIcon } from './IconComponents';
 

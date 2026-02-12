@@ -7,6 +7,8 @@
 // CORE COMPONENTS (uso frecuente, carga inmediata)
 // ============================================================
 export { Header } from './Header';
+export { GlobalSearchBar } from './GlobalSearchBar';
+export { SearchSEO } from './SearchSEO';
 export { TopNav } from './TopNav';
 export { AppHeader } from './AppHeader';
 export { Footer } from './Footer';

@@ -66,16 +66,39 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
 
   // Imagen por defecto si no hay imágenes configuradas
   const defaultImage = '/images/hero/hero.1.jpeg';
+  
+  // Video de YouTube como background
+  const youtubeVideoId = 'mD_EWwLVuNs';
 
   return (
-    <section className="relative bg-gradient-to-br from-[#f0f9f4] to-[#e8f5ed] py-28 px-4 overflow-hidden">
+    <section className="relative bg-black py-28 px-4 overflow-hidden">
+      {/* Video Background de YouTube */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden">
+        <iframe
+          className="absolute top-1/2 left-1/2 w-[300%] h-[300%] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          src={`https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${youtubeVideoId}&controls=0&showinfo=0&modestbranding=1&playsinline=1&rel=0&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0`}
+          title="Rural24 Background Video"
+          frameBorder="0"
+          allow="autoplay; encrypted-media"
+          style={{
+            minWidth: '100vw',
+            minHeight: '100vh',
+            width: 'auto',
+            height: 'auto',
+          }}
+        />
+      </div>
+
+      {/* Overlay oscuro para legibilidad */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
+
       {/* Contenido del hero (buscador, texto, etc.) */}
       <div className="relative z-10">
         <div className="text-center mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 drop-shadow-lg">
             Encontrá lo que necesitás para tu campo
           </h1>
-          <p className="text-base md:text-lg text-gray-600 font-medium">
+          <p className="text-base md:text-lg text-white/95 font-medium drop-shadow-md">
             Miles de productos agrícolas, maquinarias y servicios en un solo lugar
           </p>
         </div>

@@ -15,6 +15,7 @@ export { useCategoryPrefetch } from './useCategoryPrefetch';
 export { useRealtimeCategories } from './useRealtimeCategories';
 export { useSiteSetting } from './useSiteSetting';
 export { useFooterConfig } from './useFooterConfig';
+export { useSearchSuggestions } from './useSearchSuggestions';
 
 // UI hooks
 export { useImageUpload } from './useImageUpload';

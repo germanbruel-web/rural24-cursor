@@ -1,7 +1,10 @@
 /**
  * ManualActivationTab.tsx
- * Tab para que SuperAdmin active featured ads manualmente SIN consumir créditos
- * Búsqueda de aviso + formulario de activación
+ * ⚠️ OBSOLETO (12-Feb-2026): Funcionalidad movida al tab "Destacados" con CreateFeaturedModal
+ * 
+ * [DEPRECADO] Tab para que SuperAdmin active featured ads manualmente SIN consumir créditos
+ * Reemplazado por: CreateFeaturedModal.tsx que usa RPC create_featured_ad con detección de role='superadmin'
+ * Este archivo se mantiene solo por referencia histórica.
  */
 
 import React, { useState, useEffect } from 'react';

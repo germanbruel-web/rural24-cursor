@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { SearchResultsPageMinimal } from '../components';
+import { SearchSEO } from '../components/SearchSEO';
 
 interface SearchPageProps {
   results?: any[];
@@ -20,13 +21,19 @@ interface SearchPageProps {
 }
 
 export const SearchPage: React.FC<SearchPageProps> = (props) => {
-  // SearchResultsPageMinimal maneja su propio estado
-  // usando URL params y contexts
+  // Extraer query de URL hash para SEO
+  const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+  const currentQuery = hashParams.get('q') || undefined;
+  const resultCount = props.results?.length;
+
   return (
-    <SearchResultsPageMinimal
-      key={window.location.hash} // Force re-render on URL change
-      {...props}
-    />
+    <>
+      <SearchSEO currentQuery={currentQuery} resultCount={resultCount} />
+      <SearchResultsPageMinimal
+        key={window.location.hash}
+        {...props}
+      />
+    </>
   );
 };
 

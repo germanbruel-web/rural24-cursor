@@ -1,19 +1,18 @@
 /**
- * AdsManagementPanel - Panel Minimalista de Gestión de Avisos
+ * AdsManagementPanel - Panel CRUD Simple de Gestión de Avisos
  * 
  * UX Flow:
  * 1. Seleccionar Categoría Principal
  * 2. Seleccionar Subcategoría
  * 3. Click BUSCAR → Carga avisos paginados (10 por página)
  * 4. Filtro interno por título (autocomplete local)
- * 5. Marcar/Desmarcar destacado con fecha
- * 6. PUBLICAR CAMBIOS → Refresh en Homepage
  * 
+ * NOTA: Para gestionar destacados, usar el panel dedicado SuperAdminFeaturedPanel
  * AHORRO DE RECURSOS: No carga avisos hasta que se hace click en BUSCAR
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Search, Star, StarOff, RefreshCw, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
 
@@ -40,18 +39,10 @@ interface AdRow {
   price: number | null;
   currency: string;
   status: string;
-  featured: boolean;
-  featured_until: string | null;
   created_at: string;
   user_id: string;
   seller_name?: string;
   seller_email?: string;
-}
-
-interface PendingChange {
-  ad_id: string;
-  action: 'feature' | 'unfeature';
-  featured_until?: string;
 }
 
 interface SellerEdit {
@@ -87,14 +78,6 @@ export default function AdsManagementPanel() {
   
   // === STEP 4: Filtro por título (local) ===
   const [titleFilter, setTitleFilter] = useState('');
-  
-  // === STEP 5 & 6: Cambios pendientes ===
-  const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(new Map());
-  const [publishing, setPublishing] = useState(false);
-  
-  // === Fecha destacado temporal ===
-  const [editingFeaturedId, setEditingFeaturedId] = useState<string | null>(null);
-  const [tempFeaturedDate, setTempFeaturedDate] = useState('');
   
   // === Edición de vendedor ===
   const [editingSellerUserId, setEditingSellerUserId] = useState<string | null>(null);
@@ -172,7 +155,7 @@ export default function AdsManagementPanel() {
 
       let query = supabase
         .from('ads')
-        .select('id, title, price, currency, status, featured, featured_until, created_at, user_id')
+        .select('id, title, price, currency, status, created_at, user_id')
         .eq('category_id', selectedCategory)
         .neq('status', 'deleted')
         .order('created_at', { ascending: false })
@@ -210,7 +193,6 @@ export default function AdsManagementPanel() {
 
       setAds(adsWithSellers);
       setCurrentPage(page);
-      setPendingChanges(new Map()); // Reset cambios pendientes
     } catch (err) {
       console.error('Error loading ads:', err);
       notify.error('Error al cargar avisos');
@@ -285,99 +267,6 @@ export default function AdsManagementPanel() {
       .map(ad => ad.title)
       .slice(0, 5);
   }, [ads, titleFilter]);
-
-  // ============================================================
-  // STEP 5: Toggle Destacado
-  // ============================================================
-
-  const toggleFeatured = (adId: string, currentFeatured: boolean) => {
-    const newChanges = new Map(pendingChanges);
-    
-    if (currentFeatured) {
-      // Quitar destacado
-      newChanges.set(adId, { ad_id: adId, action: 'unfeature' });
-    } else {
-      // Abrir selector de fecha
-      setEditingFeaturedId(adId);
-      setTempFeaturedDate('');
-    }
-    
-    setPendingChanges(newChanges);
-  };
-
-  const confirmFeatured = (adId: string) => {
-    const newChanges = new Map(pendingChanges);
-    newChanges.set(adId, { 
-      ad_id: adId, 
-      action: 'feature',
-      featured_until: tempFeaturedDate || undefined
-    });
-    setPendingChanges(newChanges);
-    setEditingFeaturedId(null);
-    setTempFeaturedDate('');
-  };
-
-  const cancelFeatured = () => {
-    setEditingFeaturedId(null);
-    setTempFeaturedDate('');
-  };
-
-  // Estado efectivo de un aviso (considerando cambios pendientes)
-  const getEffectiveFeatured = (ad: AdRow): boolean => {
-    const change = pendingChanges.get(ad.id);
-    if (change) {
-      return change.action === 'feature';
-    }
-    return ad.featured;
-  };
-
-  // ============================================================
-  // STEP 6: PUBLICAR CAMBIOS
-  // ============================================================
-
-  const publishChanges = async () => {
-    if (pendingChanges.size === 0) {
-      notify.info('No hay cambios pendientes');
-      return;
-    }
-
-    setPublishing(true);
-    
-    try {
-      const changes = Array.from(pendingChanges.values());
-      
-      for (const change of changes) {
-        if (change.action === 'feature') {
-          await supabase
-            .from('ads')
-            .update({ 
-              featured: true,
-              featured_until: change.featured_until || null 
-            })
-            .eq('id', change.ad_id);
-        } else {
-          await supabase
-            .from('ads')
-            .update({ 
-              featured: false,
-              featured_until: null 
-            })
-            .eq('id', change.ad_id);
-        }
-      }
-
-      notify.success(`${changes.length} cambio(s) publicados. Homepage actualizada.`);
-      setPendingChanges(new Map());
-      
-      // Recargar datos
-      await handleSearch(currentPage);
-    } catch (err) {
-      console.error('Error publishing changes:', err);
-      notify.error('Error al publicar cambios');
-    }
-    
-    setPublishing(false);
-  };
 
   // ============================================================
   // PAGINATION
@@ -464,10 +353,10 @@ export default function AdsManagementPanel() {
         {hasSearched && (
           <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
             
-            {/* Toolbar: Filtro por título + Publicar */}
+            {/* Toolbar: Filtro por título */}
             <div className="px-4 py-3 border-b bg-gray-50 flex flex-wrap items-center justify-between gap-3">
               
-              {/* Paso 4: Filtro por título */}
+              {/* Filtro por título */}
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -485,28 +374,10 @@ export default function AdsManagementPanel() {
                 </datalist>
               </div>
 
-              <div className="flex items-center gap-3">
-                {/* Contador */}
-                <span className="text-sm text-gray-500">
-                  {totalRecords} aviso{totalRecords !== 1 ? 's' : ''}
-                </span>
-
-                {/* Paso 6: Botón PUBLICAR CAMBIOS */}
-                {pendingChanges.size > 0 && (
-                  <button
-                    onClick={publishChanges}
-                    disabled={publishing}
-                    className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg flex items-center gap-2 transition-colors animate-pulse"
-                  >
-                    {publishing ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Check className="w-4 h-4" />
-                    )}
-                    PUBLICAR CAMBIOS ({pendingChanges.size})
-                  </button>
-                )}
-              </div>
+              {/* Contador */}
+              <span className="text-sm text-gray-500">
+                {totalRecords} aviso{totalRecords !== 1 ? 's' : ''}
+              </span>
             </div>
 
             {/* Tabla tipo Excel */}
@@ -514,124 +385,58 @@ export default function AdsManagementPanel() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-100 text-left">
                   <tr>
-                    <th className="px-4 py-3 font-medium text-gray-600 w-12"><Star className="w-4 h-4" /></th>
                     <th className="px-4 py-3 font-medium text-gray-600">TÍTULO</th>
-                    <th className="px-4 py-3 font-medium text-gray-600 w-28">PRECIO</th>
-                    <th className="px-4 py-3 font-medium text-gray-600 w-24">ESTADO</th>
-                    <th className="px-4 py-3 font-medium text-gray-600 w-40">VENDEDOR</th>
-                    <th className="px-4 py-3 font-medium text-gray-600 w-36">DESTACADO HASTA</th>
+                    <th className="px-4 py-3 font-medium text-gray-600 w-32">PRECIO</th>
+                    <th className="px-4 py-3 font-medium text-gray-600 w-28">ESTADO</th>
+                    <th className="px-4 py-3 font-medium text-gray-600 w-48">VENDEDOR</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                      <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
                         <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
                         Cargando...
                       </td>
                     </tr>
                   ) : filteredAds.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                      <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
                         No se encontraron avisos
                       </td>
                     </tr>
                   ) : (
-                    filteredAds.map(ad => {
-                      const isFeatured = getEffectiveFeatured(ad);
-                      const hasPendingChange = pendingChanges.has(ad.id);
-                      const isEditing = editingFeaturedId === ad.id;
-                      
-                      return (
-                        <tr 
-                          key={ad.id} 
-                          className={`hover:bg-gray-50 ${hasPendingChange ? 'bg-yellow-50' : ''}`}
-                        >
-                          {/* Columna Destacado */}
-                          <td className="px-4 py-3">
-                            {isEditing ? (
-                              <div className="flex items-center gap-1">
-                                <button
-                                  onClick={() => confirmFeatured(ad.id)}
-                                  className="p-1 text-green-600 hover:bg-green-100 rounded"
-                                  title="Confirmar"
-                                >
-                                  <Check className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={cancelFeatured}
-                                  className="p-1 text-red-600 hover:bg-red-100 rounded text-xs"
-                                  title="Cancelar"
-                                >
-                                  ✕
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => toggleFeatured(ad.id, isFeatured)}
-                                className={`p-1.5 rounded-lg transition-colors ${
-                                  isFeatured 
-                                    ? 'text-yellow-500 bg-yellow-50 hover:bg-yellow-100' 
-                                    : 'text-gray-300 hover:text-yellow-500 hover:bg-gray-100'
-                                }`}
-                                title={isFeatured ? 'Quitar destacado' : 'Destacar'}
-                              >
-                                {isFeatured ? <Star className="w-5 h-5 fill-current" /> : <StarOff className="w-5 h-5" />}
-                              </button>
-                            )}
-                          </td>
+                    filteredAds.map(ad => (
+                      <tr key={ad.id} className="hover:bg-gray-50">
+                        {/* Título */}
+                        <td className="px-4 py-3">
+                          <span className="font-medium text-gray-900 line-clamp-2">
+                            {ad.title}
+                          </span>
+                        </td>
 
-                          {/* Título */}
-                          <td className="px-4 py-3">
-                            <span className="font-medium text-gray-900 line-clamp-1">
-                              {ad.title}
-                            </span>
-                          </td>
+                        {/* Precio */}
+                        <td className="px-4 py-3 text-gray-600">
+                          {ad.price ? `${ad.currency || '$'} ${ad.price.toLocaleString()}` : '-'}
+                        </td>
 
-                          {/* Precio */}
-                          <td className="px-4 py-3 text-gray-600">
-                            {ad.price ? `${ad.currency || '$'} ${ad.price.toLocaleString()}` : '-'}
-                          </td>
+                        {/* Estado */}
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
+                            ad.status === 'active' 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {ad.status === 'active' ? 'Activo' : ad.status}
+                          </span>
+                        </td>
 
-                          {/* Estado */}
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
-                              ad.status === 'active' 
-                                ? 'bg-green-100 text-green-700' 
-                                : 'bg-gray-100 text-gray-600'
-                            }`}>
-                              {ad.status === 'active' ? 'Activo' : ad.status}
-                            </span>
-                          </td>
-
-                          {/* Vendedor */}
-                          <td className="px-4 py-3 text-gray-600 truncate max-w-[160px]">
-                            {ad.seller_name}
-                          </td>
-
-                          {/* Fecha destacado */}
-                          <td className="px-4 py-3">
-                            {isEditing ? (
-                              <input
-                                type="date"
-                                value={tempFeaturedDate}
-                                onChange={(e) => setTempFeaturedDate(e.target.value)}
-                                min={new Date().toISOString().split('T')[0]}
-                                className="w-full px-2 py-1 border rounded text-xs"
-                                autoFocus
-                              />
-                            ) : (
-                              <span className="text-xs text-gray-500">
-                                {ad.featured_until
-                                  ? new Date(ad.featured_until).toLocaleDateString('es-AR')
-                                  : isFeatured ? 'Permanente' : '-'
-                                }
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
+                        {/* Vendedor */}
+                        <td className="px-4 py-3 text-gray-600 truncate max-w-[200px]">
+                          {ad.seller_name}
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>

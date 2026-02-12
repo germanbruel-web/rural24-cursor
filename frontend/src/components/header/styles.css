@@ -1,0 +1,182 @@
+/**
+ * Header Styles - Microinteracciones y animaciones
+ * Estilos adicionales para el header rediseñado
+ */
+
+/* Animación sutil de pulse para el CTA */
+@keyframes pulse-cta {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+.animate-pulse-cta {
+  animation: pulse-cta 3s ease-in-out infinite;
+}
+
+/* Efecto de lift en hover */
+.lift-effect {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lift-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Animación de aparición del dropdown */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-menu {
+  animation: slideDown 0.2s ease-out;
+}
+
+/* Sticky header con blur */
+.sticky-header {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Skeleton loading para búsqueda */
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.skeleton {
+  animation: shimmer 1.2s ease-in-out infinite;
+  background: linear-gradient(
+    to right,
+    #f6f7f8 0%,
+    #edeef1 20%,
+    #f6f7f8 40%,
+    #f6f7f8 100%
+  );
+  background-size: 800px 104px;
+}
+
+/* Badge de notificaciones */
+.notification-badge {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Highlight en texto de búsqueda */
+.search-highlight {
+  background: linear-gradient(
+    120deg,
+    rgba(22, 161, 53, 0.1) 0%,
+    rgba(22, 161, 53, 0.2) 100%
+  );
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* Transition suave para todos los elementos del header */
+.header-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Efecto de focus mejorado */
+.focus-ring-green:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(22, 161, 53, 0.2);
+}
+
+/* Animación de carga en el botón de búsqueda */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Glassmorphism para modales */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Mejora de hover en links */
+.link-hover {
+  position: relative;
+}
+
+.link-hover::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 50%;
+  background-color: currentColor;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.link-hover:hover::after {
+  width: 100%;
+}
+
+/* Avatar con efecto de presencia online */
+.avatar-online {
+  position: relative;
+}
+
+.avatar-online::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #10b981;
+  border: 2px solid white;
+  border-radius: 50%;
+}
+
+/* Mejora de accesibilidad - focus visible */
+.focus-visible:focus-visible {
+  outline: 2px solid #16a135;
+  outline-offset: 2px;
+}
+
+/* Transition de escala suave */
+.scale-hover {
+  transition: transform 0.2s ease;
+}
+
+.scale-hover:hover {
+  transform: scale(1.05);
+}
+
+.scale-hover:active {
+  transform: scale(0.98);
+}

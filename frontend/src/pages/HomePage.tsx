@@ -15,6 +15,7 @@ import {
   HowItWorksSection,
   BannersVipHero,
 } from '../components';
+import { SearchSEO } from '../components/SearchSEO';
 import { getHeroVIPBanners } from '../services/bannersCleanService';
 import { getSettingNumber } from '../services/v2/globalSettingsService';
 import { navigateTo } from '../hooks/useNavigate';
@@ -71,6 +72,9 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <main className="flex-1">
+      {/* SEO: Structured Data para buscador */}
+      <SearchSEO />
+
       {/* Hero con título, banner y botones */}
       <HeroWithCarousel 
         bannerSlot={

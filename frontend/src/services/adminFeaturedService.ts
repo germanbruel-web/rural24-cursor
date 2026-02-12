@@ -574,7 +574,12 @@ export interface ManualActivationResult {
 }
 
 /**
- * Activar featured ad manualmente (SuperAdmin only)
+ * ⚠️ OBSOLETO (12-Feb-2026): Activar featured ad manualmente (SuperAdmin only)
+ * 
+ * [DEPRECADO] Esta función ya no se usa. Ahora se usa directamente el RPC create_featured_ad
+ * que detecta automáticamente si el usuario es superadmin y no consume créditos.
+ * 
+ * Reemplazado por: supabase.rpc('create_featured_ad', params) en CreateFeaturedModal
  * SIN consumir créditos del usuario
  */
 export async function manualActivateFeatured(

@@ -1,11 +1,15 @@
-// AppHeader.tsx
-// Wrapper que combina TopNav + Header - Design System RURAL24
-// Mobile: Header único con menú hamburguesa → TopNav como drawer
-// Desktop: TopNav (barra superior) + Header (logo + buscador + clima)
+/**
+ * AppHeader.tsx
+ * Wrapper del Header Principal - Design System RURAL24
+ * 
+ * Integra el nuevo diseño optimizado para conversión:
+ * - TopNav con clima y links secundarios
+ * - Header con buscador protagonista y CTA destacado
+ * - Mobile responsive con menú lateral
+ */
 
-import React, { useState } from 'react';
-import { TopNav } from './TopNav';
-import { Header } from './Header';
+import React from 'react';
+import { HeaderNew } from './header/index';
 import type { Page } from '../../App';
 
 interface AppHeaderProps {
@@ -14,25 +18,11 @@ interface AppHeaderProps {
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({ onNavigate, onSearch }) => {
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-
   return (
-    <>
-      {/* Desktop: TopNav visible */}
-      <TopNav 
-        onNavigate={onNavigate} 
-        showMobileMenu={showMobileMenu}
-        onCloseMobileMenu={() => setShowMobileMenu(false)}
-      />
-      
-      {/* Header siempre visible - En mobile tiene botón hamburguesa */}
-      <Header 
-        onNavigate={onNavigate} 
-        onSearch={onSearch}
-        onToggleMobileMenu={() => setShowMobileMenu(!showMobileMenu)}
-        showMobileMenuButton={true}
-      />
-    </>
+    <HeaderNew 
+      onNavigate={onNavigate} 
+      onSearch={onSearch}
+    />
   );
 };
 

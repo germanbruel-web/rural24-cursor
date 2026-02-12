@@ -1,3 +1,17 @@
+/**
+ * @deprecated Este componente está deprecado.
+ * Usar GlobalSearchBar con useDynamicFilters en su lugar.
+ * 
+ * AdvancedSearchBar.tsx contiene lógica hardcodeada de filtros
+ * que ya no se sincroniza con la base de datos.
+ * 
+ * Migración:
+ * import { GlobalSearchBar } from './GlobalSearchBar';
+ * import { useDynamicFilters } from '../hooks/useDynamicFilters';
+ * 
+ * Pendiente de eliminación: Marzo 2026
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { SearchIcon } from './IconComponents';
 import type { SearchFilters } from '../../types';
