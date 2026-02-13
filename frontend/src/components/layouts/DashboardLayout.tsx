@@ -2,29 +2,33 @@ import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMenuItems } from '../../utils/rolePermissions';
 import { navigateTo } from '../../hooks/useNavigate';
-// import { RLSDebugBanner } from '../common/RLSDebugBanner'; // Comentado - RLS ya está configurado correctamente
 import {
   LayoutDashboard,
   Package,
   User,
   Users,
-  Search,
-  Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
   Home,
   LogOut,
   Menu,
   X,
-  Clock,
   MessageSquare,
   Edit3,
   Settings as SettingsIcon,
   Star,
-  Microscope,
-  Palette,
-  FileCode,
   Globe,
+  Image as ImageIcon,
+  CreditCard,
+  Tag,
+  Layers,
+  Megaphone,
+  Gift,
+  DollarSign,
+  Sparkles,
+  FileText,
+  Sliders,
+  Map,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -55,32 +59,25 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   // Obtener ítems del menú filtrados por rol
   const allowedMenuItems = getMenuItems(profile?.role);
 
-  // 🐛 DEBUG: Ver qué items se están mostrando
-  console.log('🔍 DashboardLayout Debug:', {
-    userRole: profile?.role,
-    userEmail: profile?.email,
-    allowedMenuItems: allowedMenuItems.map(i => i.id),
-    hasCategoriesAdmin: allowedMenuItems.some(i => i.id === 'categories-admin'),
-    hasFeaturedAds: allowedMenuItems.some(i => i.id === 'featured-ads')
-  });
-
   // Mapeo de iconos según el ID del ítem
   const iconMap: Record<string, React.ReactNode> = {
-    home: <Home className="w-5 h-5" />,
+    // Mi Cuenta
     'my-ads': <Package className="w-5 h-5" />,
     inbox: <MessageSquare className="w-5 h-5" />,
     profile: <User className="w-5 h-5" />,
-    subscription: <Star className="w-5 h-5" />,
-    users: <Users className="w-5 h-5" />,
-    'ads-management': <Package className="w-5 h-5" />,
-    'all-ads': <Search className="w-5 h-5" />,
-    banners: <Star className="w-5 h-5" />,
+    subscription: <CreditCard className="w-5 h-5" />,
+    // Gestión Avisos
     'featured-ads': <Star className="w-5 h-5" />,
-    coupons: <Star className="w-5 h-5" />,
-    'payments-admin': <LayoutDashboard className="w-5 h-5" />,
-    'categories-admin': <SettingsIcon className="w-5 h-5" />,
-    'attributes-admin': <Edit3 className="w-5 h-5" />,
-    'templates-admin': <Edit3 className="w-5 h-5" />,
+    'categories-admin': <Layers className="w-5 h-5" />,
+    'attributes-admin': <Sliders className="w-5 h-5" />,
+    'templates-admin': <FileText className="w-5 h-5" />,
+    users: <Users className="w-5 h-5" />,
+    // Comercial
+    banners: <ImageIcon className="w-5 h-5" />,
+    coupons: <Gift className="w-5 h-5" />,
+    'payments-admin': <DollarSign className="w-5 h-5" />,
+    // Configuración
+    'hero-cms': <Sparkles className="w-5 h-5" />,
     'backend-settings': <SettingsIcon className="w-5 h-5" />,
     'global-settings': <SettingsIcon className="w-5 h-5" />,
     'sitemap-seo': <Globe className="w-5 h-5" />,
@@ -97,7 +94,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   const renderMenuItem = (item: MenuItem) => {
     if (item.divider) {
-      return <div key={item.id} className="my-2 border-t border-gray-200" />;
+      return (
+        <div key={item.id} className="pt-4 pb-1 px-4">
+          <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+            {item.label}
+          </span>
+        </div>
+      );
     }
 
     const isActive = currentPage === item.id;
@@ -136,9 +139,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <>
-      {/* RLS Debug Warning Banner - Comentado: RLS configurado correctamente con política SuperAdmin */}
-      {/* <RLSDebugBanner /> */}
-      
       <div className="flex h-screen bg-gray-50">
         {/* Sidebar Desktop */}
         <aside

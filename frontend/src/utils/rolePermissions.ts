@@ -97,7 +97,7 @@ export interface MenuItem {
 
 export const MENU_STRUCTURE: MenuItem[] = [
   // ============================================================
-  // SECCIÓN: MI CUENTA (Usuario personal)
+  // SECCIÓN 1: MI CUENTA (todos los usuarios)
   // ============================================================
   {
     id: 'divider-mi-cuenta',
@@ -122,55 +122,24 @@ export const MENU_STRUCTURE: MenuItem[] = [
   },
   {
     id: 'subscription',
-    label: 'Mi Plan (Créditos)',
+    label: 'Créditos y Plan',
     allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
   },
   
   // ============================================================
-  // SECCIÓN: PUBLICIDAD (solo SuperAdmin)
+  // SECCIÓN 2: GESTIÓN DE AVISOS (SuperAdmin)
   // ============================================================
   {
-    id: 'divider-publicidad',
-    label: 'PUBLICIDAD',
+    id: 'divider-avisos',
+    label: 'GESTIÓN AVISOS',
     allowedRoles: ['superadmin'],
     divider: true,
-  },
-  {
-    id: 'banners',
-    label: 'Banners',
-    allowedRoles: ['superadmin'],
   },
   {
     id: 'featured-ads',
     label: 'Avisos y Destacados',
     allowedRoles: ['superadmin'],
   },
-  {
-    id: 'coupons',
-    label: 'Cupones',
-    allowedRoles: ['superadmin'],
-  },
-  {
-    id: 'payments-admin',
-    label: 'Cobranzas',
-    allowedRoles: ['superadmin'],
-  },
-  
-  // ============================================================
-  // SECCIÓN: BACKEND (solo SuperAdmin)
-  // ============================================================
-  {
-    id: 'divider-backend',
-    label: 'BACKEND',
-    allowedRoles: ['superadmin'],
-    divider: true,
-  },
-  {
-    id: 'users',
-    label: 'Gestión de Usuarios',
-    allowedRoles: ['superadmin'],
-  },
-  // ads-management eliminado - absorbido por featured-ads (SuperAdminFeaturedPanel)
   {
     id: 'categories-admin',
     label: 'Categorías',
@@ -187,6 +156,51 @@ export const MENU_STRUCTURE: MenuItem[] = [
     allowedRoles: ['superadmin'],
   },
   {
+    id: 'users',
+    label: 'Usuarios',
+    allowedRoles: ['superadmin'],
+  },
+  
+  // ============================================================
+  // SECCIÓN 3: COMERCIAL (SuperAdmin)
+  // ============================================================
+  {
+    id: 'divider-comercial',
+    label: 'COMERCIAL',
+    allowedRoles: ['superadmin'],
+    divider: true,
+  },
+  {
+    id: 'banners',
+    label: 'Banners',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'coupons',
+    label: 'Cupones',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'payments-admin',
+    label: 'Cobranzas',
+    allowedRoles: ['superadmin'],
+  },
+  
+  // ============================================================
+  // SECCIÓN 4: CONFIGURACIÓN (SuperAdmin)
+  // ============================================================
+  {
+    id: 'divider-config',
+    label: 'CONFIGURACIÓN',
+    allowedRoles: ['superadmin'],
+    divider: true,
+  },
+  {
+    id: 'hero-cms',
+    label: 'Hero CMS',
+    allowedRoles: ['superadmin'],
+  },
+  {
     id: 'backend-settings',
     label: 'Backend CMS',
     allowedRoles: ['superadmin'],
@@ -197,13 +211,8 @@ export const MENU_STRUCTURE: MenuItem[] = [
     allowedRoles: ['superadmin'],
   },
   {
-    id: 'hero-cms',
-    label: 'Hero CMS',
-    allowedRoles: ['superadmin'],
-  },
-  {
     id: 'sitemap-seo',
-    label: 'Sitemap',
+    label: 'Sitemap / SEO',
     allowedRoles: ['superadmin'],
   },
 ];
