@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { MapPin, Star, Tag } from 'lucide-react';
+import { MapPin, Tag } from 'lucide-react';
 import type { Product } from '../../../../types';
 import { Card } from '../../molecules/Card';
 import { Badge } from '../../atoms/Badge';
@@ -150,17 +150,6 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
           );
         })()}
 
-        {/* Badges destacados */}
-        {showBadges && product.isSponsored && isFeatured && (
-          <Badge
-            variant="primary"
-            size="sm"
-            leftIcon={<Star size={12} />}
-            className="absolute top-2 left-2 backdrop-blur-sm bg-opacity-95"
-          >
-            Premium
-          </Badge>
-        )}
       </div>
 
       {/* Contenido */}

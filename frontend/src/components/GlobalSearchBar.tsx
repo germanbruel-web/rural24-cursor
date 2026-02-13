@@ -36,6 +36,24 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Sincronizar query con el parámetro q de la URL
+  useEffect(() => {
+    const syncQueryFromHash = () => {
+      const hash = window.location.hash;
+      const queryIndex = hash.indexOf('?');
+      if (queryIndex === -1) {
+        setQuery('');
+        return;
+      }
+      const params = new URLSearchParams(hash.substring(queryIndex + 1));
+      const urlQ = params.get('q');
+      setQuery(urlQ ? decodeURIComponent(urlQ) : '');
+    };
+    syncQueryFromHash();
+    window.addEventListener('hashchange', syncQueryFromHash);
+    return () => window.removeEventListener('hashchange', syncQueryFromHash);
+  }, []);
+
   // Hook para obtener sugerencias
   const { suggestions, loading, searchHistory, clearHistory } = useSearchSuggestions(query, {
     debounceMs: 300,
@@ -180,7 +198,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
       window.location.hash = `#/search?q=${encodeURIComponent(trimmed)}`;
     }
 
-    setQuery('');
+    // query se sincroniza automáticamente desde el hashchange
     setSelectedIndex(-1);
   };
 

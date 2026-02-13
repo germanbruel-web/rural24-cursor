@@ -245,6 +245,61 @@ async function findAttributeMatch(
 }
 
 // ====================================================================
+// HELPER: Buscar en la tabla brands por nombre
+// ====================================================================
+interface BrandMatch {
+  brand_ids: string[];
+  brand_name: string;
+  category_id: string | null; // null si la marca aparece en múltiples categorías
+}
+
+async function findBrandMatch(
+  supabase: any,
+  searchTerm: string
+): Promise<BrandMatch | null> {
+  const searchLower = searchTerm.toLowerCase().trim();
+  
+  // Buscar marcas que coincidan con el término (name o display_name vía metadata)
+  const { data: brands, error } = await supabase
+    .from('brands')
+    .select('id, name, slug')
+    .eq('is_active', true)
+    .or(`name.ilike.%${searchLower}%,slug.eq.${searchLower.replace(/\s+/g, '-')}`);
+  
+  if (error || !brands || brands.length === 0) return null;
+  
+  const brandIds = brands.map((b: any) => b.id);
+  const brandName = brands[0].name;
+  
+  // Ver en qué categorías aparece esta marca (via subcategory_brands → subcategories)
+  const { data: subcatBrands } = await supabase
+    .from('subcategory_brands')
+    .select('subcategory_id')
+    .in('brand_id', brandIds);
+  
+  let categoryId: string | null = null;
+  
+  if (subcatBrands && subcatBrands.length > 0) {
+    const subIds = [...new Set(subcatBrands.map((sb: any) => sb.subcategory_id))];
+    const { data: subcats } = await supabase
+      .from('subcategories')
+      .select('category_id')
+      .in('id', subIds);
+    
+    if (subcats) {
+      const uniqueCatIds = [...new Set(subcats.map((s: any) => s.category_id))];
+      if (uniqueCatIds.length === 1) {
+        categoryId = uniqueCatIds[0] as string;
+      }
+    }
+  }
+  
+  isDev && console.log('🔍 Brand match:', { brandName, brandIds: brandIds.length, categoryId });
+  
+  return { brand_ids: brandIds, brand_name: brandName, category_id: categoryId };
+}
+
+// ====================================================================
 // MAIN HANDLER
 // ====================================================================
 export async function GET(request: NextRequest) {
@@ -369,9 +424,40 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // Si no se encontró subcategoría, buscar en atributos dinámicos
+      // Si no se encontró subcategoría, buscar en atributos dinámicos o en marcas
       if (!subcategoryId) {
-        const attrMatch = await findAttributeMatch(supabase, searchQuery);
+        // Primero buscar en marcas (brands table) - importante para maquinarias
+        const brandMatch = await findBrandMatch(supabase, searchQuery);
+        
+        if (brandMatch) {
+          detectedFromSearch = true;
+          detectedAttribute = {
+            field_name: 'brand_id',
+            field_value: brandMatch.brand_name,
+          };
+          
+          // Si la marca solo pertenece a una categoría, restringir
+          if (brandMatch.category_id) {
+            const { data: parentCat } = await supabase
+              .from('categories')
+              .select('id, name, display_name, slug')
+              .eq('id', brandMatch.category_id)
+              .single();
+            if (parentCat) {
+              categoryId = parentCat.id;
+              categoryName = parentCat.display_name || parentCat.name;
+              isDev && console.log('✅ Categoría detectada via marca:', { categoryId, categoryName, brand: brandMatch.brand_name });
+            }
+          }
+          
+          isDev && console.log('✅ Marca detectada:', {
+            brand_name: brandMatch.brand_name,
+            brand_ids: brandMatch.brand_ids,
+            category_id: brandMatch.category_id,
+          });
+        }
+
+        const attrMatch = !brandMatch ? await findAttributeMatch(supabase, searchQuery) : null;
         
         if (attrMatch) {
           // Guardar info del atributo detectado para la respuesta
@@ -516,7 +602,9 @@ export async function GET(request: NextRequest) {
         subcategory_id,
         status,
         approval_status,
-        condition
+        condition,
+        brand_id,
+        model_id
       `, { count: 'exact' })
       .eq('status', 'active')
       .eq('approval_status', 'approved');
@@ -543,13 +631,27 @@ export async function GET(request: NextRequest) {
 
     // Búsqueda por texto
     // ✅ FIX: No aplicar búsqueda de texto si ya se detectó subcategoría automáticamente
-    // EXCEPCIÓN: Si se detectó atributo pero NO subcategoría, SÍ buscar por texto para filtrar
+    // EXCEPCIÓN: Si se detectó atributo/marca pero NO subcategoría, SÍ buscar para filtrar
     const shouldApplyTextSearch = searchQuery && (
       !detectedFromSearch || // No se detectó nada automáticamente
       (detectedAttribute && !subcategoryId) // Se detectó atributo pero no subcategoría específica
     );
     
-    if (shouldApplyTextSearch) {
+    // Si se detectó una marca, filtrar por brand_id directamente
+    if (detectedAttribute?.field_name === 'brand_id' && searchQuery) {
+      // Buscar brand_ids que coincidan
+      const { data: matchedBrands } = await supabase
+        .from('brands')
+        .select('id')
+        .eq('is_active', true)
+        .or(`name.ilike.%${searchQuery}%,slug.eq.${toSlug(searchQuery)}`);
+      
+      if (matchedBrands && matchedBrands.length > 0) {
+        const brandIdList = matchedBrands.map((b: any) => b.id).join(',');
+        query = query.in('brand_id', matchedBrands.map((b: any) => b.id));
+        isDev && console.log('🔍 Filtrando por brand_id:', brandIdList);
+      }
+    } else if (shouldApplyTextSearch) {
       // ============================================================
       // FULL-TEXT SEARCH con search_vector (GIN index) + fallback ILIKE
       // search_vector usa diccionario 'spanish' con pesos:
@@ -567,9 +669,24 @@ export async function GET(request: NextRequest) {
       
       if (sanitizedQuery) {
         // Usar textSearch con search_vector (aprovecha GIN index idx_ads_search)
-        // Fallback: si search_vector está vacío, incluir también ILIKE en title
+        // TAMBIÉN buscar por brand_id resolviendo nombre de marca
+        // Y buscar en atributos JSONB (raza, marca, modelo, etc.)
+        const { data: brandsByName } = await supabase
+          .from('brands')
+          .select('id')
+          .eq('is_active', true)
+          .ilike('name', `%${searchQuery}%`);
+        
+        const brandOrClause = brandsByName?.length 
+          ? `,brand_id.in.(${brandsByName.map((b: any) => b.id).join(',')})` 
+          : '';
+        
+        // Buscar también en atributos JSONB comunes (raza, marca, tipo, variedad)
+        const jsonbFields = ['raza', 'marca', 'brand', 'modelo', 'model', 'tipobovino', 'tipo', 'variedad', 'cultivo', 'especie'];
+        const jsonbClauses = jsonbFields.map(f => `attributes->>${f}.ilike.%${searchQuery}%`).join(',');
+        
         query = query.or(
-          `search_vector.fts(spanish).${sanitizedQuery},title.ilike.%${searchQuery}%`
+          `search_vector.fts(spanish).${sanitizedQuery},title.ilike.%${searchQuery}%${brandOrClause},${jsonbClauses}`
         );
       } else {
         // Query muy corta o solo chars especiales: fallback a ILIKE
@@ -626,7 +743,31 @@ export async function GET(request: NextRequest) {
     }
 
     // ============================================================
-    // 3. TRANSFORMAR RESPONSE
+    // 3. RESOLVER NOMBRES DE MARCAS/MODELOS (batch)
+    // ============================================================
+    const brandIds = [...new Set((ads || []).map((a: any) => a.brand_id).filter(Boolean))];
+    const modelIds = [...new Set((ads || []).map((a: any) => a.model_id).filter(Boolean))];
+    
+    const brandMap = new Map<string, string>();
+    const modelMap = new Map<string, string>();
+    
+    if (brandIds.length > 0) {
+      const { data: brandsData } = await supabase
+        .from('brands')
+        .select('id, name')
+        .in('id', brandIds);
+      (brandsData || []).forEach((b: any) => brandMap.set(b.id, b.name));
+    }
+    if (modelIds.length > 0) {
+      const { data: modelsData } = await supabase
+        .from('models')
+        .select('id, name')
+        .in('id', modelIds);
+      (modelsData || []).forEach((m: any) => modelMap.set(m.id, m.name));
+    }
+
+    // ============================================================
+    // 4. TRANSFORMAR RESPONSE
     // ============================================================
     const transformedAds = (ads || []).map((ad: any) => {
       // Extraer imagen principal del array images
@@ -638,8 +779,10 @@ export async function GET(request: NextRequest) {
         return '';
       }).filter(Boolean);
       
-      // Extraer marca y modelo de attributes si existen
+      // Extraer marca y modelo: priorizar brands/models table, luego attributes
       const attrs = ad.attributes || {};
+      const resolvedBrand = ad.brand_id ? brandMap.get(ad.brand_id) : null;
+      const resolvedModel = ad.model_id ? modelMap.get(ad.model_id) : null;
       
       return {
         id: ad.id,
@@ -654,8 +797,8 @@ export async function GET(request: NextRequest) {
         featured: ad.featured || false,
         created_at: ad.created_at,
         condition: ad.condition,
-        brand: attrs.brand || attrs.marca || null,
-        model: attrs.model || attrs.modelo || null,
+        brand: resolvedBrand || attrs.brand || attrs.marca || null,
+        model: resolvedModel || attrs.model || attrs.modelo || null,
         attributes: attrs,
         user_id: ad.user_id,
         // Usar los nombres resueltos previamente (sin JOINs)

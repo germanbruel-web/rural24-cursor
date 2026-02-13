@@ -16,7 +16,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Star, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { getFeaturedForHomepage } from '../../services/userFeaturedService';
 import { useCategories } from '../../contexts/CategoryContext';
 import { ProductCard } from '../organisms/ProductCard';
@@ -72,7 +72,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
       // NOTA: Banners se manejan vía CategoryBannerSlider (tabla banners_clean)
       const categoriesWithData = await Promise.all(
         categories.map(async (cat) => {
-          // Subcategorías
+          // Subcategorías con conteo de avisos activos
           const { data: subcategories } = await supabase
             .from('subcategories')
             .select('id, name, display_name, slug, sort_order')
@@ -80,16 +80,30 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
             .eq('is_active', true)
             .order('sort_order');
 
+          // Contar avisos activos por subcategoría
+          const subcatsWithCount = await Promise.all(
+            (subcategories || []).map(async (s) => {
+              const { count } = await supabase
+                .from('ads')
+                .select('id', { count: 'exact', head: true })
+                .eq('subcategory_id', s.id)
+                .eq('status', 'active')
+                .eq('approval_status', 'approved');
+              return {
+                id: s.id,
+                name: s.display_name || s.name,
+                slug: s.slug,
+                ads_count: count || 0,
+              };
+            })
+          );
+
           return {
             category_id: cat.id,
             category_name: cat.display_name || cat.name,
             category_slug: cat.slug,
-            banners: [], // Banners manejados por CategoryBannerSlider
-            subcategories: (subcategories || []).map(s => ({
-              id: s.id,
-              name: s.display_name || s.name,
-              slug: s.slug
-            }))
+            banners: [],
+            subcategories: subcatsWithCount,
           };
         })
       );
@@ -227,11 +241,11 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
               {/* Subtítulo: Avisos Destacados */}
               {hasFeaturedAds && (
                 <div className="flex items-center gap-2 mb-4 sm:mb-5">
-                  <Star className="w-5 h-5 text-yellow-500" fill="currentColor" />
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-700">
+                  <span className="w-1 h-5 bg-green-500 rounded-full" aria-hidden="true" />
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wide">
                     Avisos Destacados
                   </h3>
-                  <span className="text-xs sm:text-sm text-gray-500">
+                  <span className="text-xs text-gray-400 font-medium">
                     ({featuredAds.length})
                   </span>
                 </div>

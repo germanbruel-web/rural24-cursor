@@ -175,12 +175,20 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
       setAdsLoading(false);
     };
     
-    // Cargar si hay al menos un filtro activo
+    // Cargar desde backend si estamos en la página de búsqueda
+    const isSearchPage = window.location.hash.startsWith('#/search');
     const hasFilters = Object.keys(urlFilters).some(k => urlFilters[k]);
-    if (hasFilters) {
+    if (isSearchPage && !hasFilters) {
+      // "Limpiar" fue clickeado: sin filtros, mostrar estado limpio
+      setBackendAds([]);
+      setTotalFromBackend(0);
+      setDetectedMeta(null);
+      setDetectedIds({});
+      setAdsLoading(false);
+    } else if (hasFilters) {
       loadAds();
     } else {
-      // Sin filtros: usar los results pasados como prop (comportamiento legacy)
+      // Fallback legacy
       setBackendAds(results);
       setTotalFromBackend(results.length);
       setDetectedMeta(null);
@@ -202,6 +210,9 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
     });
   };
   
+  // Claves de filtros estructurales (no dinámicos)
+  const STRUCTURAL_KEYS = new Set(['q', 'cat', 'sub', 'prov', 'city', 'cond', 'page']);
+
   // Generar link de filtro manteniendo otros filtros activos
   const getFilterLink = (key: string, value: string | undefined) => {
     const newFilters = { ...urlFilters, [key]: value };
@@ -211,6 +222,20 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
     }
     if (key === 'prov' && !value) {
       delete newFilters.city;
+    }
+    // Al cambiar subcategoría, limpiar todos los atributos dinámicos
+    // (marca, modelo, raza, etc. dependen de la subcategoría)
+    if (key === 'sub') {
+      Object.keys(newFilters).forEach(k => {
+        if (!STRUCTURAL_KEYS.has(k)) delete newFilters[k];
+      });
+    }
+    // Al cambiar categoría, limpiar subcategoría y atributos dinámicos
+    if (key === 'cat') {
+      delete newFilters.sub;
+      Object.keys(newFilters).forEach(k => {
+        if (!STRUCTURAL_KEYS.has(k)) delete newFilters[k];
+      });
     }
     // Limpiar valores undefined
     Object.keys(newFilters).forEach(k => {
@@ -611,18 +636,18 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                 </div>
               ) : (
                 <>
-                  {/* Info de paginación */}
-                  <div className="text-sm text-gray-600 mb-4">
-                    Mostrando {((currentPage - 1) * RESULTS_PER_PAGE) + 1}-{Math.min(currentPage * RESULTS_PER_PAGE, totalFromBackend)} de {totalFromBackend} resultados
-                  </div>
-                  
-                  {/* Avisos Destacados por Usuarios - Solo en primera página */}
+                  {/* Avisos Destacados por Usuarios - Solo en primera pagina */}
                   {currentPage === 1 && (resolvedCategory?.id || detectedIds.categoryId) && (
                     <UserFeaturedAdsBar 
                       categoryId={resolvedCategory?.id || detectedIds.categoryId}
                       onViewDetail={onViewDetail}
                     />
                   )}
+
+                  {/* Info de paginacion - debajo de destacados */}
+                  <div className="text-sm text-gray-500 mb-4">
+                    Mostrando {((currentPage - 1) * RESULTS_PER_PAGE) + 1}-{Math.min(currentPage * RESULTS_PER_PAGE, totalFromBackend)} de {totalFromBackend} resultados
+                  </div>
                   
                   {/* Grid Responsive: Mobile 2, Tablet 3, Desktop 4 - Variante Compact */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
