@@ -63,8 +63,8 @@ async function getCachedData(supabase: any) {
     return cachedData;
   }
   
-  // Cargar subcategorías con sus categorías padre
-  const { data: subcategories } = await supabase
+  // 1. Cargar subcategorías con sus categorías padre (single-level join)
+  const { data: subcategories, error: subError } = await supabase
     .from('subcategories')
     .select(`
       id,
@@ -72,7 +72,7 @@ async function getCachedData(supabase: any) {
       display_name,
       slug,
       category_id,
-      categories!inner (
+      categories (
         id,
         name,
         display_name,
@@ -83,35 +83,60 @@ async function getCachedData(supabase: any) {
     .eq('is_active', true)
     .order('sort_order');
   
-  // Cargar atributos dinámicos con sus opciones
-  const { data: attributes } = await supabase
-    .from('dynamic_attributes')
-    .select(`
-      id,
-      field_name,
-      field_label,
-      field_options,
-      subcategory_id,
-      subcategories!inner (
+  if (subError) {
+    console.error('❌ Error loading subcategories for suggestions:', subError.message);
+  }
+
+  // Build category lookup from subcategories (avoid nested joins)
+  const categoryBySubId: Record<string, any> = {};
+  for (const sub of (subcategories || [])) {
+    if (sub.categories) {
+      categoryBySubId[sub.id] = sub.categories;
+    }
+  }
+
+  // 2. Cargar atributos dinámicos (single-level join, no nested)
+  let attributes: any[] = [];
+  try {
+    const { data: attrs, error: attrError } = await supabase
+      .from('dynamic_attributes')
+      .select(`
         id,
-        name,
-        display_name,
-        slug,
-        category_id,
-        categories!inner (
-          id,
-          name,
-          display_name,
-          slug
-        )
-      )
-    `)
-    .eq('is_active', true)
-    .not('field_options', 'is', null);
+        field_name,
+        field_label,
+        field_options,
+        subcategory_id
+      `)
+      .eq('is_active', true)
+      .not('field_options', 'is', null);
+    
+    if (attrError) {
+      console.error('❌ Error loading attributes for suggestions:', attrError.message);
+    } else {
+      // Enrich attributes with subcategory/category info from lookup
+      attributes = (attrs || []).map((attr: any) => {
+        const sub = (subcategories || []).find((s: any) => s.id === attr.subcategory_id);
+        const cat = sub ? categoryBySubId[sub.id] : null;
+        return {
+          ...attr,
+          subcategories: sub ? {
+            id: sub.id,
+            name: sub.name,
+            display_name: sub.display_name,
+            slug: sub.slug,
+            category_id: sub.category_id,
+            categories: cat,
+          } : null,
+        };
+      }).filter((a: any) => a.subcategories !== null);
+    }
+  } catch (e) {
+    console.error('❌ Exception loading attributes:', e);
+  }
   
   cachedData = {
     subcategories: subcategories || [],
-    attributes: attributes || [],
+    attributes,
     cachedAt: now,
   };
   

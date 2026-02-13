@@ -284,7 +284,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
           ref={dropdownRef}
           className="absolute top-full left-0 right-0 mt-2 
                    bg-white rounded-lg shadow-xl border border-gray-200 
-                   py-2 z-50 max-h-96 overflow-y-auto"
+                   py-2 z-[9999] max-h-96 overflow-y-auto"
         >
           {/* Header según contexto */}
           <div className="px-4 py-2 flex items-center justify-between">
