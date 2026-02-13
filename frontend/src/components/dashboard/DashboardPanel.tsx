@@ -66,7 +66,7 @@ export const DashboardPanel: React.FC = () => {
           totalViews: 45678,
           totalMessages: 234,
         });
-      } else if (profile?.role === 'free' || profile?.role === 'free-verificado') {
+      } else if (profile?.role === 'free') {
         // Para usuarios FREE, obtener contadores reales
         const { count } = await getSentContactsCount();
         const receivedCount = await getMyReceivedContactsCount();

@@ -284,8 +284,8 @@ export interface UpdateBannerCleanInput {
 // TIPOS: Sistema de Roles
 // ================================================
 
-// Sistema de roles: SuperAdmin para admin, los demás usan planes
-export type UserRole = 'superadmin' | 'admin' | 'premium' | 'basic' | 'verified' | 'free' | 'user';
+// Sistema de roles: 4 roles canónicos del sistema
+export type UserRole = 'superadmin' | 'revendedor' | 'premium' | 'free';
 
 // Tipo de usuario: Particular o Empresa
 export type UserType = 'particular' | 'empresa';

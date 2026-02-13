@@ -121,9 +121,9 @@ export async function getUserAdLimit(userId?: string): Promise<{ limit: number; 
 
     // Determinar límite según rol
     let limit: number;
-    if (userData.role === 'superadmin' || userData.role === 'admin') {
+    if (userData.role === 'superadmin' || userData.role === 'revendedor') {
       limit = 999999; // Ilimitado para admins
-    } else if (userData.role === 'free' || userData.role === 'user') {
+    } else if (userData.role === 'free') {
       limit = 5; // Máximo 5 para usuarios free
     } else {
       limit = 20; // Premium: máximo 20
@@ -817,7 +817,7 @@ export async function rejectAd(
 
 /**
  * Obtener avisos pendientes de aprobación de usuarios FREE (solo SuperAdmin)
- * Retorna avisos de usuarios con role 'free' o 'free-verificado'
+ * Retorna avisos de usuarios con role 'free'
  * Ambos tipos de usuarios FREE requieren moderación antes de publicar
  */
 export async function getPendingAds(): Promise<Ad[]> {
@@ -842,12 +842,12 @@ export async function getPendingAds(): Promise<Ad[]> {
       return [];
     }
 
-    // Filtrar avisos de usuarios FREE y FREE-VERIFICADO (ambos requieren moderación)
+    // Filtrar avisos de usuarios FREE (requieren moderación)
     const freeUserAds = (data as Ad[]).filter(ad => 
-      ad.seller?.role === 'free' || ad.seller?.role === 'free-verificado'
+      ad.seller?.role === 'free'
     );
 
-    console.log(`📋 Avisos pendientes FREE: ${freeUserAds.length} de ${data.length} totales`);
+    console.log(`Avisos pendientes FREE: ${freeUserAds.length} de ${data.length} totales`);
 
     return freeUserAds;
   } catch (error) {
@@ -892,11 +892,11 @@ export async function getAllAdsByRole(filters?: {
     // Filtrar por rol si se especifica
     if (filters?.userRole === 'free') {
       return (data as Ad[]).filter(ad => 
-        ad.seller?.role === 'free' || ad.seller?.role === 'free-verificado'
+        ad.seller?.role === 'free'
       );
     } else if (filters?.userRole === 'premium') {
       return (data as Ad[]).filter(ad => 
-        ad.seller?.role === 'premium-particular' || ad.seller?.role === 'premium-empresa'
+        ad.seller?.role === 'premium'
       );
     }
 

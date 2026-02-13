@@ -25,6 +25,7 @@ import {
 // Roles disponibles para asignar
 const AVAILABLE_ROLES: { value: UserRole; label: string; color: string; icon: React.ReactNode }[] = [
   { value: 'superadmin', label: 'SuperAdmin', color: 'purple', icon: <Crown className="w-3 h-3" /> },
+  { value: 'revendedor', label: 'Revendedor', color: 'blue', icon: <Shield className="w-3 h-3" /> },
   { value: 'premium', label: 'Premium', color: 'yellow', icon: <Award className="w-3 h-3" /> },
   { value: 'free', label: 'Free', color: 'gray', icon: <UserIcon className="w-3 h-3" /> },
 ];
@@ -103,6 +104,7 @@ export const UsersPanel: React.FC = () => {
   const stats = {
     total: users.length,
     superadmins: users.filter(u => u.role === 'superadmin').length,
+    revendedores: users.filter(u => u.role === 'revendedor').length,
     premium: users.filter(u => u.role === 'premium').length,
     free: users.filter(u => u.role === 'free').length,
     verified: users.filter(u => u.email_verified).length,
@@ -216,6 +218,13 @@ export const UsersPanel: React.FC = () => {
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="text-sm text-gray-600 mb-1 flex items-center gap-1">
+            <Shield className="w-4 h-4 text-blue-500" />
+            Revendedores
+          </div>
+          <div className="text-2xl font-bold text-blue-600">{stats.revendedores}</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="text-sm text-gray-600 mb-1 flex items-center gap-1">
             <Award className="w-4 h-4 text-yellow-500" />
             Premium
           </div>
@@ -223,17 +232,10 @@ export const UsersPanel: React.FC = () => {
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="text-sm text-gray-600 mb-1 flex items-center gap-1">
-            <UserIcon className="w-4 h-4 text-blue-500" />
+            <UserIcon className="w-4 h-4 text-gray-500" />
             Free
           </div>
-          <div className="text-2xl font-bold text-blue-600">{stats.free}</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1 flex items-center gap-1">
-            <CheckCircle className="w-4 h-4 text-green-500" />
-            Verificados
-          </div>
-          <div className="text-2xl font-bold text-green-600">{stats.verified}</div>
+          <div className="text-2xl font-bold text-gray-600">{stats.free}</div>
         </div>
       </div>
 
@@ -262,6 +264,7 @@ export const UsersPanel: React.FC = () => {
           >
             <option value="all">Todos los roles</option>
             <option value="superadmin">SuperAdmin</option>
+            <option value="revendedor">Revendedor</option>
             <option value="premium">Premium</option>
             <option value="free">Free</option>
           </select>
@@ -341,15 +344,16 @@ export const UsersPanel: React.FC = () => {
                           onClick={(e) => { e.stopPropagation(); setShowRoleDropdown(showRoleDropdown === user.id ? null : user.id); }}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity"
                           style={{
-                            backgroundColor: user.role === 'superadmin' ? '#f3e8ff' : user.role === 'premium' ? '#fef9c3' : '#f3f4f6',
-                            color: user.role === 'superadmin' ? '#6b21a8' : user.role === 'premium' ? '#854d0e' : '#374151',
+                            backgroundColor: user.role === 'superadmin' ? '#f3e8ff' : user.role === 'revendedor' ? '#dbeafe' : user.role === 'premium' ? '#fef9c3' : '#f3f4f6',
+                            color: user.role === 'superadmin' ? '#6b21a8' : user.role === 'revendedor' ? '#1e40af' : user.role === 'premium' ? '#854d0e' : '#374151',
                           }}
                           title="Click para cambiar rol"
                         >
                           {user.role === 'superadmin' && <Crown className="w-3 h-3" />}
+                          {user.role === 'revendedor' && <Shield className="w-3 h-3" />}
                           {user.role === 'premium' && <Award className="w-3 h-3" />}
                           {user.role === 'free' && <UserIcon className="w-3 h-3" />}
-                          {user.role === 'superadmin' ? 'SuperAdmin' : user.role === 'premium' ? 'Premium' : 'Free'}
+                          {user.role === 'superadmin' ? 'SuperAdmin' : user.role === 'revendedor' ? 'Revendedor' : user.role === 'premium' ? 'Premium' : 'Free'}
                           <ChevronDown className="w-3 h-3" />
                         </button>
 

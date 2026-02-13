@@ -180,15 +180,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
                   profile?.role === 'superadmin'
                     ? 'bg-green-100 text-green-800'
-                    : profile?.role === 'admin'
+                    : profile?.role === 'revendedor'
                     ? 'bg-blue-100 text-blue-800'
                     : profile?.user_type === 'empresa'
                     ? 'bg-amber-100 text-amber-800'
                     : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {profile?.role === 'superadmin' ? 'SuperAdmin' : profile?.role === 'admin' ? 'Admin' : profile?.plan_name || 'Free'}
+                  {profile?.role === 'superadmin' ? 'SuperAdmin' : profile?.role === 'revendedor' ? 'Revendedor' : profile?.plan_name || 'Free'}
                 </span>
-                {profile?.user_type === 'empresa' && profile?.role !== 'superadmin' && profile?.role !== 'admin' && (
+                {profile?.user_type === 'empresa' && profile?.role !== 'superadmin' && profile?.role !== 'revendedor' && (
                   <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-semibold">
                     Empresa
                   </span>
@@ -263,17 +263,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
                   profile?.role === 'superadmin'
                     ? 'bg-green-100 text-green-800'
-                    : profile?.role === 'admin'
+                    : profile?.role === 'revendedor'
                     ? 'bg-blue-100 text-blue-800'
                     : profile?.user_type === 'empresa'
                     ? 'bg-amber-100 text-amber-800'
                     : 'bg-gray-100 text-gray-800'
                 }`}>
                   {profile?.role === 'superadmin' ? 'SuperAdmin' : 
-                   profile?.role === 'admin' ? 'Admin' : 
+                   profile?.role === 'revendedor' ? 'Revendedor' : 
                    profile?.plan_name || 'Free'}
                 </span>
-                {profile?.user_type === 'empresa' && profile?.role !== 'superadmin' && profile?.role !== 'admin' && (
+                {profile?.user_type === 'empresa' && profile?.role !== 'superadmin' && profile?.role !== 'revendedor' && (
                   <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-semibold">
                     Empresa
                   </span>

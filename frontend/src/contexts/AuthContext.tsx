@@ -143,7 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .insert({
           id: userId,
           email: userData.user?.email || '',
-          role: 'user',
+          role: 'free',
         })
         .select()
         .single();
@@ -206,9 +206,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }).select().single();
 
         if (profileError) {
-          console.error('❌ Error creando perfil en users:', profileError);
+          console.error('Error creando perfil en users:', profileError);
         } else {
-          console.log('✅ Perfil creado en users:', profileData);
+          console.log('Perfil creado en users:', profileData);
         }
       }
 
@@ -341,7 +341,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     created_at: new Date().toISOString(),
   } as User : user;
 
-  const isAdmin = effectiveProfile?.role === 'admin';
+  const isAdmin = effectiveProfile?.role === 'revendedor' || effectiveProfile?.role === 'superadmin';
 
   return (
     <AuthContext.Provider

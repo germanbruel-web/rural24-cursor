@@ -56,7 +56,7 @@ class JWTSessionAdapter implements ISessionAdapter {
     const payload: ISessionData = {
       userId,
       email: data.email || '',
-      role: data.role || 'user',
+      role: data.role || 'free',
       createdAt: now,
       expiresAt: now + (ttlSeconds * 1000),
       metadata: data.metadata || {}
@@ -141,7 +141,7 @@ class DatabaseSessionAdapter implements ISessionAdapter {
         id: sessionId,
         userId,
         email: data.email || '',
-        role: data.role || 'user',
+        role: data.role || 'free',
         metadata: data.metadata || {},
         expiresAt,
         createdAt: now,
@@ -273,7 +273,7 @@ class RedisSessionAdapter implements ISessionAdapter {
     const sessionData: ISessionData = {
       userId,
       email: data.email || '',
-      role: data.role || 'user',
+      role: data.role || 'free',
       createdAt: now,
       expiresAt: now + (ttlSeconds * 1000),
       metadata: data.metadata || {}

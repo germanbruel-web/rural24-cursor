@@ -43,7 +43,7 @@ export const PremiumSection: React.FC<PremiumSectionProps> = ({ products }) => {
               {/* Badge tipo de usuario */}
               {product.userType && product.userType !== 'free' && (
                 <div className="absolute top-2 left-2 z-10 bg-[#16a135] text-white px-2 py-1 rounded text-xs font-medium">
-                  {product.userType === 'premium-empresa' ? 'Empresa' : 'Particular'}
+                  {product.userType === 'empresa' ? 'Empresa' : 'Particular'}
                 </div>
               )}
 

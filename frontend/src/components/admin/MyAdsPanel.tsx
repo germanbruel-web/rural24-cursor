@@ -51,7 +51,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   // Determinar permisos según rol
   const isSuperAdmin = checkIsSuperAdmin(profile?.role);
   
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused'>('active');
   
   useEffect(() => {
     loadData();
@@ -77,15 +77,12 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     try {
       // Solo cargar avisos propios del usuario actual
       const adsData = await getMyAds();
-      console.log('🔍 [MyAdsPanel] Avisos cargados:', adsData.length, adsData);
       setAds(adsData);
       await loadFeaturedStatus(adsData);
       
       // Get user limits
       const limit = await getUserAdLimit(profile?.id);
       setAdLimit(limit);
-      
-      console.log(`📊 Mis avisos: ${adsData.length} | Límite: ${limit.current}/${limit.limit}`);
     } catch (error) {
       console.error('Error loading ads:', error);
       notify.error('Error al cargar avisos');

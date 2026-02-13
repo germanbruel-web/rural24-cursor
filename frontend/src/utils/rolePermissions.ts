@@ -1,28 +1,30 @@
 import type { UserRole } from '../../types';
 
+// Constante para "todos los roles" - evita repetir arrays
+const ALL_ROLES: UserRole[] = ['superadmin', 'revendedor', 'premium', 'free'];
+
 /**
  * Define qué páginas puede acceder cada rol
  */
 export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   // Páginas públicas (todos)
-  home: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
-  'how-it-works': ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
-  'email-confirm': ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
-  publicar: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
-  'ad-detail': ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+  home: ALL_ROLES,
+  'how-it-works': ALL_ROLES,
+  'email-confirm': ALL_ROLES,
+  publicar: ALL_ROLES,
+  'ad-detail': ALL_ROLES,
   
   // Páginas de perfil (todos los usuarios autenticados)
-  profile: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
-  subscription: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+  profile: ALL_ROLES,
+  subscription: ALL_ROLES,
   
   // Mis avisos personales (todos los usuarios autenticados)
-  'my-ads': ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
-  contacts: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
-  inbox: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+  'my-ads': ALL_ROLES,
+  contacts: ALL_ROLES,
+  inbox: ALL_ROLES,
   
-  // Admin y SuperAdmin (Revendedores)
-  users: ['superadmin', 'admin'], // Crear/gestionar usuarios
-  // ads-management: eliminado - redirige a featured-ads
+  // Revendedor y SuperAdmin
+  users: ['superadmin', 'revendedor'],
   
   // Solo SuperAdmin - Publicidad
   banners: ['superadmin'],
@@ -72,17 +74,17 @@ export function isSuperAdmin(userRole?: UserRole): boolean {
 }
 
 /**
- * Verifica si el usuario es Admin o SuperAdmin (Revendedor)
+ * Verifica si el usuario es Revendedor o SuperAdmin
  */
 export function isAdmin(userRole?: UserRole): boolean {
-  return userRole === 'admin' || userRole === 'superadmin';
+  return userRole === 'revendedor' || userRole === 'superadmin';
 }
 
 /**
- * Verifica si el usuario es Free (no puede acceder a paneles admin)
+ * Verifica si el usuario es Free
  */
 export function isFreeUser(userRole?: UserRole): boolean {
-  return userRole === 'free' || userRole === 'user';
+  return userRole === 'free';
 }
 
 /**
@@ -102,28 +104,28 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'divider-mi-cuenta',
     label: 'MI CUENTA',
-    allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+    allowedRoles: ALL_ROLES,
     divider: true,
   },
   {
     id: 'my-ads',
     label: 'Mis Avisos',
-    allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+    allowedRoles: ALL_ROLES,
   },
   {
     id: 'inbox',
     label: 'Mensajes',
-    allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+    allowedRoles: ALL_ROLES,
   },
   {
     id: 'profile',
     label: 'Mi Perfil',
-    allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+    allowedRoles: ALL_ROLES,
   },
   {
     id: 'subscription',
     label: 'Créditos y Plan',
-    allowedRoles: ['superadmin', 'admin', 'premium', 'basic', 'verified', 'free', 'user'],
+    allowedRoles: ALL_ROLES,
   },
   
   // ============================================================
@@ -158,7 +160,7 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'users',
     label: 'Usuarios',
-    allowedRoles: ['superadmin'],
+    allowedRoles: ['superadmin', 'revendedor'],
   },
   
   // ============================================================

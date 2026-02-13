@@ -99,10 +99,12 @@ async function extractUser(request: NextRequest): Promise<AuthUser | null> {
 }
 
 /**
- * Normaliza variantes de rol: 'super-admin' → 'superadmin'
+ * Normaliza variantes de rol: 'super-admin' → 'superadmin', 'admin' → 'revendedor'
  */
 function normalizeRole(role: string): string {
   if (role === 'super-admin') return 'superadmin';
+  if (role === 'admin') return 'revendedor';
+  if (role === 'user' || role === 'basic' || role === 'verified') return 'free';
   return role;
 }
 

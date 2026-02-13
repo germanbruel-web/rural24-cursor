@@ -30,6 +30,15 @@ const DEV_USERS: DevUser[] = [
     subscription_status: 'active',
   },
   {
+    id: 'dev-revendedor',
+    email: 'revendedor@dev.com',
+    full_name: 'Revendedor Dev',
+    role: 'revendedor',
+    user_type: 'empresa',
+    email_verified: true,
+    subscription_status: 'active',
+  },
+  {
     id: 'dev-free-empresa',
     email: 'empresa@dev.com',
     full_name: 'Free Empresa Dev',
