@@ -3,6 +3,7 @@
  */
 
 import { fetchApi, ApiError, API_URL } from './client';
+import { supabase } from '../supabaseClient';
 
 export const uploadsApi = {
   async uploadImage(
@@ -28,9 +29,15 @@ export const uploadsApi = {
 
     console.log(`[uploadsApi] 🌐 Fetching: ${API_URL}/api/uploads`);
     console.log(`[uploadsApi] 📡 Method: POST`);
+
+    // Obtener token de autenticación
+    const { data: { session } } = await supabase.auth.getSession();
     
     const response = await fetch(`${API_URL}/api/uploads`, {
       method: 'POST',
+      headers: {
+        ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+      },
       body: formData,
       // No establecer Content-Type, el browser lo hace automáticamente con boundary
     });

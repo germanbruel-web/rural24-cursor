@@ -54,6 +54,42 @@ interface UseSearchSuggestionsReturn {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
+// Rate limiter: máximo 30 búsquedas por minuto
+const searchRateLimiter = {
+  timestamps: [] as number[],
+  maxPerMinute: 30,
+  canSearch(): boolean {
+    const now = Date.now();
+    this.timestamps = this.timestamps.filter(t => now - t < 60000);
+    return this.timestamps.length < this.maxPerMinute;
+  },
+  record(): void {
+    this.timestamps.push(Date.now());
+  },
+};
+
+// In-memory cache de sugerencias (evita re-fetch de queries repetidas)
+const suggestionsCache = new Map<string, { data: SearchSuggestion[]; timestamp: number }>();
+const SUGGESTIONS_CACHE_TTL = 3 * 60 * 1000; // 3 minutos
+
+function getCachedSuggestions(query: string): SearchSuggestion[] | null {
+  const cached = suggestionsCache.get(query.toLowerCase());
+  if (cached && Date.now() - cached.timestamp < SUGGESTIONS_CACHE_TTL) {
+    return cached.data;
+  }
+  if (cached) suggestionsCache.delete(query.toLowerCase());
+  return null;
+}
+
+function setCachedSuggestions(query: string, data: SearchSuggestion[]): void {
+  // Limitar tamaño del cache a 50 entradas
+  if (suggestionsCache.size > 50) {
+    const firstKey = suggestionsCache.keys().next().value;
+    if (firstKey) suggestionsCache.delete(firstKey);
+  }
+  suggestionsCache.set(query.toLowerCase(), { data, timestamp: Date.now() });
+}
+
 export function useSearchSuggestions(
   query: string,
   options: UseSearchSuggestionsOptions = {}
@@ -123,6 +159,14 @@ export function useSearchSuggestions(
         return;
       }
 
+      // Check cache first
+      const cached = getCachedSuggestions(searchQuery);
+      if (cached) {
+        setSuggestions(cached);
+        setLoading(false);
+        return;
+      }
+
       // Cancelar request anterior si existe
       if (abortController.current) {
         abortController.current.abort();
@@ -131,6 +175,14 @@ export function useSearchSuggestions(
       abortController.current = new AbortController();
       setLoading(true);
       setError(null);
+
+      // Rate limiting check
+      if (!searchRateLimiter.canSearch()) {
+        setError('Demasiadas búsquedas. Esperá unos segundos.');
+        setLoading(false);
+        return;
+      }
+      searchRateLimiter.record();
 
       try {
         const url = `${API_BASE_URL}/api/search/suggestions?q=${encodeURIComponent(
@@ -185,6 +237,7 @@ export function useSearchSuggestions(
         }
 
         setSuggestions(transformed.slice(0, limit * 2)); // Mostrar más resultados
+        setCachedSuggestions(searchQuery, transformed.slice(0, limit * 2)); // Cache results
       } catch (err: any) {
         if (err.name !== 'AbortError') {
           console.error('Error fetching suggestions:', err);

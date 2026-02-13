@@ -30,15 +30,35 @@ export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
     location: 'Buenos Aires',
   });
 
-  const [dollarRates] = useState({
-    oficial: 1250,
-    blue: 1420,
+  const [dollarRates, setDollarRates] = useState({
+    oficial: 0,
+    blue: 0,
   });
 
-  // Simular obtención de clima (en producción vendría de una API)
+  // Cotización del dólar en tiempo real (dolarapi.com - Argentina)
   useEffect(() => {
-    // Aquí se podría implementar geolocalización + API de clima
-    // Por ahora valores mock
+    const fetchDollar = async () => {
+      try {
+        const [oficialRes, blueRes] = await Promise.all([
+          fetch('https://dolarapi.com/v1/dolares/oficial'),
+          fetch('https://dolarapi.com/v1/dolares/blue'),
+        ]);
+        if (oficialRes.ok && blueRes.ok) {
+          const oficial = await oficialRes.json();
+          const blue = await blueRes.json();
+          setDollarRates({
+            oficial: Math.round(oficial.venta || 0),
+            blue: Math.round(blue.venta || 0),
+          });
+        }
+      } catch (error) {
+        console.warn('Error fetching dollar rates:', error);
+      }
+    };
+
+    fetchDollar();
+    const interval = setInterval(fetchDollar, 30 * 60 * 1000); // Cada 30 min
+    return () => clearInterval(interval);
   }, []);
 
   const getWeatherIcon = () => {
@@ -89,9 +109,13 @@ export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
             <div className="hidden lg:flex items-center gap-1.5 ml-2 text-gray-500">
               <div className="w-px h-4 bg-gray-300" />
               <DollarSign className="w-3 h-3" />
-              <span className="text-xs">
-                Oficial ${dollarRates.oficial.toLocaleString()} · Blue ${dollarRates.blue.toLocaleString()}
-              </span>
+              {dollarRates.oficial > 0 ? (
+                <span className="text-xs">
+                  Oficial ${dollarRates.oficial.toLocaleString()} · Blue ${dollarRates.blue.toLocaleString()}
+                </span>
+              ) : (
+                <span className="text-xs text-gray-400">Cargando...</span>
+              )}
             </div>
           </div>
 

@@ -18,7 +18,7 @@ export { FilterSidebar } from './FilterSidebar';
 export { SearchResultsPageMinimal } from './SearchResultsPageMinimal';
 export { AdDetailPage } from './AdDetailPage';
 export { RegisterBanner } from './RegisterBanner';
-export { AdvancedSearchBar } from './AdvancedSearchBar';
+// AdvancedSearchBar DEPRECATED - usar GlobalSearchBar
 export { DesignSystemShowcase } from './DesignSystemShowcase';
 export { DesignSystemShowcaseSimple } from './DesignSystemShowcaseSimple';
 export { SmartBreadcrumb } from './SmartBreadcrumb';

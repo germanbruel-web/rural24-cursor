@@ -30,9 +30,18 @@ export const uploadService = {
       formData.append('file', file);
       formData.append('folder', folder); // 'ads' o 'banners'
 
+      // Obtener token de autenticación
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No estás autenticado. Iniciá sesión para subir imágenes.');
+      }
+
       // Subir vía backend API (Cloudinary)
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/uploads`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
         body: formData,
       });
 

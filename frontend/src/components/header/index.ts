@@ -5,5 +5,5 @@
 
 export { TopNav } from './TopNav';
 export { HeaderNew } from './HeaderNew';
-export { SmartSearchBar } from './SmartSearchBar';
+// SmartSearchBar DEPRECATED - usar GlobalSearchBar
 export { UserMenu } from './UserMenu';

@@ -61,6 +61,7 @@ const GlobalSettingsPanel = lazy(() => import("./src/components/admin/GlobalSett
 const PaymentsAdminPanel = lazy(() => import("./src/components/admin/PaymentsAdminPanel"));
 const SitemapSeoPanel = lazy(() => import("./src/components/admin/SitemapSeoPanel"));
 const SuperAdminFeaturedPanel = lazy(() => import("./src/components/admin/SuperAdminFeaturedPanel"));
+const HeroCmsPanel = lazy(() => import("./src/components/admin/HeroCmsPanel"));
 
 // Dashboard Components (solo para usuarios autenticados)
 const MessagesPanel = lazy(() => import("./src/components/dashboard/MessagesPanel").then(m => ({ default: m.MessagesPanel })));
@@ -92,7 +93,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads' | 'coupons' | 'company-profile';
+export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads' | 'coupons' | 'company-profile' | 'hero-cms';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -147,6 +148,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/backend-settings') return 'backend-settings';
     if (hash === '#/deleted-ads') return 'deleted-ads';
     if (hash === '#/dashboard/sitemap-seo') return 'sitemap-seo';
+    if (hash === '#/hero-cms') return 'hero-cms';
     if (hash === '#/profile') return 'profile';
     if (hash === '#/subscription') return 'subscription';
     
@@ -185,6 +187,7 @@ const AppContent: React.FC = () => {
       'featured-queue': '#/featured-queue',
       'payments-admin': '#/payments-admin',
       'sitemap-seo': '#/dashboard/sitemap-seo',
+      'hero-cms': '#/hero-cms',
       'profile': '#/profile',
       'subscription': '#/subscription',
       'contacts': '#/dashboard/contacts',
@@ -487,12 +490,12 @@ const AppContent: React.FC = () => {
   }
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'ads-management', 'banners', 'featured-ads', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo'].includes(currentPage);
+  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'ads-management', 'banners', 'featured-ads', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
     // Esperar a que cargue el perfil antes de verificar permisos en páginas protegidas
-    const isProtectedPage = ['users', 'ads-management', 'banners', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo'].includes(currentPage);
+    const isProtectedPage = ['users', 'ads-management', 'banners', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms'].includes(currentPage);
     
     if (authLoading && isProtectedPage) {
       return (
@@ -566,6 +569,7 @@ const AppContent: React.FC = () => {
                 )}
                 {currentPage === 'payments-admin' && canAccessPage('payments-admin', profile?.role) && <PaymentsAdminPanel />}
                 {currentPage === 'sitemap-seo' && canAccessPage('sitemap-seo', profile?.role) && <SitemapSeoPanel />}
+                {currentPage === 'hero-cms' && canAccessPage('hero-cms', profile?.role) && <HeroCmsPanel />}
                 {currentPage === 'settings' && (
                   <div className="bg-white rounded-lg shadow p-6">
                     <h2 className="text-2xl font-bold mb-4">Configuración</h2>

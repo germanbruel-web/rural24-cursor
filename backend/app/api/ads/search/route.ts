@@ -550,8 +550,33 @@ export async function GET(request: NextRequest) {
     );
     
     if (shouldApplyTextSearch) {
-      // Buscar en título, descripción Y atributos JSONB
-      query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,attributes.cs.{"marca":"${searchQuery}"},attributes.cs.{"brand":"${searchQuery}"}`);
+      // ============================================================
+      // FULL-TEXT SEARCH con search_vector (GIN index) + fallback ILIKE
+      // search_vector usa diccionario 'spanish' con pesos:
+      //   A = title, B = description, C = province/city
+      // ============================================================
+      
+      // Normalizar query para tsquery: quitar caracteres especiales, 
+      // convertir espacios en operador AND (&) para búsqueda precisa
+      const sanitizedQuery = searchQuery
+        .trim()
+        .replace(/[^\w\sáéíóúüñ]/gi, '') // Quitar chars especiales
+        .split(/\s+/)
+        .filter(w => w.length >= 2) // Ignorar palabras de 1 char
+        .join(' & '); // AND entre palabras
+      
+      if (sanitizedQuery) {
+        // Usar textSearch con search_vector (aprovecha GIN index idx_ads_search)
+        // Fallback: si search_vector está vacío, incluir también ILIKE en title
+        query = query.or(
+          `search_vector.fts(spanish).${sanitizedQuery},title.ilike.%${searchQuery}%`
+        );
+      } else {
+        // Query muy corta o solo chars especiales: fallback a ILIKE
+        query = query.or(
+          `title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`
+        );
+      }
     }
 
     // Filtros de precio

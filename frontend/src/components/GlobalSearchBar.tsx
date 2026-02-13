@@ -187,12 +187,14 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
     inputRef.current?.focus();
   };
 
-  // Highlight de texto
+  // Highlight de texto (XSS-safe: usa React text nodes, no innerHTML)
   const highlightText = (text: string, highlight: string) => {
     if (!highlight.trim()) return text;
 
     try {
-      const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+      // Escapar caracteres especiales de regex para prevenir ReDoS
+      const escaped = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
       return (
         <span>
           {parts.map((part, i) =>

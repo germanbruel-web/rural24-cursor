@@ -102,7 +102,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
 
             {/* BUSCADOR - Centro (Desktop) */}
             <div className="hidden md:flex flex-1 justify-center max-w-4xl mx-4">
-              <SmartSearchBar
+              <GlobalSearchBar
                 onSearch={handleSearch}
                 placeholder="Tractores, semillas, campos en venta..."
               />
