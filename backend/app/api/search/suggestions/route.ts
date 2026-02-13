@@ -146,7 +146,8 @@ async function getCachedData(supabase: any) {
 // ====================================================================
 // HELPER: Normalizar texto para comparación
 // ====================================================================
-function normalize(text: string): string {
+function normalize(text: string | null | undefined): string {
+  if (!text) return '';
   return text
     .toLowerCase()
     .normalize('NFD')
@@ -215,8 +216,9 @@ export async function GET(request: NextRequest) {
     const matchingSubcategories: SubcategorySuggestion[] = [];
     
     for (const sub of data.subcategories) {
-      const subName = sub.display_name || sub.name;
+      const subName = sub.display_name || sub.name || '';
       const cat = sub.categories as any;
+      if (!cat) continue; // Skip subcategories without valid category
       
       if (matches(subName, query) || matches(sub.slug, query)) {
         matchingSubcategories.push({
@@ -224,8 +226,8 @@ export async function GET(request: NextRequest) {
           id: sub.id,
           name: subName,
           slug: sub.slug,
-          categoryName: cat.display_name || cat.name,
-          categorySlug: cat.slug,
+          categoryName: cat.display_name || cat.name || '',
+          categorySlug: cat.slug || '',
           icon: cat.icon,
         });
         
@@ -243,8 +245,8 @@ export async function GET(request: NextRequest) {
     
     for (const attr of data.attributes) {
       // Solo buscar en campos relevantes
-      const fieldName = attr.field_name?.toLowerCase();
-      if (!searchableFields.includes(fieldName)) continue;
+      const fieldName = (attr.field_name || '').toLowerCase();
+      if (!fieldName || !searchableFields.includes(fieldName)) continue;
       
       const options = attr.field_options as any[];
       if (!options || !Array.isArray(options)) continue;
