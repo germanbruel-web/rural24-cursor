@@ -63,6 +63,7 @@ const PaymentsAdminPanel = lazy(() => import("./src/components/admin/PaymentsAdm
 const SitemapSeoPanel = lazy(() => import("./src/components/admin/SitemapSeoPanel"));
 const SuperAdminFeaturedPanel = lazy(() => import("./src/components/admin/SuperAdminFeaturedPanel"));
 const HeroCmsPanel = lazy(() => import("./src/components/admin/HeroCmsPanel"));
+const ResellerPointsPanel = lazy(() => import("./src/components/admin/ResellerPointsPanel"));
 
 // Dashboard Components (solo para usuarios autenticados)
 const MessagesPanel = lazy(() => import("./src/components/dashboard/MessagesPanel").then(m => ({ default: m.MessagesPanel })));
@@ -564,6 +565,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'payments-admin' && canAccessPage('payments-admin', profile?.role) && <PaymentsAdminPanel />}
                 {currentPage === 'sitemap-seo' && canAccessPage('sitemap-seo', profile?.role) && <SitemapSeoPanel />}
                 {currentPage === 'hero-cms' && canAccessPage('hero-cms', profile?.role) && <HeroCmsPanel />}
+                {currentPage === 'reseller-points' && canAccessPage('reseller-points', profile?.role) && <ResellerPointsPanel />}
                 {currentPage === 'settings' && (
                   <div className="bg-white rounded-lg shadow p-6">
                     <h2 className="text-2xl font-bold mb-4">Configuración</h2>

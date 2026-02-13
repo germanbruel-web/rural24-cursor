@@ -29,6 +29,7 @@ import {
   FileText,
   Sliders,
   Map,
+  Store,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -72,6 +73,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     'attributes-admin': <Sliders className="w-5 h-5" />,
     'templates-admin': <FileText className="w-5 h-5" />,
     users: <Users className="w-5 h-5" />,
+    'reseller-points': <Store className="w-5 h-5" />,
     // Comercial
     banners: <ImageIcon className="w-5 h-5" />,
     coupons: <Gift className="w-5 h-5" />,

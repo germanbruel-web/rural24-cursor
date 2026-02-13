@@ -17,3 +17,6 @@ export { default as GlobalSettingsPanel } from './GlobalSettingsPanel';
 export { default as PaymentsAdminPanel } from './PaymentsAdminPanel';
 export { default as PlansAdmin } from './PlansAdmin';
 export { default as SuperAdminFeaturedPanel } from './SuperAdminFeaturedPanel';
+
+// Paneles Revendedor
+export { ResellerPointsPanel } from './ResellerPointsPanel';

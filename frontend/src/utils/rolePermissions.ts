@@ -25,6 +25,7 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   
   // Revendedor y SuperAdmin
   users: ['superadmin', 'revendedor'],
+  'reseller-points': ['revendedor'],
   
   // Solo SuperAdmin - Publicidad
   banners: ['superadmin'],
@@ -161,6 +162,21 @@ export const MENU_STRUCTURE: MenuItem[] = [
     id: 'users',
     label: 'Usuarios',
     allowedRoles: ['superadmin', 'revendedor'],
+  },
+  
+  // ============================================================
+  // SECCIÓN 2.5: MI RED COMERCIAL (Revendedor)
+  // ============================================================
+  {
+    id: 'divider-red-comercial',
+    label: 'MI RED COMERCIAL',
+    allowedRoles: ['revendedor'],
+    divider: true,
+  },
+  {
+    id: 'reseller-points',
+    label: 'Puntos de Venta',
+    allowedRoles: ['revendedor'],
   },
   
   // ============================================================
