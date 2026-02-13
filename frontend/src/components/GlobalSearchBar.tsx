@@ -137,17 +137,21 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
         setShowDropdown(false);
         if (onSearch) {
           onSearch(item.title);
-        } else {
-          // Navegar a búsqueda genérica
-          window.location.hash = `#/search?q=${encodeURIComponent(item.title)}`;
         }
+        // Navegar a búsqueda
+        window.location.hash = `#/search?q=${encodeURIComponent(item.title)}`;
       } else {
         // Navegar a URL prearmada con filtros
         if (item.url) {
-          window.location.hash = item.url.replace('/#/', '');
+          const hash = item.url.startsWith('/#/') 
+            ? '#/' + item.url.slice(3)   // /#/search?... → #/search?...
+            : item.url.startsWith('#') 
+              ? item.url 
+              : '#/' + item.url;
+          window.location.hash = hash;
         }
         setShowDropdown(false);
-        setQuery('');
+        setQuery(item.title);
       }
       setSelectedIndex(-1);
     },
