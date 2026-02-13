@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient';
 import { getPlanByName } from './subscriptionService';
 
 /**
- * 📋 Datos de registro - PERSONA
+ * Datos de registro - PERSONA
  */
 export interface RegisterPersonaInput {
   firstName: string;
@@ -14,7 +14,7 @@ export interface RegisterPersonaInput {
 }
 
 /**
- * 🏢 Datos de registro - EMPRESA
+ * Datos de registro - EMPRESA
  */
 export interface RegisterEmpresaInput {
   firstName: string;
@@ -27,7 +27,7 @@ export interface RegisterEmpresaInput {
 }
 
 /**
- * ✅ Resultado del registro
+ * Resultado del registro
  */
 export interface RegisterResult {
   success: boolean;
@@ -38,7 +38,7 @@ export interface RegisterResult {
 }
 
 /**
- * ✍️ Validar CUIT argentino (básico)
+ * Validar CUIT argentino (basico)
  */
 export function validateCUIT(cuit: string): boolean {
   // Remover guiones y espacios
@@ -59,7 +59,7 @@ export function validateCUIT(cuit: string): boolean {
 }
 
 /**
- * 🎨 Formatear CUIT con guiones (XX-XXXXXXXX-X)
+ * Formatear CUIT con guiones (XX-XXXXXXXX-X)
  */
 export function formatCUIT(cuit: string): string {
   const cleaned = cuit.replace(/[-\s]/g, '');
@@ -68,9 +68,9 @@ export function formatCUIT(cuit: string): string {
 }
 
 /**
- * 👤 Registrar usuario PERSONA
+ * Registrar usuario PERSONA
  * - Asigna plan FREE por defecto
- * - Envía email de verificación
+ * - Envia email de verificacion
  */
 export async function registerPersona(input: RegisterPersonaInput): Promise<RegisterResult> {
   try {
@@ -147,11 +147,10 @@ export async function registerPersona(input: RegisterPersonaInput): Promise<Regi
       });
 
     if (profileError) {
-      console.error('❌ Error actualizando perfil:', profileError);
-      // No retornar error aquí - el usuario se creó correctamente
+      console.error('Error actualizando perfil:', profileError);
     }
 
-    console.log('✅ Usuario PERSONA registrado:', authData.user.id);
+    console.log('Usuario PERSONA registrado:', authData.user.id);
     return {
       success: true,
       userId: authData.user.id,
@@ -159,7 +158,7 @@ export async function registerPersona(input: RegisterPersonaInput): Promise<Regi
     };
     
   } catch (error: any) {
-    console.error('❌ Exception en registerPersona:', error);
+    console.error('Exception en registerPersona:', error);
     return {
       success: false,
       error: error.message || 'Error al registrar usuario',
@@ -169,9 +168,9 @@ export async function registerPersona(input: RegisterPersonaInput): Promise<Regi
 }
 
 /**
- * 🏢 Registrar usuario EMPRESA
+ * Registrar usuario EMPRESA
  * - Asigna plan FREE por defecto
- * - Envía email de verificación
+ * - Envia email de verificacion
  * - CUIT y datos adicionales se completan en el perfil
  */
 export async function registerEmpresa(input: RegisterEmpresaInput): Promise<RegisterResult> {
@@ -192,7 +191,7 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
     });
 
     if (authError) {
-      console.error('❌ Error en signUp:', authError);
+      console.error('Error en signUp empresa:', authError);
       
       let errorCode: 'EMAIL_EXISTS' | 'WEAK_PASSWORD' | 'UNKNOWN' = 'UNKNOWN';
       if (authError.message?.toLowerCase().includes('already registered')) {
@@ -219,7 +218,7 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
     // 2. OBTENER PLAN FREE
     const freePlan = await getPlanByName('free');
     if (!freePlan) {
-      console.error('❌ Plan free no encontrado - debe ejecutar migration 007');
+      console.error('Plan free no encontrado - debe ejecutar migration 007');
       return {
         success: false,
         error: 'Configuración de planes no encontrada',
@@ -251,11 +250,10 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
       });
 
     if (profileError) {
-      console.error('❌ Error actualizando perfil empresa:', profileError);
-      // No retornar error aquí - el usuario se creó correctamente
+      console.error('Error actualizando perfil empresa:', profileError);
     }
 
-    console.log('✅ Usuario EMPRESA registrado:', authData.user.id);
+    console.log('Usuario EMPRESA registrado:', authData.user.id);
     return {
       success: true,
       userId: authData.user.id,
@@ -263,7 +261,7 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
     };
     
   } catch (error: any) {
-    console.error('❌ Exception en registerEmpresa:', error);
+    console.error('Exception en registerEmpresa:', error);
     return {
       success: false,
       error: error.message || 'Error al registrar empresa',

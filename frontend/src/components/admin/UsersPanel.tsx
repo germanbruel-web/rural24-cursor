@@ -2,20 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   Search, 
-  Filter, 
   MoreVertical,
   Award,
   User as UserIcon,
-  Mail,
-  Calendar,
   CheckCircle,
   XCircle,
-  Edit,
   Trash2,
-  Plus,
-  AlertTriangle,
   Crown,
-  Shield
+  Shield,
+  ChevronDown
 } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import type { UserRole, UserType } from '../../../types';
@@ -27,6 +22,13 @@ import {
   type UserData 
 } from '../../services/usersService';
 
+// Roles disponibles para asignar
+const AVAILABLE_ROLES: { value: UserRole; label: string; color: string; icon: React.ReactNode }[] = [
+  { value: 'superadmin', label: 'SuperAdmin', color: 'purple', icon: <Crown className="w-3 h-3" /> },
+  { value: 'premium', label: 'Premium', color: 'yellow', icon: <Award className="w-3 h-3" /> },
+  { value: 'free', label: 'Free', color: 'gray', icon: <UserIcon className="w-3 h-3" /> },
+];
+
 export const UsersPanel: React.FC = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,11 +36,22 @@ export const UsersPanel: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<'all' | UserRole>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [showUserMenu, setShowUserMenu] = useState<string | null>(null);
+  const [showRoleDropdown, setShowRoleDropdown] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 20;
 
   useEffect(() => {
     loadUsers();
+  }, []);
+
+  // Cerrar dropdowns al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowUserMenu(null);
+      setShowRoleDropdown(null);
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const loadUsers = async () => {
@@ -54,7 +67,6 @@ export const UsersPanel: React.FC = () => {
       
       if (data) {
         setUsers(data);
-        console.log(`✅ ${data.length} usuarios cargados`);
       }
     } catch (error) {
       console.error('Error loading users:', error);
@@ -87,12 +99,39 @@ export const UsersPanel: React.FC = () => {
   const endIndex = startIndex + recordsPerPage;
   const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
-  // Estadísticas
+  // Estadisticas
   const stats = {
     total: users.length,
     superadmins: users.filter(u => u.role === 'superadmin').length,
+    premium: users.filter(u => u.role === 'premium').length,
     free: users.filter(u => u.role === 'free').length,
     verified: users.filter(u => u.email_verified).length,
+  };
+
+  const handleChangeRole = async (userId: string, newRole: UserRole) => {
+    const user = users.find(u => u.id === userId);
+    const roleName = AVAILABLE_ROLES.find(r => r.value === newRole)?.label || newRole;
+    
+    if (!confirm(`Cambiar rol de "${user?.full_name || user?.email}" a ${roleName}?`)) {
+      setShowRoleDropdown(null);
+      return;
+    }
+
+    try {
+      const { error } = await updateUserRole(userId, newRole);
+      
+      if (error) {
+        notify.error('Error al cambiar rol: ' + error.message);
+        return;
+      }
+      
+      notify.success(`Rol cambiado a ${roleName}`);
+      setShowRoleDropdown(null);
+      loadUsers();
+    } catch (error) {
+      notify.error('Error al cambiar rol');
+      console.error('Error changing role:', error);
+    }
   };
 
 
@@ -160,15 +199,6 @@ export const UsersPanel: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
           <p className="text-gray-600 mt-1">Administra cuentas y permisos - {users.length} usuarios registrados</p>
         </div>
-        {/* Botón crear usuario - Implementar modal más adelante
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-[#16a135] text-white rounded-lg hover:bg-[#0e7d25] transition-colors flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Crear Usuario
-        </button>
-        */}
       </div>
 
       {/* Stats */}
@@ -232,6 +262,7 @@ export const UsersPanel: React.FC = () => {
           >
             <option value="all">Todos los roles</option>
             <option value="superadmin">SuperAdmin</option>
+            <option value="premium">Premium</option>
             <option value="free">Free</option>
           </select>
 
@@ -280,10 +311,14 @@ export const UsersPanel: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#16a135] to-[#0e7d25] flex items-center justify-center text-white font-bold">
-                        {user.full_name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+                        {(user.first_name || user.full_name || user.email).charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">{user.full_name || 'Sin nombre'}</div>
+                        <div className="font-medium text-gray-900">
+                          {user.first_name && user.last_name 
+                            ? `${user.first_name} ${user.last_name}`
+                            : user.full_name || user.email.split('@')[0]}
+                        </div>
                         <div className="text-sm text-gray-500 flex items-center gap-2">
                           {user.email}
                           {user.email_verified ? (
@@ -301,18 +336,44 @@ export const UsersPanel: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-1">
-                      {user.role === 'superadmin' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full w-fit">
-                          <Crown className="w-3 h-3" />
-                          SuperAdmin
-                        </span>
-                      )}
-                      {user.role === 'free' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full w-fit">
-                          <UserIcon className="w-3 h-3" />
-                          Free
-                        </span>
-                      )}
+                      <div className="relative">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setShowRoleDropdown(showRoleDropdown === user.id ? null : user.id); }}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity"
+                          style={{
+                            backgroundColor: user.role === 'superadmin' ? '#f3e8ff' : user.role === 'premium' ? '#fef9c3' : '#f3f4f6',
+                            color: user.role === 'superadmin' ? '#6b21a8' : user.role === 'premium' ? '#854d0e' : '#374151',
+                          }}
+                          title="Click para cambiar rol"
+                        >
+                          {user.role === 'superadmin' && <Crown className="w-3 h-3" />}
+                          {user.role === 'premium' && <Award className="w-3 h-3" />}
+                          {user.role === 'free' && <UserIcon className="w-3 h-3" />}
+                          {user.role === 'superadmin' ? 'SuperAdmin' : user.role === 'premium' ? 'Premium' : 'Free'}
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+
+                        {showRoleDropdown === user.id && (
+                          <div className="absolute left-0 mt-1 w-40 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50">
+                            {AVAILABLE_ROLES.map(role => (
+                              <button
+                                key={role.value}
+                                onClick={() => handleChangeRole(user.id, role.value)}
+                                disabled={user.role === role.value}
+                                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors ${
+                                  user.role === role.value 
+                                    ? 'bg-gray-50 text-gray-400 cursor-default' 
+                                    : 'hover:bg-gray-50 text-gray-700'
+                                }`}
+                              >
+                                {role.icon}
+                                {role.label}
+                                {user.role === role.value && <span className="ml-auto text-xs text-gray-400">actual</span>}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       {user.user_type && (
                         <span className="text-xs text-gray-500">
                           {user.user_type === 'empresa' ? 'Empresa' : 'Particular'}
@@ -348,14 +409,9 @@ export const UsersPanel: React.FC = () => {
                     <div className="text-sm text-gray-900">
                       {new Date(user.created_at).toLocaleDateString('es-AR')}
                     </div>
-                    {user.last_sign_in && (
-                      <div className="text-xs text-gray-500">
-                        Último: {new Date(user.last_sign_in).toLocaleDateString('es-AR')}
-                      </div>
-                    )}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="relative inline-block">
+                    <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => setShowUserMenu(showUserMenu === user.id ? null : user.id)}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -366,20 +422,30 @@ export const UsersPanel: React.FC = () => {
                       {showUserMenu === user.id && (
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                           {!user.email_verified && (
-                            <>
-                              <button
-                                onClick={() => {
-                                  handleVerifyEmail(user.id);
-                                  setShowUserMenu(null);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 flex items-center gap-2"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                                Verificar Email
-                              </button>
-                              <div className="border-t border-gray-200 my-2"></div>
-                            </>
+                            <button
+                              onClick={() => {
+                                handleVerifyEmail(user.id);
+                                setShowUserMenu(null);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 flex items-center gap-2"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                              Verificar Email
+                            </button>
                           )}
+
+                          <button
+                            onClick={() => {
+                              setShowRoleDropdown(user.id);
+                              setShowUserMenu(null);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <Shield className="w-4 h-4" />
+                            Cambiar Rol
+                          </button>
+
+                          <div className="border-t border-gray-200 my-1"></div>
 
                           <button
                             onClick={() => {

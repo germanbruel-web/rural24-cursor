@@ -593,7 +593,7 @@ function CalendarTab() {
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-gray-400" />
                       <div>
-                        <p className="text-sm text-gray-900">{ad.user_name || 'Sin nombre'}</p>
+                        <p className="text-sm text-gray-900">{ad.user_name || ad.user_email?.split('@')[0] || 'Usuario'}</p>
                         <p className="text-xs text-gray-500">{ad.user_email}</p>
                       </div>
                     </div>

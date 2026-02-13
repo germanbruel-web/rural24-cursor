@@ -194,7 +194,7 @@ export default function AllAdsTab() {
           .in('id', userIds);
         (users || []).forEach((u: any) => {
           usersMap[u.id] = {
-            name: u.full_name || u.email?.split('@')[0] || 'Sin nombre',
+            name: u.full_name || u.email?.split('@')[0] || 'Usuario',
             email: u.email || ''
           };
         });
@@ -235,7 +235,7 @@ export default function AllAdsTab() {
       // Merge data
       const enrichedAds = (adsData || []).map(ad => ({
         ...ad,
-        seller_name: usersMap[ad.user_id]?.name || 'Sin nombre',
+        seller_name: usersMap[ad.user_id]?.name || 'Usuario',
         seller_email: usersMap[ad.user_id]?.email || '',
         category_name: catsMap[ad.category_id] || '',
         featured_ad_id: featuredMap[ad.id]?.id,

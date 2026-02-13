@@ -55,13 +55,13 @@ export async function signInWithGoogle() {
     });
 
     if (error) {
-      console.error('❌ Error Google OAuth:', error);
+      console.error('Error Google OAuth:', error);
       return { data: null, error };
     }
 
     return { data, error: null };
   } catch (error: any) {
-    console.error('❌ Exception en signInWithGoogle:', error);
+    console.error('Exception en signInWithGoogle:', error);
     return { data: null, error };
   }
 }
@@ -83,13 +83,13 @@ export async function signInWithFacebook() {
     });
 
     if (error) {
-      console.error('❌ Error Facebook OAuth:', error);
+      console.error('Error Facebook OAuth:', error);
       return { data: null, error };
     }
 
     return { data, error: null };
   } catch (error: any) {
-    console.error('❌ Exception en signInWithFacebook:', error);
+    console.error('Exception en signInWithFacebook:', error);
     return { data: null, error };
   }
 }
@@ -104,12 +104,12 @@ export async function handleOAuthCallback() {
     const { data: { session }, error } = await supabase.auth.getSession();
     
     if (error) {
-      console.error('❌ Error obteniendo sesión OAuth:', error);
+      console.error('Error obteniendo sesion OAuth:', error);
       return { session: null, error };
     }
 
     if (session?.user) {
-      console.log('✅ OAuth login exitoso:', session.user.email);
+      console.log('OAuth login exitoso:', session.user.email);
       
       // Verificar si el usuario ya tiene perfil en users
       const { data: existingProfile } = await supabase
@@ -126,7 +126,7 @@ export async function handleOAuthCallback() {
 
     return { session, error: null };
   } catch (error: any) {
-    console.error('❌ Exception en handleOAuthCallback:', error);
+    console.error('Exception en handleOAuthCallback:', error);
     return { session: null, error };
   }
 }
@@ -174,12 +174,12 @@ export async function createOAuthUserProfile(user: any, providerOverride?: 'goog
       });
 
     if (error) {
-      console.error('❌ Error creando perfil OAuth:', error);
+      console.error('Error creando perfil OAuth:', error);
     } else {
-      console.log('✅ Perfil OAuth creado para:', user.email);
+      console.log('Perfil OAuth creado para:', user.email);
     }
   } catch (error) {
-    console.error('❌ Exception creando perfil OAuth:', error);
+    console.error('Exception creando perfil OAuth:', error);
   }
 }
 

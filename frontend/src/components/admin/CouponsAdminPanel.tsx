@@ -373,7 +373,7 @@ export default function CouponsAdminPanel() {
           .in('id', userIds);
         (users || []).forEach((u: any) => {
           usersMap[u.id] = {
-            name: u.full_name || 'Sin nombre',
+            name: u.full_name || u.email?.split('@')[0] || 'Usuario',
             email: u.email || '',
           };
         });

@@ -13,7 +13,7 @@ async function getAuthHeaders(): Promise<HeadersInit | null> {
   } = await supabase.auth.getSession();
 
   if (!session) {
-    console.error('❌ No hay sesión activa para autenticar');
+    console.error('No hay sesion activa para autenticar');
     return null;
   }
 
@@ -65,9 +65,9 @@ export interface UpdateUserData {
  */
 export const getAllUsers = async (): Promise<{ data: UserData[] | null; error: Error | null }> => {
   try {
-    console.log('📥 Cargando usuarios desde API backend...');
+    console.log('Cargando usuarios desde API backend...');
 
-    // 🔐 Obtener headers con token de autenticación
+    // Obtener headers con token de autenticación
     const headers = await getAuthHeaders();
     if (!headers) {
       return { 
@@ -76,7 +76,7 @@ export const getAllUsers = async (): Promise<{ data: UserData[] | null; error: E
       };
     }
 
-    // 📡 Fetch con autenticación
+    // Fetch con autenticación
     const response = await fetch(`${API_BASE}/api/admin/users`, {
       method: 'GET',
       headers,
@@ -85,7 +85,7 @@ export const getAllUsers = async (): Promise<{ data: UserData[] | null; error: E
     const json = await response.json();
 
     if (!response.ok) {
-      console.error('❌ Error HTTP:', response.status, json.error);
+      console.error('Error HTTP:', response.status, json.error);
       return { 
         data: null, 
         error: new Error(json.error || `Error HTTP ${response.status}`) 
@@ -93,14 +93,14 @@ export const getAllUsers = async (): Promise<{ data: UserData[] | null; error: E
     }
 
     if (!json.success) {
-      console.error('❌ Error loading users:', json.error);
+      console.error('Error loading users:', json.error);
       return { data: null, error: new Error(json.error) };
     }
 
-    console.log(`✅ ${json.data?.length || 0} usuarios cargados`);
+    console.log(`${json.data?.length || 0} usuarios cargados`);
     return { data: json.data, error: null };
   } catch (error) {
-    console.error('❌ Error en getAllUsers:', error);
+    console.error('Error en getAllUsers:', error);
     return { data: null, error: error as Error };
   }
 };
@@ -111,7 +111,7 @@ export const getAllUsers = async (): Promise<{ data: UserData[] | null; error: E
  */
 export const createUser = async (userData: CreateUserData): Promise<{ data: any; error: Error | null }> => {
   try {
-    console.log('🔐 Creando nuevo usuario:', userData.email);
+    console.log('Creando nuevo usuario:', userData.email);
 
     // Crear usuario en Auth
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -124,7 +124,7 @@ export const createUser = async (userData: CreateUserData): Promise<{ data: any;
     });
 
     if (authError) {
-      console.error('❌ Error en auth.admin.createUser:', authError);
+      console.error('Error en auth.admin.createUser:', authError);
       return { data: null, error: authError };
     }
 
@@ -149,14 +149,14 @@ export const createUser = async (userData: CreateUserData): Promise<{ data: any;
       .single();
 
     if (profileError) {
-      console.error('❌ Error creando perfil:', profileError);
+      console.error('Error creando perfil:', profileError);
       return { data: null, error: profileError };
     }
 
-    console.log('✅ Usuario creado:', profileData);
+    console.log('Usuario creado:', profileData);
     return { data: profileData, error: null };
   } catch (error) {
-    console.error('❌ Error en createUser:', error);
+    console.error('Error en createUser:', error);
     return { data: null, error: error as Error };
   }
 };
@@ -166,7 +166,7 @@ export const createUser = async (userData: CreateUserData): Promise<{ data: any;
  */
 export const updateUser = async (userId: string, updates: UpdateUserData): Promise<{ error: Error | null }> => {
   try {
-    console.log('📝 Actualizando usuario:', userId, updates);
+    console.log('Actualizando usuario:', userId, updates);
 
     const { error } = await supabase
       .from('users')
@@ -177,14 +177,14 @@ export const updateUser = async (userId: string, updates: UpdateUserData): Promi
       .eq('id', userId);
 
     if (error) {
-      console.error('❌ Error updating user:', error);
+      console.error('Error updating user:', error);
       return { error };
     }
 
-    console.log('✅ Usuario actualizado');
+    console.log('Usuario actualizado');
     return { error: null };
   } catch (error) {
-    console.error('❌ Error en updateUser:', error);
+    console.error('Error en updateUser:', error);
     return { error: error as Error };
   }
 };
@@ -196,15 +196,15 @@ export const updateUser = async (userId: string, updates: UpdateUserData): Promi
  */
 export const updateUserRole = async (userId: string, newRole: UserRole): Promise<{ error: Error | null }> => {
   try {
-    console.log('👑 Cambiando rol de usuario:', userId, 'a', newRole);
+    console.log('Cambiando rol de usuario:', userId, 'a', newRole);
 
-    // 🔐 Obtener headers con token
+    // Obtener headers con token
     const headers = await getAuthHeaders();
     if (!headers) {
       return { error: new Error('No autenticado') };
     }
 
-    // 📡 Llamar API del backend
+    // Llamar API del backend
     const response = await fetch(`${API_BASE}/api/admin/users`, {
       method: 'PATCH',
       headers,
@@ -218,14 +218,14 @@ export const updateUserRole = async (userId: string, newRole: UserRole): Promise
     const json = await response.json();
 
     if (!response.ok || !json.success) {
-      console.error('❌ Error updating role:', json.error);
+      console.error('Error updating role:', json.error);
       return { error: new Error(json.error || 'Error al actualizar rol') };
     }
 
-    console.log('✅ Rol actualizado a:', newRole);
+    console.log('Rol actualizado a:', newRole);
     return { error: null };
   } catch (error) {
-    console.error('❌ Error en updateUserRole:', error);
+    console.error('Error en updateUserRole:', error);
     return { error: error as Error };
   }
 };
@@ -237,15 +237,15 @@ export const updateUserRole = async (userId: string, newRole: UserRole): Promise
  */
 export const verifyUserEmail = async (userId: string): Promise<{ error: Error | null }> => {
   try {
-    console.log('✅ Verificando email del usuario:', userId);
+    console.log('Verificando email del usuario:', userId);
 
-    // 🔐 Obtener headers con token
+    // Obtener headers con token
     const headers = await getAuthHeaders();
     if (!headers) {
       return { error: new Error('No autenticado') };
     }
 
-    // 📡 Llamar API del backend
+    // Llamar API del backend
     const response = await fetch(`${API_BASE}/api/admin/users`, {
       method: 'PATCH',
       headers,
@@ -259,14 +259,14 @@ export const verifyUserEmail = async (userId: string): Promise<{ error: Error | 
     const json = await response.json();
 
     if (!response.ok || !json.success) {
-      console.error('❌ Error verifying email:', json.error);
+      console.error('Error verifying email:', json.error);
       return { error: new Error(json.error || 'Error al verificar email') };
     }
 
-    console.log('✅ Email verificado exitosamente');
+    console.log('Email verificado exitosamente');
     return { error: null };
   } catch (error) {
-    console.error('❌ Error en verifyUserEmail:', error);
+    console.error('Error en verifyUserEmail:', error);
     return { error: error as Error };
   }
 };
@@ -279,7 +279,7 @@ export const verifyUserEmail = async (userId: string): Promise<{ error: Error | 
  */
 export const deleteUser = async (userId: string): Promise<{ error: Error | null }> => {
   try {
-    console.log('🗑️ Eliminando usuario:', userId);
+    console.log('Eliminando usuario:', userId);
 
     // NOTA: auth.admin.deleteUser requiere service_role key en el cliente
     // Esto funciona si SUPABASE_SERVICE_ROLE_KEY está configurado
@@ -287,7 +287,7 @@ export const deleteUser = async (userId: string): Promise<{ error: Error | null 
     const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
 
     if (deleteError) {
-      console.error('❌ Error deleting user:', deleteError);
+      console.error('Error deleting user:', deleteError);
       return { error: deleteError };
     }
 
@@ -296,10 +296,10 @@ export const deleteUser = async (userId: string): Promise<{ error: Error | null 
     // - Anuncios del usuario
     // - Mensajes
     // - Otros datos relacionados
-    console.log('✅ Usuario eliminado (CASCADE eliminará datos relacionados)');
+    console.log('Usuario eliminado (CASCADE eliminara datos relacionados)');
     return { error: null };
   } catch (error) {
-    console.error('❌ Error en deleteUser:', error);
+    console.error('Error en deleteUser:', error);
     return { error: error as Error };
   }
 };
@@ -309,7 +309,7 @@ export const deleteUser = async (userId: string): Promise<{ error: Error | null 
  */
 export const searchUsers = async (searchTerm: string): Promise<{ data: UserData[] | null; error: Error | null }> => {
   try {
-    console.log('🔍 Buscando usuarios:', searchTerm);
+    console.log('Buscando usuarios:', searchTerm);
 
     const { data, error } = await supabase
       .from('users')
@@ -318,14 +318,14 @@ export const searchUsers = async (searchTerm: string): Promise<{ data: UserData[
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error searching users:', error);
+      console.error('Error searching users:', error);
       return { data: null, error };
     }
 
-    console.log(`✅ ${data.length} usuarios encontrados`);
+    console.log(`${data.length} usuarios encontrados`);
     return { data, error: null };
   } catch (error) {
-    console.error('❌ Error en searchUsers:', error);
+    console.error('Error en searchUsers:', error);
     return { data: null, error: error as Error };
   }
 };

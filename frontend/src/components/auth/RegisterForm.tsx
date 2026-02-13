@@ -171,7 +171,7 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
               <Mail className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-blue-900 mb-2">
-                  📧 Verificá tu correo electrónico
+                  Verificá tu correo electrónico
                 </p>
                 <p className="text-sm text-gray-700">
                   Te enviamos un enlace de verificación a <strong>{email}</strong>. Por favor, hacé click en el enlace para activar tu cuenta.
@@ -232,7 +232,7 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
                       Se alcanzó el límite de cuentas nuevas por hora. Esto es una medida de seguridad.
                     </p>
                     <div className="bg-white rounded-md p-3 border border-amber-200 mb-3">
-                      <p className="text-sm font-semibold text-gray-900 mb-2">⏰ Opciones disponibles:</p>
+                      <p className="text-sm font-semibold text-gray-900 mb-2">Opciones disponibles:</p>
                       <ul className="text-sm text-gray-700 space-y-1.5">
                         <li className="flex items-start gap-2">
                           <span className="text-amber-600 font-bold">1.</span>
@@ -249,7 +249,7 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
                       </ul>
                     </div>
                     <p className="text-xs text-amber-700">
-                      💡 <strong>Recomendación:</strong> El registro con Google/Facebook es instantáneo y más rápido.
+                      <strong>Recomendacion:</strong> El registro con Google/Facebook es instantaneo y mas rapido.
                     </p>
                   </div>
                 </div>
@@ -427,23 +427,23 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
               <div className="flex items-start gap-3 mb-3">
                 <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <h4 className="font-bold text-amber-900 mb-2">⚠️ Límite temporal alcanzado</h4>
+                  <h4 className="font-bold text-amber-900 mb-2">Limite temporal alcanzado</h4>
                   <p className="text-sm text-amber-800 mb-3">
                     Por seguridad, hay un límite de registros por hora. No te preocupes, no perdiste tus datos.
                   </p>
                   <div className="bg-white rounded-md p-3 border border-amber-200 mb-3">
-                    <p className="text-sm font-semibold text-gray-900 mb-2">✅ Qué podés hacer ahora:</p>
+                    <p className="text-sm font-semibold text-gray-900 mb-2">Que podes hacer ahora:</p>
                     <ul className="text-sm text-gray-700 space-y-1.5">
                       <li className="flex items-start gap-2">
                         <span className="text-green-600 font-bold">↓</span>
                         <span><strong>Registrate con Google o Facebook</strong> (botones abajo, es instantáneo)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-amber-600">⏰</span>
+                        <span className="text-amber-600 font-bold">2.</span>
                         <span>O esperá <strong>30-60 minutos</strong> y volvé a intentar</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-600">🔑</span>
+                        <span className="text-blue-600 font-bold">3.</span>
                         <span>Si ya tenés cuenta: <button onClick={onSwitchToLogin} className="text-[#16a135] font-semibold underline">Iniciá sesión</button></span>
                       </li>
                     </ul>
@@ -555,7 +555,7 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
 
         {/* Info adicional */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-          <p>💡 Podrás completar tu perfil después del registro con más datos profesionales, ubicación y servicios.</p>
+          <p>Podras completar tu perfil despues del registro con mas datos profesionales, ubicacion y servicios.</p>
         </div>
 
         {/* Botón de envío */}

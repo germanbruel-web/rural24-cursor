@@ -275,7 +275,7 @@ export const ProfilePanel: React.FC = () => {
           {/* Info Principal */}
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-2xl font-bold text-gray-900">
-              {(profile as any)?.display_name || profile?.full_name || 'Sin nombre'}
+              {(profile as any)?.display_name || profile?.full_name || profile?.email?.split('@')[0] || 'Usuario'}
             </h1>
             <p className="text-gray-600">{profile?.email}</p>
             
