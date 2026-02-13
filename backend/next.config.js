@@ -4,6 +4,9 @@ const nextConfig = {
   compress: true,
   reactStrictMode: true,
 
+  // Turbopack config (Next.js 16+ usa Turbopack por defecto)
+  turbopack: {},
+
   // Output standalone para producción (optimiza cold starts en Render)
   // Solo activar en build, no en dev (agrega overhead al compilador)
   ...(process.env.NODE_ENV === 'production' ? { output: 'standalone' } : {}),
