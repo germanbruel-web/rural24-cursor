@@ -31,6 +31,7 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   banners: ['superadmin'],
   'featured-ads': ['superadmin'],
   coupons: ['superadmin'],
+  'credits-config': ['superadmin'],
   'payments-admin': ['superadmin'],
   
   // Solo SuperAdmin - Backend

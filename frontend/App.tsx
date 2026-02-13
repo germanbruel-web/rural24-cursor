@@ -62,6 +62,7 @@ const GlobalSettingsPanel = lazy(() => import("./src/components/admin/GlobalSett
 const PaymentsAdminPanel = lazy(() => import("./src/components/admin/PaymentsAdminPanel"));
 const SitemapSeoPanel = lazy(() => import("./src/components/admin/SitemapSeoPanel"));
 const SuperAdminFeaturedPanel = lazy(() => import("./src/components/admin/SuperAdminFeaturedPanel"));
+const SuperAdminCreditsConfig = lazy(() => import("./src/components/admin/SuperAdminCreditsConfig").then(m => ({ default: m.SuperAdminCreditsConfig })));
 const HeroCmsPanel = lazy(() => import("./src/components/admin/HeroCmsPanel"));
 const ResellerPointsPanel = lazy(() => import("./src/components/admin/ResellerPointsPanel"));
 
@@ -95,7 +96,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads' | 'coupons' | 'company-profile' | 'hero-cms';
+export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -144,6 +145,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/banners') return 'banners';
     if (hash === '#/featured-ads') return 'featured-ads';
     if (hash === '#/coupons') return 'coupons';
+    if (hash === '#/credits-config') return 'credits-config';
     if (hash === '#/categories-admin') return 'categories-admin';
     if (hash === '#/attributes-admin') return 'attributes-admin';
     if (hash === '#/templates-admin') return 'templates-admin';
@@ -190,6 +192,7 @@ const AppContent: React.FC = () => {
       'payments-admin': '#/payments-admin',
       'sitemap-seo': '#/dashboard/sitemap-seo',
       'hero-cms': '#/hero-cms',
+      'credits-config': '#/credits-config',
       'profile': '#/profile',
       'subscription': '#/subscription',
       'contacts': '#/dashboard/contacts',
@@ -565,6 +568,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'payments-admin' && canAccessPage('payments-admin', profile?.role) && <PaymentsAdminPanel />}
                 {currentPage === 'sitemap-seo' && canAccessPage('sitemap-seo', profile?.role) && <SitemapSeoPanel />}
                 {currentPage === 'hero-cms' && canAccessPage('hero-cms', profile?.role) && <HeroCmsPanel />}
+                {currentPage === 'credits-config' && canAccessPage('credits-config', profile?.role) && <SuperAdminCreditsConfig />}
                 {currentPage === 'reseller-points' && canAccessPage('reseller-points', profile?.role) && <ResellerPointsPanel />}
                 {currentPage === 'settings' && (
                   <div className="bg-white rounded-lg shadow p-6">

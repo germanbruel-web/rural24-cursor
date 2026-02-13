@@ -24,6 +24,11 @@ export interface PointOfSale {
   contact_email: string | null;
   category_ids: string[];
   notes: string | null;
+  show_contact_form: boolean;
+  show_whatsapp: boolean;
+  whatsapp_number: string | null;
+  privacy_mode: string;
+  business_hours: Record<string, any>;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -46,6 +51,11 @@ export interface CreatePointOfSaleData {
   contact_email?: string | null;
   category_ids?: string[];
   notes?: string | null;
+  show_contact_form?: boolean;
+  show_whatsapp?: boolean;
+  whatsapp_number?: string | null;
+  privacy_mode?: string;
+  business_hours?: Record<string, any>;
 }
 
 export interface UpdatePointOfSaleData extends Partial<CreatePointOfSaleData> {
@@ -148,6 +158,11 @@ export async function createPointOfSale(posData: CreatePointOfSaleData): Promise
         contact_email: posData.contact_email || null,
         category_ids: posData.category_ids || [],
         notes: posData.notes || null,
+        show_contact_form: posData.show_contact_form ?? true,
+        show_whatsapp: posData.show_whatsapp ?? false,
+        whatsapp_number: posData.whatsapp_number || null,
+        privacy_mode: posData.privacy_mode || 'public',
+        business_hours: posData.business_hours || {},
       })
       .select()
       .single();

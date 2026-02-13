@@ -221,47 +221,34 @@ export async function activateFeaturedWithCredits(
  */
 export async function getFeaturedAdsForResults(
   categoryId: string,
-  subcategoryId?: string
+  subcategoryId?: string,
+  limit: number = 4
 ): Promise<any[]> {
   try {
-    const { data: featuredIds, error: rpcError } = await supabase.rpc(
-      'get_featured_for_results_simple',
+    // Usar función RPC que retorna ads completos
+    const { data, error } = await supabase.rpc(
+      'get_featured_for_results',
       {
         p_category_id: categoryId,
-        p_subcategory_id: subcategoryId || null
+        p_limit: limit,
+        p_offset: 0
       }
     );
 
-    if (rpcError) {
-      console.error('Error obteniendo destacados:', rpcError);
+    if (error) {
+      console.error('Error obteniendo destacados:', error);
       return [];
     }
 
-    if (!featuredIds || featuredIds.length === 0) {
-      return [];
+    // La función ya retorna ads completos con relaciones
+    let results = data || [];
+
+    // Filtrar por subcategoría si se especifica
+    if (subcategoryId && results.length > 0) {
+      results = results.filter((ad: any) => ad.subcategory_id === subcategoryId);
     }
 
-    // Obtener avisos completos
-    const adIds = featuredIds.map((f: any) => f.ad_id);
-    const { data: ads, error: adsError } = await supabase
-      .from('ads')
-      .select(
-        `*,
-        users!inner(id, full_name, email),
-        categories!inner(id, name, display_name),
-        subcategories(id, name, display_name)`
-      )
-      .in('id', adIds);
-
-    if (adsError) {
-      console.error('Error obteniendo avisos:', adsError);
-      return [];
-    }
-
-    // Ordenar según FeaturedIds (FIFO)
-    return adIds
-      .map(id => ads?.find(ad => ad.id === id))
-      .filter(Boolean);
+    return results;
   } catch (error) {
     console.error('Error en getFeaturedAdsForResults:', error);
     return [];
@@ -372,7 +359,7 @@ export async function grantSignupPromo(userId: string): Promise<{
 export async function getMembershipPlans() {
   try {
     const { data, error } = await supabase
-      .from('membership_plans')
+      .from('subscription_plans')
       .select('*')
       .eq('is_active', true)
       .order('sort_order');
