@@ -441,7 +441,7 @@ export async function getDaysRemainingInBillingPeriod(userId: string): Promise<n
 }
 
 // ============================================
-// CUPONES
+// CUPONES (lee desde tabla `coupons` en Supabase)
 // ============================================
 
 export interface CouponValidation {
@@ -449,51 +449,55 @@ export interface CouponValidation {
   credits?: number;
   description?: string;
   error?: string;
+  couponId?: string;
 }
 
 /**
- * Validar un cupón antes de canjearlo
- * @param code - Código del cupón (ej: WELCOME2026, PROMO50)
+ * Validar un cupón contra la base de datos
  */
 export async function validateCoupon(code: string): Promise<CouponValidation> {
   try {
-    // Por ahora, validación básica de cupones hardcodeados
-    // En el futuro esto consultaría una tabla coupon_codes
     const upperCode = code.toUpperCase().trim();
+    if (!upperCode) {
+      return { valid: false, error: 'Ingresa un código de cupón' };
+    }
 
-    // Cupones predefinidos
-    const knownCoupons: { [key: string]: { credits: number; description: string } } = {
-      'WELCOME2026': { credits: 3, description: 'Bienvenida - 3 créditos gratis' },
-      'PROMO50': { credits: 2, description: 'Promoción especial - 2 créditos' },
-      'FLASH10': { credits: 1, description: 'Cupón flash - 1 crédito' }
-    };
+    const { data: coupon, error } = await supabase
+      .from('coupons')
+      .select('id, code, name, description, credits_amount, max_redemptions, current_redemptions, expires_at, is_active')
+      .eq('code', upperCode)
+      .single();
 
-    if (knownCoupons[upperCode]) {
-      const coupon = knownCoupons[upperCode];
-      return {
-        valid: true,
-        credits: coupon.credits,
-        description: coupon.description
-      };
+    if (error || !coupon) {
+      return { valid: false, error: 'Cupón inválido o no encontrado' };
+    }
+
+    if (!coupon.is_active) {
+      return { valid: false, error: 'Este cupón está desactivado' };
+    }
+
+    if (new Date(coupon.expires_at) < new Date()) {
+      return { valid: false, error: 'Este cupón ha expirado' };
+    }
+
+    if (coupon.current_redemptions >= coupon.max_redemptions) {
+      return { valid: false, error: 'Este cupón ya alcanzó el máximo de canjes' };
     }
 
     return {
-      valid: false,
-      error: 'Cupón inválido o expirado'
+      valid: true,
+      credits: coupon.credits_amount,
+      description: coupon.description || coupon.name,
+      couponId: coupon.id,
     };
   } catch (error) {
     console.error('Error validando cupón:', error);
-    return {
-      valid: false,
-      error: 'Error al validar cupón'
-    };
+    return { valid: false, error: 'Error al validar cupón' };
   }
 }
 
 /**
- * Canjear cupón de créditos
- * @param userId - ID del usuario
- * @param code - Código del cupón
+ * Canjear cupón de créditos (DB-backed)
  */
 export async function redeemCoupon(
   userId: string,
@@ -505,91 +509,86 @@ export async function redeemCoupon(
   error?: string;
 }> {
   try {
-    // Primero validar el cupón
     const validation = await validateCoupon(code);
     
-    if (!validation.valid) {
-      return {
-        success: false,
-        error: validation.error || 'Cupón inválido'
-      };
+    if (!validation.valid || !validation.couponId) {
+      return { success: false, error: validation.error || 'Cupón inválido' };
     }
 
-    // Verificar si el usuario ya usó este cupón
-    const { data: existingUse, error: checkError } = await supabase
-      .from('credit_transactions')
+    // Verificar si el usuario ya canjeó este cupón
+    const { data: existingRedemption } = await supabase
+      .from('coupon_redemptions')
       .select('id')
+      .eq('coupon_id', validation.couponId)
       .eq('user_id', userId)
-      .eq('type', 'promo_grant')
-      .ilike('description', `%${code}%`)
       .limit(1);
 
-    if (checkError) {
-      console.error('Error verificando uso previo:', checkError);
-      return {
-        success: false,
-        error: 'Error al verificar cupón'
-      };
+    if (existingRedemption && existingRedemption.length > 0) {
+      return { success: false, error: 'Ya canjeaste este cupón' };
     }
 
-    if (existingUse && existingUse.length > 0) {
-      return {
-        success: false,
-        error: 'Este cupón ya fue canjeado anteriormente'
-      };
-    }
+    const creditsToGrant = validation.credits || 0;
 
     // Obtener balance actual
     const currentCredits = await getUserCredits(userId);
     const currentBalance = currentCredits?.balance || 0;
-    const creditsToGrant = validation.credits || 0;
     const newBalance = currentBalance + creditsToGrant;
 
-    // Actualizar balance
+    // Actualizar balance del usuario
     const { error: updateError } = await supabase
       .from('user_credits')
       .upsert({
         user_id: userId,
         balance: newBalance,
         monthly_allowance: currentCredits?.monthly_allowance || 0,
-        last_monthly_reset: currentCredits?.last_monthly_reset || null
+        last_monthly_reset: currentCredits?.last_monthly_reset || null,
       });
 
     if (updateError) {
       console.error('Error actualizando balance:', updateError);
-      return {
-        success: false,
-        error: 'Error al otorgar créditos'
-      };
+      return { success: false, error: 'Error al otorgar créditos' };
     }
 
-    // Registrar transacción
-    const { error: txError } = await supabase
+    // Registrar en coupon_redemptions
+    await supabase
+      .from('coupon_redemptions')
+      .insert({
+        coupon_id: validation.couponId,
+        user_id: userId,
+        credits_granted: creditsToGrant,
+      });
+
+    // Incrementar current_redemptions en el cupón
+    await supabase.rpc('increment_coupon_redemptions', { coupon_uuid: validation.couponId })
+      .then(({ error }) => {
+        // Si no existe la función RPC, hacer update manual
+        if (error) {
+          supabase
+            .from('coupons')
+            .update({ current_redemptions: (currentCredits as any)?.current_redemptions + 1 || 1 })
+            .eq('id', validation.couponId);
+        }
+      });
+
+    // Registrar transacción de créditos
+    await supabase
       .from('credit_transactions')
       .insert({
         user_id: userId,
         type: 'promo_grant',
         amount: creditsToGrant,
         balance_after: newBalance,
-        description: `Cupón canjeado: ${code} - ${validation.description}`,
-        promo_code: code.toUpperCase()
+        description: `Cupón canjeado: ${code.toUpperCase()} - ${validation.description}`,
+        promo_code: code.toUpperCase(),
       });
-
-    if (txError) {
-      console.error('Error registrando transacción:', txError);
-      // No retornar error aquí, los créditos ya fueron otorgados
-    }
 
     return {
       success: true,
       creditsGranted: creditsToGrant,
-      newBalance: newBalance
+      newBalance,
     };
   } catch (error) {
     console.error('Error en redeemCoupon:', error);
-    return {
-      success: false,
-      error: 'Error inesperado al canjear cupón'
-    };
+    return { success: false, error: 'Error inesperado al canjear cupón' };
   }
 }

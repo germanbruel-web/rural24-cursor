@@ -22,7 +22,7 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   
   // Admin y SuperAdmin (Revendedores)
   users: ['superadmin', 'admin'], // Crear/gestionar usuarios
-  'ads-management': ['superadmin', 'admin'], // Crear/gestionar avisos para clientes
+  // ads-management: eliminado - redirige a featured-ads
   
   // Solo SuperAdmin - Publicidad
   banners: ['superadmin'],
@@ -142,7 +142,7 @@ export const MENU_STRUCTURE: MenuItem[] = [
   },
   {
     id: 'featured-ads',
-    label: 'Avisos Destacados',
+    label: 'Avisos y Destacados',
     allowedRoles: ['superadmin'],
   },
   {
@@ -170,11 +170,7 @@ export const MENU_STRUCTURE: MenuItem[] = [
     label: 'Gestión de Usuarios',
     allowedRoles: ['superadmin'],
   },
-  {
-    id: 'ads-management',
-    label: 'Gestión de Avisos',
-    allowedRoles: ['superadmin'],
-  },
+  // ads-management eliminado - absorbido por featured-ads (SuperAdminFeaturedPanel)
   {
     id: 'categories-admin',
     label: 'Categorías',

@@ -50,7 +50,8 @@ const AdDetailPageLazy = lazy(() => import("./src/pages/AdDetailPage"));
 
 // Admin Panel Components (solo para admins)
 const MyAdsPanel = lazy(() => import("./src/components/admin/MyAdsPanel"));
-const AdsManagementPanel = lazy(() => import("./src/components/admin/AdsManagementPanel"));
+// AdsManagementPanel eliminado - funcionalidad absorbida por SuperAdminFeaturedPanel (#/featured-ads)
+const CouponsAdminPanel = lazy(() => import("./src/components/admin/CouponsAdminPanel"));
 const BannersCleanPanel = lazy(() => import("./src/components/admin/BannersCleanPanel"));
 const UsersPanel = lazy(() => import("./src/components/admin/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const CategoriasAdmin = lazy(() => import("./src/components/admin/CategoriasAdmin").then(m => ({ default: m.CategoriasAdmin })));
@@ -138,7 +139,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/inbox') return 'inbox';
     if (hash === '#/pending-ads') return 'pending-ads';
     if (hash === '#/users') return 'users';
-    if (hash === '#/ads-management') return 'ads-management';
+    if (hash === '#/ads-management') return 'featured-ads'; // redirect → featured-ads
     if (hash === '#/banners') return 'banners';
     if (hash === '#/featured-ads') return 'featured-ads';
     if (hash === '#/coupons') return 'coupons';
@@ -176,7 +177,7 @@ const AppContent: React.FC = () => {
       'my-ads': '#/my-ads',
       'inbox': '#/inbox',
       'all-ads': '#/all-ads',
-      'ads-management': '#/ads-management',
+      'ads-management': '#/featured-ads', // redirect → featured-ads
       'users': '#/users',
       'banners': '#/banners',
       'categories-admin': '#/categories-admin',
@@ -490,12 +491,12 @@ const AppContent: React.FC = () => {
   }
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'ads-management', 'banners', 'featured-ads', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms'].includes(currentPage);
+  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'banners', 'featured-ads', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
     // Esperar a que cargue el perfil antes de verificar permisos en páginas protegidas
-    const isProtectedPage = ['users', 'ads-management', 'banners', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms'].includes(currentPage);
+    const isProtectedPage = ['users', 'banners', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms'].includes(currentPage);
     
     if (authLoading && isProtectedPage) {
       return (
@@ -552,7 +553,6 @@ const AppContent: React.FC = () => {
                 {currentPage === 'users' && canAccessPage('users', profile?.role) && <UsersPanel />}
                 {currentPage === 'my-ads' && <MyAdsPanel />}
                 {currentPage === 'inbox' && <MessagesPanel />}
-                {currentPage === 'ads-management' && canAccessPage('ads-management', profile?.role) && <AdsManagementPanel />}
                 {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersCleanPanel />}
                 {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <CategoriasAdmin />}
                 {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <AttributesAdmin />}
@@ -560,13 +560,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'backend-settings' && canAccessPage('backend-settings', profile?.role) && <BackendSettings />}
                 {currentPage === 'global-settings' && canAccessPage('global-settings', profile?.role) && <GlobalSettingsPanel />}
                 {currentPage === 'featured-ads' && canAccessPage('featured-ads', profile?.role) && <SuperAdminFeaturedPanel />}
-                {currentPage === 'coupons' && canAccessPage('coupons', profile?.role) && (
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-2xl font-bold mb-4">Gestión de Cupones</h2>
-                    <p className="text-gray-600">Panel de cupones en desarrollo...</p>
-                    <p className="text-sm text-gray-500 mt-2">📋 Cupones actuales: WELCOME2026, PROMO50, FLASH10</p>
-                  </div>
-                )}
+                {currentPage === 'coupons' && canAccessPage('coupons', profile?.role) && <CouponsAdminPanel />}
                 {currentPage === 'payments-admin' && canAccessPage('payments-admin', profile?.role) && <PaymentsAdminPanel />}
                 {currentPage === 'sitemap-seo' && canAccessPage('sitemap-seo', profile?.role) && <SitemapSeoPanel />}
                 {currentPage === 'hero-cms' && canAccessPage('hero-cms', profile?.role) && <HeroCmsPanel />}

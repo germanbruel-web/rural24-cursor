@@ -73,10 +73,10 @@ export default function SuperAdminFeaturedPanel() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">
-              Gestión de Avisos
+              Gestión de Avisos y Destacados
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              CRUD completo + Destacados con calendario
+              CRUD completo, destacados con calendario y estadísticas
             </p>
           </div>
         </div>
