@@ -210,7 +210,7 @@ export function useSearchSuggestions(
               id: sub.id,
               title: sub.name,
               subtitle: sub.categoryName,
-              icon: sub.icon || '📂',
+              icon: 'subcategory',
               url: `/#/search?cat=${sub.categorySlug}&sub=${sub.slug}`,
               category: sub.categoryName,
             });
@@ -227,7 +227,7 @@ export function useSearchSuggestions(
                   id: `${attr.fieldName}-${attr.value}-${index}`,
                   title: attr.value,
                   subtitle: `${fieldLabel} en ${attr.subcategoryName}`,
-                  icon: getIconForFieldName(attr.fieldName),
+                  icon: attr.fieldName || 'attribute',
                   url: `/#/search?cat=${attr.categorySlug}&sub=${attr.subcategorySlug}&${attr.fieldName}=${encodeURIComponent(attr.value)}`,
                   category: attr.categoryName,
                 });
@@ -286,24 +286,4 @@ export function useSearchSuggestions(
     searchHistory,
     clearHistory,
   };
-}
-
-// Helper: Obtener icono según tipo de campo
-function getIconForFieldName(fieldName: string): string {
-  const iconMap: Record<string, string> = {
-    marca: '🏷️',
-    brand: '🏷️',
-    modelo: '🔧',
-    model: '🔧',
-    raza: '🐄',
-    tipobovino: '🐄',
-    tipoequino: '🐴',
-    tipoovino: '🐑',
-    tipoporcino: '🐷',
-    provincia: '📍',
-    province: '📍',
-    location: '📍',
-  };
-
-  return iconMap[fieldName.toLowerCase()] || '🔍';
 }

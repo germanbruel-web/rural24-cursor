@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Search, X, Loader2, Clock, TrendingUp, ChevronRight } from 'lucide-react';
+import { Search, X, Loader2, Clock, TrendingUp, ChevronRight, Tag, MapPin, Layers, Tractor } from 'lucide-react';
 import { useSearchSuggestions } from '../hooks/useSearchSuggestions';
 import { searchAnalytics } from '../services/searchAnalytics';
 
@@ -51,7 +51,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
         id: `history-${idx}`,
         title: term,
         subtitle: 'Búsqueda reciente',
-        icon: '🕐',
+        icon: 'history',
       }));
 
   // Cerrar dropdown al hacer clic fuera
@@ -213,6 +213,24 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
     }
   };
 
+  // Icono SVG contextual segun tipo de sugerencia
+  const SuggestionIcon = ({ type, fieldName, className }: { type: string; fieldName?: string; className?: string }) => {
+    if (type === 'history') return <Clock className={className} />;
+    if (type === 'subcategory') return <Layers className={className} />;
+    // Atributos por fieldName
+    const fn = (fieldName || '').toLowerCase();
+    if (fn.includes('raza') || fn.includes('bovino') || fn.includes('equino') || fn.includes('ovino') || fn.includes('porcino')) {
+      return <Tag className={className} />;
+    }
+    if (fn.includes('marca') || fn.includes('modelo')) {
+      return <Tractor className={className} />;
+    }
+    if (fn.includes('provincia') || fn.includes('location')) {
+      return <MapPin className={className} />;
+    }
+    return <Search className={className} />;
+  };
+
   return (
     <div className={`relative flex-1 max-w-2xl ${className}`}>
       <form onSubmit={handleSubmit} className="relative">
@@ -327,8 +345,13 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
                            : 'hover:bg-gray-50 text-gray-900'
                        }`}
             >
-              {/* Icono */}
-              <span className="text-lg flex-shrink-0">{item.icon}</span>
+              {/* Icono contextual */}
+              <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0
+                            ${selectedIndex === index 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'}`}>
+                <SuggestionIcon type={item.type} fieldName={item.icon} className="w-4 h-4" />
+              </div>
 
               {/* Texto */}
               <div className="flex-1 min-w-0">
