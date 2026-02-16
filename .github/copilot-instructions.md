@@ -1,0 +1,101 @@
+# Rural24 — Instrucciones Obligatorias para Copilot
+
+> **Este archivo es leído automáticamente por GitHub Copilot en cada sesión.**
+> Define el protocolo obligatorio para cualquier agente IA que trabaje en este proyecto.
+
+---
+
+## PROTOCOLO DE INICIO (OBLIGATORIO)
+
+Antes de escribir UNA sola línea de código o proponer CUALQUIER cambio, el agente DEBE:
+
+### 1. Leer el contexto del dominio afectado
+```
+¿Toca frontend?  → Leer ai/frontend.agent.md
+¿Toca backend?   → Leer ai/backend.agent.md
+¿Toca base datos? → Leer ai/database.agent.md
+¿Toca deploy?    → Leer ai/devops.agent.md
+¿Toca performance? → Leer ai/performance.agent.md
+¿Toca UX/flujos? → Leer ai/uxui.agent.md
+¿Toca múltiples? → Leer ai/SUPERAGENT.md + los agentes involucrados
+```
+
+### 2. Verificar decisiones inmutables
+Leer `ai/ARCHITECTURE.md` para confirmar que el cambio propuesto NO viola decisiones arquitectónicas ya tomadas.
+
+### 3. Verificar estado actual
+- **Antes de tocar DB:** Verificar CHECK constraints, tablas existentes, columnas existentes
+- **Antes de tocar routing:** Verificar las 7 capas de routing en App.tsx (Page type, getPageFromHash, hashMap, hashchange, isDashboardPage, isProtectedPage, PAGE_PERMISSIONS)
+- **Antes de crear archivo:** Verificar que no existe uno similar que haga lo mismo
+- **Antes de crear función SQL:** Verificar `information_schema.routines` para evitar duplicados
+
+---
+
+## REGLAS INQUEBRANTABLES
+
+1. **DB compartida dev/prod.** Todo cambio de datos impacta producción inmediatamente. No hay staging.
+2. **Hash routing.** El frontend usa `window.location.hash`, NO React Router. No cambiar.
+3. **Singleton Supabase.** Un solo client en backend (`getSupabaseClient()`), uno en frontend (`supabaseClient.ts`).
+4. **Servicios como capa de datos.** Componentes React NUNCA llaman a Supabase directamente.
+5. **Backend API-only.** Next.js 16 solo sirve API routes, no SSR/SSG.
+6. **Free tier Render.** Cold starts de 30-50s. Diseñar para resiliencia.
+7. **Monorepo npm workspaces + Turborepo.** No cambiar estructura de workspaces.
+
+---
+
+## CHECKLIST PRE-CAMBIO
+
+Antes de cada modificación, verificar mentalmente:
+
+- [ ] ¿Leí el agent file correspondiente al dominio?
+- [ ] ¿Verifiqué que no existe código/tabla/función duplicada?
+- [ ] ¿El cambio respeta ARCHITECTURE.md?
+- [ ] ¿Si toco DB, verifiqué CHECK constraints con `pg_constraint`?
+- [ ] ¿Si toco routing, actualicé las 7 capas?
+- [ ] ¿Si agrego página admin, la agregué a `isProtectedPage` Y `PAGE_PERMISSIONS`?
+- [ ] ¿Si creo endpoint, verifiqué que no hay uno similar en `/api/`?
+
+---
+
+## ARCHIVOS DE REFERENCIA
+
+| Archivo | Contenido | Cuándo leer |
+|---------|-----------|-------------|
+| `ai/ARCHITECTURE.md` | Decisiones inmutables, stack, scaling | Siempre al inicio |
+| `ai/SUPERAGENT.md` | Coordinación entre dominios | Tareas multi-dominio |
+| `ai/frontend.agent.md` | React, routing, componentes, servicios | Cambios frontend |
+| `ai/backend.agent.md` | API routes, auth, domain services | Cambios backend |
+| `ai/database.agent.md` | Schema, RPCs, constraints, estado datos | Cambios DB |
+| `ai/devops.agent.md` | Render, cron, env vars, deploy | Cambios infra |
+| `ai/performance.agent.md` | Cache, bundle, queries | Optimizaciones |
+| `ai/uxui.agent.md` | Flujos, estados UI, mobile-first | Diseño UX |
+
+---
+
+## ERRORES HISTÓRICOS A NO REPETIR
+
+### 1. No verificar CHECK constraints (Feb 2026)
+Al migrar `featured_ads_queue`, se intentó usar `status = 'migrated'` que no existía en el CHECK constraint. También se usó `action = 'phase1_migration'` en audit que tampoco estaba permitido. **Regla: SIEMPRE consultar `pg_constraint` antes de INSERT/UPDATE con valores nuevos.**
+
+### 2. No sincronizar las 7 capas de routing (Feb 2026)
+Se eliminó `'featured-queue'` del `Page` type pero no se agregó en `isProtectedPage`, causando loading infinito. **Regla: Las 7 capas de routing DEBEN estar sincronizadas. Ver checklist en frontend.agent.md.**
+
+### 3. Asumir estructura de tabla sin verificar (Feb 2026)
+Se confundieron columnas entre `featured_ads` y `featured_ads_queue` múltiples veces porque se asumió la estructura sin consultar `information_schema.columns`. **Regla: SIEMPRE verificar con SQL antes de operar.**
+
+---
+
+## FLUJO DE TRABAJO
+
+```
+1. Usuario pide cambio
+2. Identificar dominio(s) afectado(s)
+3. LEER agent file(s) correspondiente(s)
+4. VERIFICAR estado actual (DB, código, routing)
+5. PROPONER cambio con justificación
+6. EJECUTAR cambio
+7. VERIFICAR que no se rompió nada (TypeScript, tests, consistencia)
+8. ACTUALIZAR agent files si el cambio introduce conocimiento nuevo
+```
+
+**El paso 8 es crítico:** si descubrís algo nuevo sobre el proyecto (un constraint, un bug, un patrón), actualizá el agent file correspondiente para que no se pierda.

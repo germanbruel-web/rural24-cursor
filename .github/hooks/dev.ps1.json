@@ -1,0 +1,10 @@
+{
+	"hooks": {
+		"SubagentStart": [
+			{
+				"type": "command",
+				"command": ""
+			}
+		]
+	}
+}

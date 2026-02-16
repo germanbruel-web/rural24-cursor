@@ -18,12 +18,13 @@
  * - Responsive mobile-first
  */
 
-import React, { useState, useEffect } from 'react';
-import { Sparkles, Menu, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { PlusCircle, Menu, X, Home, Package, Clock, MessageSquare, User, LogOut, Settings, Star, Search, ChevronDown, HelpCircle, CreditCard } from 'lucide-react';
 import { TopNav } from './TopNav';
 import { GlobalSearchBar } from '../GlobalSearchBar';
 import { UserMenu } from './UserMenu';
 import { useAuth } from '../../contexts/AuthContext';
+import { canAccessPage } from '../../utils/rolePermissions';
 import AuthModal from '../auth/AuthModal';
 import type { Page } from '../../../App';
 
@@ -33,10 +34,13 @@ interface HeaderNewProps {
 }
 
 export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) => {
-  const { user } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showMobileUserMenu, setShowMobileUserMenu] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const mobileUserMenuRef = useRef<HTMLDivElement>(null);
 
   // Logo estático para evitar latencia
   const LOGO_PATH = '/images/logos/rural24-dark.webp';
@@ -71,6 +75,34 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
     }
   };
 
+  // Manejar logout mobile
+  const handleMobileLogout = async () => {
+    if (isLoggingOut) return;
+    try {
+      setIsLoggingOut(true);
+      setShowMobileUserMenu(false);
+      await signOut();
+      window.location.hash = '#/';
+      setTimeout(() => window.location.reload(), 100);
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      setIsLoggingOut(false);
+    }
+  };
+
+  // Cerrar dropdown mobile al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mobileUserMenuRef.current && !mobileUserMenuRef.current.contains(event.target as Node)) {
+        setShowMobileUserMenu(false);
+      }
+    };
+    if (showMobileUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMobileUserMenu]);
+
   return (
     <>
       {/* TOPNAV - Barra superior secundaria */}
@@ -81,13 +113,13 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
         className={`bg-white border-b border-gray-200 transition-all duration-300
                    ${isScrolled ? 'sticky top-0 shadow-md backdrop-blur-sm bg-white/95 z-40' : 'z-30'}`}
       >
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4 h-16 sm:h-20">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-3 h-14 sm:h-16">
             
             {/* LOGO - Izquierda */}
             <button 
               onClick={() => onNavigate('home')}
-              className="flex-shrink-0 hover:opacity-80 transition-opacity group"
+              className="flex-shrink-0 hover:opacity-80 transition-opacity"
               aria-label="Ir al inicio"
             >
               <img 
@@ -108,46 +140,139 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
               />
             </div>
 
-            {/*GlobalLE: Botón de búsqueda */}
-            <button
-              onClick={() => setShowMobileMenu(true)}
-              className="md:hidden flex-1 flex items-center gap-2 px-3 py-2 
-                       text-sm text-gray-500 bg-gray-100 rounded-lg 
-                       hover:bg-gray-200 transition-colors"
-            >
-              <span>Buscar...</span>
-            </button>
-
-            {/* CTA + Usuario - Derecha */}
-            <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Derecha */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               
-              {/* CTA "Publicar Gratis" - Desktop */}
+              {/* CTA "Publicar Aviso Gratis" - Solo Desktop */}
               <button
                 onClick={handlePublish}
                 className="hidden sm:flex items-center gap-2 px-5 py-2.5 
-                         bg-gradient-to-r from-green-600 to-green-700
-                         hover:from-green-700 hover:to-green-800
-                         text-white font-semibold rounded-lg
+                         bg-green-600 hover:bg-green-700
+                         text-white font-semibold rounded-full
                          shadow-md hover:shadow-lg
                          transition-all duration-200
                          transform hover:scale-105 active:scale-100
                          focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
-                <Sparkles className="w-4 h-4" />
-                <span>Publicar Gratis</span>
+                <PlusCircle className="w-4 h-4" />
+                <span>Publicar Aviso Gratis</span>
               </button>
 
-              {/* CTA Mobile (solo icono) */}
-              <button
-                onClick={handlePublish}
-                className="sm:hidden p-2.5 bg-gradient-to-r from-green-600 to-green-700
-                         hover:from-green-700 hover:to-green-800
-                         text-white rounded-lg shadow-md"
-              >
-                <Sparkles className="w-5 h-5" />
-              </button>
+              {/* Mobile: Botón ENTRAR | REGISTRARSE (no autenticado) */}
+              {!user && (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="sm:hidden flex items-center gap-0 min-h-[36px] text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  <span className="px-2 py-1 text-sm font-medium">Entrar</span>
+                  <span className="text-gray-300">|</span>
+                  <span className="px-2 py-1 text-sm font-medium">Registrarse</span>
+                </button>
+              )}
 
-              {/* User Menu */}
+              {/* Mobile: Avatar + Nombre con dropdown dashboard (autenticado) */}
+              {user && (
+                <div ref={mobileUserMenuRef} className="sm:hidden relative">
+                  <button
+                    onClick={() => setShowMobileUserMenu(!showMobileUserMenu)}
+                    className="flex items-center gap-1.5 min-h-[40px] px-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    {profile?.avatar_url ? (
+                      <img 
+                        src={profile.avatar_url}
+                        alt="Avatar"
+                        className="w-7 h-7 rounded-full object-cover ring-2 ring-green-500"
+                      />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-green-500 to-green-600 
+                                    flex items-center justify-center text-white font-semibold text-xs">
+                        {(profile?.full_name?.charAt(0) || user.email?.charAt(0) || 'U').toUpperCase()}
+                      </div>
+                    )}
+                    <span className="text-sm font-medium text-gray-700 max-w-[60px] truncate">
+                      {profile?.full_name?.split(' ')[0] || user.email?.split('@')[0] || ''}
+                    </span>
+                    <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showMobileUserMenu ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Dropdown Dashboard Menu - Mobile */}
+                  {showMobileUserMenu && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-50 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm font-semibold text-gray-900">{profile?.full_name || 'Usuario'}</p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      </div>
+
+                      <div className="py-1">
+                        <button onClick={() => { onNavigate('my-ads'); setShowMobileUserMenu(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                          <Home className="w-4 h-4 text-gray-500" /> Dashboard
+                        </button>
+                        <button onClick={() => { onNavigate('my-ads'); setShowMobileUserMenu(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                          <Package className="w-4 h-4 text-gray-500" /> Mis Avisos
+                        </button>
+                        {canAccessPage('deleted-ads', profile?.role) && (
+                          <button onClick={() => { onNavigate('deleted-ads'); setShowMobileUserMenu(false); }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                            <Clock className="w-4 h-4 text-gray-500" /> Avisos Eliminados
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="border-t border-gray-100 py-1">
+                        <button onClick={() => { onNavigate('inbox'); setShowMobileUserMenu(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                          <MessageSquare className="w-4 h-4 text-gray-500" /> Mensajes
+                        </button>
+                      </div>
+
+                      {(canAccessPage('users', profile?.role) || canAccessPage('banners', profile?.role)) && (
+                        <div className="border-t border-gray-100 py-1">
+                          <div className="px-4 py-1 text-xs font-semibold text-gray-400 uppercase">Admin</div>
+                          {canAccessPage('users', profile?.role) && (
+                            <button onClick={() => { onNavigate('users'); setShowMobileUserMenu(false); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                              <User className="w-4 h-4 text-gray-500" /> Usuarios
+                            </button>
+                          )}
+                          {canAccessPage('ad-finder', profile?.role) && (
+                            <button onClick={() => { onNavigate('ad-finder'); setShowMobileUserMenu(false); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                              <Search className="w-4 h-4 text-gray-500" /> Buscador Avisos
+                            </button>
+                          )}
+                          {canAccessPage('banners', profile?.role) && (
+                            <button onClick={() => { onNavigate('banners'); setShowMobileUserMenu(false); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                              <Star className="w-4 h-4 text-gray-500" /> Banners
+                            </button>
+                          )}
+                          {canAccessPage('categories-admin', profile?.role) && (
+                            <button onClick={() => { onNavigate('categories-admin'); setShowMobileUserMenu(false); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                              <Settings className="w-4 h-4 text-gray-500" /> Categorías
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="border-t border-gray-100 py-1">
+                        <button onClick={() => { onNavigate('profile'); setShowMobileUserMenu(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                          <User className="w-4 h-4 text-gray-500" /> Mi Perfil
+                        </button>
+                        <button onClick={handleMobileLogout} disabled={isLoggingOut}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50">
+                          <LogOut className="w-4 h-4" /> {isLoggingOut ? 'Cerrando...' : 'Cerrar Sesión'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* User Menu - Solo Desktop */}
               <div className="hidden sm:block">
                 <UserMenu 
                   onNavigate={onNavigate}
@@ -158,19 +283,19 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="sm:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="sm:hidden p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
                 aria-label="Menú"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-6 h-6" />
               </button>
             </div>
           </div>
 
-          {/* Buscador Mobile - Expandible */}
-          <div className="md:hidden pb-3">
+          {/* ROW 3 - SUBNAV: Buscador Mobile - Full width */}
+          <div className="md:hidden pb-2">
             <GlobalSearchBar
               onSearch={handleSearch}
-              placeholder="Buscar productos..."
+              placeholder="Tractores, campos, semillas..."
             />
           </div>
         </div>
@@ -202,58 +327,44 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
               </button>
             </div>
 
-            {/* Contenido del menú */}
-            <div className="p-4 space-y-4">
-              {/* User info si está logueado */}
-              {user && (
-                <div className="pb-4 border-b border-gray-200">
-                  <UserMenu 
-                    onNavigate={(page) => {
-                      onNavigate(page);
-                      setShowMobileMenu(false);
-                    }}
-                    onShowAuthModal={() => {
-                      setShowAuthModal(true);
-                      setShowMobileMenu(false);
-                    }}
-                  />
-                </div>
-              )}
+            {/* Contenido del menú - Links de navegación */}
+            <div className="p-4 space-y-2">
+              <button
+                onClick={() => { onNavigate('how-it-works'); setShowMobileMenu(false); }}
+                className="w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-3"
+              >
+                <HelpCircle className="w-5 h-5 text-gray-400" />
+                ¿Qué es Rural24?
+              </button>
+              
+              <button
+                onClick={() => { onNavigate('pricing'); setShowMobileMenu(false); }}
+                className="w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-3"
+              >
+                <CreditCard className="w-5 h-5 text-gray-400" />
+                Planes y Servicios
+              </button>
 
-              {/* Links principales */}
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    onNavigate('how-it-works');
-                    setShowMobileMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  ¿Qué es Rural24?
-                </button>
-                
-                <button
-                  onClick={() => {
-                    onNavigate('pricing');
-                    setShowMobileMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  Planes y Servicios
-                </button>
+              <button
+                onClick={() => { handlePublish(); setShowMobileMenu(false); }}
+                className="w-full text-left px-4 py-3 text-base font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-lg flex items-center gap-3"
+              >
+                <PlusCircle className="w-5 h-5" />
+                Publicar Aviso Gratis
+              </button>
 
-                {!user && (
+              {!user && (
+                <>
+                  <hr className="my-2 border-gray-200" />
                   <button
-                    onClick={() => {
-                      setShowAuthModal(true);
-                      setShowMobileMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-3 font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                    onClick={() => { setShowAuthModal(true); setShowMobileMenu(false); }}
+                    className="w-full px-4 py-3 text-base font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg flex items-center justify-center gap-2"
                   >
+                    <User className="w-5 h-5" />
                     Ingresar / Registrarse
                   </button>
-                )}
-              </div>
+                </>
+              )}
             </div>
           </div>
         </div>

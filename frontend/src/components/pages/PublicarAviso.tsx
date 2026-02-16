@@ -551,12 +551,7 @@ export default function PublicarAviso() {
     try {
       const data = await getCategories();
       setCategories(data);
-      
-      // Seleccionar primera categoría por defecto si existe
-      if (data.length > 0 && !selectedCategory) {
-        setSelectedCategory(data[0].id);
-        setExpandedCategory(data[0].id);
-      }
+      // No auto-seleccionar ni auto-expandir: el usuario debe elegir
     } catch (error) {
       console.error('Error cargando categorías:', error);
       notify.error('Error cargando categorías');
@@ -567,11 +562,7 @@ export default function PublicarAviso() {
     try {
       const data = await getSubcategories(categoryId);
       setSubcategories(data);
-      
-      // Seleccionar primera subcategoría por defecto si existe
-      if (data.length > 0 && !selectedSubcategory) {
-        setSelectedSubcategory(data[0].id);
-      }
+      // No auto-seleccionar: el usuario debe elegir la subcategoría
     } catch (error) {
       console.error('Error cargando subcategorías:', error);
     }

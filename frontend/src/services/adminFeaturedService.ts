@@ -422,8 +422,8 @@ export async function getOccupancyGrid(
  */
 export function getCreditCost(placement: FeaturedPlacement): number {
   const costs: Record<FeaturedPlacement, number> = {
-    homepage: 4,
-    results: 1,
+    homepage: 6,
+    results: 2,
     detail: 1,
   };
   return costs[placement] || 1;
@@ -473,9 +473,9 @@ export function getStatusBadge(status: FeaturedStatus): {
  */
 export function getPlacementLabel(placement: FeaturedPlacement): string {
   const labels: Record<FeaturedPlacement, string> = {
-    homepage: 'Homepage',
-    results: 'Resultados',
-    detail: 'Detalle',
+    homepage: 'Destacado ALTO',
+    results: 'Destacado MEDIO',
+    detail: 'Destacado BÁSICO',
   };
   return labels[placement] || placement;
 }

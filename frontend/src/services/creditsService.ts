@@ -529,7 +529,7 @@ export async function redeemCoupon(
         balance: newBalance,
         monthly_allowance: currentCredits?.monthly_allowance || 0,
         last_monthly_reset: currentCredits?.last_monthly_reset || null,
-      });
+      }, { onConflict: 'user_id' });
 
     if (updateError) {
       console.error('Error actualizando balance:', updateError);

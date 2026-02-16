@@ -10,9 +10,8 @@
  * 
  * Mobile First: 1col → 2col (sm) → 3col (md) → 4col (lg) → 5col (xl)
  * 
- * HÍBRIDO: Combina avisos destacados por:
- * 1. Superadmin (featured_ads_queue)
- * 2. Usuarios que pagan créditos (featured_ads)
+ * Tabla unificada: featured_ads (placement: homepage, category, results)
+ * Incluye avisos activados por superadmin y usuarios con créditos
  */
 
 import React, { useEffect, useState, useCallback } from 'react';

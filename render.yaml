@@ -57,9 +57,17 @@ jobs:
       curl -X POST https://rural24-backend.onrender.com/api/featured-ads/cron
       -H "X-Cron-Secret: ${CRON_SECRET}"
       -H "Content-Type: application/json"
+      --connect-timeout 60
+      --max-time 120
+      --retry 2
+      --retry-delay 10
+      -f -s -o /dev/null -w "HTTP %{http_code}"
     envVars:
       - key: CRON_SECRET
-        sync: false  # Debe coincidir con el del backend
+        fromService:
+          name: rural24-backend
+          type: web
+          envVarKey: CRON_SECRET
 
 # ============================================================================
 # ALTERNATIVA: Si no funciona el cron job, usar external cron

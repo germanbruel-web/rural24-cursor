@@ -155,7 +155,7 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
       setPriceNegotiable(data.price_negotiable || false);
       setCurrency(data.currency || 'ARS');
       setProvince(data.province || '');
-      setLocality(data.location || '');
+      setLocality(data.city || data.location || '');
       setStatus(data.status || 'active');
       
       // Categoría y Subcategoría
@@ -234,6 +234,7 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
         price_negotiable: priceNegotiable,
         currency,
         province,
+        city: locality,
         location: locality,
         status,
         category_id: categoryId,

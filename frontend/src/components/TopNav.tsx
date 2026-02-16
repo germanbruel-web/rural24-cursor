@@ -94,11 +94,29 @@ export const TopNav: React.FC<TopNavProps> = ({
   return (
     <>
       <nav className="bg-gray-100 border-b border-gray-200">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-end h-10 gap-1">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-8 sm:h-10 gap-1">
+
+            {/* Mobile: Clima + Dolar (izq) + Publicar (der) */}
+            <div className="flex md:hidden items-center justify-between w-full">
+              <div className="flex items-center gap-2 text-sm text-gray-600 font-sans">
+                <Sun size={14} className="text-yellow-500" />
+                <span className="font-medium">24°</span>
+                <span className="text-gray-300">·</span>
+                <span className="font-medium">USD</span>
+                <span className="text-green-600 font-semibold">$1.085</span>
+              </div>
+              <button
+                onClick={() => navigateTo('/publicar')}
+                className="flex items-center gap-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-full min-h-[32px] transition-colors active:scale-95"
+              >
+                <PlusCircle size={14} />
+                PUBLICAR
+              </button>
+            </div>
             
             {/* Links de navegación - Desktop */}
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-1 ml-auto">
               <button
                 onClick={() => onNavigate('how-it-works')}
                 className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-colors flex items-center gap-1.5"
@@ -127,9 +145,9 @@ export const TopNav: React.FC<TopNavProps> = ({
             {/* Separador vertical */}
             <div className="hidden md:block w-px h-5 bg-gray-300 mx-2" />
 
-            {/* Usuario autenticado */}
+            {/* Usuario autenticado - Desktop only */}
             {isAuthenticated ? (
-              <div className="relative" ref={menuRef}>
+              <div className="hidden md:block relative" ref={menuRef}>
                 <button 
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-colors"

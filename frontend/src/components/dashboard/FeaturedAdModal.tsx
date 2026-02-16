@@ -3,11 +3,9 @@
  * Modal para que usuarios destaquen sus propios avisos
  * 
  * Flujo:
- * 1. Muestra créditos disponibles
- * 2. Seleccionar placement (homepage/resultados)
- * 3. Elegir fecha de inicio
- * 4. Ver disponibilidad en tiempo real
- * 5. Confirmar y consumir crédito
+ * 1. Seleccionar placements en layout 3 columnas (ALTO/MEDIO/BÁSICO) — multi-select
+ * 2. Elegir fecha de inicio (calendario con disponibilidad)
+ * 3. Confirmar y consumir créditos
  */
 
 import React, { useState, useEffect } from 'react';
@@ -20,18 +18,24 @@ import {
   Loader2,
   Home,
   Search,
+  FileText,
   Zap,
   Clock,
   Info,
-  Gift
+  Gift,
+  Check,
+  ShoppingCart,
+  Ticket
 } from 'lucide-react';
-import { navigateTo } from '../../hooks/useNavigate';
+import BuyCreditsModal from '../modals/BuyCreditsModal';
+import RedeemCouponModal from '../modals/RedeemCouponModal';
 import { 
   getUserCredits, 
   getMonthlyAvailability,
   createUserFeaturedAd,
   checkPromoStatus,
   claimPromoCredits,
+  getFeaturedSettings,
   type FeaturedPlacement,
   type AvailabilityCheck,
   type MonthlyAvailabilityDay,
@@ -53,33 +57,51 @@ interface FeaturedAdModalProps {
   onSuccess?: () => void;
 }
 
-const PLACEMENT_OPTIONS: { value: FeaturedPlacement; label: string; icon: React.ReactNode; description: string }[] = [
+interface PlacementOption {
+  value: FeaturedPlacement;
+  label: string;
+  shortLabel: string;
+  icon: React.ReactNode;
+  description: string;
+}
+
+const PLACEMENT_OPTIONS: PlacementOption[] = [
   {
     value: 'homepage',
-    label: 'Página Principal',
-    icon: <Home className="w-5 h-5" />,
-    description: 'Tu aviso aparece en la sección destacada del inicio'
+    label: 'Destacado ALTO',
+    shortLabel: 'ALTO',
+    icon: <Home className="w-6 h-6" />,
+    description: 'Inicio + Resultados + Detalle'
   },
   {
     value: 'results',
-    label: 'Resultados de Búsqueda',
-    icon: <Search className="w-5 h-5" />,
-    description: 'Aparece primero cuando buscan en tu categoría'
+    label: 'Destacado MEDIO',
+    shortLabel: 'MEDIO',
+    icon: <Search className="w-6 h-6" />,
+    description: 'Resultados + Detalle'
+  },
+  {
+    value: 'detail',
+    label: 'Destacado BÁSICO',
+    shortLabel: 'BÁSICO',
+    icon: <FileText className="w-6 h-6" />,
+    description: 'Solo en detalle de avisos similares'
   }
 ];
 
-const CREDIT_COSTS: Record<FeaturedPlacement, number> = {
-  homepage: 4,
-  results: 1,
+// Defaults (se sobreescriben con config del servidor)
+const DEFAULT_CREDIT_COSTS: Record<FeaturedPlacement, number> = {
+  homepage: 6,
+  results: 2,
   detail: 1
 };
 
-const DURATION_DAYS = 30;
+const DEFAULT_DURATION_DAYS = 15;
 
 export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: FeaturedAdModalProps) {
   // Estados
   const [step, setStep] = useState<'placement' | 'date' | 'confirm'>('placement');
-  const [selectedPlacement, setSelectedPlacement] = useState<FeaturedPlacement | null>(null);
+  const [selectedPlacements, setSelectedPlacements] = useState<FeaturedPlacement[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   const [credits, setCredits] = useState<UserFeaturedCredits | null>(null);
@@ -90,17 +112,29 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   
+  // Config cargada del servidor
+  const [creditCosts, setCreditCosts] = useState<Record<FeaturedPlacement, number>>(DEFAULT_CREDIT_COSTS);
+  const [durationDays, setDurationDays] = useState<number>(DEFAULT_DURATION_DAYS);
+  
   // Estados de promoción
   const [promoStatus, setPromoStatus] = useState<PromoStatus | null>(null);
   const [claimingPromo, setClaimingPromo] = useState(false);
+
+  // Sub-modals de créditos
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+
+  // Costo total de placements seleccionados
+  const totalCost = selectedPlacements.reduce((sum, p) => sum + creditCosts[p], 0);
 
   // Cargar créditos y promoción al abrir
   useEffect(() => {
     if (isOpen) {
       loadCredits();
       loadPromoStatus();
+      loadSettings();
       setStep('placement');
-      setSelectedPlacement(null);
+      setSelectedPlacements([]);
       setSelectedDate('');
       setSelectedMonth(new Date());
       setAvailability(null);
@@ -109,12 +143,12 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
     }
   }, [isOpen]);
 
-  // Cargar disponibilidad mensual al cambiar placement o mes
+  // Cargar disponibilidad mensual al cambiar placements o mes
   useEffect(() => {
-    if (selectedPlacement && ad.category_id) {
-      loadMonthAvailability();
+    if (selectedPlacements.length > 0 && ad.category_id && step === 'date') {
+      loadCombinedMonthAvailability();
     }
-  }, [selectedPlacement, selectedMonth, ad.category_id]);
+  }, [selectedPlacements, selectedMonth, ad.category_id, step]);
 
   // Limpiar fecha si cambia el mes
   useEffect(() => {
@@ -126,7 +160,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
     }
   }, [selectedMonth, selectedDate]);
 
-  // Actualizar disponibilidad del dia seleccionado
+  // Actualizar disponibilidad del día seleccionado
   useEffect(() => {
     if (!selectedDate) return;
     const selectedDay = new Date(`${selectedDate}T12:00:00`).getDate();
@@ -143,19 +177,28 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
   }, [selectedDate, monthAvailability]);
 
   const loadPromoStatus = async () => {
-    console.log('🎁 [FeaturedAdModal] Cargando estado de promoción...');
-    const { data, error } = await checkPromoStatus();
-    console.log('🎁 [FeaturedAdModal] Promo status:', { data, error });
+    const { data } = await checkPromoStatus();
     setPromoStatus(data);
+  };
+
+  const loadSettings = async () => {
+    try {
+      const settings = await getFeaturedSettings();
+      setCreditCosts({
+        homepage: 6,
+        results: 2,
+        detail: 1,
+      });
+      setDurationDays(settings.durationDays || DEFAULT_DURATION_DAYS);
+    } catch (e) {
+      // Fallback a defaults
+    }
   };
 
   const handleClaimPromo = async () => {
     setClaimingPromo(true);
-    console.log('🎁 [FeaturedAdModal] Reclamando créditos...');
     const result = await claimPromoCredits();
-    console.log('🎁 [FeaturedAdModal] Resultado claim:', result);
     if (result.success) {
-      // Recargar créditos y estado de promo
       await loadCredits();
       await loadPromoStatus();
     } else {
@@ -167,7 +210,6 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
   const loadCredits = async () => {
     setLoading(true);
     const { data, error } = await getUserCredits();
-    console.log('💳 [FeaturedAdModal] Créditos:', { data, error });
     if (error) {
       setError('Error al cargar créditos');
     } else {
@@ -176,31 +218,62 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
     setLoading(false);
   };
 
-  const loadMonthAvailability = async () => {
-    if (!selectedPlacement || !ad.category_id) return;
+  /**
+   * Cargar disponibilidad combinada para TODOS los placements seleccionados.
+   * Un día es "disponible" sólo si TODOS los placements tienen slot libre.
+   */
+  const loadCombinedMonthAvailability = async () => {
+    if (selectedPlacements.length === 0 || !ad.category_id) return;
 
     setCheckingAvailability(true);
     const year = selectedMonth.getFullYear();
     const month = selectedMonth.getMonth() + 1;
-    const { data, error } = await getMonthlyAvailability(
-      selectedPlacement,
-      ad.category_id,
-      year,
-      month
-    );
 
-    if (error) {
-      setError('Error al cargar disponibilidad mensual');
+    try {
+      // Cargar disponibilidad para cada placement en paralelo
+      const results = await Promise.all(
+        selectedPlacements.map(placement =>
+          getMonthlyAvailability(placement, ad.category_id!, year, month)
+        )
+      );
+
+      // Combinar: un día es disponible solo si TODOS los placements lo son
+      const firstResult = results[0]?.data || [];
+      const combined: MonthlyAvailabilityDay[] = firstResult.map(dayInfo => {
+        const allAvailable = results.every(r => {
+          const match = r.data.find(d => d.day === dayInfo.day);
+          return match?.is_available ?? false;
+        });
+        return {
+          ...dayInfo,
+          is_available: allAvailable,
+          // Mostrar el mínimo de slots disponibles entre todos los placements
+          slots_available: Math.min(
+            ...results.map(r => {
+              const match = r.data.find(d => d.day === dayInfo.day);
+              return match?.slots_available ?? 0;
+            })
+          )
+        };
+      });
+
+      setMonthAvailability(combined);
+    } catch (e) {
+      setError('Error al cargar disponibilidad');
       setMonthAvailability([]);
-    } else {
-      setMonthAvailability(data || []);
     }
     setCheckingAvailability(false);
   };
 
-  const handlePlacementSelect = (placement: FeaturedPlacement) => {
-    setSelectedPlacement(placement);
-    // Setear fecha de hoy por defecto
+  const togglePlacement = (placement: FeaturedPlacement) => {
+    setSelectedPlacements(prev => 
+      prev.includes(placement) 
+        ? prev.filter(p => p !== placement)
+        : [...prev, placement]
+    );
+  };
+
+  const handleContinueToDate = () => {
     const today = new Date().toISOString().split('T')[0];
     setSelectedDate(today);
     setSelectedMonth(new Date());
@@ -212,20 +285,31 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
   };
 
   const handleConfirm = async () => {
-    if (!selectedPlacement || !selectedDate) return;
+    if (selectedPlacements.length === 0 || !selectedDate) return;
     
     setSubmitting(true);
     setError(null);
     
-    const { data, error } = await createUserFeaturedAd(
-      ad.id,
-      selectedPlacement,
-      selectedDate
-    );
+    // Crear un featured ad por cada placement seleccionado
+    const errors: string[] = [];
+    for (const placement of selectedPlacements) {
+      const { data, error } = await createUserFeaturedAd(
+        ad.id,
+        placement,
+        selectedDate
+      );
+      if (error || !data?.success) {
+        errors.push(`${PLACEMENT_OPTIONS.find(o => o.value === placement)?.shortLabel}: ${data?.error_message || error?.message || 'Error'}`);
+      }
+    }
     
-    if (error || !data?.success) {
-      setError(data?.error_message || error?.message || 'Error al destacar aviso');
+    if (errors.length > 0) {
+      setError(errors.join('. '));
       setSubmitting(false);
+      if (errors.length < selectedPlacements.length) {
+        // Parcialmente exitoso
+        onSuccess?.();
+      }
       return;
     }
     
@@ -234,24 +318,22 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
     onClose();
   };
 
-  // Calcular fecha mínima (hoy)
+  // Calcular fecha mínima (hoy) y máxima (30 días)
   const minDate = new Date();
-  // Fecha máxima: 30 días adelante
   const maxDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-  const creditCost = selectedPlacement ? CREDIT_COSTS[selectedPlacement] : 0;
-  // Validar datos mínimos: categoría Y subcategoría obligatorias
   const hasCategoryData = Boolean(ad.category_id && ad.subcategory_id);
 
   if (!isOpen) return null;
 
   const creditsAvailable = credits?.credits_available ?? 0;
   const hasCredits = creditsAvailable > 0;
+  const hasEnoughCredits = creditsAvailable >= totalCost;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-60 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-amber-400 to-amber-500 px-6 py-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden max-h-[90vh] overflow-y-auto">
+        {/* Header — Verde #386539 */}
+        <div className="bg-[#386539] px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center">
@@ -271,22 +353,36 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
           </div>
         </div>
 
-        {/* Créditos disponibles */}
-        <div className="px-6 py-4 bg-gray-50 border-b flex items-center justify-between">
+        {/* Créditos disponibles + Acciones */}
+        <div className="px-6 py-3 bg-gray-50 border-b flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-amber-500" />
+            <Zap className="w-5 h-5 text-[#169834]" />
             <span className="text-sm text-gray-600">Tus créditos:</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`text-2xl font-bold ${hasCredits ? 'text-green-600' : 'text-red-500'}`}>
+            <span className={`text-xl font-bold ${hasCredits ? 'text-[#169834]' : 'text-red-500'}`}>
               {loading ? '...' : creditsAvailable}
             </span>
-            <span className="text-sm text-gray-500">disponibles</span>
+            <span className="text-xs text-gray-400">disponibles</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setShowBuyModal(true)}
+              className="flex items-center gap-1 bg-[#386539] hover:bg-[#2d5230] text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              Comprar
+            </button>
+            <button
+              onClick={() => setShowCouponModal(true)}
+              className="flex items-center gap-1 bg-white border border-[#386539] text-[#386539] hover:bg-green-50 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
+            >
+              <Ticket className="w-3.5 h-3.5" />
+              Cupón
+            </button>
           </div>
         </div>
 
         {/* Aviso seleccionado */}
-        <div className="px-6 py-3 bg-blue-50 border-b">
+        <div className="px-6 py-3 bg-green-50 border-b">
           <p className="text-sm text-gray-600">Aviso a destacar:</p>
           <p className="font-semibold text-gray-900 truncate">{ad.title}</p>
           {ad.category_name && (
@@ -298,17 +394,16 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
         <div className="px-6 py-5">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-[#169834]" />
             </div>
           ) : !hasCredits ? (
-            /* Sin créditos - Mostrar promoción si está disponible */
+            /* Sin créditos */
             <div className="text-center py-6">
-              {/* Banner promocional si está activo y puede reclamar */}
               {promoStatus?.can_claim && (
                 <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <Gift className="w-6 h-6 text-green-600" />
-                    <span className="font-bold text-green-800">🎉 ¡Promoción de Lanzamiento!</span>
+                    <span className="font-bold text-green-800">¡Promoción de Lanzamiento!</span>
                   </div>
                   <p className="text-sm text-green-700 mb-3">
                     {promoStatus.promo_message || `Reclamá ${promoStatus.credits_available} créditos GRATIS`}
@@ -316,7 +411,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                   <button
                     onClick={handleClaimPromo}
                     disabled={claimingPromo}
-                    className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-3 rounded-xl font-bold transition-colors"
+                    className="inline-flex items-center gap-2 bg-[#169834] hover:bg-[#0e7d25] disabled:bg-green-400 text-white px-6 py-3 rounded-xl font-bold transition-colors"
                   >
                     {claimingPromo ? (
                       <>
@@ -330,18 +425,12 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                       </>
                     )}
                   </button>
-                  {promoStatus.promo_end_date && (
-                    <p className="text-xs text-green-600 mt-2">
-                      Válido hasta {new Date(promoStatus.promo_end_date).toLocaleDateString('es-AR')}
-                    </p>
-                  )}
                 </div>
               )}
 
-              {/* Mensaje de ya reclamó */}
               {promoStatus?.already_claimed && (
                 <div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
-                  ✅ Ya reclamaste tus créditos de promoción
+                  Ya reclamaste tus créditos de promoción
                 </div>
               )}
 
@@ -353,59 +442,147 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                 Necesitás créditos disponibles para destacar tu aviso.
               </p>
               <button 
-                onClick={() => navigateTo('/checkout')}
-                className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-xl font-bold transition-colors"
+                onClick={() => setShowBuyModal(true)}
+                className="inline-flex items-center gap-2 bg-[#386539] hover:bg-[#2d5230] text-white px-6 py-3 rounded-xl font-bold transition-colors"
               >
                 <Zap className="w-5 h-5" />
                 Comprar créditos
               </button>
             </div>
           ) : step === 'placement' ? (
-            /* Paso 1: Elegir placement */
+            /* ═══════════════════════════════════════════
+               PASO 1: Seleccionar placements — Layout 3 columnas
+               ═══════════════════════════════════════════ */
             <div className="space-y-4">
-              <h4 className="font-semibold text-gray-900 mb-3">
+              <h4 className="font-semibold text-gray-900 text-center">
                 ¿Dónde querés destacar tu aviso?
               </h4>
+              <p className="text-sm text-gray-500 text-center">
+                Podés seleccionar uno o más destinos
+              </p>
 
               {!hasCategoryData && (
                 <div className="flex items-start gap-2 p-3 bg-red-50 rounded-lg text-sm text-red-700">
                   <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium">Categoría y subcategoría requeridas</p>
-                    <p className="text-xs mt-0.5">Este aviso debe tener categoría y subcategoría asignadas antes de poder destacarse.</p>
+                    <p className="text-xs mt-0.5">Este aviso debe tener categoría y subcategoría asignadas.</p>
                   </div>
                 </div>
               )}
-              
-              {PLACEMENT_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => handlePlacementSelect(option.value)}
-                  disabled={!hasCategoryData || creditsAvailable < CREDIT_COSTS[option.value]}
-                  className={`w-full p-4 border-2 rounded-xl transition-all text-left flex items-start gap-4 group ${
-                    hasCategoryData && creditsAvailable >= CREDIT_COSTS[option.value]
-                      ? 'border-gray-200 hover:border-amber-400 hover:bg-amber-50'
-                      : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="w-12 h-12 bg-gray-100 group-hover:bg-amber-100 rounded-lg flex items-center justify-center text-gray-500 group-hover:text-amber-600 transition-colors">
-                    {option.icon}
+
+              {/* 3 Columnas de placement */}
+              <div className="grid grid-cols-3 gap-3">
+                {PLACEMENT_OPTIONS.map((option) => {
+                  const isSelected = selectedPlacements.includes(option.value);
+                  const canAfford = creditsAvailable >= creditCosts[option.value];
+                  const isDisabled = !hasCategoryData || !canAfford;
+
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => !isDisabled && togglePlacement(option.value)}
+                      disabled={isDisabled}
+                      className={`relative flex flex-col items-center p-4 rounded-xl border-2 transition-all text-center ${
+                        isSelected
+                          ? 'border-[#169834] bg-green-50 shadow-md'
+                          : isDisabled
+                          ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                          : 'border-gray-200 hover:border-[#a2c037] hover:bg-green-50/50 cursor-pointer'
+                      }`}
+                    >
+                      {/* Checkmark */}
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#169834] rounded-full flex items-center justify-center shadow">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+
+                      {/* Short label (PP/PR/PA) */}
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full mb-2 ${
+                        isSelected ? 'bg-[#169834] text-white' : 'bg-gray-200 text-gray-600'
+                      }`}>
+                        {option.shortLabel}
+                      </span>
+
+                      {/* Icon */}
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-2 ${
+                        isSelected ? 'bg-[#169834]/10 text-[#169834]' : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {option.icon}
+                      </div>
+
+                      {/* Label */}
+                      <span className="text-xs font-semibold text-gray-900 leading-tight">
+                        {option.label}
+                      </span>
+
+                      {/* Description */}
+                      <span className="text-[10px] text-gray-500 mt-1 leading-tight">
+                        {option.description}
+                      </span>
+
+                      {/* Cost */}
+                      <span className={`text-sm font-bold mt-2 ${
+                        isSelected ? 'text-[#169834]' : 'text-gray-700'
+                      }`}>
+                        {creditCosts[option.value]} créd.
+                      </span>
+
+                      {!canAfford && (
+                        <span className="text-[10px] text-red-500 mt-1">Insuficiente</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Resumen de selección */}
+              {selectedPlacements.length > 0 && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm text-gray-600">Selección:</span>
+                      <div className="flex gap-1.5 mt-1">
+                        {selectedPlacements.map(p => {
+                          const opt = PLACEMENT_OPTIONS.find(o => o.value === p);
+                          return (
+                            <span key={p} className="text-xs font-bold bg-[#169834] text-white px-2 py-0.5 rounded-full">
+                              {opt?.shortLabel}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm text-gray-600">Costo total:</span>
+                      <p className={`text-xl font-bold ${hasEnoughCredits ? 'text-[#169834]' : 'text-red-500'}`}>
+                        {totalCost} crédito{totalCost !== 1 ? 's' : ''}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h5 className="font-semibold text-gray-900">{option.label}</h5>
-                    <p className="text-sm text-gray-500">{option.description}</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Costo: {option.value === 'homepage' ? '4 créditos' : '1 crédito'}
+                  {!hasEnoughCredits && (
+                    <p className="text-xs text-red-500 mt-2 text-center">
+                      No tenés suficientes créditos. Disponibles: {creditsAvailable}
                     </p>
-                    {creditsAvailable < CREDIT_COSTS[option.value] && (
-                      <p className="text-xs text-red-500 mt-1">Créditos insuficientes</p>
-                    )}
-                  </div>
-                </button>
-              ))}
+                  )}
+                </div>
+              )}
+
+              {/* Botón continuar */}
+              <button
+                onClick={handleContinueToDate}
+                disabled={selectedPlacements.length === 0 || !hasEnoughCredits}
+                className="w-full bg-[#386539] hover:bg-[#2d5230] disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+              >
+                Elegir fecha de inicio
+                <Calendar className="w-5 h-5" />
+              </button>
             </div>
           ) : step === 'date' ? (
-            /* Paso 2: Elegir fecha */
+            /* ═══════════════════════════════════════════
+               PASO 2: Elegir fecha
+               ═══════════════════════════════════════════ */
             <div className="space-y-5">
               <button 
                 onClick={() => setStep('placement')}
@@ -414,15 +591,24 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                 ← Cambiar ubicación
               </button>
 
-              <div className="p-4 bg-amber-50 rounded-xl">
-                <div className="flex items-center gap-3 mb-2">
-                  {PLACEMENT_OPTIONS.find(o => o.value === selectedPlacement)?.icon}
-                  <span className="font-semibold text-gray-900">
-                    {PLACEMENT_OPTIONS.find(o => o.value === selectedPlacement)?.label}
-                  </span>
+              {/* Resumen de placements seleccionados */}
+              <div className="p-3 bg-green-50 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {selectedPlacements.map(p => {
+                    const opt = PLACEMENT_OPTIONS.find(o => o.value === p);
+                    return (
+                      <span key={p} className="text-xs font-bold bg-[#169834] text-white px-2 py-0.5 rounded-full">
+                        {opt?.shortLabel}
+                      </span>
+                    );
+                  })}
                 </div>
+                <span className="text-sm font-bold text-[#169834]">
+                  {totalCost} créd.
+                </span>
               </div>
 
+              {/* Calendario */}
               <div className="border border-gray-200 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -455,7 +641,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
 
                 {checkingAvailability ? (
                   <div className="flex items-center justify-center py-6">
-                    <Loader2 className="w-5 h-5 animate-spin text-amber-500 mr-2" />
+                    <Loader2 className="w-5 h-5 animate-spin text-[#169834] mr-2" />
                     <span className="text-sm text-gray-600">Cargando disponibilidad...</span>
                   </div>
                 ) : (
@@ -467,7 +653,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                       const firstDay = new Date(year, month, 1).getDay();
                       const offset = (firstDay + 6) % 7;
 
-                      const cells = [] as JSX.Element[];
+                      const cells = [] as React.JSX.Element[];
                       for (let i = 0; i < offset; i += 1) {
                         cells.push(<div key={`empty-${i}`} />);
                       }
@@ -490,7 +676,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                             onClick={() => handleDateChange(isoDate)}
                             className={`h-9 rounded-md text-sm font-medium transition-colors ${
                               isSelected
-                                ? 'bg-amber-500 text-white'
+                                ? 'bg-[#169834] text-white'
                                 : isDisabled
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 : 'bg-green-50 text-green-800 hover:bg-green-100'
@@ -522,7 +708,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
 
                 <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  Tu aviso estará destacado por {DURATION_DAYS} días desde esta fecha
+                  Tu aviso estará destacado por {durationDays} días desde esta fecha
                 </p>
               </div>
 
@@ -551,19 +737,33 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                 </div>
               )}
 
-              {/* Botón continuar */}
-              {availability?.is_available && (
-                <button
-                  onClick={() => setStep('confirm')}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
-                >
-                  Continuar
-                  <CheckCircle className="w-5 h-5" />
-                </button>
-              )}
+              {/* Botón Aceptar — siempre visible */}
+              <button
+                onClick={() => setStep('confirm')}
+                disabled={!selectedDate || !availability?.is_available || checkingAvailability}
+                className="w-full bg-[#386539] hover:bg-[#2d5230] disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+              >
+                {checkingAvailability ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Verificando disponibilidad...
+                  </>
+                ) : !selectedDate ? (
+                  'Seleccioná una fecha'
+                ) : !availability?.is_available ? (
+                  'Fecha no disponible'
+                ) : (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    Aceptar y Continuar
+                  </>
+                )}
+              </button>
             </div>
           ) : (
-            /* Paso 3: Confirmar */
+            /* ═══════════════════════════════════════════
+               PASO 3: Confirmar
+               ═══════════════════════════════════════════ */
             <div className="space-y-5">
               <button 
                 onClick={() => setStep('date')}
@@ -580,11 +780,24 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                   <span className="font-semibold text-gray-900 text-right max-w-[200px] truncate">{ad.title}</span>
                 </div>
                 
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Ubicación:</span>
-                  <span className="font-semibold text-gray-900">
-                    {PLACEMENT_OPTIONS.find(o => o.value === selectedPlacement)?.label}
-                  </span>
+                <div className="py-2 border-b border-gray-200">
+                  <span className="text-gray-600">Ubicaciones:</span>
+                  <div className="mt-2 space-y-1">
+                    {selectedPlacements.map(p => {
+                      const opt = PLACEMENT_OPTIONS.find(o => o.value === p);
+                      return (
+                        <div key={p} className="flex justify-between items-center text-sm">
+                          <span className="flex items-center gap-2">
+                            <span className="text-xs font-bold bg-[#169834] text-white px-2 py-0.5 rounded-full">
+                              {opt?.shortLabel}
+                            </span>
+                            {opt?.label}
+                          </span>
+                          <span className="text-gray-600">{creditCosts[p]} créd.</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 
                 <div className="flex justify-between items-center py-2 border-b border-gray-200">
@@ -600,13 +813,13 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                 
                 <div className="flex justify-between items-center py-2 border-b border-gray-200">
                   <span className="text-gray-600">Duración:</span>
-                  <span className="font-semibold text-gray-900">{DURATION_DAYS} días</span>
+                  <span className="font-semibold text-gray-900">{durationDays} días</span>
                 </div>
                 
-                <div className="flex justify-between items-center py-2 bg-amber-100 -mx-5 px-5 rounded-b-xl">
-                  <span className="text-gray-700 font-medium">Costo:</span>
-                  <span className="font-bold text-xl text-amber-700">
-                    {creditCost} crédito{creditCost > 1 ? 's' : ''}
+                <div className="flex justify-between items-center py-2 bg-[#386539]/10 -mx-5 px-5 rounded-b-xl">
+                  <span className="text-gray-700 font-medium">Costo total:</span>
+                  <span className="font-bold text-xl text-[#386539]">
+                    {totalCost} crédito{totalCost > 1 ? 's' : ''}
                   </span>
                 </div>
               </div>
@@ -632,7 +845,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               <button
                 onClick={handleConfirm}
                 disabled={submitting}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-[#169834] hover:bg-[#0e7d25] disabled:bg-gray-400 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>
@@ -648,12 +861,32 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               </button>
 
               <p className="text-xs text-center text-gray-500">
-                Se descontará {creditCost} crédito{creditCost > 1 ? 's' : ''} de tu cuenta
+                Se descontarán {totalCost} crédito{totalCost > 1 ? 's' : ''} de tu cuenta
               </p>
             </div>
           )}
         </div>
       </div>
+
+      {/* Sub-modal: Comprar Créditos */}
+      <BuyCreditsModal
+        isOpen={showBuyModal}
+        onClose={() => setShowBuyModal(false)}
+        onSuccess={() => {
+          loadCredits();
+          setShowBuyModal(false);
+        }}
+      />
+
+      {/* Sub-modal: Canjear Cupón */}
+      <RedeemCouponModal
+        isOpen={showCouponModal}
+        onClose={() => setShowCouponModal(false)}
+        onSuccess={() => {
+          loadCredits();
+          setShowCouponModal(false);
+        }}
+      />
     </div>
   );
 }

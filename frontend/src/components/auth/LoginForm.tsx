@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogIn, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { UserCircle, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import { Button } from '../atoms/Button';
 import { FormField } from '../molecules/FormField';
@@ -87,7 +87,7 @@ export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSw
             </svg>
           </button>
         )}
-        <LogIn className="w-10 h-10 sm:w-12 sm:h-12 text-[#16a135] mx-auto mb-3" />
+        <UserCircle className="w-10 h-10 sm:w-12 sm:h-12 text-[#16a135] mx-auto mb-3" />
         <h2 className="text-2xl sm:text-3xl font-bold text-[#1b2f23]">Iniciar Sesión</h2>
         <p className="text-sm sm:text-base text-gray-600 mt-1">Accede a tu cuenta de Rural24</p>
       </div>
@@ -148,7 +148,7 @@ export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSw
           size="lg"
           loading={loading}
           className="w-full"
-          leftIcon={<LogIn size={18} />}
+          leftIcon={<UserCircle size={18} />}
         >
           {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
         </Button>

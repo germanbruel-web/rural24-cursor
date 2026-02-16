@@ -8,18 +8,15 @@
  * 3. Estadísticas - Dashboard con métricas
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Calendar,
   TrendingUp,
   List,
   Search,
-  Filter,
   X,
   ChevronLeft,
   ChevronRight,
-  Download,
-  Ban,
   Eye,
   Home,
   Search as SearchIcon,
@@ -31,7 +28,6 @@ import {
   Users,
   CreditCard,
   Loader2,
-  RefreshCw,
   Edit2,
   Zap
 } from 'lucide-react';
@@ -46,7 +42,6 @@ import {
   getCreditCost,
   formatFeaturedDate,
   formatDateRange,
-  exportToCSV,
   type AdminFeaturedAd,
   type AdminFeaturedFilters,
   type AdminFeaturedStats,
@@ -59,6 +54,7 @@ import CancelFeaturedModal from './CancelFeaturedModal';
 import CreateFeaturedModal from './CreateFeaturedModal';
 import AllAdsTab from './AllAdsTab';
 import { Package } from 'lucide-react';
+import { supabase } from '../../services/supabaseClient';
 
 type TabView = 'all-ads' | 'list' | 'calendar' | 'stats';
 
@@ -144,255 +140,390 @@ export default function SuperAdminFeaturedPanel() {
 }
 
 // ============================================================================
-// TAB 1: LISTA CON FILTROS
+// TAB 1: DESTACADOS — Modelo filtros AllAdsTab + columna PUBLICIDAD
 // ============================================================================
 
+interface ListCategory {
+  id: string;
+  name: string;
+  display_name?: string;
+}
+
+interface ListSubcategory {
+  id: string;
+  name: string;
+  display_name?: string;
+  category_id: string;
+}
+
+interface ListAdRow {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
+  category_id: string;
+  user_id: string;
+  images: string[];
+  seller_name: string;
+  seller_email: string;
+  category_name: string;
+}
+
+interface ListFeaturedEntry {
+  id: string;
+  ad_id: string;
+  user_id: string;
+  placement: FeaturedPlacement;
+  status: FeaturedStatus;
+  scheduled_start: string;
+  actual_start: string | null;
+  expires_at: string | null;
+  duration_days: number;
+  category_id: string;
+  priority: number | null;
+  credit_consumed: boolean;
+  is_manual: boolean;
+  refunded: boolean;
+  cancelled_by: string | null;
+  cancelled_reason: string | null;
+  cancelled_at: string | null;
+  created_at: string;
+  updated_at: string;
+  transaction_id: string | null;
+  requires_payment: boolean;
+  admin_notes: string | null;
+  manual_activated_by: string | null;
+  manual_activator_email: string | null;
+  manual_activator_name: string | null;
+}
+
+const RECORDS_PER_PAGE_LIST = 15;
+
 function ListTab() {
-  const [ads, setAds] = useState<AdminFeaturedAd[]>([]);
-  const [total, setTotal] = useState(0);
+  // Filtros (Modelo A — Categoría, Subcategoría, Estado)
+  const [categories, setCategories] = useState<ListCategory[]>([]);
+  const [subcategories, setSubcategories] = useState<ListSubcategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
+
+  // Resultados
+  const [ads, setAds] = useState<ListAdRow[]>([]);
+  const [featuredMap, setFeaturedMap] = useState<Record<string, ListFeaturedEntry[]>>({});
+  const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(20);
-  const [filters, setFilters] = useState<AdminFeaturedFilters>({});
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedAd, setSelectedAd] = useState<AdminFeaturedAd | null>(null);
+
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
+  // Modals Featured
+  const [selectedFeatured, setSelectedFeatured] = useState<AdminFeaturedAd | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showAuditModal, setShowAuditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  // ── Load categories ──
   useEffect(() => {
-    loadAds();
-  }, [page, filters]);
+    const load = async () => {
+      const { data } = await supabase
+        .from('categories')
+        .select('id, name, display_name')
+        .eq('is_active', true)
+        .order('display_name');
+      setCategories(data || []);
+    };
+    load();
+  }, []);
 
-  const loadAds = async () => {
+  useEffect(() => {
+    if (!selectedCategory) { setSubcategories([]); setSelectedSubcategory(''); return; }
+    const load = async () => {
+      const { data } = await supabase
+        .from('subcategories')
+        .select('id, name, display_name, category_id')
+        .eq('category_id', selectedCategory)
+        .eq('is_active', true)
+        .order('display_name');
+      setSubcategories(data || []);
+      setSelectedSubcategory('');
+    };
+    load();
+  }, [selectedCategory]);
+
+  // ── Search ──
+  const handleSearch = useCallback(async (page = 1) => {
     setLoading(true);
-    const offset = (page - 1) * limit;
-    const { data, total: totalCount } = await getAdminFeaturedAds(filters, limit, offset);
-    setAds(data);
-    setTotal(totalCount);
+    setHasSearched(true);
+    try {
+      // Count
+      let countQ = supabase.from('ads').select('id', { count: 'exact', head: true }).neq('status', 'deleted');
+      let dataQ = supabase.from('ads').select('id, title, slug, status, category_id, user_id, images').neq('status', 'deleted').order('created_at', { ascending: false });
+
+      if (selectedCategory) { countQ = countQ.eq('category_id', selectedCategory); dataQ = dataQ.eq('category_id', selectedCategory); }
+      if (selectedSubcategory) { countQ = countQ.eq('subcategory_id', selectedSubcategory); dataQ = dataQ.eq('subcategory_id', selectedSubcategory); }
+      if (statusFilter === 'active') { countQ = countQ.eq('status', 'active'); dataQ = dataQ.eq('status', 'active'); }
+      else if (statusFilter === 'paused') { countQ = countQ.eq('status', 'paused'); dataQ = dataQ.eq('status', 'paused'); }
+
+      const { count } = await countQ;
+      setTotalRecords(count || 0);
+
+      const from = (page - 1) * RECORDS_PER_PAGE_LIST;
+      dataQ = dataQ.range(from, from + RECORDS_PER_PAGE_LIST - 1);
+      const { data: adsData, error } = await dataQ;
+      if (error) throw error;
+
+      // Enrich: users
+      const userIds = [...new Set((adsData || []).map(a => a.user_id).filter(Boolean))];
+      let usersMap: Record<string, { name: string; email: string }> = {};
+      if (userIds.length > 0) {
+        const { data: users } = await supabase.from('users').select('id, full_name, email').in('id', userIds);
+        (users || []).forEach((u: any) => { usersMap[u.id] = { name: u.full_name || u.email?.split('@')[0] || 'Usuario', email: u.email || '' }; });
+      }
+
+      // Enrich: category names
+      const catIds = [...new Set((adsData || []).map(a => a.category_id).filter(Boolean))];
+      let catsMap: Record<string, string> = {};
+      if (catIds.length > 0) {
+        const { data: cats } = await supabase.from('categories').select('id, display_name').in('id', catIds);
+        (cats || []).forEach((c: any) => { catsMap[c.id] = c.display_name || c.id; });
+      }
+
+      // Enrich: featured entries (ALL active/pending per ad, multiple placements)
+      const adIds = (adsData || []).map(a => a.id);
+      const newFeaturedMap: Record<string, ListFeaturedEntry[]> = {};
+      if (adIds.length > 0) {
+        const { data: featAds } = await supabase
+          .from('featured_ads')
+          .select('*')
+          .in('ad_id', adIds)
+          .in('status', ['active', 'pending']);
+        (featAds || []).forEach((f: any) => {
+          if (!newFeaturedMap[f.ad_id]) newFeaturedMap[f.ad_id] = [];
+          newFeaturedMap[f.ad_id].push(f);
+        });
+      }
+      setFeaturedMap(newFeaturedMap);
+
+      const enriched: ListAdRow[] = (adsData || []).map(a => ({
+        ...a,
+        seller_name: usersMap[a.user_id]?.name || 'Usuario',
+        seller_email: usersMap[a.user_id]?.email || '',
+        category_name: catsMap[a.category_id] || '',
+      }));
+
+      setAds(enriched);
+      setCurrentPage(page);
+    } catch (err) {
+      console.error('Error loading ads:', err);
+    }
     setLoading(false);
+  }, [selectedCategory, selectedSubcategory, statusFilter]);
+
+  // ── Helpers ──
+  const getRemainingDays = (expiresAt?: string | null): number => {
+    if (!expiresAt) return 0;
+    const diff = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, diff);
   };
 
-  const handleExport = () => {
-    const filename = `featured-ads-${new Date().toISOString().split('T')[0]}.csv`;
-    exportToCSV(ads, filename);
-  };
+  const getPlacementShort = (p: string) => ({ homepage: 'ALTO', results: 'MEDIO', detail: 'BÁSICO' }[p] || p);
 
-  const handleEditClick = (ad: AdminFeaturedAd) => {
-    setSelectedAd(ad);
+  const buildAdminFeaturedAd = (ad: ListAdRow, feat: ListFeaturedEntry): AdminFeaturedAd => ({
+    ...feat,
+    ad_title: ad.title,
+    ad_slug: ad.slug,
+    ad_images: ad.images || [],
+    ad_price: 0,
+    ad_currency: 'ARS',
+    ad_status: ad.status,
+    user_email: ad.seller_email,
+    user_full_name: ad.seller_name,
+    user_role: '',
+    category_name: ad.category_name,
+    category_slug: '',
+  });
+
+  const handleEditFeatured = (ad: ListAdRow, feat: ListFeaturedEntry) => {
+    setSelectedFeatured(buildAdminFeaturedAd(ad, feat));
     setShowEditModal(true);
   };
 
-  const handleCancelClick = (ad: AdminFeaturedAd) => {
-    setSelectedAd(ad);
+  const handleCancelFeatured = (ad: ListAdRow, feat: ListFeaturedEntry) => {
+    setSelectedFeatured(buildAdminFeaturedAd(ad, feat));
     setShowCancelModal(true);
   };
 
-  const handleAuditClick = (ad: AdminFeaturedAd) => {
-    setSelectedAd(ad);
-    setShowAuditModal(true);
-  };
-
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = Math.ceil(totalRecords / RECORDS_PER_PAGE_LIST);
 
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-medium shadow-sm"
-          >
-            <span className="text-lg leading-none">+</span>
-            Destacar Nuevo Aviso
+      {/* Filtros — Modelo A (Categoría, Subcategoría, Estado) */}
+      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex-1 min-w-[180px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Categoría</label>
+            <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+              <option value="">Todas las categorías</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.display_name || c.name}</option>)}
+            </select>
+          </div>
+          <div className="flex-1 min-w-[180px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Subcategoría</label>
+            <select value={selectedSubcategory} onChange={e => setSelectedSubcategory(e.target.value)} disabled={!selectedCategory}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100">
+              <option value="">Todas</option>
+              {subcategories.map(s => <option key={s.id} value={s.id}>{s.display_name || s.name}</option>)}
+            </select>
+          </div>
+          <div className="min-w-[140px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Estado</label>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+              <option value="all">Todos</option>
+              <option value="active">Activos</option>
+              <option value="paused">Pausados</option>
+            </select>
+          </div>
+          <button onClick={() => handleSearch(1)} disabled={loading}
+            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white font-medium rounded-lg flex items-center gap-2 transition-colors">
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+            Buscar
           </button>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-          >
-            <Filter className="w-4 h-4" />
-            Filtros
-            {Object.keys(filters).length > 0 && (
-              <span className="bg-emerald-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {Object.keys(filters).length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={loadAds}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refrescar
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">
-            {total} registro{total !== 1 ? 's' : ''}
-          </span>
-          <button
-            onClick={handleExport}
-            disabled={ads.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Exportar CSV
+          <button onClick={() => setShowCreateModal(true)}
+            className="px-5 py-2 bg-[#386539] hover:bg-[#2d5230] text-white font-medium rounded-lg flex items-center gap-2 transition-colors">
+            <Zap className="w-4 h-4" />
+            Destacar Aviso
           </button>
         </div>
       </div>
 
-      {/* Filtros */}
-      {showFilters && (
-        <FiltersPanel filters={filters} setFilters={setFilters} onClose={() => setShowFilters(false)} />
-      )}
-
-      {/* Tabla */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
+      {/* Resultados */}
+      {!hasSearched ? (
+        <div className="text-center py-16">
+          <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">Usá los filtros para buscar avisos y ver su publicidad</p>
+        </div>
+      ) : loading ? (
+        <div className="flex items-center justify-center py-16">
           <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
         </div>
       ) : ads.length === 0 ? (
-        <div className="text-center py-12">
-          <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">No se encontraron avisos destacados</p>
+        <div className="text-center py-16">
+          <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">No se encontraron avisos</p>
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto">
+          {/* Info */}
+          <div className="flex items-center justify-end">
+            <span className="text-sm text-gray-500">{totalRecords} aviso{totalRecords !== 1 ? 's' : ''} encontrados</span>
+          </div>
+
+          {/* Tabla */}
+          <div className="overflow-x-auto border border-gray-200 rounded-lg">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Aviso
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Usuario
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Placement
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fecha
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Créditos
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aviso</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendedor</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Publicidad</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {ads.map((ad) => (
-                  <tr key={ad.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <StatusBadge status={ad.status} />
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        {ad.ad_images && ad.ad_images.length > 0 && (
-                          <img
-                            src={ad.ad_images[0]}
-                            alt=""
-                            className="w-12 h-12 object-cover rounded"
-                          />
+                {ads.map((ad) => {
+                  const feats = featuredMap[ad.id] || [];
+                  return (
+                    <tr key={ad.id} className="hover:bg-gray-50">
+                      {/* Aviso */}
+                      <td className="px-4 py-3">
+                        <p className="text-sm font-medium text-gray-900 truncate max-w-[260px]">{ad.title}</p>
+                        <p className="text-xs text-gray-500">{ad.category_name}</p>
+                      </td>
+                      {/* Vendedor */}
+                      <td className="px-4 py-3">
+                        <p className="text-sm text-gray-900">{ad.seller_name}</p>
+                        <p className="text-xs text-gray-500">{ad.seller_email}</p>
+                      </td>
+                      {/* Estado */}
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          ad.status === 'active' ? 'bg-green-100 text-green-800' : ad.status === 'paused' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {ad.status === 'active' ? 'Activo' : ad.status === 'paused' ? 'Pausado' : ad.status}
+                        </span>
+                      </td>
+                      {/* PUBLICIDAD */}
+                      <td className="px-4 py-3">
+                        {ad.status !== 'active' ? (
+                          <span className="text-gray-400 text-sm">—</span>
+                        ) : feats.length === 0 ? (
+                          <span className="text-xs text-gray-400 italic">Sin destacar</span>
+                        ) : (
+                          <div className="flex flex-col gap-1.5">
+                            {feats.map((f) => {
+                              const remaining = getRemainingDays(f.expires_at);
+                              const tierColor = f.placement === 'homepage'
+                                ? 'bg-purple-100 text-purple-800 border-purple-200'
+                                : f.placement === 'results'
+                                ? 'bg-blue-100 text-blue-800 border-blue-200'
+                                : 'bg-gray-100 text-gray-700 border-gray-200';
+                              return (
+                                <div key={f.id} className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border ${tierColor}`}>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[11px] font-bold">
+                                      {getPlacementShort(f.placement)}
+                                    </span>
+                                    {f.status === 'active' ? (
+                                      <span className="text-[10px] font-medium opacity-75">
+                                        {remaining}d
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] text-yellow-600 font-medium">pendiente</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-0.5">
+                                    <button onClick={() => handleEditFeatured(ad, f)} className="p-0.5 opacity-60 hover:opacity-100 transition-opacity" title="Editar destacado">
+                                      <Edit2 className="w-3 h-3" />
+                                    </button>
+                                    <button onClick={() => handleCancelFeatured(ad, f)} className="p-0.5 text-red-500 opacity-60 hover:opacity-100 transition-opacity" title="Cancelar destacado">
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         )}
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {ad.ad_title}
-                          </p>
-                          <p className="text-xs text-gray-500">{ad.category_name}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div>
-                        <p className="text-sm text-gray-900">{ad.user_full_name}</p>
-                        <p className="text-xs text-gray-500">{ad.user_email}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <PlacementBadge placement={ad.placement} />
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div>
-                        <p className="text-sm text-gray-900">{formatFeaturedDate(ad.scheduled_start)}</p>
-                        <p className="text-xs text-gray-500">{ad.duration_days} días</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <CreditCard className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">{getCreditCost(ad.placement)}</span>
-                        {ad.refunded && (
-                          <span className="text-xs text-emerald-600 ml-1">(reemb.)</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-2">
-                        {/* Ver Aviso */}
-                        <button
-                          onClick={() => window.open(`/#/ad/${ad.ad_slug || ad.ad_id}`, '_blank')}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Ver aviso"
-                        >
+                      </td>
+                      {/* Acciones */}
+                      <td className="px-4 py-3 text-right">
+                        <button onClick={() => window.open(`/#/ad/${ad.slug || ad.id}`, '_blank')}
+                          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Ver aviso">
                           <Eye className="w-4 h-4" />
                         </button>
-                        
-                        {/* Editar */}
-                        {(ad.status === 'active' || ad.status === 'pending') && (
-                          <button
-                            onClick={() => handleEditClick(ad)}
-                            className="text-emerald-600 hover:text-emerald-900"
-                            title="Editar"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                        )}
-                        
-                        {/* Cancelar */}
-                        {(ad.status === 'active' || ad.status === 'pending') && (
-                          <button
-                            onClick={() => handleCancelClick(ad)}
-                            className="text-red-600 hover:text-red-900"
-                            title="Cancelar"
-                          >
-                            <Ban className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {/* Paginación */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-              <p className="text-sm text-gray-600">
-                Página {page} de {totalPages}
-              </p>
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-sm text-gray-600">Página {currentPage} de {totalPages}</p>
               <div className="flex gap-2">
-                <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                >
+                <button onClick={() => handleSearch(currentPage - 1)} disabled={currentPage === 1 || loading}
+                  className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                >
+                <button onClick={() => handleSearch(currentPage + 1)} disabled={currentPage === totalPages || loading}
+                  className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -402,42 +533,27 @@ function ListTab() {
       )}
 
       {/* Modals */}
-      {showEditModal && selectedAd && (
+      {showEditModal && selectedFeatured && (
         <EditFeaturedModal
           isOpen={showEditModal}
-          onClose={() => {
-            setShowEditModal(false);
-            setSelectedAd(null);
-          }}
-          featured={selectedAd}
-          onSuccess={() => {
-            loadAds();
-          }}
+          onClose={() => { setShowEditModal(false); setSelectedFeatured(null); }}
+          featured={selectedFeatured}
+          onSuccess={() => { handleSearch(currentPage); }}
         />
       )}
-
-      {showCancelModal && selectedAd && (
+      {showCancelModal && selectedFeatured && (
         <CancelFeaturedModal
           isOpen={showCancelModal}
-          onClose={() => {
-            setShowCancelModal(false);
-            setSelectedAd(null);
-          }}
-          featured={selectedAd}
-          onSuccess={() => {
-            loadAds();
-          }}
+          onClose={() => { setShowCancelModal(false); setSelectedFeatured(null); }}
+          featured={selectedFeatured}
+          onSuccess={() => { handleSearch(currentPage); }}
         />
       )}
-
       {showCreateModal && (
         <CreateFeaturedModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onSuccess={() => {
-            setShowCreateModal(false);
-            loadAds();
-          }}
+          onSuccess={() => { setShowCreateModal(false); handleSearch(currentPage); }}
         />
       )}
     </div>
@@ -461,12 +577,12 @@ function CalendarTab() {
     setLoading(true);
     try {
       const filters: AdminFeaturedFilters = {
-        status: ['active'],
-        ...(selectedPlacement !== 'all' && { placement: [selectedPlacement as FeaturedPlacement] })
+        status: ['active' as FeaturedStatus],
+        ...(selectedPlacement !== 'all' && { placement: selectedPlacement as FeaturedPlacement })
       };
       
-      const { data } = await getAdminFeaturedAds(filters, 1, 100);
-      setAds(data?.ads || []);
+      const { data } = await getAdminFeaturedAds(filters, 100, 0);
+      setAds(data || []);
     } catch (error) {
       console.error('Error loading active featured ads:', error);
     } finally {
@@ -503,7 +619,7 @@ function CalendarTab() {
             }`}
           >
             <Home className="w-4 h-4 inline mr-2" />
-            Homepage
+            Destacado ALTO
           </button>
           <button
             onClick={() => setSelectedPlacement('results')}
@@ -514,7 +630,7 @@ function CalendarTab() {
             }`}
           >
             <SearchIcon className="w-4 h-4 inline mr-2" />
-            Resultados
+            Destacado MEDIO
           </button>
         </div>
       </div>
@@ -530,7 +646,7 @@ function CalendarTab() {
           <p className="text-gray-600 font-medium">
             {selectedPlacement === 'all' 
               ? 'No hay avisos destacados activos' 
-              : `No hay avisos destacados en ${selectedPlacement === 'homepage' ? 'Homepage' : 'Resultados'}`}
+              : `No hay avisos con ${selectedPlacement === 'homepage' ? 'Destacado ALTO' : 'Destacado MEDIO'}`}
           </p>
         </div>
       ) : (
@@ -578,12 +694,16 @@ function CalendarTab() {
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                       ad.placement === 'homepage' 
                         ? 'bg-purple-100 text-purple-800' 
-                        : 'bg-blue-100 text-blue-800'
+                        : ad.placement === 'results'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
                     }`}>
                       {ad.placement === 'homepage' ? (
-                        <><Home className="w-3 h-3" /> Homepage</>
+                        <><Home className="w-3 h-3" /> ALTO</>
+                      ) : ad.placement === 'results' ? (
+                        <><SearchIcon className="w-3 h-3" /> MEDIO</>
                       ) : (
-                        <><SearchIcon className="w-3 h-3" /> Resultados</>
+                        <>BÁSICO</>
                       )}
                     </span>
                   </td>
@@ -593,7 +713,7 @@ function CalendarTab() {
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-gray-400" />
                       <div>
-                        <p className="text-sm text-gray-900">{ad.user_name || ad.user_email?.split('@')[0] || 'Usuario'}</p>
+                        <p className="text-sm text-gray-900">{ad.user_full_name || ad.user_email?.split('@')[0] || 'Usuario'}</p>
                         <p className="text-xs text-gray-500">{ad.user_email}</p>
                       </div>
                     </div>
@@ -874,94 +994,6 @@ function KPICard({ icon, label, value, suffix = '', color }: any) {
 }
 
 // ============================================================================
-// PANEL DE FILTROS
-// ============================================================================
-
-function FiltersPanel({ filters, setFilters, onClose }: any) {
-  const [localFilters, setLocalFilters] = useState(filters);
-
-  const handleApply = () => {
-    setFilters(localFilters);
-    onClose();
-  };
-
-  const handleReset = () => {
-    setLocalFilters({});
-    setFilters({});
-    onClose();
-  };
-
-  return (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-gray-900">Filtros</h3>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-          <X className="w-5 h-5" />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Status */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-          <select
-            value={localFilters.status?.[0] || ''}
-            onChange={e => setLocalFilters({ ...localFilters, status: e.target.value ? [e.target.value as FeaturedStatus] : undefined })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          >
-            <option value="">Todos</option>
-            <option value="active">Activo</option>
-            <option value="pending">Pendiente</option>
-            <option value="expired">Expirado</option>
-            <option value="cancelled">Cancelado</option>
-          </select>
-        </div>
-
-        {/* Placement */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Ubicación</label>
-          <select
-            value={localFilters.placement?.[0] || ''}
-            onChange={e => setLocalFilters({ ...localFilters, placement: e.target.value ? [e.target.value as FeaturedPlacement] : undefined })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          >
-            <option value="">Todas</option>
-            <option value="homepage">Homepage</option>
-            <option value="results">Resultados</option>
-          </select>
-        </div>
-
-        {/* Search */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
-          <input
-            type="text"
-            placeholder="Título, email..."
-            value={localFilters.search || ''}
-            onChange={e => setLocalFilters({ ...localFilters, search: e.target.value || undefined })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-2">
-        <button
-          onClick={handleReset}
-          className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
-        >
-          Limpiar
-        </button>
-        <button
-          onClick={handleApply}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
-        >
-          Aplicar
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ============================================================================
 // MODAL DE CANCELACIÓN
 // ============================================================================

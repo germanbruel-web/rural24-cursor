@@ -96,7 +96,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'featured-queue' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config';
+export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -142,6 +142,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/pending-ads') return 'pending-ads';
     if (hash === '#/users') return 'users';
     if (hash === '#/ads-management') return 'featured-ads'; // redirect → featured-ads
+    if (hash === '#/featured-queue') return 'featured-ads'; // redirect legacy queue → featured-ads
     if (hash === '#/banners') return 'banners';
     if (hash === '#/featured-ads') return 'featured-ads';
     if (hash === '#/coupons') return 'coupons';
@@ -188,7 +189,6 @@ const AppContent: React.FC = () => {
       'templates-admin': '#/templates-admin',
       'backend-settings': '#/backend-settings',
       'global-settings': '#/global-settings',
-      'featured-queue': '#/featured-queue',
       'payments-admin': '#/payments-admin',
       'sitemap-seo': '#/dashboard/sitemap-seo',
       'hero-cms': '#/hero-cms',
@@ -335,7 +335,7 @@ const AppContent: React.FC = () => {
         navigateToPage('global-settings');
       }
       else if (hash === '#/featured-queue') {
-        navigateToPage('featured-queue');
+        navigateToPage('featured-ads'); // Redirect legacy queue route to unified featured-ads
       }
       else if (hash === '#/payments-admin') {
         navigateToPage('payments-admin');
@@ -500,7 +500,8 @@ const AppContent: React.FC = () => {
   // Render con Dashboard Layout
   if (isDashboardPage) {
     // Esperar a que cargue el perfil antes de verificar permisos en páginas protegidas
-    const isProtectedPage = ['users', 'banners', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'reseller-points'].includes(currentPage);
+    // Incluye TODAS las páginas que requieren un rol específico (superadmin/revendedor)
+    const isProtectedPage = ['users', 'banners', 'featured-ads', 'coupons', 'credits-config', 'settings', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'reseller-points'].includes(currentPage);
     
     if (authLoading && isProtectedPage) {
       return (

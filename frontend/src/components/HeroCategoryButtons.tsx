@@ -362,8 +362,8 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
       {/* Botones de categorías - Layout diferente Mobile vs Desktop */}
       {showCategoryButtons && categories.length > 0 && (
         <>
-          {/* ========== MOBILE: Lista vertical con botones rectangulares ========== */}
-          <div className="md:hidden flex flex-col gap-2">
+          {/* ========== MOBILE: Cards sólidas sobre fondo blanco ========== */}
+          <div className="md:hidden grid grid-cols-2 gap-2.5">
             {categories.map((cat) => {
               const slug = cat.slug || cat.name.toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -384,18 +384,23 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryClick(slug)}
-                  className="flex items-center gap-3 w-full px-4 py-3 bg-black hover:bg-[#16a135] rounded transition-colors duration-200 active:scale-[0.98]"
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 
+                           bg-gray-900 hover:bg-gray-800 active:bg-gray-700
+                           rounded-xl transition-all duration-200 active:scale-[0.97]
+                           group"
                 >
-                  <img 
-                    src={iconUrl} 
-                    alt={categoryName}
-                    className="w-8 h-8 object-contain flex-shrink-0"
-                  />
-                  <span className="text-white text-sm font-semibold text-left flex-1">
+                  <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0 group-hover:bg-white/25 transition-colors">
+                    <img 
+                      src={iconUrl} 
+                      alt={categoryName}
+                      className="w-6 h-6 object-contain"
+                    />
+                  </div>
+                  <span className="text-white text-xs font-medium text-left flex-1 leading-tight">
                     {categoryName}
                   </span>
                   <svg 
-                    className="w-4 h-4 text-white/60" 
+                    className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70 transition-colors flex-shrink-0" 
                     fill="none" 
                     viewBox="0 0 24 24" 
                     stroke="currentColor"

@@ -75,11 +75,30 @@ export async function PATCH(request: NextRequest) {
   return withAuth(request, async (_user: AuthUser) => {
     try {
     const body = await request.json();
-    const { user_id, ...updates } = body;
+    const { user_id, ...rawUpdates } = body;
 
     if (!user_id) {
       return NextResponse.json(
         { success: false, error: 'user_id requerido' },
+        { status: 400 }
+      );
+    }
+
+    // Whitelist de campos permitidos para evitar escrituras arbitrarias
+    const ALLOWED_FIELDS = [
+      'full_name', 'first_name', 'last_name', 'phone', 'mobile',
+      'role', 'is_verified', 'email_verified', 'is_active', 'user_type'
+    ];
+    const updates: Record<string, any> = {};
+    for (const key of ALLOWED_FIELDS) {
+      if (key in rawUpdates) {
+        updates[key] = rawUpdates[key];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No se proporcionaron campos válidos para actualizar' },
         { status: 400 }
       );
     }

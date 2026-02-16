@@ -151,11 +151,19 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, onShowAuthModal 
           className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded-lg transition-colors group"
         >
           {/* Avatar */}
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 
-                        flex items-center justify-center text-white font-semibold text-sm
-                        ring-2 ring-white shadow-sm">
-            {getInitials()}
-          </div>
+          {profile?.avatar_url ? (
+            <img 
+              src={profile.avatar_url} 
+              alt={getUserDisplayName()}
+              className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 
+                          flex items-center justify-center text-white font-semibold text-sm
+                          ring-2 ring-white shadow-sm">
+              {getInitials()}
+            </div>
+          )}
           
           {/* Nombre (solo desktop) */}
           <span className="hidden xl:inline text-sm font-medium text-gray-700 group-hover:text-gray-900">

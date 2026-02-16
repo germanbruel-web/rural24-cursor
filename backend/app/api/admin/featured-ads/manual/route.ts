@@ -18,12 +18,34 @@ import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 
 const supabase = getSupabaseClient();
 
-// Configuración de slots por placement
-const MAX_SLOTS: Record<string, number> = {
+// Defaults — se sobreescriben con global_settings si están configurados
+const DEFAULT_MAX_SLOTS: Record<string, number> = {
   homepage: 10,
   results: 4,
   detail: 6
 };
+
+/**
+ * Carga slots máximos desde global_settings, con fallback a defaults
+ */
+async function getMaxSlots(): Promise<Record<string, number>> {
+  try {
+    const { data } = await supabase
+      .from('global_settings')
+      .select('key, value')
+      .in('key', ['featured_slots_homepage', 'featured_slots_results', 'featured_slots_detail']);
+
+    const slots = { ...DEFAULT_MAX_SLOTS };
+    (data || []).forEach((item: { key: string; value: string }) => {
+      const placement = item.key.replace('featured_slots_', '');
+      const parsed = parseInt(item.value);
+      if (!isNaN(parsed) && parsed > 0) slots[placement] = parsed;
+    });
+    return slots;
+  } catch {
+    return DEFAULT_MAX_SLOTS;
+  }
+}
 
 /**
  * POST /api/admin/featured-ads/manual
@@ -97,6 +119,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 8. Verificar slots disponibles en la categoría
+    const maxSlotsConfig = await getMaxSlots();
     const { count } = await supabase
       .from('featured_ads')
       .select('id', { count: 'exact', head: true })
@@ -104,7 +127,7 @@ export async function POST(request: NextRequest) {
       .eq('placement', placement)
       .in('status', ['pending', 'active']);
 
-    const maxSlots = MAX_SLOTS[placement] || 10;
+    const maxSlots = maxSlotsConfig[placement] || 10;
     if ((count || 0) >= maxSlots) {
       return NextResponse.json(
         { 

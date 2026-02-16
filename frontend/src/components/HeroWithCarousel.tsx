@@ -92,10 +92,10 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
   const hasAnyBackground = hasVideoContent || hasImageContent || hasCarouselContent;
 
   return (
-    <section className="relative bg-black py-28 px-4 overflow-hidden">
-      {/* ── FONDO: VIDEO ─────────────────────────────────────────── */}
+    <section className="relative bg-white md:bg-black py-6 md:py-28 px-4 overflow-hidden">
+      {/* ── FONDO: VIDEO (solo desktop) ──────────────────────────── */}
       {hasVideoContent && (
-        <div className="absolute inset-0 w-full h-full overflow-hidden">
+        <div className="hidden md:block absolute inset-0 w-full h-full overflow-hidden">
           <iframe
             className="absolute top-1/2 left-1/2 w-[300%] h-[300%] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
             src={buildYouTubeEmbedUrl(config!)}
@@ -112,9 +112,9 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
         </div>
       )}
 
-      {/* ── FONDO: IMAGEN ESTÁTICA ───────────────────────────────── */}
+      {/* ── FONDO: IMAGEN ESTÁTICA (solo desktop) ───────────────── */}
       {hasImageContent && (
-        <div className="absolute inset-0 w-full h-full">
+        <div className="hidden md:block absolute inset-0 w-full h-full">
           <img
             src={config!.image_url}
             alt={config!.image_alt || 'Rural24 Hero'}
@@ -123,9 +123,9 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
         </div>
       )}
 
-      {/* ── FONDO: CAROUSEL DE IMÁGENES ──────────────────────────── */}
+      {/* ── FONDO: CAROUSEL DE IMÁGENES (solo desktop) ────────── */}
       {hasCarouselContent && (
-        <div className="absolute inset-0 w-full h-full">
+        <div className="hidden md:block absolute inset-0 w-full h-full">
           {images.map((image, index) => (
             <div
               key={image.id}
@@ -181,14 +181,14 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
         </div>
       )}
 
-      {/* ── FONDO FALLBACK (sin contenido configurado) ────────── */}
+      {/* ── FONDO FALLBACK (solo desktop, sin contenido configurado) */}
       {!hasAnyBackground && (
-        <div className="absolute inset-0 bg-gradient-to-br from-green-800 via-emerald-800 to-green-900" />
+        <div className="hidden md:block absolute inset-0 bg-gradient-to-br from-green-800 via-emerald-800 to-green-900" />
       )}
 
-      {/* Overlay para legibilidad */}
+      {/* Overlay para legibilidad (solo desktop) */}
       <div
-        className="absolute inset-0 backdrop-blur-[1px]"
+        className="hidden md:block absolute inset-0 backdrop-blur-[1px]"
         style={{
           backgroundColor: overlayColor,
           opacity: overlayOpacity / 100,
@@ -198,10 +198,10 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
       {/* Contenido del hero (buscador, texto, etc.) */}
       <div className="relative z-10">
         <div className="text-center mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 drop-shadow-lg">
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 md:text-white mb-3 md:drop-shadow-lg">
             {title}
           </h1>
-          <p className="text-base md:text-lg text-white/95 font-medium drop-shadow-md">
+          <p className="hidden md:block text-base md:text-lg text-white/95 font-medium drop-shadow-md">
             {subtitle}
           </p>
         </div>

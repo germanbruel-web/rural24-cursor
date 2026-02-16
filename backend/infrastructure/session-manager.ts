@@ -33,7 +33,15 @@ export interface SessionOptions {
 // JWT UTILITIES (Stateless) - jsonwebtoken
 // =========================================
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-this-in-production-use-32-chars-min';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('🚨 JWT_SECRET no configurado en producción. Definir en variables de entorno.');
+} else if (!JWT_SECRET) {
+  console.warn('⚠️ JWT_SECRET no configurado — usando valor inseguro solo para desarrollo');
+}
+
+const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'dev-only-insecure-secret-do-not-use-in-prod';
 
 export async function createSession(
   data: SessionData,
@@ -45,7 +53,7 @@ export async function createSession(
   const payload = { ...data, jti };
   
   // @ts-ignore - Los tipos se resuelven al instalar @types/jsonwebtoken
-  const token = jwt.sign(payload, JWT_SECRET, { 
+  const token = jwt.sign(payload, EFFECTIVE_JWT_SECRET, { 
     expiresIn,
     algorithm: 'HS256' as const
   });
@@ -56,7 +64,7 @@ export async function createSession(
 export async function verifySession(token: string): Promise<SessionData | null> {
   try {
     // @ts-ignore - Los tipos se resuelven al instalar @types/jsonwebtoken
-    const decoded = jwt.verify(token, JWT_SECRET) as SessionData;
+    const decoded = jwt.verify(token, EFFECTIVE_JWT_SECRET) as SessionData;
     return decoded;
   } catch (error) {
     console.error('[Session] JWT verification failed:', error);

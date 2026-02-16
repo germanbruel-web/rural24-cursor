@@ -518,7 +518,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
                       e.preventDefault();
                       onViewMore?.(category);
                     }}
-                    className={`px-6 py-2 rounded-xl font-bold bg-gray-900 text-white hover:bg-gray-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all flex items-center gap-2 ${isMobile ? 'text-xs' : 'text-sm'}`}
+                    className={`px-6 py-2 rounded-xl font-bold bg-green-600 text-white hover:bg-green-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all flex items-center gap-2 ${isMobile ? 'text-xs' : 'text-sm'}`}
                   >
                     Ver todas
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

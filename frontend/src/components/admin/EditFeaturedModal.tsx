@@ -31,16 +31,15 @@ interface Props {
 }
 
 const PLACEMENT_OPTIONS: { value: FeaturedPlacement; label: string; icon: React.ReactNode }[] = [
-  { value: 'homepage', label: 'Homepage', icon: <Home className="w-4 h-4" /> },
-  { value: 'results', label: 'Resultados', icon: <Search className="w-4 h-4" /> },
-  { value: 'detail', label: 'Detalle', icon: <Star className="w-4 h-4" /> }
+  { value: 'homepage', label: 'Destacado ALTO', icon: <Home className="w-4 h-4" /> },
+  { value: 'results', label: 'Destacado MEDIO', icon: <Search className="w-4 h-4" /> },
+  { value: 'detail', label: 'Destacado BÁSICO', icon: <Star className="w-4 h-4" /> }
 ];
 
 export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess }: Props) {
   const [scheduledStart, setScheduledStart] = useState('');
   const [durationDays, setDurationDays] = useState(15);
   const [placement, setPlacement] = useState<FeaturedPlacement>('homepage');
-  const [reason, setReason] = useState('');
   
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +51,6 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
       setScheduledStart(featured.scheduled_start || '');
       setDurationDays(featured.duration_days || 15);
       setPlacement(featured.placement);
-      setReason('');
       setError(null);
       setSuccess(false);
     }
@@ -86,18 +84,12 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
       return;
     }
 
-    if (!reason.trim()) {
-      setError('Debes proporcionar un motivo para la edición');
-      return;
-    }
-
     setSubmitting(true);
     setError(null);
 
     try {
       const params: EditFeaturedParams = {
-        id: featured.id,
-        reason: reason.trim()
+        id: featured.id
       };
 
       // Solo enviar campos que cambiaron
@@ -136,7 +128,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 px-6 py-4 flex items-center justify-between" style={{ background: 'linear-gradient(to right, #386539, #169834)' }}>
           <div className="flex items-center gap-3">
             <Edit2 className="w-6 h-6 text-white" />
             <h2 className="text-xl font-bold text-white">
@@ -207,7 +199,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
                       onClick={() => setPlacement(option.value)}
                       className={`p-3 border-2 rounded-lg flex items-center justify-center gap-2 transition-all ${
                         placement === option.value
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-green-600 bg-green-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -229,7 +221,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
                     value={scheduledStart}
                     onChange={(e) => setScheduledStart(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
 
@@ -240,7 +232,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
                   <select
                     value={durationDays}
                     onChange={(e) => setDurationDays(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   >
                     <option value={7}>7 días</option>
                     <option value={14}>14 días</option>
@@ -253,25 +245,11 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
               </div>
 
               {/* Preview nueva expiración */}
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-800">
                   <Calendar className="w-4 h-4 inline mr-1" />
                   Nueva fecha de expiración: <strong>{calculateNewExpiry()}</strong>
                 </p>
-              </div>
-
-              {/* Motivo */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Motivo de la Edición *
-                </label>
-                <textarea
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder="Ej: Extender campaña, Corregir fecha, Cambiar ubicación..."
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
-                />
               </div>
 
               {/* Cambios detectados */}
@@ -327,8 +305,8 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
                 </button>
                 <button
                   onClick={handleEdit}
-                  disabled={submitting || !hasChanges() || !reason.trim()}
-                  className="flex-1 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  disabled={submitting || !hasChanges()}
+                  className="flex-1 px-6 py-2 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" style={{ backgroundColor: '#386539' }}
                 >
                   {submitting ? (
                     <>

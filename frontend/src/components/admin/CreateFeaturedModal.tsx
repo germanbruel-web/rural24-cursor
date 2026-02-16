@@ -4,7 +4,7 @@
  * 
  * Features:
  * 1. Buscar avisos por título o ID
- * 2. Seleccionar placement (homepage/results)
+ * 2. Seleccionar tier (ALTO/MEDIO/BÁSICO)
  * 3. Seleccionar fecha de inicio
  * 4. Preview antes de confirmar
  * 5. Badge "SuperAdmin - Sin cargo"
@@ -21,6 +21,8 @@ import {
   CheckCircle,
   Loader2,
   Shield,
+  FileText,
+  Star,
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
@@ -270,39 +272,35 @@ export default function CreateFeaturedModal({ isOpen, onClose, onSuccess }: Crea
                 </p>
               </div>
 
-              {/* Placement */}
+              {/* Placement — 3 tiers */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Ubicación de Destacado
+                  Nivel de Destacado
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <button
                     onClick={() => setPlacement('homepage')}
-                    className={`p-4 border-2 rounded-lg transition-all ${
-                      placement === 'homepage'
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    className={`p-4 border-2 rounded-lg transition-all ${placement === 'homepage' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}
                   >
                     <Home className={`w-6 h-6 mx-auto mb-2 ${placement === 'homepage' ? 'text-emerald-600' : 'text-gray-400'}`} />
-                    <p className={`font-medium ${placement === 'homepage' ? 'text-emerald-900' : 'text-gray-700'}`}>
-                      Homepage
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Máxima visibilidad</p>
+                    <p className={`font-bold text-sm ${placement === 'homepage' ? 'text-emerald-900' : 'text-gray-700'}`}>ALTO</p>
+                    <p className="text-[10px] text-gray-500 mt-1">Inicio + Resultados + Detalle</p>
                   </button>
                   <button
                     onClick={() => setPlacement('results')}
-                    className={`p-4 border-2 rounded-lg transition-all ${
-                      placement === 'results'
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    className={`p-4 border-2 rounded-lg transition-all ${placement === 'results' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}
                   >
                     <SearchIcon className={`w-6 h-6 mx-auto mb-2 ${placement === 'results' ? 'text-emerald-600' : 'text-gray-400'}`} />
-                    <p className={`font-medium ${placement === 'results' ? 'text-emerald-900' : 'text-gray-700'}`}>
-                      Resultados
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Búsquedas específicas</p>
+                    <p className={`font-bold text-sm ${placement === 'results' ? 'text-emerald-900' : 'text-gray-700'}`}>MEDIO</p>
+                    <p className="text-[10px] text-gray-500 mt-1">Resultados + Detalle</p>
+                  </button>
+                  <button
+                    onClick={() => setPlacement('detail')}
+                    className={`p-4 border-2 rounded-lg transition-all ${placement === 'detail' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}
+                  >
+                    <FileText className={`w-6 h-6 mx-auto mb-2 ${placement === 'detail' ? 'text-emerald-600' : 'text-gray-400'}`} />
+                    <p className={`font-bold text-sm ${placement === 'detail' ? 'text-emerald-900' : 'text-gray-700'}`}>BÁSICO</p>
+                    <p className="text-[10px] text-gray-500 mt-1">Solo en detalle</p>
                   </button>
                 </div>
               </div>
@@ -356,9 +354,9 @@ export default function CreateFeaturedModal({ isOpen, onClose, onSuccess }: Crea
                   <p className="font-medium text-gray-900">{selectedAd.title}</p>
                 </div>
                 <div className="border-b border-gray-200 pb-3">
-                  <p className="text-xs text-gray-500 uppercase font-medium mb-1">Ubicación</p>
+                  <p className="text-xs text-gray-500 uppercase font-medium mb-1">Nivel</p>
                   <p className="font-medium text-gray-900">
-                    {placement === 'homepage' ? 'Homepage (Máxima visibilidad)' : 'Resultados de búsqueda'}
+                    {placement === 'homepage' ? 'Destacado ALTO (Inicio + Resultados + Detalle)' : placement === 'results' ? 'Destacado MEDIO (Resultados + Detalle)' : 'Destacado BÁSICO (Solo detalle)'}
                   </p>
                 </div>
                 <div className="border-b border-gray-200 pb-3">

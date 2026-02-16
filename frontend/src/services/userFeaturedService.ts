@@ -22,9 +22,8 @@ export type FeaturedStatus = 'pending' | 'active' | 'expired' | 'cancelled';
 export interface UserFeaturedCredits {
   id: string;
   user_id: string;
-  credits_total: number;
-  credits_used: number;
-  credits_available: number; // Calculado
+  balance: number;
+  credits_available: number; // Alias de balance para compatibilidad
   created_at: string;
   updated_at: string;
 }
@@ -108,7 +107,7 @@ export async function getUserCredits(): Promise<{ data: UserFeaturedCredits | nu
     }
 
     const { data, error } = await supabase
-      .from('user_featured_credits')
+      .from('user_credits')
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -120,8 +119,7 @@ export async function getUserCredits(): Promise<{ data: UserFeaturedCredits | nu
           data: {
             id: '',
             user_id: user.id,
-            credits_total: 0,
-            credits_used: 0,
+            balance: 0,
             credits_available: 0,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -135,7 +133,7 @@ export async function getUserCredits(): Promise<{ data: UserFeaturedCredits | nu
     return {
       data: {
         ...data,
-        credits_available: data.credits_total - data.credits_used
+        credits_available: data.balance ?? 0
       },
       error: null
     };
@@ -154,20 +152,20 @@ export async function addCreditsToUser(
   try {
     // Intentar con upsert
     const { data: existing } = await supabase
-      .from('user_featured_credits')
-      .select('credits_total')
+      .from('user_credits')
+      .select('balance')
       .eq('user_id', userId)
       .single();
 
     if (existing) {
       await supabase
-        .from('user_featured_credits')
-        .update({ credits_total: existing.credits_total + amount })
+        .from('user_credits')
+        .update({ balance: (existing.balance || 0) + amount })
         .eq('user_id', userId);
     } else {
       await supabase
-        .from('user_featured_credits')
-        .insert({ user_id: userId, credits_total: amount, credits_used: 0 });
+        .from('user_credits')
+        .insert({ user_id: userId, balance: amount });
     }
 
     return { success: true, error: null };
@@ -345,17 +343,64 @@ export async function cancelUserFeaturedAd(
     // Devolver crédito si fue consumido
     if (featured.credit_consumed) {
       const { data: credits } = await supabase
-        .from('user_featured_credits')
-        .select('credits_used')
+        .from('user_credits')
+        .select('balance')
         .eq('user_id', user.id)
         .single();
       
       if (credits) {
         await supabase
-          .from('user_featured_credits')
-          .update({ credits_used: Math.max(0, credits.credits_used - 1) })
+          .from('user_credits')
+          .update({ balance: (credits.balance || 0) + 1 })
           .eq('user_id', user.id);
       }
+    }
+
+    return { success: true, error: null };
+  } catch (error) {
+    return { success: false, error: error as Error };
+  }
+}
+
+/**
+ * Cancelar un destacado ACTIVO (NO devuelve créditos)
+ * Usado cuando el usuario quiere quitar su aviso de destacados.
+ */
+export async function cancelActiveFeaturedAd(
+  featuredId: string
+): Promise<{ success: boolean; error: Error | null }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: new Error('No autenticado') };
+    }
+
+    const { data: featured, error: fetchError } = await supabase
+      .from('featured_ads')
+      .select('user_id, status')
+      .eq('id', featuredId)
+      .single();
+
+    if (fetchError || !featured) {
+      return { success: false, error: new Error('Destacado no encontrado') };
+    }
+
+    if (featured.user_id !== user.id) {
+      return { success: false, error: new Error('No sos el dueño de este destacado') };
+    }
+
+    if (featured.status !== 'active') {
+      return { success: false, error: new Error('Solo se pueden cancelar destacados activos') };
+    }
+
+    // Cancelar SIN devolver créditos
+    const { error: updateError } = await supabase
+      .from('featured_ads')
+      .update({ status: 'cancelled' })
+      .eq('id', featuredId);
+
+    if (updateError) {
+      return { success: false, error: updateError };
     }
 
     return { success: true, error: null };

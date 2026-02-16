@@ -15,9 +15,12 @@ const supabase = getSupabaseClient();
 
 // Secret para proteger el endpoint (DEBE estar configurado en env)
 const CRON_SECRET = process.env.CRON_SECRET;
+const isProduction = process.env.NODE_ENV === 'production';
 
-if (!CRON_SECRET) {
-  console.warn('⚠️ CRON_SECRET no configurado en variables de entorno');
+if (!CRON_SECRET && isProduction) {
+  console.error('🚨 CRON_SECRET no configurado en producción — el cron job fallará con 401');
+} else if (!CRON_SECRET) {
+  console.warn('⚠️ CRON_SECRET no configurado (dev: se permite localhost)');
 }
 
 /**
@@ -34,24 +37,27 @@ if (!CRON_SECRET) {
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticación
-    const cronSecret = request.headers.get('X-Cron-Secret');
+    const cronSecret = request.headers.get('x-cron-secret') || request.headers.get('X-Cron-Secret');
     
     // Permitir acceso si:
     // 1. Tiene el X-Cron-Secret correcto (requerido en producción)
-    // 2. Es localhost (solo desarrollo)
-    const isLocalhost = request.headers.get('host')?.includes('localhost');
+    // 2. Es localhost EN DESARROLLO (no en producción — Host header es spoofeable)
+    const isLocalDev = !isProduction && request.headers.get('host')?.includes('localhost');
     const hasValidSecret = CRON_SECRET && cronSecret === CRON_SECRET;
     
-    if (!isLocalhost && !hasValidSecret) {
-      console.warn('⚠️ CRON unauthorized access attempt');
+    if (!isLocalDev && !hasValidSecret) {
+      const reason = !CRON_SECRET 
+        ? 'CRON_SECRET no configurado en el servidor' 
+        : 'Secret inválido';
+      console.warn(`⚠️ CRON unauthorized: ${reason} (recibido: ${cronSecret ? 'sí' : 'no'})`);
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        { success: false, error: 'Unauthorized', reason },
         { status: 401 }
       );
     }
 
     // Log only in dev
-    if (process.env.NODE_ENV !== 'production') console.log('[CRON] Ejecutando activación de destacados...');
+    if (!isProduction) console.log('[CRON] Ejecutando activación de destacados...');
 
     // Llamar a la función RPC que activa pendientes y expira vencidos
     const { data, error } = await supabase.rpc('activate_pending_featured_ads');
@@ -62,7 +68,11 @@ export async function GET(request: NextRequest) {
     }
 
     const activatedCount = data || 0;
-    if (process.env.NODE_ENV !== 'production') console.log(`[CRON] Destacados activados: ${activatedCount}`);
+    
+    // Log siempre cuando hay cambios, en dev siempre
+    if (activatedCount > 0 || !isProduction) {
+      console.log(`[CRON] Destacados activados: ${activatedCount}`);
+    }
 
     // También contar cuántos expiraron (ya lo hace la función, pero logueamos)
     const { count: expiredCount } = await supabase
