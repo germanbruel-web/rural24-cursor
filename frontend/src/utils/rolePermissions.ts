@@ -122,12 +122,7 @@ export const MENU_STRUCTURE: MenuItem[] = [
   },
   {
     id: 'profile',
-    label: 'Mi Perfil',
-    allowedRoles: ALL_ROLES,
-  },
-  {
-    id: 'subscription',
-    label: 'Créditos y Plan',
+    label: 'Mi Cuenta',
     allowedRoles: ALL_ROLES,
   },
   

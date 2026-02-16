@@ -10,6 +10,7 @@ interface UserProfile {
   full_name?: string;
   phone?: string;
   mobile?: string;
+  mobile_verified?: boolean;
   province?: string;
   location?: string;
   role: UserRole;

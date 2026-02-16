@@ -5,6 +5,7 @@ import { notify } from '../../utils/notifications';
 import { Button } from '../atoms/Button';
 import { FormField } from '../molecules/FormField';
 import { socialAuthService } from '../../services/socialAuthService';
+import { setJustLoggedIn } from '../../utils/profileCompleteness';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -70,6 +71,7 @@ export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSw
       setLoading(false);
     } else {
       setLoading(false);
+      setJustLoggedIn(); // Flag para redirect a perfil
       onSuccess?.();
     }
   };

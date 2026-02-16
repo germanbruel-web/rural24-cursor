@@ -128,15 +128,14 @@ export async function registerPersona(input: RegisterPersonaInput): Promise<Regi
       };
     }
 
-    // 2. OBTENER PLAN FREE
-    const freePlan = await getPlanByName('free');
-    if (!freePlan) {
-      console.error('❌ Plan free no encontrado - debe ejecutar migration 007');
-      return {
-        success: false,
-        error: 'Configuración de planes no encontrada',
-        errorCode: 'UNKNOWN',
-      };
+    // 2. OBTENER PLAN FREE (best-effort, no bloquea registro)
+    let freePlanId: string | null = null;
+    try {
+      const freePlan = await getPlanByName('free');
+      if (freePlan) freePlanId = freePlan.id;
+      else console.warn('⚠️ Plan free no encontrado - registro persona continúa sin plan_id');
+    } catch (e) {
+      console.warn('⚠️ Error consultando plan free:', e);
     }
 
     // 3. CREAR/ACTUALIZAR PERFIL EN USERS
@@ -151,7 +150,7 @@ export async function registerPersona(input: RegisterPersonaInput): Promise<Regi
         phone: input.phone || null,
         account_type: 'persona',
         user_type: 'particular',
-        subscription_plan_id: freePlan.id,
+        ...(freePlanId ? { subscription_plan_id: freePlanId } : {}),
         role: 'free',
         email_verified: false,
         created_at: new Date().toISOString(),
@@ -230,15 +229,14 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
       };
     }
 
-    // 2. OBTENER PLAN FREE
-    const freePlan = await getPlanByName('free');
-    if (!freePlan) {
-      console.error('Plan free no encontrado - debe ejecutar migration 007');
-      return {
-        success: false,
-        error: 'Configuración de planes no encontrada',
-        errorCode: 'UNKNOWN',
-      };
+    // 2. OBTENER PLAN FREE (best-effort, no bloquea registro)
+    let freePlanId: string | null = null;
+    try {
+      const freePlan = await getPlanByName('free');
+      if (freePlan) freePlanId = freePlan.id;
+      else console.warn('⚠️ Plan free no encontrado - registro empresa continúa sin plan_id');
+    } catch (e) {
+      console.warn('⚠️ Error consultando plan free:', e);
     }
 
     // 3. CREAR/ACTUALIZAR PERFIL EN USERS CON DATOS DE EMPRESA
@@ -254,7 +252,7 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
         account_type: 'empresa',
         user_type: 'empresa',
         display_name: input.companyName,
-        subscription_plan_id: freePlan.id,
+        ...(freePlanId ? { subscription_plan_id: freePlanId } : {}),
         role: 'free',
         email_verified: false,
         created_at: new Date().toISOString(),
@@ -334,11 +332,17 @@ export async function registerUser(input: RegisterUserInput): Promise<RegisterRe
       return { success: false, error: 'No se pudo crear el usuario', errorCode: 'UNKNOWN' };
     }
 
-    // 2. OBTENER PLAN FREE
-    const freePlan = await getPlanByName('free');
-    if (!freePlan) {
-      console.error('❌ Plan free no encontrado');
-      return { success: false, error: 'Configuración de planes no encontrada', errorCode: 'UNKNOWN' };
+    // 2. OBTENER PLAN FREE (best-effort, no bloquea registro)
+    let freePlanId: string | null = null;
+    try {
+      const freePlan = await getPlanByName('free');
+      if (freePlan) {
+        freePlanId = freePlan.id;
+      } else {
+        console.warn('⚠️ Plan free no encontrado en subscription_plans - registro continúa sin plan_id');
+      }
+    } catch (planError) {
+      console.warn('⚠️ Error consultando plan free (RLS?) - registro continúa sin plan_id:', planError);
     }
 
     // 3. CREAR/ACTUALIZAR PERFIL EN USERS
@@ -351,12 +355,16 @@ export async function registerUser(input: RegisterUserInput): Promise<RegisterRe
       account_type: userType,
       user_type: userType,
       activity: input.activity,
-      subscription_plan_id: freePlan.id,
       role: 'free',
       email_verified: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+
+    // Solo asignar plan_id si lo encontramos
+    if (freePlanId) {
+      profileData.subscription_plan_id = freePlanId;
+    }
 
     if (isEmpresa && input.companyName) {
       profileData.display_name = input.companyName;

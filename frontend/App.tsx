@@ -23,6 +23,7 @@ import {
 // ============================================================
 import { useProducts, useCategoryPrefetch, useRealtimeCategories, OfflineBanner } from "./src/hooks";
 import { useAuth, CategoryProvider, ToastProvider } from "./src/contexts";
+import { useProfileNudge } from './src/hooks/useProfileNudge';
 
 // ============================================================
 // SERVICES
@@ -156,7 +157,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/dashboard/sitemap-seo') return 'sitemap-seo';
     if (hash === '#/hero-cms') return 'hero-cms';
     if (hash === '#/profile') return 'profile';
-    if (hash === '#/subscription') return 'subscription';
+    if (hash === '#/subscription') return 'profile'; // Subscription integrada en profile
     
     // Si no hay hash específico o es #/ (home), ir a home y limpiar localStorage
     localStorage.removeItem('currentPage');
@@ -165,6 +166,9 @@ const AppContent: React.FC = () => {
   
   const { products, isLoading, getFilterOptions, refetch } = useProducts();
   const { profile, loading: authLoading } = useAuth();
+  
+  // 🔔 Redirect post-login a perfil + nudge de completitud
+  useProfileNudge();
   
   // ⚡ Wrapper para setCurrentPage que persiste en localStorage
   const navigateToPage = useCallback((page: Page) => {
@@ -555,7 +559,7 @@ const AppContent: React.FC = () => {
             {!authLoading && (
               <Suspense fallback={<LoadingFallback />}>
                 {currentPage === 'profile' && <ProfilePanel />}
-                {currentPage === 'subscription' && <SubscriptionPanel />}
+                {currentPage === 'subscription' && <ProfilePanel />}
                 {currentPage === 'contacts' && <ReceivedContactsView />}
                 {currentPage === 'users' && canAccessPage('users', profile?.role) && <UsersPanel />}
                 {currentPage === 'my-ads' && <MyAdsPanel />}

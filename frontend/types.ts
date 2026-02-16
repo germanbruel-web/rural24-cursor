@@ -296,6 +296,7 @@ export interface UserProfile {
   full_name?: string;
   phone?: string;
   mobile?: string;
+  mobile_verified?: boolean;
   role: UserRole;
   user_type?: UserType;
   email_verified: boolean;

@@ -11,6 +11,7 @@ import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { handleOAuthCallback, createOAuthUserProfile } from '../../services/socialAuthService';
 import { useAuth } from '../../contexts/AuthContext';
 import { navigateTo } from '../../hooks/useNavigate';
+import { setJustLoggedIn } from '../../utils/profileCompleteness';
 
 interface OAuthCallbackPageProps {
   onComplete?: () => void;
@@ -55,9 +56,10 @@ export default function OAuthCallbackPage({ onComplete, onError }: OAuthCallback
         setStatus('success');
         setMessage('¡Autenticación exitosa! Redirigiendo...');
 
-        // 4. Redirigir al home después de un breve delay
+        // 4. Redirigir al perfil después de un breve delay
+        setJustLoggedIn(); // Flag para nudge de perfil
         setTimeout(() => {
-          navigateTo('/');
+          navigateTo('/profile');
           onComplete?.();
         }, 1500);
 
