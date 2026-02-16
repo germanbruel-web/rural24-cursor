@@ -50,6 +50,7 @@
 - **Roles:** `superadmin`, `revendedor`, `premium`, `free`
 - **Tipos de usuario:** `particular`, `empresa`
 - **RLS:** Habilitado en todas las tablas con datos de usuario
+- **Verificación móvil:** OTP 4 dígitos via `/api/phone/send-code` + `/api/phone/verify` (Feb 2026). Rate limit 60s, max 5 intentos, 10 min expiry. Dev mode: código "1234".
 
 ### Acceso a datos
 - **Frontend → Supabase directamente** (anon key, RLS protege): lecturas públicas, auth
@@ -177,6 +178,9 @@ rural24/
 - Panel SuperAdmin para gestión completo
 - SEO optimizado via backend SSR para páginas de detalle/categorías
 - Monetización: planes de suscripción + créditos para destacar avisos
+- Verificación de celular con OTP para contacto confiable
+- Perfil unificado ("Mi Cuenta"): datos personales + plan + créditos en una sola página
+- Post-login nudge: redirige a completar perfil (nombre, celular verificado, ubicación)
 
 **Usuarios objetivo:**
 - Productores agropecuarios

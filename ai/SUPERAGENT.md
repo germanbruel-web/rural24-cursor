@@ -153,12 +153,16 @@ NUNCA asumir que una tabla/columna no existe sin verificar.
 - **4 usuarios con créditos**, ~32 avisos destacados activos
 - **31 funciones SQL** de featured ads (3 legacy marcadas NO USAR)
 - **Hash routing** en frontend con 7 capas sincronizadas (ver frontend.agent.md)
+- **Verificación móvil OTP** implementada (Feb 2026): endpoints `/api/phone/send-code` y `/api/phone/verify`, columnas en `users`, flujo inline en ProfilePanel
+- **Perfil unificado "Mi Cuenta"** (Feb 2026): ProfilePanel 2 columnas (datos + plan/créditos), `#/subscription` redirige a `#/profile`, item `subscription` eliminado del menú
+- **Post-login profile nudge** (Feb 2026): `useProfileNudge` hook redirige a completar perfil tras login si faltan datos críticos (nombre, celular verificado, ubicación)
 
 ### Prioridad actual
 1. Completar unificación de código (eliminar referencias legacy)
 2. Test, commit, deploy de Phase 1
 3. Phase 2: Registro de usuarios
 4. Phase 3: Seguridad backend adicional
+5. Integrar proveedor SMS real para OTP en producción (actualmente placeholder)
 
 ### Lo que NO se debe hacer ahora
 - Reescrituras masivas del frontend

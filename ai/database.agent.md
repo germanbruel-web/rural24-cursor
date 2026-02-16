@@ -37,6 +37,15 @@ DBA Senior y Arquitecto de datos especializado en PostgreSQL + Supabase. Respons
    - `featured_ads_audit.action`: solo `created|activated|cancelled|expired|refunded|edited`
    - Verificar SIEMPRE antes de usar valores nuevos en columnas `status`, `action`, `type`.
 
+8. **Columnas de verificación móvil en `users`** (agregadas Feb 2026):
+   - `mobile_verified BOOLEAN DEFAULT FALSE` — estado de verificación OTP
+   - `mobile_verification_code TEXT` — código OTP temporal (se limpia tras verificar)
+   - `mobile_verification_sent_at TIMESTAMPTZ` — cuándo se envió el código (expira 10 min)
+   - `mobile_verification_attempts INT DEFAULT 0` — intentos de verificación (max 5)
+   - **Índice parcial único**: `idx_users_mobile_verified_unique` — `UNIQUE (mobile) WHERE mobile_verified = true` (evita duplicados de celulares verificados)
+   - **Índice**: `idx_users_mobile` — índice regular en columna `mobile`
+   - **Migración**: `database/20260216_mobile_verification.sql`
+
 ---
 
 ## STRICT RULES
@@ -213,3 +222,31 @@ CREATE POLICY "SuperAdmin can manage all" ON tabla
 | `ads.featured` columns legacy | Tercera fuente de verdad | Pendiente deprecar |
 | 1 ad fantasma (featured=true sin registro) | Dato huérfano | Pendiente limpiar |
 | Queue con registros sin `scheduled_end` (null) | Nunca expiran | Pendiente corregir |
+
+---
+
+## COLUMNAS DE VERIFICACIÓN MÓVIL EN `users` (Feb 2026)
+
+### Columnas agregadas
+```sql
+mobile_verified              BOOLEAN DEFAULT FALSE     -- estado de verificación OTP
+mobile_verification_code     TEXT                      -- código OTP temporal (4 dígitos)
+mobile_verification_sent_at  TIMESTAMPTZ               -- timestamp de envío (expira 10 min)
+mobile_verification_attempts INT DEFAULT 0             -- contador de intentos (max 5)
+```
+
+### Índices
+```sql
+-- Índice parcial único: evita duplicados de celulares verificados
+CREATE UNIQUE INDEX idx_users_mobile_verified_unique 
+  ON public.users (mobile) 
+  WHERE mobile_verified = true;
+
+-- Índice regular para búsquedas por celular
+CREATE INDEX idx_users_mobile ON public.users (mobile);
+```
+
+### Migración
+- **Archivo**: `database/20260216_mobile_verification.sql`
+- **Impacto**: Solo agrega columnas e índices, no modifica datos existentes
+- **Rollback**: DROP de columnas e índices documentado en el script

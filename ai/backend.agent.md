@@ -97,6 +97,8 @@ backend/app/api/
 ├── config/categories/route.ts   → GET (catálogo)
 ├── featured-ads/route.ts        → GET/POST/DELETE
 ├── featured-ads/cron/route.ts   → GET/POST (cron job)
+├── phone/send-code/route.ts     → POST (enviar OTP, withAuth)
+├── phone/verify/route.ts        → POST (verificar OTP, withAuth)
 ├── admin/users/route.ts         → GET/PATCH (superadmin)
 └── admin/featured-ads/...       → CRUD admin featured
 ```
@@ -159,6 +161,45 @@ return withOptionalAuth(request, async (user) => { ... });
 /api/config/*           → max-age=300, stale-while-revalidate=600
 /api/ads/search         → max-age=60, stale-while-revalidate=300
 /api/health             → no-store
+```
+
+---
+
+## MOBILE PHONE VERIFICATION (OTP) — Feb 2026
+
+### Endpoints
+
+#### `POST /api/phone/send-code`
+- **Guard**: `withAuth()` (usuario logueado)
+- **Input**: `{ mobile: string }` (número de celular)
+- **Rate limiting**: 60 segundos entre envíos
+- **Lógica**:
+  1. Valida formato de celular
+  2. Genera código OTP de 4 dígitos
+  3. Guarda en `users`: `mobile_verification_code`, `mobile_verification_sent_at`, reset `mobile_verification_attempts = 0`
+  4. En dev mode (`NODE_ENV=development`): código siempre "1234"
+  5. En producción: envía SMS (placeholder para integrar proveedor SMS)
+- **Response**: `{ success: true, message: "Código enviado" }`
+
+#### `POST /api/phone/verify`
+- **Guard**: `withAuth()` (usuario logueado)
+- **Input**: `{ mobile: string, code: string }`
+- **Lógica**:
+  1. Lee código guardado en `users`
+  2. Verifica: max 5 intentos, expiración 10 minutos
+  3. Compara código
+  4. Si éxito: `mobile_verified = true`, limpia campos de verificación
+  5. Si fallo: incrementa `mobile_verification_attempts`
+- **Response**: `{ success: true, verified: true }` o error con intentos restantes
+
+### Patrón OTP (referencia para futuras verificaciones)
+```typescript
+// Rate limit: 60s entre envíos
+// Max attempts: 5 por código
+// Expiry: 10 minutos
+// Dev mode: código fijo "1234"
+// Columnas en users: mobile_verification_code, mobile_verification_sent_at, mobile_verification_attempts, mobile_verified
+// Parcial unique index: idx_users_mobile_verified_unique (solo mobiles verificados)
 ```
 
 ### Environments

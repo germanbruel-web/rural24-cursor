@@ -81,8 +81,10 @@ Rural24 es un marketplace de clasificados agropecuarios para Argentina rural. Lo
 1. BUSCAR → Filtrar por categoría/subcategoría/marca → Ver resultados → Ver detalle → Contactar
 2. PUBLICAR → Login → Elegir categoría → Completar form dinámico → Subir fotos → Enviar
 3. DESTACAR → Desde "Mis Avisos" → Elegir placement → Confirmar créditos → Ver en home
-4. DASHBOARD → Mis avisos → Mensajes → Perfil → Créditos
+4. DASHBOARD → Mis avisos → Mensajes → Mi Cuenta (perfil + plan + créditos unificados)
 5. ADMIN → Gestión de avisos → Featured → Usuarios → Banners → CMS
+6. VERIFICAR CELULAR → En perfil → Ingresar número → Click "Verificar" → Ingresar OTP 4 dígitos → Confirmar → Badge verde
+7. POST-LOGIN NUDGE → Login → Si perfil incompleto → Redirect a #/profile → Toast con campos faltantes (max 10 nudges por usuario)
 ```
 
 ### Design tokens (Tailwind)

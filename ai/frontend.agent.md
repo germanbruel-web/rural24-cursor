@@ -186,8 +186,10 @@ Rural24 es un marketplace de clasificados agropecuarios argentino. El frontend e
 2. Publicar aviso con fotos y atributos dinámicos por subcategoría
 3. Destacar aviso con créditos
 4. Contactar vendedor
-5. Panel dashboard (mis avisos, mensajes, perfil)
+5. Panel dashboard (mis avisos, mensajes, Mi Cuenta — perfil + suscripción unificados)
 6. Panel SuperAdmin (gestión completa)
+7. Verificación de celular con OTP (inline en perfil)
+8. Post-login nudge para completar perfil
 
 ---
 
@@ -208,10 +210,12 @@ src/
 │   └── modals/         → ConfirmModal.tsx
 ├── services/           → adsService.ts, authService.ts (Supabase directo)
 ├── services/v2/        → attributesService.ts (Backend API)
-├── hooks/              → useAuth.ts, useImageUpload.ts
+├── services/           → phoneVerificationService.ts (OTP flow via backend API)
+├── hooks/              → useAuth.ts, useImageUpload.ts, useProfileNudge.ts
 ├── contexts/           → AuthContext.tsx, CategoryContext.tsx
 ├── config/             → features.ts, api.ts
 ├── constants/          → index.ts
+├── utils/              → profileCompleteness.ts
 └── pages/              → HomePage.tsx, SearchPage.tsx
 ```
 
@@ -252,3 +256,61 @@ VITE_BACKEND_URL           → Backend URL directo
 VITE_USE_API_BACKEND       → Feature flag: usar backend API
 VITE_FALLBACK_TO_SUPABASE  → Fallback si backend falla
 ```
+
+---
+
+## MOBILE PHONE VERIFICATION (OTP) — Feb 2026
+
+### Frontend service
+- **Archivo**: `src/services/phoneVerificationService.ts`
+- **Funciones**: `sendVerificationCode(mobile)`, `verifyCode(mobile, code)`
+- **Endpoints consumidos**: `POST /api/phone/send-code`, `POST /api/phone/verify`
+- **Autenticación**: Bearer token (usuario logueado)
+
+### ProfilePanel UX Flow
+- Celular field con flujo de verificación inline:
+  1. Usuario ingresa número → click "Verificar"
+  2. Se envía OTP (4 dígitos) → aparece campo de código
+  3. Usuario ingresa código → click "Confirmar"
+  4. Verificación exitosa → badge verde ✓ Verificado
+- Campo Teléfono fijo solo se habilita DESPUÉS de verificar celular
+- Dev mode: código siempre "1234"
+
+### UserProfile interface update
+- `mobile_verified?: boolean` agregado en `frontend/types.ts` y `AuthContext.tsx`
+
+---
+
+## PROFILE + SUBSCRIPTION UNIFICATION — Feb 2026
+
+### ProfilePanel rewrite
+- **Layout**: 2 columnas 50/50 en desktop:
+  - **Izquierda**: Avatar + datos personales + contacto (celular con verificación, teléfono) + ubicación + datos profesionales
+  - **Derecha**: Card de plan actual + créditos + paquetes disponibles + historial de transacciones
+- **SubscriptionPanel eliminado** como item separado del sidebar
+- **`#/subscription`** ahora redirige a `#/profile` (render ProfilePanel)
+- **`rolePermissions.ts`**: Eliminado item `subscription` del menú, profile renombrado a **"Mi Cuenta"**
+
+### Routing changes
+- `getPageFromHash()`: `#/subscription` → retorna `'profile'`
+- `Page` type: `subscription` puede existir como legacy redirect, pero renderiza ProfilePanel
+- No se creó página nueva — se amplió ProfilePanel existente
+
+---
+
+## POST-LOGIN PROFILE NUDGE — Feb 2026
+
+### Utility
+- **Archivo**: `src/utils/profileCompleteness.ts`
+- **Checks**: `full_name`, `mobile` (verificado), `province`, `location`
+- **Constante**: `MAX_NUDGES = 10` (máx. veces que se muestra el nudge por usuario)
+
+### Hook
+- **Archivo**: `src/hooks/useProfileNudge.ts`
+- **Detección de login**: via `sessionStorage` flag (`setJustLoggedIn()` / `hasJustLoggedIn()`)
+- **Comportamiento**: Tras login, si perfil incompleto → redirige a `#/profile` + muestra toast con campos faltantes
+- **Integración**: Wired en `App.tsx` como hook global
+
+### Login integration
+- **`LoginForm.tsx`**: Llama `setJustLoggedIn()` antes de `onSuccess()`
+- **`OAuthCallbackPage.tsx`**: Llama `setJustLoggedIn()`, redirige a `/profile` en lugar de `/`
