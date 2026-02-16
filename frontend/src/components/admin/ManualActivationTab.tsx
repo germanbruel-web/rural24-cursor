@@ -226,7 +226,7 @@ export default function ManualActivationTab() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg p-6">
+      <div className="bg-gradient-to-r from-emerald-50 to-brand-50 border border-emerald-200 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-2">
           <Sparkles className="w-6 h-6 text-emerald-600" />
           <h3 className="text-xl font-bold text-gray-900">
@@ -474,13 +474,13 @@ export default function ManualActivationTab() {
             )}
 
             {success && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div className="p-4 bg-brand-50 border border-brand-200 rounded-lg flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-semibold text-green-800">
+                  <p className="font-semibold text-brand-700">
                     ¡Activación Exitosa!
                   </p>
-                  <p className="text-sm text-green-700">
+                  <p className="text-sm text-brand-600">
                     El aviso fue destacado sin consumir créditos del usuario
                   </p>
                 </div>

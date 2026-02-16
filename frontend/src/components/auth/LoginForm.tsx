@@ -75,7 +75,7 @@ export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSw
   };
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-4 sm:p-6">
+    <div className="w-full bg-white rounded-xl shadow-lg p-4 sm:p-6">
       <div className="relative text-center mb-4 sm:mb-6">
         {onClose && (
           <button
@@ -87,8 +87,12 @@ export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSw
             </svg>
           </button>
         )}
-        <UserCircle className="w-10 h-10 sm:w-12 sm:h-12 text-[#16a135] mx-auto mb-3" />
-        <h2 className="text-2xl sm:text-3xl font-bold text-[#1b2f23]">Iniciar Sesión</h2>
+        <img 
+          src="/images/logos/rural24-dark.webp" 
+          alt="RURAL24" 
+          className="h-7 w-auto mx-auto mb-2" 
+        />
+        <h2 className="text-2xl sm:text-3xl font-bold text-brand-950">Iniciar Sesión</h2>
         <p className="text-sm sm:text-base text-gray-600 mt-1">Accede a tu cuenta de Rural24</p>
       </div>
 
@@ -204,7 +208,7 @@ export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSw
         </p>
         <Button
           variant="outline"
-          size="md"
+          size="lg"
           onClick={onSwitchToRegister}
           className="w-full"
         >

@@ -116,7 +116,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
                 <a 
                   key={social.id}
                   href={social.url} 
-                  className="w-10 h-10 bg-[#16a135] hover:bg-[#138a2e] rounded-full flex items-center justify-center transition-colors" 
+                  className="w-10 h-10 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center transition-colors" 
                   aria-label={social.platform}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -228,7 +228,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
           <div className="text-center mt-6 pt-4 text-xs text-gray-500">
             <p>© 2024-2026 <span className="text-white font-semibold">RURAL24.COM</span></p>
             <p className="mt-1">
-              Diseño: <a href="https://www.germanbruel.com.ar" target="_blank" rel="noopener noreferrer" className="text-[#16a135] hover:text-[#138a2e] transition-colors">Brüel Studio</a>
+              Diseño: <a href="https://www.germanbruel.com.ar" target="_blank" rel="noopener noreferrer" className="text-brand-500 hover:text-brand-600 transition-colors">Brüel Studio</a>
             </p>
           </div>
         </div>
@@ -357,7 +357,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
                     <a 
                       key={social.id}
                       href={social.url} 
-                      className="w-10 h-10 bg-[#16a135] hover:bg-[#138a2e] rounded-full flex items-center justify-center transition-colors" 
+                      className="w-10 h-10 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center transition-colors" 
                       aria-label={social.platform}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -376,7 +376,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
               © Copyright 2024 - 2026 | <span className="text-white font-semibold">RURAL24.COM</span> | Todos los derechos reservados.
             </p>
             <p className="text-gray-400 mt-2 md:mt-0">
-              Diseño Web: <a href="https://www.germanbruel.com.ar" target="_blank" rel="noopener noreferrer" className="text-[#16a135] hover:text-[#138a2e] transition-colors">Brüel Studio</a>
+              Diseño Web: <a href="https://www.germanbruel.com.ar" target="_blank" rel="noopener noreferrer" className="text-brand-500 hover:text-brand-600 transition-colors">Brüel Studio</a>
             </p>
           </div>
         </div>

@@ -148,7 +148,7 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
               onClick={() => setPreviewMode('desktop')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 previewMode === 'desktop'
-                  ? 'bg-[#16a135] text-white'
+                  ? 'bg-brand-500 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -158,7 +158,7 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
               onClick={() => setPreviewMode('mobile')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 previewMode === 'mobile'
-                  ? 'bg-[#16a135] text-white'
+                  ? 'bg-brand-500 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -214,7 +214,7 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
                         className={`border-2 rounded-xl overflow-hidden transition-all ${
                           isUnlocked 
                             ? isComplete 
-                              ? 'border-green-300 bg-green-50/30' 
+                              ? 'border-green-300 bg-brand-50/30' 
                               : 'border-gray-200'
                             : 'border-gray-300 bg-gray-50 opacity-60'
                         }`}
@@ -229,14 +229,14 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
                             !isUnlocked
                               ? 'cursor-not-allowed'
                               : isExpanded
-                              ? 'bg-green-50 border-b-2 border-green-200'
-                              : 'bg-white hover:bg-green-50'
+                              ? 'bg-brand-50 border-b-2 border-brand-200'
+                              : 'bg-white hover:bg-brand-50'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 flex-1">
                               {isComplete ? (
-                                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                                <CheckCircle className="w-5 h-5 text-brand-500 flex-shrink-0" />
                               ) : !isUnlocked ? (
                                 <Lock className="w-5 h-5 text-gray-400 flex-shrink-0" />
                               ) : (
@@ -260,7 +260,7 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
                             
                             <ChevronRight
                               className={`w-5 h-5 flex-shrink-0 ml-2 transition-transform ${
-                                isUnlocked ? 'text-green-600' : 'text-gray-400'
+                                isUnlocked ? 'text-brand-500' : 'text-gray-400'
                               } ${isExpanded ? 'rotate-90' : ''}`}
                             />
                           </div>

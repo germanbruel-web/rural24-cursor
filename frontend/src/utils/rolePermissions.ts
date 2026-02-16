@@ -43,6 +43,7 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   'global-settings': ['superadmin'],
   'sitemap-seo': ['superadmin'],
   'hero-cms': ['superadmin'],
+  'design-system': ['superadmin'],
 };
 
 /**
@@ -232,6 +233,11 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'sitemap-seo',
     label: 'Sitemap / SEO',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'design-system',
+    label: 'Design System R24',
     allowedRoles: ['superadmin'],
   },
 ];

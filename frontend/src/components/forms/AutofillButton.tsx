@@ -60,7 +60,7 @@ export function AutofillButton({
       <button
         type="button"
         onClick={handleClick}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-brand-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
         title="Click para otra variante"
       >
         {isAnimating ? (
@@ -82,8 +82,8 @@ export function AutofillButton({
         px-4 py-3 rounded-lg font-medium text-sm
         border-2 border-dashed transition-all
         ${hasContent 
-          ? 'border-green-300 text-green-600 hover:border-green-400 hover:bg-green-50'
-          : 'border-green-400 text-green-600 bg-green-50 hover:bg-green-100 hover:border-green-500'
+          ? 'border-green-300 text-brand-500 hover:border-green-400 hover:bg-brand-50'
+          : 'border-green-400 text-brand-500 bg-brand-50 hover:bg-brand-100 hover:border-brand-400'
         }
       `}
     >

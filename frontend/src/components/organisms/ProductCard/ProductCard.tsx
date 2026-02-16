@@ -90,7 +90,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
       className={cn(
         'group cursor-pointer overflow-hidden',
         'transition-all duration-300 ease-out',
-        'hover:-translate-y-[3px] hover:shadow-lg hover:border-[#16a135]',
+        'hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500',
         isFeatured && 'h-full',
         isCompact && 'h-auto',
         className
@@ -171,7 +171,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         {/* Título */}
         <h3 className={cn(
           'font-bold text-gray-900 dark:text-white line-clamp-2',
-          'group-hover:text-[#16a135] transition-colors',
+          'group-hover:text-brand-500 transition-colors',
           isFeatured ? 'text-base leading-tight min-h-[2.5rem]' : 'text-sm leading-snug min-h-[2rem]'
         )}>
           {product.title}
@@ -180,12 +180,12 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         {/* Precio destacado */}
         <div>
           <div className={cn(
-            'inline-block bg-gradient-to-r from-green-50 to-emerald-50',
-            'border-l-4 border-[#16a135] rounded-lg',
+            'inline-block bg-gradient-to-r from-brand-50 to-emerald-50',
+            'border-l-4 border-brand-500 rounded-lg',
             isFeatured ? 'px-3 py-1.5' : 'px-2.5 py-1'
           )}>
             <p className={cn(
-              'font-black text-green-700',
+              'font-black text-brand-600',
               isFeatured ? 'text-base' : 'text-sm'
             )}>
               {formatPrice(product.price, product.currency)}

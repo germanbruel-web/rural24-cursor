@@ -30,6 +30,7 @@ import {
   Sliders,
   Map,
   Store,
+  Palette,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -83,6 +84,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     'backend-settings': <SettingsIcon className="w-5 h-5" />,
     'global-settings': <SettingsIcon className="w-5 h-5" />,
     'sitemap-seo': <Globe className="w-5 h-5" />,
+    'design-system': <Palette className="w-5 h-5" />,
   };
 
   // Construir menú dinámico según rol
@@ -116,11 +118,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         }}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
           isActive
-            ? 'bg-[#16a135] text-white shadow-md'
+            ? 'bg-brand-500 text-white shadow-md'
             : 'text-gray-700 hover:bg-gray-100'
         }`}
       >
-        <span className={isActive ? 'text-white' : 'text-gray-500 group-hover:text-[#16a135]'}>
+        <span className={isActive ? 'text-white' : 'text-gray-500 group-hover:text-brand-500'}>
           {item.icon}
         </span>
         {!sidebarCollapsed && (
@@ -181,7 +183,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <div className="flex gap-1">
                 <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
                   profile?.role === 'superadmin'
-                    ? 'bg-green-100 text-green-800'
+                    ? 'bg-brand-100 text-brand-700'
                     : profile?.role === 'revendedor'
                     ? 'bg-blue-100 text-blue-800'
                     : profile?.user_type === 'empresa'
@@ -242,7 +244,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {/* Header */}
           <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
             <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg flex items-center justify-center text-white font-bold">
+              <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center text-white font-bold">
                 C
               </div>
               <span className="font-bold text-gray-900">Clasify</span>
@@ -264,7 +266,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <div className="flex gap-1">
                 <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
                   profile?.role === 'superadmin'
-                    ? 'bg-green-100 text-green-800'
+                    ? 'bg-brand-100 text-brand-700'
                     : profile?.role === 'revendedor'
                     ? 'bg-blue-100 text-blue-800'
                     : profile?.user_type === 'empresa'
@@ -318,7 +320,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <Menu className="w-6 h-6 text-gray-600" />
             </button>
             <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg flex items-center justify-center text-white font-bold">
+              <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center text-white font-bold">
                 R
               </div>
               <span className="font-bold text-gray-900">RURAL24</span>

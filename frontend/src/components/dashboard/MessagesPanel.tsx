@@ -281,7 +281,7 @@ export const MessagesPanel: React.FC = () => {
                             {message.ads.title}
                           </div>
                           {message.ads.price && (
-                            <div className="text-xs font-bold text-green-600">
+                            <div className="text-xs font-bold text-brand-500">
                               ${message.ads.price.toLocaleString()}
                             </div>
                           )}
@@ -333,7 +333,7 @@ export const MessagesPanel: React.FC = () => {
                             {new Date(selectedMessage.created_at).toLocaleString('es-AR')}
                           </div>
                           {selectedMessage.is_read && selectedMessage.read_at && activeTab === 'received' && (
-                            <div className="flex items-center gap-2 text-green-600">
+                            <div className="flex items-center gap-2 text-brand-500">
                               <Eye className="w-4 h-4" />
                               Leído: {new Date(selectedMessage.read_at).toLocaleString('es-AR')}
                             </div>
@@ -374,7 +374,7 @@ export const MessagesPanel: React.FC = () => {
                                 {selectedMessage.ads.title}
                               </div>
                               {selectedMessage.ads.price && (
-                                <div className="text-xl font-bold text-green-600 mb-1">
+                                <div className="text-xl font-bold text-brand-500 mb-1">
                                   ${selectedMessage.ads.price.toLocaleString()}
                                 </div>
                               )}
@@ -420,7 +420,7 @@ export const MessagesPanel: React.FC = () => {
                           href={`https://wa.me/${selectedMessage.sender_phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hola ${selectedMessage.sender_name}, te respondo sobre: ${selectedMessage.ads?.title}`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium transition-colors"
+                          className="flex-1 flex items-center justify-center gap-2 bg-brand-500 text-white py-3 px-4 rounded-lg hover:bg-brand-600 font-medium transition-colors"
                         >
                           <Phone className="w-5 h-5" />
                           WhatsApp

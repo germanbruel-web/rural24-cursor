@@ -183,7 +183,7 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
 
       {/* ── FONDO FALLBACK (solo desktop, sin contenido configurado) */}
       {!hasAnyBackground && (
-        <div className="hidden md:block absolute inset-0 bg-gradient-to-br from-green-800 via-emerald-800 to-green-900" />
+        <div className="hidden md:block absolute inset-0 bg-gradient-to-br from-brand-700 via-emerald-800 to-brand-800" />
       )}
 
       {/* Overlay para legibilidad (solo desktop) */}

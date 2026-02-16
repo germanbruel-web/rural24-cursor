@@ -15,7 +15,7 @@ const SOCIAL_ICONS: Record<SocialLinkItem['platform'], { icon: React.FC<any>; la
   twitter: { icon: Twitter, label: 'Twitter', color: 'text-blue-400' },
   facebook: { icon: Facebook, label: 'Facebook', color: 'text-blue-600' },
   instagram: { icon: Instagram, label: 'Instagram', color: 'text-pink-600' },
-  whatsapp: { icon: MessageCircle, label: 'WhatsApp', color: 'text-green-600' },
+  whatsapp: { icon: MessageCircle, label: 'WhatsApp', color: 'text-brand-500' },
   youtube: { icon: Youtube, label: 'YouTube', color: 'text-red-600' },
   tiktok: { icon: TrendingUp, label: 'TikTok', color: 'text-gray-900' },
   linkedin: { icon: Linkedin, label: 'LinkedIn', color: 'text-blue-700' }

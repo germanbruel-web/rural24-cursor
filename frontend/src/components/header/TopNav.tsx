@@ -97,14 +97,14 @@ export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
               <span className="text-gray-300">·</span>
               <span className="font-medium">USD</span>
               {dollarRates.oficial > 0 ? (
-                <span className="text-green-600 font-semibold">${dollarRates.oficial.toLocaleString()}</span>
+                <span className="text-brand-500 font-semibold">${dollarRates.oficial.toLocaleString()}</span>
               ) : (
-                <span className="text-green-600 font-semibold">$1.085</span>
+                <span className="text-brand-500 font-semibold">$1.085</span>
               )}
             </div>
             <button
               onClick={() => { window.location.hash = '#/publicar'; }}
-              className="flex items-center gap-1.5 px-5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-full min-h-[34px] transition-colors active:scale-95"
+              className="flex items-center gap-1.5 px-5 py-1.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-bold rounded-full min-h-[34px] transition-colors active:scale-95"
             >
               <PlusCircle size={14} />
               PUBLICAR

@@ -2,7 +2,24 @@ import { supabase } from './supabaseClient';
 import { getPlanByName } from './subscriptionService';
 
 /**
- * Datos de registro - PERSONA
+ * Tipos de actividad del usuario
+ */
+export type UserActivity = 'productor' | 'empresa' | 'comerciante' | 'profesional' | 'usuario_general';
+
+/**
+ * Datos de registro unificado
+ */
+export interface RegisterUserInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  activity: UserActivity;
+  companyName?: string; // Solo cuando activity === 'empresa'
+}
+
+/**
+ * Datos de registro - PERSONA (legacy, mantener para compatibilidad)
  */
 export interface RegisterPersonaInput {
   firstName: string;
@@ -10,11 +27,10 @@ export interface RegisterPersonaInput {
   email: string;
   password: string;
   phone?: string;
-  // mobile eliminado - un solo campo de teléfono
 }
 
 /**
- * Datos de registro - EMPRESA
+ * Datos de registro - EMPRESA (legacy, mantener para compatibilidad)
  */
 export interface RegisterEmpresaInput {
   firstName: string;
@@ -23,7 +39,6 @@ export interface RegisterEmpresaInput {
   password: string;
   phone?: string;
   companyName: string;
-  // CUIT eliminado - se puede agregar después en el perfil
 }
 
 /**
@@ -265,6 +280,109 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
     return {
       success: false,
       error: error.message || 'Error al registrar empresa',
+      errorCode: 'UNKNOWN',
+    };
+  }
+}
+
+/**
+ * Registrar usuario UNIFICADO (nuevo flujo)
+ * - Determina user_type a partir de activity
+ * - Asigna plan FREE por defecto
+ * - Envia email de verificación
+ */
+export async function registerUser(input: RegisterUserInput): Promise<RegisterResult> {
+  try {
+    const isEmpresa = input.activity === 'empresa';
+    const userType = isEmpresa ? 'empresa' : 'particular';
+
+    // 1. CREAR USUARIO EN AUTH
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: input.email,
+      password: input.password,
+      options: {
+        data: {
+          first_name: input.firstName,
+          last_name: input.lastName,
+          account_type: userType,
+          activity: input.activity,
+          ...(isEmpresa && input.companyName ? { company_name: input.companyName } : {}),
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (authError) {
+      console.error('❌ Error en signUp:', authError);
+      
+      // Detectar rate limit de Supabase
+      if (authError.status === 429 || authError.message?.toLowerCase().includes('rate limit')) {
+        return { success: false, error: 'Rate limit alcanzado', errorCode: 'RATE_LIMIT' };
+      }
+      
+      let errorCode: RegisterResult['errorCode'] = 'UNKNOWN';
+      if (authError.message?.toLowerCase().includes('already registered')) {
+        errorCode = 'EMAIL_EXISTS';
+      } else if (authError.message?.toLowerCase().includes('password')) {
+        errorCode = 'WEAK_PASSWORD';
+      }
+      
+      return { success: false, error: authError.message, errorCode };
+    }
+
+    if (!authData.user) {
+      return { success: false, error: 'No se pudo crear el usuario', errorCode: 'UNKNOWN' };
+    }
+
+    // 2. OBTENER PLAN FREE
+    const freePlan = await getPlanByName('free');
+    if (!freePlan) {
+      console.error('❌ Plan free no encontrado');
+      return { success: false, error: 'Configuración de planes no encontrada', errorCode: 'UNKNOWN' };
+    }
+
+    // 3. CREAR/ACTUALIZAR PERFIL EN USERS
+    const profileData: Record<string, any> = {
+      id: authData.user.id,
+      email: input.email,
+      first_name: input.firstName,
+      last_name: input.lastName,
+      full_name: `${input.firstName} ${input.lastName}`,
+      account_type: userType,
+      user_type: userType,
+      activity: input.activity,
+      subscription_plan_id: freePlan.id,
+      role: 'free',
+      email_verified: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    if (isEmpresa && input.companyName) {
+      profileData.display_name = input.companyName;
+      profileData.company_name = input.companyName;
+    }
+
+    const { error: profileError } = await supabase
+      .from('users')
+      .upsert(profileData, { onConflict: 'id', ignoreDuplicates: false });
+
+    if (profileError) {
+      console.error('Error actualizando perfil:', profileError);
+    }
+
+    console.log(`✅ Usuario registrado (${input.activity}):`, authData.user.id);
+    return {
+      success: true,
+      userId: authData.user.id,
+      needsVerification: true,
+    };
+
+  } catch (error: any) {
+    console.error('Exception en registerUser:', error);
+    return {
+      success: false,
+      error: error.message || 'Error al registrar usuario',
       errorCode: 'UNKNOWN',
     };
   }

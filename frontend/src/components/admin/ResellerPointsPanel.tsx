@@ -9,7 +9,7 @@ import { Construction } from 'lucide-react';
 export function ResellerPointsPanel() {
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-[#1b2f23]">Puntos de Revendedores</h2>
+      <h2 className="text-2xl font-bold text-brand-950">Puntos de Revendedores</h2>
       <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
         <div className="text-gray-400 mb-4">
           <Construction className="w-16 h-16 mx-auto" />

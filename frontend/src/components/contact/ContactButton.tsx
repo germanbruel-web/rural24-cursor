@@ -78,7 +78,7 @@ export default function ContactButton({ adId, adOwnerId, onOpenModal, className 
           flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all shadow-md
           ${isDisabled && user !== null
             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-[#16a135] hover:bg-[#0e7d28] text-white'
+            : 'bg-brand-500 hover:bg-[#0e7d28] text-white'
           }
           ${className}
         `}

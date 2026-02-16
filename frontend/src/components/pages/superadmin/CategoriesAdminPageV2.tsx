@@ -217,14 +217,14 @@ export const CategoriesAdminPageV2: React.FC = () => {
       <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
         <button
           onClick={() => setNav({ mode: 'categories' })}
-          className="hover:text-[#16a135] transition-colors"
+          className="hover:text-brand-500 transition-colors"
         >
           Inicio
         </button>
         {items.map((item, index) => (
           <React.Fragment key={index}>
             <ChevronRight className="w-4 h-4" />
-            <span className={index === items.length - 1 ? 'text-[#16a135] font-medium' : ''}>
+            <span className={index === items.length - 1 ? 'text-brand-500 font-medium' : ''}>
               {item}
             </span>
           </React.Fragment>
@@ -725,7 +725,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
             )}
             <button
               onClick={openCreateModal}
-              className="flex items-center gap-2 px-6 py-3 bg-[#16a135] text-white rounded-lg hover:bg-[#138a2d] transition-all shadow-md hover:shadow-lg"
+              className="flex items-center gap-2 px-6 py-3 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all shadow-md hover:shadow-lg"
             >
               <Plus className="w-5 h-5" />
               {nav.mode === 'categories' && 'Nueva Categoría'}
@@ -745,7 +745,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
         <div className="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-200">
           <button
             onClick={goBack}
-            className="flex items-center gap-2 text-[#16a135] hover:text-[#138a2d] mb-2 transition-colors"
+            className="flex items-center gap-2 text-brand-500 hover:text-brand-600 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver
@@ -757,7 +757,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
       {/* Content - MODELOS EN FORMATO TABLA */}
       {loading ? (
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16a135] mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto"></div>
           <p className="text-gray-600 mt-4">Cargando...</p>
         </div>
       ) : nav.mode === 'models' ? (
@@ -778,7 +778,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                   <tr key={item.id} className="hover:bg-gray-50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <Wrench className="w-5 h-5 text-[#16a135]" />
+                        <Wrench className="w-5 h-5 text-brand-500" />
                         <div>
                           <p className="font-medium text-gray-900">{item.display_name}</p>
                         </div>
@@ -787,7 +787,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
                         item.is_active 
-                          ? 'bg-green-100 text-green-700' 
+                          ? 'bg-brand-100 text-brand-600' 
                           : 'bg-gray-100 text-gray-700'
                       }`}>
                         {item.is_active ? (
@@ -870,16 +870,16 @@ export const CategoriesAdminPageV2: React.FC = () => {
               >
                 {/* Icono */}
                 <div className="col-span-1 flex items-center">
-                  <div className="w-8 h-8 bg-[#16a135]/10 rounded flex items-center justify-center">
-                    {nav.mode === 'categories' && <Box className="w-4 h-4 text-[#16a135]" />}
-                    {nav.mode === 'subcategories' && <Tag className="w-4 h-4 text-[#16a135]" />}
-                    {nav.mode === 'brands' && <Tag className="w-4 h-4 text-[#16a135]" />}
+                  <div className="w-8 h-8 bg-brand-500/10 rounded flex items-center justify-center">
+                    {nav.mode === 'categories' && <Box className="w-4 h-4 text-brand-500" />}
+                    {nav.mode === 'subcategories' && <Tag className="w-4 h-4 text-brand-500" />}
+                    {nav.mode === 'brands' && <Tag className="w-4 h-4 text-brand-500" />}
                   </div>
                 </div>
 
                 {/* Nombre */}
                 <div className="col-span-5">
-                  <div className="font-semibold text-gray-900 group-hover:text-[#16a135] transition-colors">
+                  <div className="font-semibold text-gray-900 group-hover:text-brand-500 transition-colors">
                     {item.display_name}
                   </div>
                 </div>
@@ -894,7 +894,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                 {/* Estado */}
                 <div className="col-span-2 text-center">
                   {item.is_active ? (
-                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
+                    <span className="px-2 py-1 bg-brand-100 text-brand-600 text-xs font-medium rounded">
                       ✓ Activo
                     </span>
                   ) : (
@@ -936,7 +936,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                         navigateToModels(item.id, item.display_name);
                       }
                     }}
-                    className="p-2 text-[#16a135] hover:bg-[#16a135]/10 rounded transition-colors"
+                    className="p-2 text-brand-500 hover:bg-brand-500/10 rounded transition-colors"
                     title="Ver contenido"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -1010,7 +1010,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                       setBrandFormData({ ...brandFormData, display_name: e.target.value });
                     }
                   }}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#16a135] focus:outline-none transition-colors"
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-brand-500 focus:outline-none transition-colors"
                   placeholder={
                     nav.mode === 'categories' ? "ej: Automotores" :
                     nav.mode === 'subcategories' ? "ej: Tractores" :
@@ -1032,7 +1032,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                     type="number"
                     value={categoryFormData.sort_order}
                     onChange={(e) => setCategoryFormData({ ...categoryFormData, sort_order: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#16a135] focus:outline-none transition-colors"
+                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-brand-500 focus:outline-none transition-colors"
                     placeholder="1"
                     required
                   />
@@ -1119,7 +1119,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                       type="number"
                       value={subcategoryFormData.sort_order}
                       onChange={(e) => setSubcategoryFormData({ ...subcategoryFormData, sort_order: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#16a135] focus:outline-none transition-colors"
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-brand-500 focus:outline-none transition-colors"
                       placeholder="0"
                     />
                     <p className="text-xs text-gray-500 mt-1">Número menor aparece primero</p>
@@ -1132,7 +1132,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                         id="has_brands"
                         checked={subcategoryFormData.has_brands}
                         onChange={(e) => setSubcategoryFormData({ ...subcategoryFormData, has_brands: e.target.checked })}
-                        className="w-5 h-5 text-[#16a135] rounded focus:ring-[#16a135]"
+                        className="w-5 h-5 text-brand-500 rounded focus:ring-brand-500"
                       />
                       <label htmlFor="has_brands" className="text-sm font-medium text-gray-700 cursor-pointer">
                         Permite seleccionar marcas
@@ -1145,7 +1145,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                         id="has_models"
                         checked={subcategoryFormData.has_models}
                         onChange={(e) => setSubcategoryFormData({ ...subcategoryFormData, has_models: e.target.checked })}
-                        className="w-5 h-5 text-[#16a135] rounded focus:ring-[#16a135]"
+                        className="w-5 h-5 text-brand-500 rounded focus:ring-brand-500"
                       />
                       <label htmlFor="has_models" className="text-sm font-medium text-gray-700 cursor-pointer">
                         Permite seleccionar modelos
@@ -1174,7 +1174,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                       setBrandFormData({ ...brandFormData, is_active: e.target.checked });
                     }
                   }}
-                  className="w-5 h-5 text-[#16a135] rounded focus:ring-[#16a135]"
+                  className="w-5 h-5 text-brand-500 rounded focus:ring-brand-500"
                 />
                 <label htmlFor="is_active" className="text-sm font-medium text-gray-700 cursor-pointer">
                   {nav.mode === 'subcategories' ? 'Subcategoría activa' :
@@ -1194,7 +1194,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-[#16a135] text-white rounded-lg hover:bg-[#138a2d] transition-colors font-medium flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium flex items-center justify-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {nav.mode === 'subcategories'
@@ -1219,7 +1219,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Carga Masiva de Modelos</h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Para: <span className="font-semibold text-[#16a135]">{nav.brandName}</span>
+                  Para: <span className="font-semibold text-brand-500">{nav.brandName}</span>
                 </p>
               </div>
               <button

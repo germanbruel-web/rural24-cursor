@@ -43,7 +43,7 @@ export default function PublicarSeleccionCategoria({ onSelect, onBack }: Publica
           {/* Maquinarias */}
           <button
             onClick={() => onSelect('maquinarias')}
-            className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border-2 border-transparent hover:border-[#16a135] text-left"
+            className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border-2 border-transparent hover:border-brand-500 text-left"
           >
             <h3 className="text-xl font-bold text-gray-900 mb-2">
               Maquinarias
@@ -56,7 +56,7 @@ export default function PublicarSeleccionCategoria({ onSelect, onBack }: Publica
           {/* Ganadería */}
           <button
             onClick={() => onSelect('ganaderia')}
-            className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border-2 border-transparent hover:border-[#16a135] text-left"
+            className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border-2 border-transparent hover:border-brand-500 text-left"
           >
             <h3 className="text-xl font-bold text-gray-900 mb-2">
               Ganadería
@@ -69,7 +69,7 @@ export default function PublicarSeleccionCategoria({ onSelect, onBack }: Publica
           {/* Insumos Agropecuarios */}
           <button
             onClick={() => onSelect('insumos')}
-            className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border-2 border-transparent hover:border-[#16a135] text-left"
+            className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border-2 border-transparent hover:border-brand-500 text-left"
           >
             <h3 className="text-xl font-bold text-gray-900 mb-2">
               Insumos Agropecuarios
@@ -82,7 +82,7 @@ export default function PublicarSeleccionCategoria({ onSelect, onBack }: Publica
           {/* Inmuebles Rurales */}
           <button
             onClick={() => onSelect('inmuebles')}
-            className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border-2 border-transparent hover:border-[#16a135] text-left"
+            className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border-2 border-transparent hover:border-brand-500 text-left"
           >
             <h3 className="text-xl font-bold text-gray-900 mb-2">
               Inmuebles Rurales
@@ -95,7 +95,7 @@ export default function PublicarSeleccionCategoria({ onSelect, onBack }: Publica
           {/* Servicios Rurales */}
           <button
             onClick={() => onSelect('servicios')}
-            className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border-2 border-transparent hover:border-[#16a135] text-left md:col-span-2"
+            className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-6 border-2 border-transparent hover:border-brand-500 text-left md:col-span-2"
           >
             <h3 className="text-xl font-bold text-gray-900 mb-2">
               Servicios Rurales

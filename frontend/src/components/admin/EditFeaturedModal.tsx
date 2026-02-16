@@ -168,7 +168,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
               <div>
                 <span className="text-gray-600">Estado:</span>
                 <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                  featured.status === 'active' ? 'bg-green-100 text-green-800' :
+                  featured.status === 'active' ? 'bg-brand-100 text-brand-700' :
                   featured.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                   'bg-gray-100 text-gray-800'
                 }`}>
@@ -199,7 +199,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
                       onClick={() => setPlacement(option.value)}
                       className={`p-3 border-2 rounded-lg flex items-center justify-center gap-2 transition-all ${
                         placement === option.value
-                          ? 'border-green-600 bg-green-50'
+                          ? 'border-brand-500 bg-brand-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -221,7 +221,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
                     value={scheduledStart}
                     onChange={(e) => setScheduledStart(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400"
                   />
                 </div>
 
@@ -232,7 +232,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
                   <select
                     value={durationDays}
                     onChange={(e) => setDurationDays(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400"
                   >
                     <option value={7}>7 días</option>
                     <option value={14}>14 días</option>
@@ -245,8 +245,8 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
               </div>
 
               {/* Preview nueva expiración */}
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800">
+              <div className="p-3 bg-brand-50 border border-brand-200 rounded-lg">
+                <p className="text-sm text-brand-700">
                   <Calendar className="w-4 h-4 inline mr-1" />
                   Nueva fecha de expiración: <strong>{calculateNewExpiry()}</strong>
                 </p>
@@ -284,10 +284,10 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
               )}
 
               {success && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div className="p-4 bg-brand-50 border border-brand-200 rounded-lg flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <p className="font-semibold text-green-800">
+                    <p className="font-semibold text-brand-700">
                       ✅ Cambios guardados exitosamente
                     </p>
                   </div>

@@ -87,13 +87,51 @@ Rural24 es un marketplace de clasificados agropecuarios para Argentina rural. Lo
 
 ### Design tokens (Tailwind)
 ```
-Colores principales: green-600 (primary), gray-900 (text), white (bg)
-Tipografía: System fonts (sans-serif)
+Colores principales:
+  brand-500 (primary) — CSS var: --color-brand-500
+  brand-600 (hover)   — CSS var: --color-brand-600
+  brand-700 (active)  — CSS var: --color-brand-700
+  brand-950 (headings dark green) — CSS var: --color-brand-950
+  gray-900 (text), white (bg)
+
+Nunca usar:
+  ❌ #16a135 (hardcoded hex) → usar brand-500
+  ❌ green-600 (Tailwind default) → usar brand-500
+  ❌ green-700 → usar brand-600
+  ❌ #138a2e/#138a2c/#138a2d → usar brand-600
+  ❌ #0e7d25/#0f7023 → usar brand-700
+  ❌ #1b2f23 → usar brand-950
+
+Tokens CSS: definidos en frontend/src/index.css (:root)
+Config Tailwind: frontend/tailwind.config.js (extend.colors.brand)
+Fuente de verdad: Un solo lugar (CSS vars) → Tailwind lee → Componentes usan
+
+Tipografía: Inter (sans-serif)
 Espaciado: Tailwind scale (p-4, gap-4, etc.)
-Bordes: rounded-lg (cards), rounded-full (badges)
-Sombras: shadow-sm (cards), shadow-lg (modals)
+Bordes: rounded-xl (cards, modals), rounded-full (badges, CTAs pill)
+Sombras: shadow-sm (cards), shadow-lg (modals, auth)
 Breakpoints: sm(640), md(768), lg(1024), xl(1280)
 ```
+
+### Componentes de producción (referencia obligatoria)
+
+**ProductCard** (organism) — Card de avisos:
+- Card completa clickeable, SIN botón "Ver Detalle"
+- Hover: lift `-translate-y-[3px]` + `shadow-lg` + `border-brand-500`
+- Precio en pill verde: `bg-gradient-to-r from-brand-50 to-emerald-50` + `border-l-4 border-brand-500`
+- 2 variantes: `featured` (16/9, homepage) y `compact` (4/3, resultados)
+- Badge contextual sobre imagen: Nuevo/Usado (ganadería → edad)
+
+**UserFeaturedAdsBar** — Avisos Destacados en resultados:
+- Contenedor verde sutil: `bg-brand-50/70 border-brand-100 rounded-xl`
+- Header con Megaphone icon + label "Publicidad"
+- Grid 5 columnas desktop con cards compact
+
+**Botón de contacto** (ad detail): `border-radius: 9999px` — siempre pill, incluso disabled
+
+**Auth Modals**: `rounded-xl`, logo Rural24, social login al final
+
+**Showcase completo**: `DesignSystemShowcaseSimple.tsx` — accesible en `#/design-system` (superadmin)
 
 ---
 

@@ -461,7 +461,7 @@ export function getStatusBadge(status: FeaturedStatus): {
 } {
   const badges: Record<FeaturedStatus, { label: string; color: string; bgColor: string }> = {
     pending: { label: 'Pendiente', color: 'text-yellow-700', bgColor: 'bg-yellow-50' },
-    active: { label: 'Activo', color: 'text-green-700', bgColor: 'bg-green-50' },
+    active: { label: 'Activo', color: 'text-brand-600', bgColor: 'bg-brand-50' },
     expired: { label: 'Expirado', color: 'text-gray-700', bgColor: 'bg-gray-50' },
     cancelled: { label: 'Cancelado', color: 'text-red-700', bgColor: 'bg-red-50' },
   };

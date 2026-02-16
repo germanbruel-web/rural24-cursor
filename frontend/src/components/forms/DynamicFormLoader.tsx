@@ -211,7 +211,7 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
       {/* Badge indicador de conexión exitosa (solo en dev) */}
       {process.env.NODE_ENV === 'development' && (
         <div className="mb-2">
-          <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
+          <span className="text-xs px-2 py-1 rounded bg-brand-100 text-brand-700">
             ✅ Conectado al servidor
           </span>
         </div>

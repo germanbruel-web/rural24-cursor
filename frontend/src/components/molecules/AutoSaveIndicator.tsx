@@ -54,7 +54,7 @@ export const AutoSaveIndicator: React.FC<AutoSaveIndicatorProps> = ({ lastSaved,
   }
 
   return (
-    <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded" title={`Guardado hace ${timeSince}`}>
+    <div className="flex items-center gap-1 text-xs text-brand-500 bg-brand-50 px-2 py-1 rounded" title={`Guardado hace ${timeSince}`}>
       <Check className="w-3.5 h-3.5 flex-shrink-0" />
       <span className="hidden sm:inline">{timeSince}</span>
     </div>

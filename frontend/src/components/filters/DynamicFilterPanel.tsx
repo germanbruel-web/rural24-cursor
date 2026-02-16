@@ -154,7 +154,7 @@ export const DynamicFilterPanel: React.FC<Props> = ({
                     onClick={() => handleQuickFilterClick(filter.name, option.value)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-[#16a135] text-white'
+                        ? 'bg-brand-500 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
@@ -208,7 +208,7 @@ export const DynamicFilterPanel: React.FC<Props> = ({
                               type="checkbox"
                               checked={isChecked}
                               onChange={(e) => handleCheckboxChange(filter.name, option.value, e.target.checked)}
-                              className="rounded border-gray-300 text-[#16a135] focus:ring-[#16a135]"
+                              className="rounded border-gray-300 text-brand-500 focus:ring-brand-500"
                             />
                             <span>{option.label}</span>
                             {option.count && (
@@ -221,7 +221,7 @@ export const DynamicFilterPanel: React.FC<Props> = ({
                   )}
 
                   {filter.type === 'select' && (
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#16a135] focus:border-[#16a135]">
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500">
                       <option value="">Todas</option>
                       {filter.options.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -236,12 +236,12 @@ export const DynamicFilterPanel: React.FC<Props> = ({
                       <input
                         type="number"
                         placeholder="Desde"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#16a135] focus:border-[#16a135]"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500"
                       />
                       <input
                         type="number"
                         placeholder="Hasta"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#16a135] focus:border-[#16a135]"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500"
                       />
                     </div>
                   )}

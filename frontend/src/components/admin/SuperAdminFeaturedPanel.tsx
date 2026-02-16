@@ -451,7 +451,7 @@ function ListTab() {
                       {/* Estado */}
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          ad.status === 'active' ? 'bg-green-100 text-green-800' : ad.status === 'paused' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                          ad.status === 'active' ? 'bg-brand-100 text-brand-700' : ad.status === 'paused' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
                         }`}>
                           {ad.status === 'active' ? 'Activo' : ad.status === 'paused' ? 'Pausado' : ad.status}
                         </span>
@@ -762,7 +762,7 @@ function CalendarTab() {
                         Usuario
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-brand-100 text-brand-700">
                         <Zap className="w-3 h-3" />
                         SuperAdmin
                       </span>
@@ -868,7 +868,7 @@ function StatsTab() {
       {/* KPIs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          icon={<CheckCircle className="w-8 h-8 text-green-600" />}
+          icon={<CheckCircle className="w-8 h-8 text-brand-500" />}
           label="Activos"
           value={stats.total_active}
           color="green"

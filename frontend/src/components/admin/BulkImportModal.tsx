@@ -203,7 +203,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                       Vista Previa ({parsedData.length} filas detectadas)
                     </h3>
                     <div className="flex gap-3">
-                      <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg">
+                      <div className="flex items-center gap-2 text-brand-500 bg-brand-50 px-3 py-1.5 rounded-lg">
                         <CheckCircle className="w-4 h-4" />
                         <span className="font-semibold">{validCount} válidas</span>
                       </div>
@@ -247,7 +247,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                               ))}
                               <td className="px-3 py-2">
                                 {row.errors.length === 0 ? (
-                                  <span className="text-green-600 flex items-center gap-1">
+                                  <span className="text-brand-500 flex items-center gap-1">
                                     <CheckCircle className="w-4 h-4" /> OK
                                   </span>
                                 ) : (
@@ -274,17 +274,17 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
             /* Result */
             <div className="text-center py-12">
               <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 ${
-                result.errors.length === 0 ? 'bg-green-100' : 'bg-yellow-100'
+                result.errors.length === 0 ? 'bg-brand-100' : 'bg-yellow-100'
               }`}>
                 <CheckCircle className={`w-10 h-10 ${
-                  result.errors.length === 0 ? 'text-green-600' : 'text-yellow-600'
+                  result.errors.length === 0 ? 'text-brand-500' : 'text-yellow-600'
                 }`} />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 ¡Importación Completada!
               </h3>
               <p className="text-lg text-gray-600 mb-6">
-                Se importaron <span className="font-bold text-green-600">{result.success}</span> registros exitosamente
+                Se importaron <span className="font-bold text-brand-500">{result.success}</span> registros exitosamente
               </p>
               
               {result.errors.length > 0 && (

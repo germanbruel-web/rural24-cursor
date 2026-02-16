@@ -13,9 +13,9 @@ interface Category {
 const CATEGORIES: Category[] = [
   {
     id: 'maquinaria',
-    name: 'Maquinaria Agrícola',
+    name: 'Maquinaria Agrï¿½cola',
     icon: 'tractor',
-    color: 'from-[#16a135] to-[#0e7d25]',
+    color: 'from-brand-500 to-brand-700',
     description: 'Tractores, cosechadoras y equipos',
     count: 1247,
   },
@@ -23,23 +23,23 @@ const CATEGORIES: Category[] = [
     id: 'ganado',
     name: 'Ganado',
     icon: 'beef',
-    color: 'from-[#16a135] to-[#0e7d25]',
+    color: 'from-brand-500 to-brand-700',
     description: 'Bovinos, ovinos y equinos',
     count: 856,
   },
   {
     id: 'insumos',
-    name: 'Insumos Agrícolas',
+    name: 'Insumos Agrï¿½colas',
     icon: 'wheat',
-    color: 'from-[#16a135] to-[#0e7d25]',
-    description: 'Semillas, fertilizantes y químicos',
+    color: 'from-brand-500 to-brand-700',
+    description: 'Semillas, fertilizantes y quï¿½micos',
     count: 3421,
   },
   {
     id: 'inmuebles',
     name: 'Inmuebles Rurales',
     icon: 'mappin',
-    color: 'from-[#16a135] to-[#0e7d25]',
+    color: 'from-brand-500 to-brand-700',
     description: 'Campos, lotes y propiedades rurales',
     count: 723,
   },
@@ -47,7 +47,7 @@ const CATEGORIES: Category[] = [
     id: 'equipos',
     name: 'Equipos y Herramientas',
     icon: 'wrench',
-    color: 'from-[#16a135] to-[#0e7d25]',
+    color: 'from-brand-500 to-brand-700',
     description: 'Herramientas manuales y equipos',
     count: 1892,
   },
@@ -59,7 +59,7 @@ interface CategoriesShowcaseProps {
 }
 
 export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCategoryClick, products = [] }) => {
-  // Calcular contadores reales por categoría
+  // Calcular contadores reales por categorï¿½a
   const getCategoryCount = (categoryName: string) => {
     return products.filter(p => p.category === categoryName).length;
   };
@@ -75,29 +75,29 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-            Categorías
+            Categorï¿½as
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Explora nuestras principales categorías de productos y servicios para la agricultura
+            Explora nuestras principales categorï¿½as de productos y servicios para la agricultura
           </p>
         </div>
       </div>
 
-      {/* Grid intercalado: Categorías + Banners - Full Width */}
+      {/* Grid intercalado: Categorï¿½as + Banners - Full Width */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Fila 1 */}
-          {/* Maquinaria Agrícola */}
+          {/* Maquinaria Agrï¿½cola */}
           <button
             onClick={() => onCategoryClick?.('maquinaria')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform"><Tractor className="w-12 h-12" /></div>
-              <h3 className="text-xl font-bold mb-2">Maquinaria Agrícola</h3>
+              <h3 className="text-xl font-bold mb-2">Maquinaria Agrï¿½cola</h3>
               <p className="text-white text-sm opacity-90 mb-4">Tractores, cosechadoras y equipos</p>
               <div className="flex justify-between items-center pt-4 border-t border-white border-opacity-20">
-                <span className="text-sm font-semibold">{getCategoryCount('Maquinaria Agrícola')} avisos</span>
+                <span className="text-sm font-semibold">{getCategoryCount('Maquinaria Agrï¿½cola')} avisos</span>
                 <span className="group-hover:translate-x-2 transition-transform">?</span>
               </div>
             </div>
@@ -107,7 +107,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="text-4xl mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
@@ -116,7 +116,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="text-4xl mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
@@ -126,7 +126,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="text-4xl mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
@@ -135,7 +135,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="text-4xl mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
@@ -145,7 +145,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
             onClick={() => onCategoryClick?.('ganado')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform"><Beef className="w-12 h-12" /></div>
               <h3 className="text-xl font-bold mb-2">Ganado</h3>
               <p className="text-white text-sm opacity-90 mb-4">Bovinos, ovinos y equinos</p>
@@ -161,22 +161,22 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="text-4xl mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
 
-          {/* Insumos Agrícolas */}
+          {/* Insumos Agrï¿½colas */}
           <button
             onClick={() => onCategoryClick?.('insumos')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform"><Wheat className="w-12 h-12" /></div>
-              <h3 className="text-xl font-bold mb-2">Insumos Agrícolas</h3>
-              <p className="text-white text-sm opacity-90 mb-4">Semillas, fertilizantes y químicos</p>
+              <h3 className="text-xl font-bold mb-2">Insumos Agrï¿½colas</h3>
+              <p className="text-white text-sm opacity-90 mb-4">Semillas, fertilizantes y quï¿½micos</p>
               <div className="flex justify-between items-center pt-4 border-t border-white border-opacity-20">
-                <span className="text-sm font-semibold">{getCategoryCount('Insumos Agrícolas')} avisos</span>
+                <span className="text-sm font-semibold">{getCategoryCount('Insumos Agrï¿½colas')} avisos</span>
                 <span className="group-hover:translate-x-2 transition-transform">?</span>
               </div>
             </div>
@@ -186,7 +186,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="text-4xl mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
@@ -197,7 +197,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
             onClick={() => onCategoryClick?.('servicios')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform"><Briefcase className="w-12 h-12" /></div>
               <h3 className="text-xl font-bold mb-2">Servicios</h3>
               <p className="text-white text-sm opacity-90 mb-4">Asesoramiento y servicios profesionales</p>
@@ -212,7 +212,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="text-4xl mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
@@ -221,7 +221,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="text-4xl mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
@@ -231,7 +231,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="text-4xl mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
@@ -241,7 +241,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
             onClick={() => onCategoryClick?.('tierras')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="mb-4 group-hover:scale-110 transition-transform"><MapPin className="w-12 h-12" /></div>
               <h3 className="text-xl font-bold mb-2">Campos y Tierras</h3>
               <p className="text-white text-sm opacity-90 mb-4">Campos, lotes y propiedades rurales</p>
@@ -256,7 +256,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="flex justify-center mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
@@ -266,7 +266,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="text-4xl mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
@@ -275,7 +275,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
           <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center p-8">
             <div className="text-center">
               <div className="text-4xl mb-2"><Megaphone className="w-10 h-10 text-gray-400" /></div>
-              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquí</h3>
+              <h3 className="text-lg font-bold text-gray-600">Tu Anuncio Aquï¿½</h3>
               <p className="text-sm text-gray-500">300x250px</p>
             </div>
           </div>
@@ -285,7 +285,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
             onClick={() => onCategoryClick?.('equipos')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform"><Wrench className="w-12 h-12" /></div>
               <h3 className="text-xl font-bold mb-2">Equipos y Herramientas</h3>
               <p className="text-white text-sm opacity-90 mb-4">Herramientas manuales y equipos</p>

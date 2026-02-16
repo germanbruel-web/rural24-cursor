@@ -85,7 +85,7 @@ const CompanyProfilePage = lazy(() => import("./src/components/empresa/CompanyPr
 const TestDynamicForm = import.meta.env.DEV ? lazy(() => import("./src/pages/TestDynamicForm").then(m => ({ default: m.TestDynamicForm }))) : null;
 const APITestPage = import.meta.env.DEV ? lazy(() => import("./src/pages/APITest")) : null;
 const DiagnosticsPage = import.meta.env.DEV ? lazy(() => import("./src/pages/DiagnosticsPage").then(m => ({ default: m.DiagnosticsPage }))) : null;
-const DesignSystemShowcaseSimple = import.meta.env.DEV ? lazy(() => import("./src/components/DesignSystemShowcaseSimple").then(m => ({ default: m.DesignSystemShowcaseSimple }))) : null;
+const DesignSystemShowcaseSimple = lazy(() => import("./src/components/DesignSystemShowcaseSimple").then(m => ({ default: m.DesignSystemShowcaseSimple })));
 
 // ============================================================
 // LOADING FALLBACK COMPONENT
@@ -96,7 +96,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config';
+export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'featured-ads' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -124,6 +124,7 @@ const AppContent: React.FC = () => {
     if (hash.startsWith('#/auth/callback')) return 'auth-callback';
     if (hash === '#/how-it-works') return 'how-it-works';
     if (hash === '#/design-showcase') return 'design-showcase';
+    if (hash === '#/design-system') return 'design-system';
     if (hash === '#/example-migration') return 'example-migration';
     if (hash === '#/api-test') return 'api-test';
     if (hash === '#/diagnostics') return 'diagnostics';
@@ -201,6 +202,7 @@ const AppContent: React.FC = () => {
       'test-form': '#/test-form',
       'api-test': '#/api-test',
       'pricing': '#/pricing',
+      'design-system': '#/design-system',
       'home': '#/'
     };
     
@@ -495,13 +497,13 @@ const AppContent: React.FC = () => {
   }
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'banners', 'featured-ads', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'reseller-points'].includes(currentPage);
+  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'banners', 'featured-ads', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'reseller-points', 'design-system'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
     // Esperar a que cargue el perfil antes de verificar permisos en páginas protegidas
     // Incluye TODAS las páginas que requieren un rol específico (superadmin/revendedor)
-    const isProtectedPage = ['users', 'banners', 'featured-ads', 'coupons', 'credits-config', 'settings', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'reseller-points'].includes(currentPage);
+    const isProtectedPage = ['users', 'banners', 'featured-ads', 'coupons', 'credits-config', 'settings', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'reseller-points', 'design-system'].includes(currentPage);
     
     if (authLoading && isProtectedPage) {
       return (
@@ -532,7 +534,7 @@ const AppContent: React.FC = () => {
                 navigateToPage('home');
                 navigateTo('/');
               }}
-              className="px-4 py-2 bg-[#16a135] text-white rounded-lg hover:bg-[#0e7d25]"
+              className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-700"
             >
               Volver al Inicio
             </button>
@@ -571,6 +573,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'hero-cms' && canAccessPage('hero-cms', profile?.role) && <HeroCmsPanel />}
                 {currentPage === 'credits-config' && canAccessPage('credits-config', profile?.role) && <SuperAdminCreditsConfig />}
                 {currentPage === 'reseller-points' && canAccessPage('reseller-points', profile?.role) && <ResellerPointsPanel />}
+                {currentPage === 'design-system' && canAccessPage('design-system', profile?.role) && <DesignSystemShowcaseSimple />}
                 {currentPage === 'settings' && (
                   <div className="bg-white rounded-lg shadow p-6">
                     <h2 className="text-2xl font-bold mb-4">Configuración</h2>
@@ -821,7 +824,7 @@ const AppContent: React.FC = () => {
       {showScrollTop && currentPage === 'home' && !isSearching && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 bg-[#16a135] hover:bg-[#138a2e] text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 group"
+          className="fixed bottom-8 right-8 z-50 bg-brand-500 hover:bg-brand-600 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 group"
           aria-label="Volver arriba"
         >
           <svg 

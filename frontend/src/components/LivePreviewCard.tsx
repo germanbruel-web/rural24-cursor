@@ -47,7 +47,7 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({ formData }) =>
   return (
     <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-[#16a135] text-white px-5 py-4">
+      <div className="bg-brand-500 text-white px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <Package className="w-5 h-5" />
@@ -104,7 +104,7 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({ formData }) =>
             {(category || subcategory) && (
               <div className="flex flex-wrap gap-2">
                 {category && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-800 text-xs font-bold rounded-full">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-100 text-brand-700 text-xs font-bold rounded-full">
                     <Tag className="w-3 h-3" />
                     {category.display_name}
                   </span>
@@ -129,8 +129,8 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({ formData }) =>
             {/* Price */}
             {price && parseFloat(price) > 0 && (
               <div className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-green-600" />
-                <p className="text-2xl font-bold text-green-600">
+                <DollarSign className="w-5 h-5 text-brand-500" />
+                <p className="text-2xl font-bold text-brand-500">
                   {formatPrice(price, currency)}
                 </p>
               </div>
@@ -139,7 +139,7 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({ formData }) =>
             {/* Location */}
             {province && (
               <div className="flex items-center gap-2 text-sm text-gray-700">
-                <MapPin className="w-4 h-4 text-green-600" />
+                <MapPin className="w-4 h-4 text-brand-500" />
                 <span className="font-medium">
                   {province}{locality && `, ${locality}`}
                 </span>
@@ -158,7 +158,7 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({ formData }) =>
             {/* Attributes Count */}
             {attributeCount > 0 && (
               <div className="flex items-center gap-2 text-sm text-gray-600 pt-2 border-t border-gray-200">
-                <CheckCircle className="w-4 h-4 text-green-600" />
+                <CheckCircle className="w-4 h-4 text-brand-500" />
                 <span className="font-medium">
                   {attributeCount} característica{attributeCount !== 1 ? 's' : ''} agregada{attributeCount !== 1 ? 's' : ''}
                 </span>

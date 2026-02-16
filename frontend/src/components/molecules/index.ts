@@ -11,3 +11,11 @@ export type { CardProps } from './Card';
 
 export { Modal } from './Modal';
 export type { ModalProps } from './Modal';
+
+export { InfoBox } from './InfoBox';
+export type { InfoBoxProps } from './InfoBox';
+
+export { TipsCard } from './TipsCard';
+export type { TipsCardProps } from './TipsCard';
+
+export { AutoSaveIndicator } from './AutoSaveIndicator';

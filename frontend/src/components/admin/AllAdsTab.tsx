@@ -491,7 +491,7 @@ export default function AllAdsTab() {
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         ad.status === 'active'
-                          ? 'bg-green-100 text-green-800'
+                          ? 'bg-brand-100 text-brand-700'
                           : ad.status === 'paused'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-gray-100 text-gray-800'

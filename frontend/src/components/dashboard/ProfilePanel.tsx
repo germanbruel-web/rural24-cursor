@@ -287,7 +287,7 @@ export const ProfilePanel: React.FC = () => {
                 </span>
               )}
               {(profile as any)?.plan_name && (
-                <span className="px-3 py-1 bg-[#16a135] text-white text-xs font-bold rounded-full">
+                <span className="px-3 py-1 bg-brand-500 text-white text-xs font-bold rounded-full">
                   {(profile as any).plan_name}
                 </span>
               )}
@@ -295,7 +295,7 @@ export const ProfilePanel: React.FC = () => {
                 {isEmpresa ? '🏢 Empresa' : '👤 Particular'}
               </span>
               {profile?.email_verified && (
-                <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full flex items-center gap-1">
+                <span className="px-3 py-1 bg-brand-100 text-brand-600 text-xs font-semibold rounded-full flex items-center gap-1">
                   <CheckCircle className="w-3 h-3" />
                   Verificado
                 </span>
@@ -326,7 +326,7 @@ export const ProfilePanel: React.FC = () => {
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="px-4 py-2 bg-[#16a135] text-white rounded-lg hover:bg-[#0e7d25] transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-2"
             >
               <Edit className="w-4 h-4" />
               Editar
@@ -343,7 +343,7 @@ export const ProfilePanel: React.FC = () => {
               onClick={() => setActiveTab('info')}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
                 activeTab === 'info'
-                  ? 'text-[#16a135] border-b-2 border-[#16a135]'
+                  ? 'text-brand-500 border-b-2 border-brand-500'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -354,7 +354,7 @@ export const ProfilePanel: React.FC = () => {
               onClick={() => setActiveTab('privacy')}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
                 activeTab === 'privacy'
-                  ? 'text-[#16a135] border-b-2 border-[#16a135]'
+                  ? 'text-brand-500 border-b-2 border-brand-500'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -474,7 +474,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
           <button
             onClick={onSave}
             disabled={saving}
-            className="px-4 py-2 bg-[#16a135] text-white rounded-lg hover:bg-[#0e7d25] transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             {saving ? 'Guardando...' : 'Guardar'}
@@ -485,7 +485,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
       {/* Datos Personales */}
       <div>
         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <User className="w-5 h-5 text-[#16a135]" />
+          <User className="w-5 h-5 text-brand-500" />
           Datos Personales
         </h3>
         <div className="grid md:grid-cols-2 gap-4">
@@ -520,7 +520,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
       {hasPremiumFeatures && (
         <div>
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Briefcase className="w-5 h-5 text-[#16a135]" />
+            <Briefcase className="w-5 h-5 text-brand-500" />
             Perfil Profesional
             <span className="text-xs font-normal text-gray-500 ml-2">(opcional)</span>
           </h3>
@@ -547,7 +547,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
                   placeholder={labels.bio_placeholder}
                   rows={4}
                   maxLength={500}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent resize-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                 />
               ) : (
                 <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900 min-h-[100px]">
@@ -569,7 +569,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
                   placeholder={labels.services_placeholder}
                   rows={3}
                   maxLength={300}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent resize-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                 />
               ) : (
                 <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
@@ -584,7 +584,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
       {/* Contacto */}
       <div>
         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Phone className="w-5 h-5 text-[#16a135]" />
+          <Phone className="w-5 h-5 text-brand-500" />
           Información de Contacto
         </h3>
         <div className="grid md:grid-cols-2 gap-4">
@@ -612,7 +612,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
       {/* Ubicación */}
       <div>
         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <MapPin className="w-5 h-5 text-[#16a135]" />
+          <MapPin className="w-5 h-5 text-brand-500" />
           Ubicación
         </h3>
         <div className="grid md:grid-cols-2 gap-4">
@@ -625,7 +625,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
               <select
                 value={formData.province}
                 onChange={(e) => setFormData({ ...formData, province: e.target.value, location: '' })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
               >
                 <option value="">Seleccionar provincia</option>
                 {PROVINCES.map(prov => (
@@ -649,7 +649,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
                 <select
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 >
                   <option value="">Seleccionar localidad</option>
                   {LOCALITIES_BY_PROVINCE[formData.province]?.map(loc => (
@@ -709,7 +709,7 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
           <button
             onClick={onSave}
             disabled={saving}
-            className="px-4 py-2 bg-[#16a135] text-white rounded-lg hover:bg-[#0e7d25] transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             {saving ? 'Guardando...' : 'Guardar'}
@@ -721,7 +721,7 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
       <div>
         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
           {formData.privacy_mode === 'public' ? (
-            <Eye className="w-5 h-5 text-[#16a135]" />
+            <Eye className="w-5 h-5 text-brand-500" />
           ) : (
             <EyeOff className="w-5 h-5 text-amber-500" />
           )}
@@ -740,7 +740,7 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
                 <div className="space-y-3">
                   <label className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                     formData.privacy_mode === 'public' 
-                      ? 'border-[#16a135] bg-green-50' 
+                      ? 'border-brand-500 bg-brand-50' 
                       : 'border-gray-200 hover:border-gray-300'
                   }`}>
                     <input
@@ -753,7 +753,7 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
                     />
                     <div>
                       <div className="flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-[#16a135]" />
+                        <Globe className="w-4 h-4 text-brand-500" />
                         <span className="font-medium text-gray-900">Público</span>
                       </div>
                       <p className="text-sm text-gray-600 mt-1">
@@ -794,13 +794,13 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
               ) : (
                 <div className={`p-4 rounded-lg border-2 ${
                   formData.privacy_mode === 'public' 
-                    ? 'border-[#16a135] bg-green-50' 
+                    ? 'border-brand-500 bg-brand-50' 
                     : 'border-amber-500 bg-amber-50'
                 }`}>
                   <div className="flex items-center gap-2">
                     {formData.privacy_mode === 'public' ? (
                       <>
-                        <Globe className="w-5 h-5 text-[#16a135]" />
+                        <Globe className="w-5 h-5 text-brand-500" />
                         <span className="font-medium text-gray-900">Perfil Público</span>
                       </>
                     ) : (
@@ -825,13 +825,13 @@ const PrivacyTab: React.FC<PrivacyTabProps> = ({
       {/* Métricas */}
       <div>
         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-[#16a135]" />
+          <BarChart3 className="w-5 h-5 text-brand-500" />
           Métricas de tu Perfil
         </h3>
 
         {loadingMetrics ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#16a135] mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div>
             <p className="text-gray-500 mt-2">Cargando métricas...</p>
           </div>
         ) : metrics ? (
@@ -914,7 +914,7 @@ const FormField: React.FC<FormFieldProps> = ({
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
       />
     ) : (
       <div className={`px-4 py-2 rounded-lg ${disabled ? 'bg-gray-100 text-gray-600' : 'bg-gray-50 text-gray-900'}`}>
@@ -936,7 +936,7 @@ interface MetricCardProps {
 const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value, subtitle, color }) => {
   const colorClasses = {
     blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
+    green: 'bg-brand-50 text-brand-500',
     purple: 'bg-purple-50 text-purple-600',
     amber: 'bg-amber-50 text-amber-600'
   };

@@ -1279,6 +1279,7 @@ model public_users {
   email_verified                                          Boolean?                @default(false)
   mobile                                                  String?
   user_type                                               String?                 @default("particular")
+  activity                                                String?                 @db.VarChar(50)
   province                                                String?
   subscription_plan_id                                    String?                 @db.Uuid
   subscription_status                                     String?                 @default("active") @db.VarChar(20)

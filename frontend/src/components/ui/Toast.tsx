@@ -41,7 +41,7 @@ export const Toast: React.FC<ToastProps> = ({
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
+        return <CheckCircle className="w-5 h-5 text-brand-500" />;
       case 'error':
         return <AlertCircle className="w-5 h-5 text-red-600" />;
       case 'loading':
@@ -55,7 +55,7 @@ export const Toast: React.FC<ToastProps> = ({
   const getStyles = () => {
     switch (type) {
       case 'success':
-        return 'bg-green-50 border-green-200 text-green-900';
+        return 'bg-brand-50 border-brand-200 text-brand-800';
       case 'error':
         return 'bg-red-50 border-red-200 text-red-900';
       case 'loading':

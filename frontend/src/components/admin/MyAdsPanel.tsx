@@ -316,7 +316,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16a135] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando tus avisos...</p>
         </div>
       </div>
@@ -328,10 +328,10 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
       {/* Header simple */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-[#1b2f23]">Mis Avisos</h2>
+          <h2 className="text-2xl font-bold text-brand-950">Mis Avisos</h2>
           {!isSuperAdmin && (
             <p className="text-sm text-gray-600 mt-1">
-              Estás usando <span className="font-bold text-[#16a135]">{adLimit.current}</span> de{' '}
+              Estás usando <span className="font-bold text-brand-500">{adLimit.current}</span> de{' '}
               <span className="font-bold">{adLimit.limit}</span> avisos disponibles
             </p>
           )}
@@ -340,7 +340,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           <button
             onClick={() => navigateTo('/publicar')}
             disabled={!isSuperAdmin && adLimit.current >= adLimit.limit}
-            className="bg-gradient-to-r from-[#16a135] to-[#138a2c] hover:from-[#138a2c] hover:to-[#0e7d25] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             <Plus className="w-5 h-5" />
             Crear Nuevo Aviso
@@ -366,7 +366,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
             onClick={() => setFilterStatus(status)}
             className={`px-4 py-2 rounded-full font-medium text-sm transition-colors ${
               filterStatus === status
-                ? 'bg-[#16a135] text-white'
+                ? 'bg-brand-500 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -394,7 +394,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           {filterStatus === 'all' && adLimit.current < adLimit.limit && (
             <button
               onClick={() => navigateTo('/publicar')}
-              className="px-6 py-3 bg-[#16a135] text-white rounded-xl hover:bg-[#0e7d25] transition-colors inline-flex items-center gap-2"
+              className="px-6 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-700 transition-colors inline-flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Publicar Aviso
@@ -411,7 +411,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
             return (
               <div
                 key={ad.id}
-                className="bg-white rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md hover:border-[#16a135]/40 transition-all overflow-hidden flex flex-col"
+                className="bg-white rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md hover:border-brand-500/40 transition-all overflow-hidden flex flex-col"
               >
                 {/* Thumbnail + Status Badge */}
                 <div className="relative w-full aspect-[16/9] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
@@ -425,7 +425,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                   {/* Status badge */}
                   <span className={`absolute top-2 left-2 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold shadow-sm ${
                     ad.status === 'active'
-                      ? 'bg-green-500 text-white'
+                      ? 'bg-brand-400 text-white'
                       : 'bg-yellow-400 text-yellow-900'
                   }`}>
                     {ad.status === 'active' ? 'Activo' : 'Pausado'}
@@ -463,8 +463,8 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
 
                   {/* Price + Category */}
                   <div className="flex items-center justify-between mt-auto pt-2">
-                    <div className="inline-block bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-[#16a135] rounded-lg px-2.5 py-1">
-                      <p className="font-black text-green-700 text-sm">
+                    <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                      <p className="font-black text-brand-600 text-sm">
                         {ad.currency} {ad.price?.toLocaleString() || '0'}
                       </p>
                     </div>
@@ -475,7 +475,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
 
                   {/* Featured status / Expiration info */}
                   {isAdFeatured && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-2.5 mt-1">
+                    <div className="bg-brand-50 border border-brand-200 rounded-lg p-2.5 mt-1">
                       {adFeatureds.map((feat) => {
                         const remaining = getRemainingDays(feat.expires_at);
                         return (
@@ -538,7 +538,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                       adFeatureds.length < 3 ? (
                         <button
                           onClick={() => setSelectedAdForFeatured(ad)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-[#169834] hover:bg-[#0e7d25] rounded-lg transition-colors shadow-sm"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-[#169834] hover:bg-brand-700 rounded-lg transition-colors shadow-sm"
                         >
                           <Zap className="w-3.5 h-3.5" />
                           RENOVAR
@@ -547,7 +547,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                     ) : isPaidUser ? (
                       <button
                         onClick={() => setSelectedAdForFeatured(ad)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#386539] to-[#169834] hover:from-[#2d5230] hover:to-[#0e7d25] rounded-lg transition-all shadow-sm"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#386539] to-[#169834] hover:from-[#2d5230] hover:to-brand-700 rounded-lg transition-all shadow-sm"
                       >
                         <Star className="w-3.5 h-3.5" />
                         DESTACAR
@@ -586,7 +586,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                   <p>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       selectedAdForView.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
+                        ? 'bg-brand-100 text-brand-700' 
                         : 'bg-yellow-100 text-yellow-800'
                     }`}>
                       {selectedAdForView.status === 'active' ? 'Activo' : 'Pausado'}
@@ -608,7 +608,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Precio</label>
-                  <p className="font-bold text-[#16a135]">
+                  <p className="font-bold text-brand-500">
                     {selectedAdForView.currency} {selectedAdForView.price?.toLocaleString() || '0'}
                   </p>
                 </div>

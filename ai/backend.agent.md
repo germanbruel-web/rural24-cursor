@@ -67,6 +67,7 @@ Ingeniero Backend Senior especializado en Next.js API Routes, Clean Architecture
 - `render.yaml`, GitHub Actions — derivar al DevOps Agent
 - Decisiones de UX/flujos — derivar al UX/UI Agent
 - `backend/prisma/schema.prisma` — solo el Database Agent lo edita
+- **Design System (colores, componentes, tokens)** — derivar al Frontend Agent. Ref: `ai/frontend.agent.md` sección DESIGN SYSTEM RURAL24
 
 ---
 

@@ -149,7 +149,7 @@ export const BackendFormSection: React.FC<BackendFormSectionProps> = ({
           <div 
             key={groupName} 
             className={`border-2 rounded-xl overflow-hidden transition-colors ${
-              isExpanded ? 'border-green-300 shadow-md' : hasValues ? 'border-green-200' : 'border-gray-200'
+              isExpanded ? 'border-green-300 shadow-md' : hasValues ? 'border-brand-200' : 'border-gray-200'
             }`}
           >
             {/* Header del grupo - SIEMPRE clickeable */}
@@ -161,13 +161,13 @@ export const BackendFormSection: React.FC<BackendFormSectionProps> = ({
                 }
               }}
               className={`w-full px-4 py-3 text-left transition-all hover:bg-gray-50 ${
-                isExpanded ? 'bg-green-50' : hasValues ? 'bg-green-50/50' : ''
+                isExpanded ? 'bg-brand-50' : hasValues ? 'bg-brand-50/50' : ''
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {hasValues ? (
-                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-brand-400 flex-shrink-0" />
                   ) : (
                     <div className="w-5 h-5 rounded-full border-2 border-gray-300 flex-shrink-0" />
                   )}
@@ -179,14 +179,14 @@ export const BackendFormSection: React.FC<BackendFormSectionProps> = ({
                     <p className="text-xs text-gray-500">
                       {groupFields.length} campo{groupFields.length !== 1 ? 's' : ''}
                       {hasValues && !isExpanded && (
-                        <span className="text-green-600 ml-1">• Completado</span>
+                        <span className="text-brand-500 ml-1">• Completado</span>
                       )}
                     </p>
                   </div>
                 </div>
                 
                 <ChevronRight
-                  className={`w-5 h-5 flex-shrink-0 transition-transform text-green-600 ${
+                  className={`w-5 h-5 flex-shrink-0 transition-transform text-brand-500 ${
                     isExpanded ? 'rotate-90' : ''
                   }`}
                 />

@@ -71,15 +71,15 @@ function SortableGroup({ group, onEdit, onDelete, attributeCount = 0 }: Sortable
         <button
           {...dndAttributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing p-2 hover:bg-green-100 rounded-lg transition-all"
+          className="cursor-grab active:cursor-grabbing p-2 hover:bg-brand-100 rounded-lg transition-all"
           title="Arrastrar para reordenar"
         >
-          <GripVertical className="w-5 h-5 text-gray-400 hover:text-green-600" />
+          <GripVertical className="w-5 h-5 text-gray-400 hover:text-brand-500" />
         </button>
         
         {/* Ícono de carpeta */}
-        <div className="p-2 bg-green-100 rounded-lg">
-          <Folder className="w-5 h-5 text-green-600" />
+        <div className="p-2 bg-brand-100 rounded-lg">
+          <Folder className="w-5 h-5 text-brand-500" />
         </div>
         
         {/* Contenido del grupo */}
@@ -314,7 +314,7 @@ export function GroupsAdmin({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <Folder className="w-5 h-5 text-green-600" />
+              <Folder className="w-5 h-5 text-brand-500" />
               Grupos de Atributos
             </h3>
             <p className="text-sm text-gray-500 mt-1">
@@ -335,7 +335,7 @@ export function GroupsAdmin({
             )}
             <button
               onClick={openCreateModal}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-600/20"
+              className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/20"
             >
               <Plus className="w-4 h-4" />
               Nuevo Grupo
@@ -348,7 +348,7 @@ export function GroupsAdmin({
       {message && (
         <div className={`mx-6 mt-4 p-4 rounded-xl flex items-center gap-3 ${
           message.type === 'success' 
-            ? 'bg-green-50 text-green-700 border border-green-200' 
+            ? 'bg-brand-50 text-brand-600 border border-brand-200' 
             : 'bg-red-50 text-red-700 border border-red-200'
         }`}>
           {message.type === 'success' ? (
@@ -364,7 +364,7 @@ export function GroupsAdmin({
       <div className="p-6">
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-4 border-green-600 border-t-transparent mx-auto" />
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-brand-500 border-t-transparent mx-auto" />
             <p className="text-gray-500 mt-4">Cargando grupos...</p>
           </div>
         ) : groups.length === 0 ? (
@@ -373,7 +373,7 @@ export function GroupsAdmin({
             <p className="text-gray-500 mb-4">No hay grupos definidos para esta subcategoría</p>
             <button
               onClick={handleCreateDefaults}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all"
+              className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all"
             >
               Crear grupos por defecto
             </button>
@@ -430,7 +430,7 @@ export function GroupsAdmin({
                   value={formDisplayName}
                   onChange={(e) => setFormDisplayName(e.target.value)}
                   placeholder="Ej: Información General"
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
                   autoFocus
                 />
               </div>
@@ -441,7 +441,7 @@ export function GroupsAdmin({
                   id="groupActive"
                   checked={formIsActive}
                   onChange={(e) => setFormIsActive(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  className="w-5 h-5 rounded border-gray-300 text-brand-500 focus:ring-brand-400"
                 />
                 <label htmlFor="groupActive" className="text-sm font-medium text-gray-700">
                   Grupo activo (visible en formularios)
@@ -459,7 +459,7 @@ export function GroupsAdmin({
               <button
                 onClick={handleSave}
                 disabled={saving || !formDisplayName.trim()}
-                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {saving ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />

@@ -176,7 +176,7 @@ export const SubscriptionPanel: React.FC = () => {
                 <p className="text-sm text-gray-700">Suscripción activa</p>
               </div>
             </div>
-            <span className="px-4 py-2 bg-green-500 text-white rounded-full font-bold text-sm flex items-center gap-2">
+            <span className="px-4 py-2 bg-brand-400 text-white rounded-full font-bold text-sm flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               Activo
             </span>
@@ -205,7 +205,7 @@ export const SubscriptionPanel: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <button className="px-4 py-2 bg-[#16a135] text-white rounded-lg hover:bg-[#0e7d25] transition-colors flex items-center gap-2">
+            <button className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-2">
               <RefreshCw className="w-4 h-4" />
               Cambiar plan
             </button>
@@ -224,7 +224,7 @@ export const SubscriptionPanel: React.FC = () => {
 
       {/* Aviso de Lanzamiento */}
       {!isPremium && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
+        <div className="bg-gradient-to-r from-brand-50 to-emerald-50 border-2 border-brand-200 rounded-xl p-6 mb-6">
           <div className="text-center">
             <h3 className="text-2xl font-bold text-gray-900 mb-2">🚀 Etapa de Lanzamiento</h3>
             <p className="text-gray-700 text-lg mb-2">
@@ -246,7 +246,7 @@ export const SubscriptionPanel: React.FC = () => {
             <div
               key={plan.id}
               className={`bg-white rounded-lg shadow-lg border-2 overflow-hidden opacity-50 cursor-not-allowed ${
-                plan.popular ? 'border-[#16a135]' : 'border-gray-200'
+                plan.popular ? 'border-brand-500' : 'border-gray-200'
               }`}
             >
               {plan.popular && (
@@ -258,9 +258,9 @@ export const SubscriptionPanel: React.FC = () => {
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   {plan.userType === 'empresa' ? (
-                    <Building className="w-8 h-8 text-[#16a135]" />
+                    <Building className="w-8 h-8 text-brand-500" />
                   ) : (
-                    <Award className="w-8 h-8 text-[#16a135]" />
+                    <Award className="w-8 h-8 text-brand-500" />
                   )}
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
@@ -285,7 +285,7 @@ export const SubscriptionPanel: React.FC = () => {
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
                       {feature.included ? (
-                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
                       ) : (
                         <AlertCircle className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" />
                       )}
@@ -309,27 +309,27 @@ export const SubscriptionPanel: React.FC = () => {
       )}
 
       {/* Benefits Section */}
-      <div className="bg-gradient-to-br from-[#16a135] to-[#0e7d25] rounded-lg p-8 text-white">
+      <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white">
         <h2 className="text-2xl font-bold mb-6">¿Por qué elegir Premium?</h2>
         <div className="grid md:grid-cols-3 gap-6">
           <div>
             <TrendingUp className="w-10 h-10 mb-3" />
             <h3 className="font-bold text-lg mb-2">Mayor Visibilidad</h3>
-            <p className="text-green-100 text-sm">
+            <p className="text-brand-100 text-sm">
               Tus avisos aparecen destacados en la homepage y en los primeros resultados de búsqueda
             </p>
           </div>
           <div>
             <Award className="w-10 h-10 mb-3" />
             <h3 className="font-bold text-lg mb-2">Badge Premium</h3>
-            <p className="text-green-100 text-sm">
+            <p className="text-brand-100 text-sm">
               Destácate de la competencia con el badge dorado que genera confianza
             </p>
           </div>
           <div>
             <Zap className="w-10 h-10 mb-3" />
             <h3 className="font-bold text-lg mb-2">Sin Límites</h3>
-            <p className="text-green-100 text-sm">
+            <p className="text-brand-100 text-sm">
               Publica avisos ilimitados y recibe todas las consultas sin restricciones
             </p>
           </div>
@@ -351,8 +351,8 @@ export const SubscriptionPanel: React.FC = () => {
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  <div className="w-10 h-10 bg-brand-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-brand-500" />
                   </div>
                   <div>
                     <div className="font-medium text-gray-900">
@@ -365,7 +365,7 @@ export const SubscriptionPanel: React.FC = () => {
                 </div>
                 <button
                   onClick={() => handleDownloadInvoice(invoice.id)}
-                  className="px-4 py-2 text-[#16a135] hover:bg-green-50 rounded-lg transition-colors flex items-center gap-2"
+                  className="px-4 py-2 text-brand-500 hover:bg-brand-50 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />
                   Descargar

@@ -62,11 +62,11 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
   if (loading) {
     return (
       <div className={`mb-6 ${className}`}>
-        <div className="bg-green-50/70 border border-green-100 rounded-xl p-4">
+        <div className="bg-brand-50/70 border border-brand-100 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-4">
-            <Megaphone className="w-4 h-4 text-green-600" />
-            <h3 className="text-sm font-semibold text-green-800 tracking-wide uppercase">Avisos Destacados</h3>
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-green-500 ml-1" />
+            <Megaphone className="w-4 h-4 text-brand-500" />
+            <h3 className="text-sm font-semibold text-brand-700 tracking-wide uppercase">Avisos Destacados</h3>
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-400 ml-1" />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {[1, 2, 3, 4, 5].map(i => (
@@ -85,14 +85,14 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
 
   return (
     <div className={`mb-6 ${className}`}>
-      <div className="bg-green-50/70 border border-green-100 rounded-xl p-4">
+      <div className="bg-brand-50/70 border border-brand-100 rounded-xl p-4">
         {/* Header sutil */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Megaphone className="w-4 h-4 text-green-600" />
-            <h3 className="text-sm font-semibold text-green-800 tracking-wide uppercase">Avisos Destacados</h3>
+            <Megaphone className="w-4 h-4 text-brand-500" />
+            <h3 className="text-sm font-semibold text-brand-700 tracking-wide uppercase">Avisos Destacados</h3>
           </div>
-          <span className="text-xs text-green-600/70 font-medium">Publicidad</span>
+          <span className="text-xs text-brand-500/70 font-medium">Publicidad</span>
         </div>
 
         {/* Grid 5 columnas desktop */}

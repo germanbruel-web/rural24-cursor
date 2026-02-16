@@ -115,7 +115,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-[#1b2f23]">Iniciar Sesión</h3>
+            <h3 className="text-xl font-bold text-brand-950">Iniciar Sesión</h3>
             <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full">
               <X className="w-5 h-5" />
             </button>
@@ -130,7 +130,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
                 handleClose();
                 // TODO: Abrir modal de login
               }}
-              className="w-full bg-[#16a135] hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
+              className="w-full bg-brand-500 hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
             >
               Iniciar Sesión
             </button>
@@ -146,7 +146,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-[#1b2f23]">Verificación Requerida</h3>
+            <h3 className="text-xl font-bold text-brand-950">Verificación Requerida</h3>
             <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full">
               <X className="w-5 h-5" />
             </button>
@@ -161,7 +161,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
             </p>
             <button
               onClick={handleClose}
-              className="w-full bg-[#16a135] hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
+              className="w-full bg-brand-500 hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
             >
               Entendido
             </button>
@@ -180,13 +180,13 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-[#1b2f23]">¡Mensaje Enviado!</h3>
+            <h3 className="text-xl font-bold text-brand-950">¡Mensaje Enviado!</h3>
             <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full">
               <X className="w-5 h-5" />
             </button>
           </div>
           <div className="text-center py-6">
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <CheckCircle className="w-16 h-16 text-brand-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-6">
               Tu mensaje fue enviado correctamente al vendedor. Recibirás una respuesta en tu correo electrónico.
             </p>
@@ -218,7 +218,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
 
             <button
               onClick={handleClose}
-              className="w-full bg-[#16a135] hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
+              className="w-full bg-brand-500 hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
             >
               Cerrar
             </button>
@@ -246,7 +246,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-[#1b2f23]">Contactar Vendedor</h3>
+            <h3 className="text-xl font-bold text-brand-950">Contactar Vendedor</h3>
             <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full">
               <X className="w-5 h-5" />
             </button>
@@ -333,7 +333,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
                   onChange={(e) => setMessage(e.target.value)}
                   required
                   rows={4}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent resize-none"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                   placeholder="Hola, estoy interesado en..."
                 />
               </div>
@@ -349,7 +349,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-3 bg-[#16a135] hover:bg-[#0e7d28] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 bg-brand-500 hover:bg-[#0e7d28] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Enviando...' : 'Enviar Mensaje'}
                 </button>
@@ -370,7 +370,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
               </p>
               <button
                 onClick={() => setShowUpgradeModal(true)}
-                className="w-full bg-[#16a135] hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
+                className="w-full bg-brand-500 hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
               >
                 Actualizar a Premium
               </button>

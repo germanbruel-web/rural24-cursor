@@ -58,7 +58,7 @@ export default function UpgradeModal({ isOpen, onClose, planName }: UpgradeModal
               <Zap className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-[#1b2f23]">Upgrade a Premium</h3>
+              <h3 className="text-2xl font-bold text-brand-950">Upgrade a Premium</h3>
               <p className="text-sm text-gray-600">Desbloquea todo el potencial de RURAL 24</p>
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function UpgradeModal({ isOpen, onClose, planName }: UpgradeModal
                 <h5 className="font-bold text-lg text-gray-900">Premium Particular</h5>
               </div>
               <div className="mb-3">
-                <span className="text-3xl font-bold text-[#16a135]">$12.000</span>
+                <span className="text-3xl font-bold text-brand-500">$12.000</span>
                 <span className="text-gray-600 text-sm">/mes</span>
               </div>
               <ul className="text-xs text-gray-600 space-y-1 mb-4">
@@ -123,7 +123,7 @@ export default function UpgradeModal({ isOpen, onClose, planName }: UpgradeModal
                 <h5 className="font-bold text-lg text-gray-900">Premium Empresa</h5>
               </div>
               <div className="mb-3">
-                <span className="text-3xl font-bold text-[#16a135]">$50.000</span>
+                <span className="text-3xl font-bold text-brand-500">$50.000</span>
                 <span className="text-gray-600 text-sm">/mes</span>
               </div>
               <ul className="text-xs text-gray-600 space-y-1 mb-4">
@@ -153,7 +153,7 @@ export default function UpgradeModal({ isOpen, onClose, planName }: UpgradeModal
               onClose();
               window.location.href = '/planes'; // TODO: Ajustar ruta según tu app
             }}
-            className="flex-1 py-3 bg-gradient-to-r from-[#16a135] to-[#0e7d28] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+            className="flex-1 py-3 bg-gradient-to-r from-brand-500 to-[#0e7d28] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
           >
             Ver Planes Completos
           </button>

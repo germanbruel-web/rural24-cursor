@@ -259,7 +259,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                       type="button"
                       onClick={generateDescription}
                       disabled={isGenerating.description}
-                      className="px-3 py-1.5 text-sm bg-green-50 hover:bg-green-100 text-green-700 rounded-lg border border-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                      className="px-3 py-1.5 text-sm bg-brand-50 hover:bg-brand-100 text-brand-600 rounded-lg border border-brand-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                     >
                       {isGenerating.description ? (
                         <>
@@ -306,7 +306,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         <button
           type="submit"
           disabled={isLoading}
-          className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="px-8 py-3 bg-brand-500 text-white rounded-lg font-semibold hover:bg-brand-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
           {isLoading ? 'Enviando...' : submitLabel}
         </button>
@@ -342,7 +342,7 @@ const FieldRenderer: React.FC<FieldComponentProps> = ({
   categoryId,
   formData,
 }) => {
-  const baseInputClass = `w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-black ${
+  const baseInputClass = `w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent bg-white text-black ${
     error ? 'border-red-500' : 'border-gray-300'
   }`;
 
@@ -478,7 +478,7 @@ const FieldRenderer: React.FC<FieldComponentProps> = ({
               type="checkbox"
               checked={value || false}
               onChange={(e) => onChange(e.target.checked)}
-              className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              className="w-5 h-5 text-brand-500 border-gray-300 rounded focus:ring-brand-400"
             />
             <span className="ml-2 text-sm text-gray-700">
               {field.placeholder || field.field_label}
@@ -588,7 +588,7 @@ const BrandAutocomplete: React.FC<{
         onChange={(e) => setSearchTerm(e.target.value)}
         onFocus={() => setShowSuggestions(true)}
         placeholder={placeholder || 'Buscar marca...'}
-        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${
+        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-400 ${
           error ? 'border-red-500' : 'border-gray-300'
         }`}
         required={required}
@@ -673,7 +673,7 @@ const ModelAutocomplete: React.FC<{
         onFocus={() => setShowSuggestions(true)}
         placeholder={placeholder || 'Buscar modelo...'}
         disabled={disabled}
-        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${
+        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-400 ${
           error ? 'border-red-500' : 'border-gray-300'
         } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
         required={required}
@@ -763,7 +763,7 @@ const FeaturesSelector: React.FC<{
                 key={feature.id}
                 className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
                   value[feature.name]
-                    ? 'border-green-500 bg-green-50'
+                    ? 'border-brand-400 bg-brand-50'
                     : 'border-gray-200 hover:border-gray-300 bg-white'
                 }`}
               >
@@ -773,7 +773,7 @@ const FeaturesSelector: React.FC<{
                   onChange={(e) =>
                     handleFeatureChange(feature.name, e.target.checked)
                   }
-                  className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500 mr-3"
+                  className="w-5 h-5 text-brand-500 border-gray-300 rounded focus:ring-brand-400 mr-3"
                 />
                 <div className="flex items-center gap-2">
                   {feature.icon && <span className="text-xl">{feature.icon}</span>}
@@ -806,7 +806,7 @@ const FeaturesSelector: React.FC<{
                 <select
                   value={value[feature.name] || ''}
                   onChange={(e) => handleFeatureChange(feature.name, e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 bg-white"
                 >
                   <option value="">Seleccione una opción</option>
                   {feature.options.map((option) => (
@@ -823,7 +823,7 @@ const FeaturesSelector: React.FC<{
                   value={value[feature.name] || ''}
                   onChange={(e) => handleFeatureChange(feature.name, e.target.value)}
                   placeholder={feature.placeholder || ''}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 bg-white"
                 />
               )}
             </div>
@@ -887,13 +887,13 @@ const TagsInput: React.FC<{
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder || 'Escriba y presione Enter'}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
         />
         <button
           type="button"
           onClick={addTag}
           disabled={!inputValue.trim() || value.length >= maxTags}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Agregar
         </button>
@@ -905,13 +905,13 @@ const TagsInput: React.FC<{
           {value.map((tag, index) => (
             <span
               key={index}
-              className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm"
+              className="inline-flex items-center gap-1 px-3 py-1 bg-brand-100 text-brand-700 rounded-full text-sm"
             >
               {tag}
               <button
                 type="button"
                 onClick={() => removeTag(index)}
-                className="ml-1 text-green-600 hover:text-green-800 transition-colors"
+                className="ml-1 text-brand-500 hover:text-brand-700 transition-colors"
               >
                 ×
               </button>

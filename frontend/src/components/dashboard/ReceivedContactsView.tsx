@@ -38,7 +38,7 @@ export const ReceivedContactsView: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16a135] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando contactos...</p>
         </div>
       </div>
@@ -59,13 +59,13 @@ export const ReceivedContactsView: React.FC = () => {
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-6">
+          <div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white p-6">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold mb-2">
                   {selectedMessage.sender_name} {selectedMessage.sender_last_name || ''}
                 </h2>
-                <p className="text-green-100 text-sm flex items-center gap-2">
+                <p className="text-brand-100 text-sm flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   {formatDate(selectedMessage.created_at)}
                 </p>
@@ -87,12 +87,12 @@ export const ReceivedContactsView: React.FC = () => {
             <h3 className="font-semibold text-gray-900 mb-4">Datos de Contacto</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <Mail className="w-5 h-5 text-green-600" />
+                <Mail className="w-5 h-5 text-brand-500" />
                 <div>
                   <p className="text-xs text-gray-500">Email</p>
                   <a
                     href={`mailto:${selectedMessage.sender_email}`}
-                    className="font-medium text-gray-900 hover:text-green-600 transition-colors"
+                    className="font-medium text-gray-900 hover:text-brand-500 transition-colors"
                   >
                     {selectedMessage.sender_email}
                   </a>
@@ -101,12 +101,12 @@ export const ReceivedContactsView: React.FC = () => {
 
               {selectedMessage.sender_phone && (
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Phone className="w-5 h-5 text-green-600" />
+                  <Phone className="w-5 h-5 text-brand-500" />
                   <div>
                     <p className="text-xs text-gray-500">Teléfono</p>
                     <a
                       href={`tel:${selectedMessage.sender_phone}`}
-                      className="font-medium text-gray-900 hover:text-green-600 transition-colors"
+                      className="font-medium text-gray-900 hover:text-brand-500 transition-colors"
                     >
                       {selectedMessage.sender_phone}
                     </a>
@@ -119,7 +119,7 @@ export const ReceivedContactsView: React.FC = () => {
           {/* Message */}
           <div className="p-6">
             <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-green-600" />
+              <MessageSquare className="w-5 h-5 text-brand-500" />
               Mensaje
             </h3>
             <div className="bg-gray-50 rounded-lg p-4">
@@ -145,7 +145,7 @@ export const ReceivedContactsView: React.FC = () => {
           <div className="p-6 bg-gray-50 border-t flex gap-3">
             <a
               href={`mailto:${selectedMessage.sender_email}?subject=Re: ${selectedMessage.ads?.title || 'Consulta'}`}
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors font-medium"
             >
               <Mail className="w-5 h-5" />
               Responder por Email
@@ -197,8 +197,8 @@ export const ReceivedContactsView: React.FC = () => {
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start gap-4">
-                  <div className="bg-green-100 rounded-full p-3">
-                    <User className="w-6 h-6 text-green-600" />
+                  <div className="bg-brand-100 rounded-full p-3">
+                    <User className="w-6 h-6 text-brand-500" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 text-lg">

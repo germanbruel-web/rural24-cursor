@@ -54,10 +54,10 @@ export const AdDetailDynamic: React.FC<AdDetailDynamicProps> = ({ attributes, sc
         iconBg: 'bg-blue-100'
       },
       green: { 
-        bg: 'bg-green-50', 
-        text: 'text-green-700', 
-        border: 'border-green-200',
-        iconBg: 'bg-green-100'
+        bg: 'bg-brand-50', 
+        text: 'text-brand-600', 
+        border: 'border-brand-200',
+        iconBg: 'bg-brand-100'
       },
       orange: { 
         bg: 'bg-orange-50', 
@@ -124,20 +124,20 @@ export const AdDetailDynamic: React.FC<AdDetailDynamicProps> = ({ attributes, sc
         key={attr.slug}
         className={`relative p-4 rounded-xl border transition-all hover:shadow-md ${
           isFeatured 
-            ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 ring-2 ring-green-200' 
+            ? 'bg-gradient-to-br from-brand-50 to-emerald-50 border-green-300 ring-2 ring-brand-200' 
             : 'bg-white border-gray-200 hover:border-gray-300'
         }`}
       >
         {isFeatured && (
           <div className="absolute top-2 right-2">
-            <CheckCircle className="w-4 h-4 text-green-600" />
+            <CheckCircle className="w-4 h-4 text-brand-500" />
           </div>
         )}
         <div className="flex flex-col gap-2">
           <span className="text-gray-600">
             {attr.name}
           </span>
-          <span className={`text-lg font-bold ${isFeatured ? 'text-green-900' : 'text-gray-900'}`}>
+          <span className={`text-lg font-bold ${isFeatured ? 'text-brand-800' : 'text-gray-900'}`}>
             {displayValue}
           </span>
           {attr.uiConfig?.helpText && (

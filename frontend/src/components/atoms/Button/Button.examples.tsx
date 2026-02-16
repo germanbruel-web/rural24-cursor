@@ -201,8 +201,8 @@ export function ButtonExamples() {
         <h2 className="text-2xl font-bold mb-4">9. Ejemplo: Estado de Éxito</h2>
         <div className="max-w-md bg-white rounded-xl shadow-lg p-6">
           <div className="text-center mb-6">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <Check className="text-green-600" size={32} />
+            <div className="mx-auto w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-4">
+              <Check className="text-brand-500" size={32} />
             </div>
             <h3 className="text-xl font-bold mb-2">¡Mensaje Enviado!</h3>
             <p className="text-gray-600">

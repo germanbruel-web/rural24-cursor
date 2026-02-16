@@ -19,9 +19,10 @@ import type { Page } from '../../../App';
 interface UserMenuProps {
   onNavigate: (page: Page) => void;
   onShowAuthModal?: () => void;
+  onShowRegisterModal?: () => void;
 }
 
-export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, onShowAuthModal }) => {
+export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, onShowAuthModal, onShowRegisterModal }) => {
   const { user, profile, signOut } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -93,7 +94,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, onShowAuthModal 
         </button>
         <span className="text-gray-300">|</span>
         <button
-          onClick={onShowAuthModal}
+          onClick={onShowRegisterModal || onShowAuthModal}
           className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
         >
           Registrate
@@ -126,7 +127,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, onShowAuthModal 
         >
           <MessageSquare className="w-5 h-5" />
           {/* Badge de nuevo mensaje (ejemplo) */}
-          {/* <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">1</span> */}
+          {/* <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-400 text-white text-xs rounded-full flex items-center justify-center">1</span> */}
         </button>
 
         {/* Notificaciones */}
@@ -158,7 +159,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, onShowAuthModal 
               className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-500 
                           flex items-center justify-center text-white font-semibold text-sm
                           ring-2 ring-white shadow-sm">
               {getInitials()}

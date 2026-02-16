@@ -121,7 +121,7 @@ export default function APITestPage() {
               <span className="font-semibold">Backend Mode:</span>{' '}
               <span
                 className={
-                  migrationStatus.isUsingBackend ? 'text-green-600' : 'text-orange-600'
+                  migrationStatus.isUsingBackend ? 'text-brand-500' : 'text-orange-600'
                 }
               >
                 {migrationStatus.isUsingBackend ? '✅ Fastify API' : '⚠️ Supabase Direct'}
@@ -160,7 +160,7 @@ export default function APITestPage() {
                 result.status === 'loading'
                   ? 'border-blue-500'
                   : result.status === 'success'
-                  ? 'border-green-500'
+                  ? 'border-brand-400'
                   : result.status === 'error'
                   ? 'border-red-500'
                   : 'border-gray-300'

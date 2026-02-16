@@ -67,7 +67,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
   if (loading || !credits || !config) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
       </div>
     );
   }
@@ -77,10 +77,10 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
       {/* ============================================
           HEADER CON BALANCE
           ============================================ */}
-      <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
+      <div className="bg-gradient-to-br from-brand-500 to-emerald-600 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <p className="text-green-100 text-xs sm:text-sm mb-2 flex items-center gap-2">
+            <p className="text-brand-100 text-xs sm:text-sm mb-2 flex items-center gap-2">
               <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
               TU BALANCE DE CRÉDITOS
             </p>
@@ -88,12 +88,12 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
               <span className="text-4xl sm:text-6xl font-black leading-none">
                 {credits.balance}
               </span>
-              <span className="text-lg sm:text-2xl font-semibold text-green-100">
+              <span className="text-lg sm:text-2xl font-semibold text-brand-100">
                 créditos
               </span>
             </div>
             {credits.monthly_allowance > 0 && (
-              <p className="text-green-100 text-xs sm:text-sm mt-3">
+              <p className="text-brand-100 text-xs sm:text-sm mt-3">
                 🎁 Recibirás {credits.monthly_allowance} crédito(s) cada mes
               </p>
             )}
@@ -101,7 +101,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
 
           <div className="text-right">
             <TrendingUp className="w-12 h-12 sm:w-16 sm:h-16 text-white/30 mb-3 ml-auto" />
-            <p className="text-xs sm:text-sm text-green-100 leading-relaxed">
+            <p className="text-xs sm:text-sm text-brand-100 leading-relaxed">
               <span className="block">1 Crédito = {config.featured_durations[0].label}</span>
               <span className="block">4 Créditos = {config.featured_durations[3].label}</span>
             </p>
@@ -114,7 +114,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
           ============================================ */}
       <section className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100">
         <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-          <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 text-green-600" />
+          <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 text-brand-500" />
           Comprar Créditos
         </h3>
 
@@ -130,16 +130,16 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
                 onClick={() => setShowBuyCreditsModal(true)}
                 className={`p-3 sm:p-6 rounded-xl border-2 transition-all text-center ${
                   isRecommended
-                    ? 'border-green-600 bg-green-50 shadow-lg scale-100 hover:scale-105'
+                    ? 'border-brand-500 bg-brand-50 shadow-lg scale-100 hover:scale-105'
                     : 'border-gray-200 bg-white hover:border-green-300 hover:shadow-md'
                 }`}
               >
                 {isRecommended && (
-                  <div className="text-xs sm:text-sm font-bold text-green-600 mb-1">
+                  <div className="text-xs sm:text-sm font-bold text-brand-500 mb-1">
                     ⭐ MEJOR
                   </div>
                 )}
-                <div className="text-2xl sm:text-4xl font-black text-green-600 mb-1">
+                <div className="text-2xl sm:text-4xl font-black text-brand-500 mb-1">
                   {qty}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-500 mb-2">
@@ -155,7 +155,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
 
         <button
           onClick={() => setShowBuyCreditsModal(true)}
-          className="w-full py-3 sm:py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
+          className="w-full py-3 sm:py-4 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
         >
           <ShoppingCart className="w-5 h-5" />
           Comprar Créditos
@@ -206,7 +206,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
               >
                 <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                   {tx.type === 'purchase' && (
-                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
+                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500 flex-shrink-0" />
                   )}
                   {tx.type === 'spend' && (
                     <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 flex-shrink-0" />
@@ -229,7 +229,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
                 </div>
 
                 <div className="text-right flex-shrink-0">
-                  <p className={`font-bold ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className={`font-bold ${tx.amount > 0 ? 'text-brand-500' : 'text-red-600'}`}>
                     {tx.amount > 0 ? '+' : ''}{tx.amount}
                   </p>
                   <p className="text-xs text-gray-500">

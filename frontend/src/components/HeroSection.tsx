@@ -15,10 +15,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, isLoading })
   };
 
   return (
-    <section className="bg-gradient-to-br from-[#e8f5e9] to-[#c8e6c9] text-gray-900 py-24 md:py-32">
+    <section className="bg-gradient-to-br from-brand-50 to-brand-200 text-gray-900 py-24 md:py-32">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight text-[#004c3f]">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight text-brand-900">
             Encontrá todo para el agro
           </h1>
           <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto">

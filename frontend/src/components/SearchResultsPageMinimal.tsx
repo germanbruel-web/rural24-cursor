@@ -330,7 +330,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                 <SlidersHorizontal className="w-5 h-5" />
                 <span>Filtros</span>
                 {activeFilterCount > 0 && (
-                  <span className="bg-[#16a135] text-white text-xs px-2 py-0.5 rounded-full">
+                  <span className="bg-brand-500 text-white text-xs px-2 py-0.5 rounded-full">
                     {activeFilterCount}
                   </span>
                 )}
@@ -353,7 +353,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                   {activeFilterCount > 0 && (
                     <a
                       href={clearFiltersUrl}
-                      className="text-xs text-[#16a135] hover:text-[#138a2c] flex items-center gap-1"
+                      className="text-xs text-brand-500 hover:text-brand-600 flex items-center gap-1"
                     >
                       <X className="w-3 h-3" />
                       Limpiar ({activeFilterCount})
@@ -580,13 +580,13 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                                 <input
                                   type="number"
                                   placeholder="Mín"
-                                  className="w-1/2 px-2 py-1 text-sm border rounded focus:ring-1 focus:ring-green-500 focus:border-green-500"
+                                  className="w-1/2 px-2 py-1 text-sm border rounded focus:ring-1 focus:ring-brand-400 focus:border-brand-400"
                                   defaultValue={urlFilters.priceMin}
                                 />
                                 <input
                                   type="number"
                                   placeholder="Máx"
-                                  className="w-1/2 px-2 py-1 text-sm border rounded focus:ring-1 focus:ring-green-500 focus:border-green-500"
+                                  className="w-1/2 px-2 py-1 text-sm border rounded focus:ring-1 focus:ring-brand-400 focus:border-brand-400"
                                   defaultValue={urlFilters.priceMax}
                                 />
                               </div>
@@ -621,7 +621,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
             <div className="lg:w-[80%]">
               {adsLoading ? (
                 <div className="py-12 text-center bg-white rounded-lg">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#16a135] border-t-transparent mb-4"></div>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-brand-500 border-t-transparent mb-4"></div>
                   <p className="text-gray-600">Cargando resultados...</p>
                 </div>
               ) : sortedResults.length === 0 ? (
@@ -629,7 +629,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                   <p className="text-gray-600 mb-4">No se encontraron resultados para tu búsqueda.</p>
                   <button
                     onClick={onBack}
-                    className="text-[#16a135] hover:underline"
+                    className="text-brand-500 hover:underline"
                   >
                     Volver al inicio
                   </button>
@@ -703,7 +703,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                             onClick={() => goToPage(pageNum)}
                             className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold transition-colors ${
                               currentPage === pageNum
-                                ? 'bg-[#16a135] text-white'
+                                ? 'bg-brand-500 text-white'
                                 : 'hover:bg-gray-100 text-gray-700'
                             }`}
                           >

@@ -96,7 +96,7 @@ export const DashboardPanel: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16a135] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando dashboard...</p>
         </div>
       </div>
@@ -118,7 +118,7 @@ export const DashboardPanel: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigateTo('/my-ads')}
-              className="bg-[#16a135] hover:bg-[#138a2c] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+              className="bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
             >
               <PenLine className="w-5 h-5" />
               Crear Aviso
@@ -242,7 +242,7 @@ export const DashboardPanel: React.FC = () => {
         </div>
         <button
           onClick={() => navigateTo('/my-ads')}
-          className="bg-[#16a135] hover:bg-[#138a2c] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center gap-3"
+          className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center gap-3"
         >
           <PenLine className="w-6 h-6" />
           Crear Nuevo Aviso
@@ -300,7 +300,7 @@ export const DashboardPanel: React.FC = () => {
             </div>
             <button
               onClick={(e) => { e.preventDefault(); navigateTo('/dashboard/contacts'); }}
-              className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
+              className="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
             >
               <MessageSquare className="w-5 h-5" />
               Ver Contactos
@@ -329,7 +329,7 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({ icon, title, value, subtitle, color, trend, isClickable, onClick }) => {
   const colorClasses = {
     blue: 'from-blue-500 to-blue-600',
-    green: 'from-green-500 to-green-600',
+    green: 'from-brand-400 to-brand-500',
     yellow: 'from-yellow-400 to-yellow-500',
     purple: 'from-purple-500 to-purple-600',
     red: 'from-red-500 to-red-600',
@@ -340,14 +340,14 @@ const StatCard: React.FC<StatCardProps> = ({ icon, title, value, subtitle, color
   return (
     <Component 
       onClick={onClick}
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow ${isClickable ? 'cursor-pointer hover:border-green-500' : ''} w-full text-left`}
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow ${isClickable ? 'cursor-pointer hover:border-brand-400' : ''} w-full text-left`}
     >
       <div className="flex items-start justify-between mb-4">
         <div className={`p-3 rounded-lg bg-gradient-to-br ${colorClasses[color]} text-white`}>
           {icon}
         </div>
         {trend && (
-          <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">
+          <span className="px-2 py-1 bg-brand-100 text-brand-600 text-xs font-semibold rounded">
             {trend}
           </span>
         )}

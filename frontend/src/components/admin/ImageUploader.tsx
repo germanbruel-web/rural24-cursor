@@ -143,7 +143,7 @@ export function ImageUploader({
           onDragLeave={handleDragLeave}
           className={`relative border-2 border-dashed rounded-lg p-6 transition-all ${
             dragActive
-              ? 'border-[#16a135] bg-green-50'
+              ? 'border-brand-500 bg-brand-50'
               : error
               ? 'border-red-300 bg-red-50'
               : 'border-gray-300 hover:border-gray-400 bg-gray-50'
@@ -160,13 +160,13 @@ export function ImageUploader({
           {uploading ? (
             // SUBIENDO
             <div className="text-center">
-              <Loader2 className="w-8 h-8 text-[#16a135] mx-auto mb-2 animate-spin" />
+              <Loader2 className="w-8 h-8 text-brand-500 mx-auto mb-2 animate-spin" />
               <div className="text-sm font-medium text-gray-700 mb-2">
                 Subiendo imagen...
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-[#16a135] h-2 rounded-full transition-all duration-300"
+                  className="bg-brand-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 ></div>
               </div>
@@ -180,7 +180,7 @@ export function ImageUploader({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-[#16a135] font-medium hover:underline"
+                  className="text-brand-500 font-medium hover:underline"
                 >
                   Clic para subir
                 </button>
@@ -226,7 +226,7 @@ export function ImageUploader({
             onChange={handleFileSelect}
             className="hidden"
           />
-          <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
+          <div className="absolute top-2 right-2 bg-brand-400 text-white rounded-full p-1">
             <Check className="w-3 h-3" />
           </div>
         </div>

@@ -35,6 +35,62 @@ Ingeniero Frontend Senior especializado en React 19 + Vite + Tailwind. Responsab
 5. **Feature folders** para dominio complejo: `admin/`, `dashboard/`, `auth/`, `sections/`.
 6. **Servicios** como capa de acceso a datos — componentes NUNCA llaman a Supabase directamente.
 7. **Migración activa**: Frontend migrando de Supabase directo → Backend API. Feature flags en `src/config/features.ts`.
+8. **Design System unificado** — NUNCA inventar colores ni estilos. Seguir la paleta y tokens documentados abajo.
+
+---
+
+## DESIGN SYSTEM RURAL24
+
+### Fuente de verdad
+```
+CSS vars (index.css :root) → tailwind.config.js (brand-*) → Componentes (clases Tailwind)
+```
+
+### Paleta de colores — OBLIGATORIO usar tokens
+| Token | Uso | CSS var |
+|-------|-----|---------|
+| `brand-500` | Primary (botones, links, precio border) | `--color-brand-500` |
+| `brand-600` | Hover states | `--color-brand-600` |
+| `brand-700` | Active/pressed | `--color-brand-700` |
+| `brand-950` | Dark headings | `--color-brand-950` |
+| `brand-50` | Backgrounds sutiles | `--color-brand-50` |
+| `brand-100` | Borders sutiles | `--color-brand-100` |
+| `brand-400` | Accent bars | `--color-brand-400` |
+
+### PROHIBIDO (causa inconsistencia)
+```
+❌ #16a135, #138a2e, #0f7023, #1b2f23 (hex hardcoded)
+❌ green-600, green-700, emerald-600 (Tailwind defaults como primary)
+❌ Inventar colores que no estén en la paleta brand-*
+❌ Botones "Ver Detalle" en cards (la card entera es clickeable)
+```
+
+### Componentes clave (Atomic Design)
+```
+atoms/     → Button, Badge, Input, Spinner, Logo, Toggle, Avatar
+molecules/ → Card, InfoBox, TipsCard, SearchBar, AutoSaveIndicator, Modal
+organisms/ → ProductCard, HeaderNew, UserMenu, AuthModal, DashboardLayout
+sections/  → FeaturedAdsSection, UserFeaturedAdsBar, CategoryCarousel, Hero
+```
+
+### ProductCard — Patrón de producción
+- Card completa clickeable → navega a `/ad/{slug}`
+- SIN botón "Ver Detalle" — toda la superficie es el CTA
+- Imagen: `aspect-[16/9]` (featured) o `aspect-[4/3]` (compact)
+- Label: `Tag` icon + Subcategoría · Marca · Modelo
+- Precio: pill `bg-gradient-to-r from-brand-50 to-emerald-50` + `border-l-4 border-brand-500`
+- Hover: `-translate-y-[3px]` + `shadow-lg` + `border-brand-500`
+- Badge contextual sobre imagen: Nuevo/Usado (o edad en ganadería)
+
+### Avisos Destacados (UserFeaturedAdsBar)
+- Contenedor: `bg-brand-50/70 border border-brand-100 rounded-xl p-4`
+- Header: `Megaphone` icon + "AVISOS DESTACADOS" uppercase `text-brand-700`
+- Grid: `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3`
+- Cards: variante `compact` con `isSponsored: true`
+
+### Showcase
+- Componente: `DesignSystemShowcaseSimple.tsx`
+- Acceso: Dashboard → superadmin only → `#/design-system`
 
 ---
 

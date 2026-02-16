@@ -344,7 +344,7 @@ export const CategoriasAdmin: React.FC = () => {
         </div>
         <button
           onClick={() => handleNew('category')}
-          className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+          className="px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Nueva Categoría
@@ -388,7 +388,7 @@ export const CategoriasAdmin: React.FC = () => {
                       <div className="flex gap-1">
                         <button
                           onClick={() => handleNew('subcategory', category.id)}
-                          className="p-1.5 text-green-600 hover:bg-green-50 rounded transition"
+                          className="p-1.5 text-brand-500 hover:bg-brand-50 rounded transition"
                           title="Agregar subcategoría"
                         >
                           <Plus className="w-4 h-4" />
@@ -441,7 +441,7 @@ export const CategoriasAdmin: React.FC = () => {
                                 <div className="flex gap-1">
                                   <button
                                     onClick={() => handleNew('type', sub.id)}
-                                    className="p-1.5 text-green-600 hover:bg-green-50 rounded transition"
+                                    className="p-1.5 text-brand-500 hover:bg-brand-50 rounded transition"
                                     title="Agregar tipo"
                                   >
                                     <Plus className="w-4 h-4" />
@@ -469,7 +469,7 @@ export const CategoriasAdmin: React.FC = () => {
                                   {subTypes.map(type => (
                                     <div key={type.id} className="flex items-center gap-2 py-2 px-3 hover:bg-gray-50 rounded">
                                       <div className="w-4" />
-                                      <FileText className="w-4 h-4 text-green-600" />
+                                      <FileText className="w-4 h-4 text-brand-500" />
                                       <span className="text-gray-700 flex-1">
                                         {type.display_name}
                                       </span>
@@ -575,7 +575,7 @@ export const CategoriasAdmin: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold"
+                  className="px-6 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition font-semibold"
                 >
                   {editingItem ? 'Guardar Cambios' : 'Crear'}
                 </button>

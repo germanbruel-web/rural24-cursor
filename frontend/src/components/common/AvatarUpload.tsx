@@ -115,12 +115,12 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
           rounded-full
           overflow-hidden
           border-4
-          ${dragOver ? 'border-[#16a135] border-dashed' : 'border-gray-200'}
+          ${dragOver ? 'border-brand-500 border-dashed' : 'border-gray-200'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           bg-gray-100
           flex items-center justify-center
           transition-all
-          hover:border-[#16a135]/50
+          hover:border-brand-500/50
         `}
         onClick={() => !disabled && fileInputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -128,7 +128,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         onDrop={handleDrop}
       >
         {isUploading ? (
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#16a135]" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500" />
         ) : displayUrl ? (
           <img
             src={displayUrl}
@@ -149,11 +149,11 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
           absolute bottom-0 right-0
           ${size === 'sm' ? 'w-6 h-6' : size === 'md' ? 'w-8 h-8' : 'w-10 h-10'}
           rounded-full
-          bg-[#16a135]
+          bg-brand-500
           text-white
           flex items-center justify-center
           shadow-lg
-          hover:bg-[#0e7d25]
+          hover:bg-brand-700
           disabled:opacity-50 disabled:cursor-not-allowed
           transition-colors
         `}
@@ -197,8 +197,8 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
       {/* Helper Text */}
       {dragOver && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="absolute inset-0 bg-[#16a135]/20 rounded-full" />
-          <Upload className="w-8 h-8 text-[#16a135] z-10" />
+          <div className="absolute inset-0 bg-brand-500/20 rounded-full" />
+          <Upload className="w-8 h-8 text-brand-500 z-10" />
         </div>
       )}
     </div>

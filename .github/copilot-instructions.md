@@ -40,6 +40,7 @@ Leer `ai/ARCHITECTURE.md` para confirmar que el cambio propuesto NO viola decisi
 5. **Backend API-only.** Next.js 16 solo sirve API routes, no SSR/SSG.
 6. **Free tier Render.** Cold starts de 30-50s. Diseñar para resiliencia.
 7. **Monorepo npm workspaces + Turborepo.** No cambiar estructura de workspaces.
+8. **Design System RURAL24.** Usar SOLO tokens `brand-*` de CSS vars. NUNCA hex hardcoded ni `green-600`. Cards clickeables SIN botón "Ver Detalle". Ref: `ai/frontend.agent.md` → sección DESIGN SYSTEM.
 
 ---
 
@@ -54,6 +55,7 @@ Antes de cada modificación, verificar mentalmente:
 - [ ] ¿Si toco routing, actualicé las 7 capas?
 - [ ] ¿Si agrego página admin, la agregué a `isProtectedPage` Y `PAGE_PERMISSIONS`?
 - [ ] ¿Si creo endpoint, verifiqué que no hay uno similar en `/api/`?
+- [ ] ¿Si toco UI/colores, usé tokens `brand-*` del Design System? (ver `ai/frontend.agent.md`)
 
 ---
 

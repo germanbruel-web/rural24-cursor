@@ -179,7 +179,7 @@ export const SuperAdminCreditsConfig: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
       </div>
     );
   }
@@ -198,7 +198,7 @@ export const SuperAdminCreditsConfig: React.FC = () => {
           HEADER
           ============================================ */}
       <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
-        <Settings className="w-7 h-7 sm:w-9 sm:h-9 text-green-600" />
+        <Settings className="w-7 h-7 sm:w-9 sm:h-9 text-brand-500" />
         <h1 className="text-2xl sm:text-4xl font-black text-gray-800">
           Configuración de Créditos
         </h1>
@@ -220,10 +220,10 @@ export const SuperAdminCreditsConfig: React.FC = () => {
           SUCCESS
           ============================================ */}
       {success && (
-        <div className="bg-green-50 border border-green-300 rounded-lg p-4 flex items-start gap-3">
-          <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+        <div className="bg-brand-50 border border-green-300 rounded-lg p-4 flex items-start gap-3">
+          <CheckCircle2 className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold text-green-700">
+            <p className="font-bold text-brand-600">
               Configuración guardada exitosamente
             </p>
           </div>
@@ -243,23 +243,23 @@ export const SuperAdminCreditsConfig: React.FC = () => {
             Este es el precio que paga un usuario por cada crédito.
           </p>
 
-          <div className="bg-green-50 p-4 sm:p-6 rounded-xl border border-green-200">
+          <div className="bg-brand-50 p-4 sm:p-6 rounded-xl border border-brand-200">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Precio (ARS)
             </label>
             <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-green-600">$</span>
+              <span className="text-lg font-bold text-brand-500">$</span>
               <input
                 type="number"
                 value={config.credit_base_price}
                 onChange={(e) => handleChangeCreditPrice(parseFloat(e.target.value))}
-                className="flex-1 py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                className="flex-1 py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 min="0"
                 step="100"
               />
             </div>
 
-            <div className="mt-4 p-3 bg-white rounded-lg border border-green-200">
+            <div className="mt-4 p-3 bg-white rounded-lg border border-brand-200">
               <p className="text-xs text-gray-600 mb-2">
                 <strong>Ejemplo de precios automatizados:</strong>
               </p>
@@ -398,7 +398,7 @@ export const SuperAdminCreditsConfig: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200 text-sm text-green-700">
+          <div className="bg-brand-50 p-4 rounded-lg border border-brand-200 text-sm text-brand-600">
             <strong>Resumen de promos:</strong> Cada nuevo usuario recibe <strong>{config.promo_credits_for_new_users} créditos gratis</strong> (valor ${(config.credit_base_price * config.promo_credits_for_new_users).toLocaleString('es-AR')}) que caducan en <strong>{config.promo_credits_expire_days} días</strong>.
           </div>
         </div>
@@ -426,7 +426,7 @@ export const SuperAdminCreditsConfig: React.FC = () => {
           disabled={!isDirty || saving}
           className={`flex-1 py-3 px-4 font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-sm sm:text-base ${
             isDirty && !saving
-              ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg'
+              ? 'bg-brand-500 hover:bg-brand-600 text-white shadow-lg'
               : 'bg-gray-300 text-gray-600 cursor-not-allowed'
           }`}
         >

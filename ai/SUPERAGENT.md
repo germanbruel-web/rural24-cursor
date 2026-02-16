@@ -54,6 +54,14 @@ Sos el coordinador técnico del proyecto Rural24. Tu responsabilidad es:
 | **Performance** | `ai/performance.agent.md` | Cache, rate limiting, lazy loading, bundle size, queries N+1 |
 | **UX/UI** | `ai/uxui.agent.md` | Flujos de usuario, estados de carga/error/vacío, accesibilidad, mobile |
 
+### Design System RURAL24
+- **Dueño**: Frontend Agent + UX/UI Agent (co-ownership)
+- **Referencia**: `frontend/src/components/DesignSystemShowcaseSimple.tsx` + `frontend/src/index.css` (CSS vars)
+- **Regla**: TODO agente que toque UI DEBE usar tokens `brand-*` del Design System. NUNCA hex hardcoded.
+- **Cards**: Seguir patrón `ProductCard` — card clickeable completa, SIN botones "Ver Detalle"
+- **Avisos destacados**: `UserFeaturedAdsBar` — contenedor `bg-brand-50/70`, grid 5 cols, cards compact
+- **Showcase**: Dashboard → `#/design-system` (superadmin only)
+
 ---
 
 ## REGLAS DE DELEGACIÓN

@@ -126,7 +126,7 @@ export function ImportTemplateModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por nombre, categoría o descripción..."
-              className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
             />
           </div>
         </div>
@@ -135,7 +135,7 @@ export function ImportTemplateModal({
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
+              <Loader2 className="w-8 h-8 text-brand-400 animate-spin" />
               <p className="ml-3 text-gray-600">Cargando templates...</p>
             </div>
           ) : filteredTemplates.length === 0 ? (
@@ -158,8 +158,8 @@ export function ImportTemplateModal({
                     onClick={() => setSelectedTemplateId(template.id)}
                     className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
                       isSelected
-                        ? 'border-green-500 bg-green-50 shadow-md'
-                        : 'border-gray-200 hover:border-green-400 hover:bg-green-50'
+                        ? 'border-brand-400 bg-brand-50 shadow-md'
+                        : 'border-gray-200 hover:border-green-400 hover:bg-brand-50'
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -169,7 +169,7 @@ export function ImportTemplateModal({
                             {template.name}
                           </h3>
                           {isSelected && (
-                            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                            <div className="w-6 h-6 bg-brand-400 rounded-full flex items-center justify-center">
                               <Check className="w-4 h-4 text-white" />
                             </div>
                           )}
@@ -223,7 +223,7 @@ export function ImportTemplateModal({
           <button
             onClick={handleApplyTemplate}
             disabled={!selectedTemplateId || applying}
-            className="px-6 py-3 rounded-xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-all shadow-lg shadow-green-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-3 rounded-xl bg-brand-400 text-white font-semibold hover:bg-brand-500 transition-all shadow-lg shadow-brand-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {applying ? (
               <>

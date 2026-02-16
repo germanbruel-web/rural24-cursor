@@ -435,7 +435,7 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
                   key={cat.id}
                   onClick={() => handleCategoryClick(slug)}
                   onMouseEnter={() => handleCategoryHover(categoryName)}
-                  className="rounded-[8px] p-3 transition-all duration-300 hover:scale-105 shadow-lg flex flex-col items-center gap-2 aspect-square justify-center relative overflow-hidden group bg-black hover:bg-[#16a135] border-2 border-black hover:border-green-600 cursor-pointer"
+                  className="rounded-[8px] p-3 transition-all duration-300 hover:scale-105 shadow-lg flex flex-col items-center gap-2 aspect-square justify-center relative overflow-hidden group bg-black hover:bg-brand-500 border-2 border-black hover:border-brand-500 cursor-pointer"
                 >
                   {/* Efecto de brillo en hover */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />

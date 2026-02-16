@@ -50,7 +50,7 @@ export const ResultsBannerBelowFilter: React.FC<Props> = ({ category }) => {
       <div className="mt-4">
         <a
           href="mailto:info@rural24.com.ar?subject=Consulta%20publicidad%20en%20Rural24"
-          className="block w-[280px] h-[250px] bg-gradient-to-br from-[#16a135] to-[#138a2e] rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex flex-col items-center justify-center"
+          className="block w-[280px] h-[250px] bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex flex-col items-center justify-center"
         >
           <div className="text-center text-white px-4">
             <div className="text-4xl mb-2">📢</div>

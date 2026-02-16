@@ -49,7 +49,7 @@ export const EmailConfirmationPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
-          <Loader2 className="w-16 h-16 text-green-600 mx-auto mb-4 animate-spin" />
+          <Loader2 className="w-16 h-16 text-brand-500 mx-auto mb-4 animate-spin" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Verificando tu email...
           </h1>
@@ -65,14 +65,14 @@ export const EmailConfirmationPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
-          <CheckCircle className="w-20 h-20 text-green-600 mx-auto mb-4" />
+          <CheckCircle className="w-20 h-20 text-brand-500 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             ✅ Email Verificado!
           </h1>
           <p className="text-gray-600 mb-4">
             Tu cuenta ha sido activada correctamente.
           </p>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 text-left">
+          <div className="bg-brand-50 border border-brand-200 rounded-lg p-4 mb-6 text-left">
             <p className="text-sm text-gray-700">
               💚 <strong>¡Cuenta Verificada!</strong><br/>
               <span className="text-xs">Una cuenta verificada demuestra más confianza frente al mercado de agronegocios. Ahora podés iniciar sesión y acceder a todas las funcionalidades.</span>
@@ -87,7 +87,7 @@ export const EmailConfirmationPage = () => {
               const event = new CustomEvent('openAuthModal', { detail: { view: 'login' } });
               window.dispatchEvent(event);
             }}
-            className="bg-[#16a135] hover:bg-[#0e7d25] text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className="bg-brand-500 hover:bg-brand-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
           >
             Iniciar Sesión Ahora
           </button>

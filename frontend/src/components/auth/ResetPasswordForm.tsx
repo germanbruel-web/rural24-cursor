@@ -32,10 +32,10 @@ export default function ResetPasswordForm({ onSuccess, onBack }: ResetPasswordFo
 
   if (success) {
     return (
-      <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
+      <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
         <div className="text-center">
-          <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-[#1b2f23] mb-2">Email Enviado</h2>
+          <CheckCircle className="w-16 h-16 text-brand-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-brand-950 mb-2">Email Enviado</h2>
           <p className="text-gray-600 mb-4">
             Te hemos enviado un email a <strong>{email}</strong> con instrucciones para restablecer tu contraseña.
           </p>
@@ -44,7 +44,7 @@ export default function ResetPasswordForm({ onSuccess, onBack }: ResetPasswordFo
           </p>
           <button
             onClick={onBack}
-            className="text-[#16a135] font-medium hover:underline"
+            className="text-brand-500 font-medium hover:underline"
           >
             Volver al inicio de sesión
           </button>
@@ -54,10 +54,10 @@ export default function ResetPasswordForm({ onSuccess, onBack }: ResetPasswordFo
   }
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
+    <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
       <div className="text-center mb-8">
-        <KeyRound className="w-12 h-12 text-[#16a135] mx-auto mb-4" />
-        <h2 className="text-3xl font-bold text-[#1b2f23]">Recuperar Contraseña</h2>
+        <KeyRound className="w-12 h-12 text-brand-500 mx-auto mb-4" />
+        <h2 className="text-3xl font-bold text-brand-950">Recuperar Contraseña</h2>
         <p className="text-gray-600 mt-2">
           Ingresa tu email y te enviaremos instrucciones para restablecer tu contraseña
         </p>
@@ -83,7 +83,7 @@ export default function ResetPasswordForm({ onSuccess, onBack }: ResetPasswordFo
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
               placeholder="tu@email.com"
             />
           </div>
@@ -92,7 +92,7 @@ export default function ResetPasswordForm({ onSuccess, onBack }: ResetPasswordFo
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-[#16a135] text-white rounded-lg font-medium hover:bg-[#1b2f23] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 bg-brand-500 text-white rounded-lg font-medium hover:bg-brand-950 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Enviando...' : 'Enviar Instrucciones'}
         </button>
@@ -101,7 +101,7 @@ export default function ResetPasswordForm({ onSuccess, onBack }: ResetPasswordFo
       <div className="mt-6 text-center">
         <button
           onClick={onBack}
-          className="text-[#16a135] font-medium hover:underline"
+          className="text-brand-500 font-medium hover:underline"
         >
           Volver al inicio de sesión
         </button>

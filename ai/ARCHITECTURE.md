@@ -66,6 +66,16 @@
 - Stateless via tokens de Supabase
 - `session-manager.ts` y `session-adapter.ts` existen pero NO se usan — auth real es via Supabase tokens
 
+### Design System RURAL24
+- **Fuente de verdad**: CSS variables en `frontend/src/index.css` (:root)
+- **Consumo**: `frontend/tailwind.config.js` lee las CSS vars → componentes usan clases `brand-*`
+- **Paleta principal**: `brand-500` (primary), `brand-600` (hover), `brand-700` (active), `brand-950` (dark headings)
+- **NUNCA usar hex hardcoded** (`#16a135`, `#1b2f23`) ni clases Tailwind genéricas (`green-600`, `green-700`)
+- **Componentes**: Atomic Design — `atoms/` → `molecules/` → `organisms/` → `sections/` → `pages/`
+- **Showcase**: `frontend/src/components/DesignSystemShowcaseSimple.tsx` — accesible en dashboard para superadmin (`#/design-system`)
+- **Card de producción**: `ProductCard` (organism) — card clickeable completa, SIN botón "Ver Detalle", precio en pill verde con `border-l-4 border-brand-500`
+- **Avisos destacados**: `UserFeaturedAdsBar` — contenedor `bg-brand-50/70 border-brand-100 rounded-xl` con grid 5 cols compact
+
 ---
 
 ## ESTRATEGIA DE ESCALABILIDAD

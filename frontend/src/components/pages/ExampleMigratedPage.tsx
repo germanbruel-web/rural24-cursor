@@ -128,7 +128,7 @@ export const ExampleMigratedPage: React.FC<ExampleMigratedPageProps> = ({ onNavi
                 </div>
 
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
+                  <p className="text-lg sm:text-xl font-bold text-brand-500 dark:text-green-400">
                     USD 45,000
                   </p>
                   <Badge variant="outline" size="sm">
@@ -202,7 +202,7 @@ export const ExampleMigratedPage: React.FC<ExampleMigratedPageProps> = ({ onNavi
             </label>
             <textarea
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-400 dark:bg-gray-700 dark:text-white"
               placeholder="Cuéntanos qué necesitas..."
             />
           </div>

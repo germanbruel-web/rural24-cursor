@@ -36,6 +36,7 @@ interface HeaderNewProps {
 export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) => {
   const { user, profile, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileUserMenu, setShowMobileUserMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -66,10 +67,16 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
     }
   };
 
+  // Abrir modal de auth con vista específica
+  const openAuth = (view: 'login' | 'register') => {
+    setAuthModalView(view);
+    setShowAuthModal(true);
+  };
+
   // Manejar click en "Publicar Gratis"
   const handlePublish = () => {
     if (!user) {
-      setShowAuthModal(true);
+      openAuth('login');
     } else {
       window.location.hash = '#/publicar';
     }
@@ -147,27 +154,34 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
               <button
                 onClick={handlePublish}
                 className="hidden sm:flex items-center gap-2 px-5 py-2.5 
-                         bg-green-600 hover:bg-green-700
+                         bg-brand-500 hover:bg-brand-600
                          text-white font-semibold rounded-full
                          shadow-md hover:shadow-lg
                          transition-all duration-200
                          transform hover:scale-105 active:scale-100
-                         focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                         focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Publicar Aviso Gratis</span>
               </button>
 
-              {/* Mobile: Botón ENTRAR | REGISTRARSE (no autenticado) */}
+              {/* Mobile: Botones ENTRAR / REGISTRARSE separados (no autenticado) */}
               {!user && (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="sm:hidden flex items-center gap-0 min-h-[36px] text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  <span className="px-2 py-1 text-sm font-medium">Entrar</span>
+                <div className="sm:hidden flex items-center gap-0 min-h-[36px]">
+                  <button
+                    onClick={() => openAuth('login')}
+                    className="px-2 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    Entrar
+                  </button>
                   <span className="text-gray-300">|</span>
-                  <span className="px-2 py-1 text-sm font-medium">Registrarse</span>
-                </button>
+                  <button
+                    onClick={() => openAuth('register')}
+                    className="px-2 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    Registrarse
+                  </button>
+                </div>
               )}
 
               {/* Mobile: Avatar + Nombre con dropdown dashboard (autenticado) */}
@@ -181,10 +195,10 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
                       <img 
                         src={profile.avatar_url}
                         alt="Avatar"
-                        className="w-7 h-7 rounded-full object-cover ring-2 ring-green-500"
+                        className="w-7 h-7 rounded-full object-cover ring-2 ring-brand-400"
                       />
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-green-500 to-green-600 
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-400 to-brand-500 
                                     flex items-center justify-center text-white font-semibold text-xs">
                         {(profile?.full_name?.charAt(0) || user.email?.charAt(0) || 'U').toUpperCase()}
                       </div>
@@ -276,7 +290,8 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
               <div className="hidden sm:block">
                 <UserMenu 
                   onNavigate={onNavigate}
-                  onShowAuthModal={() => setShowAuthModal(true)}
+                  onShowAuthModal={() => openAuth('login')}
+                  onShowRegisterModal={() => openAuth('register')}
                 />
               </div>
 
@@ -306,6 +321,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
         <AuthModal
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
+          initialView={authModalView}
         />
       )}
 
@@ -347,7 +363,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
 
               <button
                 onClick={() => { handlePublish(); setShowMobileMenu(false); }}
-                className="w-full text-left px-4 py-3 text-base font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-lg flex items-center gap-3"
+                className="w-full text-left px-4 py-3 text-base font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg flex items-center gap-3"
               >
                 <PlusCircle className="w-5 h-5" />
                 Publicar Aviso Gratis
@@ -356,13 +372,21 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
               {!user && (
                 <>
                   <hr className="my-2 border-gray-200" />
-                  <button
-                    onClick={() => { setShowAuthModal(true); setShowMobileMenu(false); }}
-                    className="w-full px-4 py-3 text-base font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg flex items-center justify-center gap-2"
-                  >
-                    <User className="w-5 h-5" />
-                    Ingresar / Registrarse
-                  </button>
+                  <div className="grid grid-cols-2 gap-2 px-4">
+                    <button
+                      onClick={() => { openAuth('login'); setShowMobileMenu(false); }}
+                      className="px-4 py-3 text-sm font-semibold text-brand-500 border-2 border-brand-500 hover:bg-brand-50 rounded-lg flex items-center justify-center gap-2"
+                    >
+                      <User className="w-4 h-4" />
+                      Entrar
+                    </button>
+                    <button
+                      onClick={() => { openAuth('register'); setShowMobileMenu(false); }}
+                      className="px-4 py-3 text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 rounded-lg flex items-center justify-center gap-2"
+                    >
+                      Registrarse
+                    </button>
+                  </div>
                 </>
               )}
             </div>

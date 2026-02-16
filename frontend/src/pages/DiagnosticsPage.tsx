@@ -127,7 +127,7 @@ export const DiagnosticsPage: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">📊 Resultados del Diagnóstico</h2>
               <div className="flex gap-2">
-                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
+                <span className="px-3 py-1 bg-brand-100 text-brand-600 rounded-full text-sm font-semibold">
                   ✅ {logs.filter(l => l.status === 'success').length}
                 </span>
                 <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-semibold">
@@ -145,7 +145,7 @@ export const DiagnosticsPage: React.FC = () => {
                   key={index}
                   className={`p-4 rounded-lg border-l-4 ${
                     log.status === 'success'
-                      ? 'bg-green-50 border-green-500'
+                      ? 'bg-brand-50 border-brand-400'
                       : log.status === 'warning'
                       ? 'bg-yellow-50 border-yellow-500'
                       : 'bg-red-50 border-red-500'

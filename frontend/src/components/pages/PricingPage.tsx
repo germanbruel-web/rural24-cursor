@@ -17,7 +17,7 @@ const PLAN_ICONS: Record<string, React.ReactNode> = {
 const COLOR_CLASSES: Record<string, { bg: string; text: string; ring: string }> = {
   gray: { bg: 'bg-gray-100', text: 'text-gray-600', ring: '' },
   blue: { bg: 'bg-blue-100', text: 'text-blue-600', ring: '' },
-  green: { bg: 'bg-green-100', text: 'text-green-600', ring: 'ring-4 ring-green-500 ring-opacity-50' },
+  green: { bg: 'bg-brand-100', text: 'text-brand-500', ring: 'ring-4 ring-brand-400 ring-opacity-50' },
   purple: { bg: 'bg-purple-100', text: 'text-purple-600', ring: '' },
   gold: { bg: 'bg-yellow-100', text: 'text-yellow-600', ring: '' },
   red: { bg: 'bg-red-100', text: 'text-red-600', ring: '' },
@@ -93,7 +93,7 @@ export const PricingPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-green-600" />
+        <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
       </div>
     );
   }
@@ -119,7 +119,7 @@ export const PricingPage: React.FC = () => {
       {/* Pricing Cards */}
       <div className="max-w-[1400px] mx-auto px-4 py-12">
         {/* Aviso de Lanzamiento */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-8 text-center">
+        <div className="bg-gradient-to-r from-brand-50 to-emerald-50 border-2 border-brand-200 rounded-xl p-6 mb-8 text-center">
           <h3 className="text-2xl font-bold text-gray-900 mb-2">🚀 Etapa de Lanzamiento</h3>
           <p className="text-gray-700 text-lg">
             Durante esta etapa, <strong>todos los usuarios tienen acceso gratuito al plan Starter</strong>.
@@ -144,13 +144,13 @@ export const PricingPage: React.FC = () => {
                 className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all ${
                   isComingSoon ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-2xl hover:scale-105'
                 } ${
-                  isFeatured && !isComingSoon ? 'ring-4 ring-green-500 ring-opacity-50' : ''
+                  isFeatured && !isComingSoon ? 'ring-4 ring-brand-400 ring-opacity-50' : ''
                 }`}
               >
                 {/* Badge */}
                 {badgeText && (
                   <div className="absolute top-4 right-4">
-                    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                    <span className="bg-brand-400 text-white px-3 py-1 rounded-full text-xs font-semibold">
                       {badgeText}
                     </span>
                   </div>
@@ -170,7 +170,7 @@ export const PricingPage: React.FC = () => {
                   {isStarter ? (
                     <div className="mb-6">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-black text-green-600">
+                        <span className="text-4xl font-black text-brand-500">
                           Gratis
                         </span>
                       </div>
@@ -214,7 +214,7 @@ export const PricingPage: React.FC = () => {
                   <ul className="space-y-3 mb-6">
                     {features.map((feature: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-2 text-sm">
-                        <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <Check className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
                         <span className="text-gray-700">{feature}</span>
                       </li>
                     ))}
@@ -228,7 +228,7 @@ export const PricingPage: React.FC = () => {
                       isComingSoon
                         ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                         : isFeatured
-                        ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl'
+                        ? 'bg-brand-500 hover:bg-brand-600 text-white shadow-lg hover:shadow-xl'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
                     }`}
                   >

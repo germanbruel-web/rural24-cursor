@@ -180,23 +180,23 @@ const RedeemCouponModal: React.FC<RedeemCouponModalProps> = ({
               INFORMACIÓN DEL CUPÓN (después de validar)
               ============================================ */}
           {validated && couponInfo && !success && (
-            <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4 sm:p-6">
+            <div className="bg-brand-50 border-2 border-green-300 rounded-xl p-4 sm:p-6">
               <div className="flex items-start gap-3 mb-4">
-                <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-6 h-6 text-brand-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-green-700 text-base sm:text-lg">
+                  <p className="font-bold text-brand-600 text-base sm:text-lg">
                     ✓ Cupón válido!
                   </p>
-                  <p className="text-sm text-green-600 mt-1">
+                  <p className="text-sm text-brand-500 mt-1">
                     {couponInfo.description}
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg p-4 border border-green-200">
+              <div className="bg-white rounded-lg p-4 border border-brand-200">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600 text-sm">Créditos a recibir:</span>
-                  <span className="font-black text-green-600 text-2xl">
+                  <span className="font-black text-brand-500 text-2xl">
                     +{couponInfo.credits}
                   </span>
                 </div>
@@ -251,13 +251,13 @@ const RedeemCouponModal: React.FC<RedeemCouponModalProps> = ({
               SUCCESS
               ============================================ */}
           {success && (
-            <div className="bg-green-50 border border-green-300 rounded-lg p-4 flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div className="bg-brand-50 border border-green-300 rounded-lg p-4 flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold text-green-700 text-sm">
+                <p className="font-bold text-brand-600 text-sm">
                   ¡Cupón canjeado exitosamente!
                 </p>
-                <p className="text-xs text-green-600 mt-1">
+                <p className="text-xs text-brand-500 mt-1">
                   Los créditos fueron agregados a tu balance
                 </p>
               </div>
@@ -306,7 +306,7 @@ const RedeemCouponModal: React.FC<RedeemCouponModalProps> = ({
                 className={`flex-1 py-3 px-4 font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
                   redeeming || success
                     ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700 text-white shadow-lg'
+                    : 'bg-brand-500 hover:bg-brand-600 text-white shadow-lg'
                 }`}
               >
                 {redeeming && <Loader2 className="w-5 h-5 animate-spin" />}

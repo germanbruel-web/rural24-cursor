@@ -77,7 +77,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => 
         {parts.map((part, i) =>
           // Direct, case-sensitive comparison
           part === highlight ? (
-            <strong key={i} className="font-bold text-[#7CB342]">
+            <strong key={i} className="font-bold text-brand-400">
               {part}
             </strong>
           ) : (
@@ -100,13 +100,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => 
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setShowSuggestions(true)}
           placeholder="Ej: Tractor usado en Córdoba..."
-          className="block w-full p-4 pl-12 text-lg text-gray-900 border border-gray-300 rounded-full bg-white focus:ring-[#7CB342] focus:border-[#7CB342] shadow-lg transition"
+          className="block w-full p-4 pl-12 text-lg text-gray-900 border border-gray-300 rounded-full bg-white focus:ring-brand-400 focus:border-brand-400 shadow-lg transition"
           disabled={isLoading}
           autoComplete="off"
         />
         <button
           type="submit"
-          className="text-white absolute right-2.5 bottom-2.5 bg-[#7CB342] hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-full text-sm px-8 py-3 transition"
+          className="text-white absolute right-2.5 bottom-2.5 bg-brand-400 hover:bg-brand-500 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-full text-sm px-8 py-3 transition"
           disabled={isLoading}
         >
           Buscar

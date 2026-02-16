@@ -41,7 +41,7 @@ const ICON_OPTIONS = [
 const COLOR_OPTIONS = [
   { value: 'gray', label: 'Gris', bg: 'bg-gray-500' },
   { value: 'blue', label: 'Azul', bg: 'bg-blue-500' },
-  { value: 'green', label: 'Verde', bg: 'bg-green-500' },
+  { value: 'green', label: 'Verde', bg: 'bg-brand-400' },
   { value: 'purple', label: 'Violeta', bg: 'bg-purple-500' },
   { value: 'gold', label: 'Dorado', bg: 'bg-yellow-500' },
   { value: 'red', label: 'Rojo', bg: 'bg-red-500' },
@@ -274,7 +274,7 @@ export default function PlansAdmin() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-green-600" />
+        <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
       </div>
     );
   }
@@ -285,7 +285,7 @@ export default function PlansAdmin() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <CreditCard className="w-6 h-6 text-green-600" />
+            <CreditCard className="w-6 h-6 text-brand-500" />
             Planes de Suscripción
           </h2>
           <p className="text-gray-600 text-sm mt-1">
@@ -302,7 +302,7 @@ export default function PlansAdmin() {
           </button>
           <button
             onClick={handleCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
             Nuevo Plan
@@ -321,7 +321,7 @@ export default function PlansAdmin() {
         </div>
       )}
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+        <div className="bg-brand-50 border border-brand-200 text-brand-600 px-4 py-3 rounded-lg flex items-center gap-2">
           <Check className="w-5 h-5" />
           {success}
         </div>
@@ -367,7 +367,7 @@ export default function PlansAdmin() {
                       plan.badge_color === 'gold' ? 'bg-yellow-100 text-yellow-600' :
                       plan.badge_color === 'purple' ? 'bg-purple-100 text-purple-600' :
                       plan.badge_color === 'blue' ? 'bg-blue-100 text-blue-600' :
-                      plan.badge_color === 'green' ? 'bg-green-100 text-green-600' :
+                      plan.badge_color === 'green' ? 'bg-brand-100 text-brand-500' :
                       'bg-gray-100 text-gray-600'
                     }`}>
                       {PLAN_ICONS[plan.icon_name || 'gift'] || PLAN_ICONS.gift}
@@ -376,7 +376,7 @@ export default function PlansAdmin() {
                       <div className="font-semibold text-gray-900 flex items-center gap-2">
                         {plan.display_name}
                         {plan.is_featured && (
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+                          <span className="px-2 py-0.5 bg-brand-100 text-brand-600 text-xs rounded-full">
                             Popular
                           </span>
                         )}
@@ -396,12 +396,12 @@ export default function PlansAdmin() {
                   )}
                 </td>
                 <td className="px-4 py-4 text-center">
-                  <span className={plan.max_ads === null ? 'text-green-600 font-semibold' : ''}>
+                  <span className={plan.max_ads === null ? 'text-brand-500 font-semibold' : ''}>
                     {formatLimit(plan.max_ads)}
                   </span>
                 </td>
                 <td className="px-4 py-4 text-center">
-                  <span className={plan.max_contacts_per_month === null ? 'text-green-600 font-semibold' : ''}>
+                  <span className={plan.max_contacts_per_month === null ? 'text-brand-500 font-semibold' : ''}>
                     {formatLimit(plan.max_contacts_per_month)}
                   </span>
                 </td>
@@ -416,7 +416,7 @@ export default function PlansAdmin() {
                     onClick={() => handleToggleActive(plan)}
                     className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                       plan.is_active
-                        ? 'bg-green-100 text-green-700'
+                        ? 'bg-brand-100 text-brand-600'
                         : 'bg-gray-100 text-gray-500'
                     }`}
                   >
@@ -498,7 +498,7 @@ export default function PlansAdmin() {
                       type="text"
                       value={editingPlan.name}
                       onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value.toLowerCase().replace(/\s/g, '_') })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                       placeholder="ej: pro_plus"
                       disabled={!isCreating}
                     />
@@ -511,7 +511,7 @@ export default function PlansAdmin() {
                       type="text"
                       value={editingPlan.display_name}
                       onChange={(e) => setEditingPlan({ ...editingPlan, display_name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                       placeholder="ej: Pro Plus"
                     />
                   </div>
@@ -524,7 +524,7 @@ export default function PlansAdmin() {
                     type="text"
                     value={editingPlan.description}
                     onChange={(e) => setEditingPlan({ ...editingPlan, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                     placeholder="ej: Ideal para vendedores profesionales"
                   />
                 </div>
@@ -545,7 +545,7 @@ export default function PlansAdmin() {
                       type="number"
                       value={editingPlan.price_monthly}
                       onChange={(e) => setEditingPlan({ ...editingPlan, price_monthly: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                       min="0"
                     />
                   </div>
@@ -557,7 +557,7 @@ export default function PlansAdmin() {
                       type="number"
                       value={editingPlan.price_yearly}
                       onChange={(e) => setEditingPlan({ ...editingPlan, price_yearly: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                       min="0"
                     />
                   </div>
@@ -583,7 +583,7 @@ export default function PlansAdmin() {
                         ...editingPlan, 
                         max_ads: e.target.value === '' ? null : parseInt(e.target.value) 
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                       min="0"
                       placeholder="∞"
                     />
@@ -599,7 +599,7 @@ export default function PlansAdmin() {
                         ...editingPlan, 
                         max_contacts_per_month: e.target.value === '' ? null : parseInt(e.target.value) 
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                       min="0"
                       placeholder="∞"
                     />
@@ -612,7 +612,7 @@ export default function PlansAdmin() {
                       type="number"
                       value={editingPlan.max_featured_ads}
                       onChange={(e) => setEditingPlan({ ...editingPlan, max_featured_ads: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                       min="0"
                     />
                   </div>
@@ -631,7 +631,7 @@ export default function PlansAdmin() {
                       type="checkbox"
                       checked={editingPlan.has_public_profile}
                       onChange={(e) => setEditingPlan({ ...editingPlan, has_public_profile: e.target.checked })}
-                      className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                      className="w-4 h-4 text-brand-500 rounded focus:ring-brand-400"
                     />
                     <span className="text-sm text-gray-700">Perfil Público</span>
                   </label>
@@ -640,7 +640,7 @@ export default function PlansAdmin() {
                       type="checkbox"
                       checked={editingPlan.has_catalog}
                       onChange={(e) => setEditingPlan({ ...editingPlan, has_catalog: e.target.checked })}
-                      className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                      className="w-4 h-4 text-brand-500 rounded focus:ring-brand-400"
                     />
                     <span className="text-sm text-gray-700">Catálogo</span>
                   </label>
@@ -649,7 +649,7 @@ export default function PlansAdmin() {
                       type="checkbox"
                       checked={editingPlan.has_analytics}
                       onChange={(e) => setEditingPlan({ ...editingPlan, has_analytics: e.target.checked })}
-                      className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                      className="w-4 h-4 text-brand-500 rounded focus:ring-brand-400"
                     />
                     <span className="text-sm text-gray-700">Analytics</span>
                   </label>
@@ -665,7 +665,7 @@ export default function PlansAdmin() {
                 <div className="space-y-2">
                   {editingPlan.features.map((feature, idx) => (
                     <div key={idx} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-600" />
+                      <Check className="w-4 h-4 text-brand-500" />
                       <span className="flex-1 text-sm text-gray-700">{feature}</span>
                       <button
                         onClick={() => handleRemoveFeature(idx)}
@@ -681,7 +681,7 @@ export default function PlansAdmin() {
                       value={newFeature}
                       onChange={(e) => setNewFeature(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleAddFeature()}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                       placeholder="Agregar feature..."
                     />
                     <button
@@ -708,7 +708,7 @@ export default function PlansAdmin() {
                     <select
                       value={editingPlan.icon_name}
                       onChange={(e) => setEditingPlan({ ...editingPlan, icon_name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                     >
                       {ICON_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -722,7 +722,7 @@ export default function PlansAdmin() {
                     <select
                       value={editingPlan.badge_color}
                       onChange={(e) => setEditingPlan({ ...editingPlan, badge_color: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                     >
                       {COLOR_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -737,7 +737,7 @@ export default function PlansAdmin() {
                       type="number"
                       value={editingPlan.sort_order}
                       onChange={(e) => setEditingPlan({ ...editingPlan, sort_order: parseInt(e.target.value) || 1 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                       min="1"
                     />
                   </div>
@@ -748,7 +748,7 @@ export default function PlansAdmin() {
                       type="checkbox"
                       checked={editingPlan.is_featured}
                       onChange={(e) => setEditingPlan({ ...editingPlan, is_featured: e.target.checked })}
-                      className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                      className="w-4 h-4 text-brand-500 rounded focus:ring-brand-400"
                     />
                     <span className="text-sm text-gray-700">Plan destacado (borde verde en /pricing)</span>
                   </label>
@@ -761,7 +761,7 @@ export default function PlansAdmin() {
                     type="text"
                     value={editingPlan.badge_text}
                     onChange={(e) => setEditingPlan({ ...editingPlan, badge_text: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                     placeholder="ej: Más Popular"
                   />
                 </div>
@@ -779,7 +779,7 @@ export default function PlansAdmin() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+                className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
               >
                 {saving ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />

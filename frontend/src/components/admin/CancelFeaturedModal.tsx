@@ -292,14 +292,14 @@ export default function CancelFeaturedModal({ isOpen, onClose, featured, onSucce
               )}
 
               {success && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div className="p-4 bg-brand-50 border border-brand-200 rounded-lg flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <p className="font-semibold text-green-800">
+                    <p className="font-semibold text-brand-700">
                       ✅ Featured cancelado exitosamente
                     </p>
                     {refundInfo && refundInfo.applied && (
-                      <p className="text-sm text-green-700 mt-1">
+                      <p className="text-sm text-brand-600 mt-1">
                         {refundInfo.amount} créditos reembolsados
                       </p>
                     )}

@@ -21,9 +21,9 @@ const checkboxVariants = cva(
       variant: {
         primary: [
           'border-gray-300',
-          'checked:bg-[#16a135] checked:border-[#16a135]',
-          'hover:border-[#16a135]',
-          'focus-visible:ring-green-500',
+          'checked:bg-brand-500 checked:border-brand-500',
+          'hover:border-brand-500',
+          'focus-visible:ring-brand-400',
         ],
         secondary: [
           'border-gray-300',

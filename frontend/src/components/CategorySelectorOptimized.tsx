@@ -159,7 +159,7 @@ export const CategorySelectorOptimized: React.FC<CategorySelectorProps> = ({ onS
       {/* Estado de carga */}
       {loadingState && (
         <div className="text-sm text-gray-600 flex items-center gap-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-2 border-green-500 border-t-transparent" />
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-brand-400 border-t-transparent" />
           {loadingState}
         </div>
       )}
@@ -172,7 +172,7 @@ export const CategorySelectorOptimized: React.FC<CategorySelectorProps> = ({ onS
         <select
           value={selectedCategory}
           onChange={(e) => handleCategoryChange(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
         >
           <option value="">Seleccionar categoría</option>
           {categories.map((cat) => (
@@ -192,7 +192,7 @@ export const CategorySelectorOptimized: React.FC<CategorySelectorProps> = ({ onS
           <select
             value={selectedSubcategory}
             onChange={(e) => handleSubcategoryChange(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
           >
             <option value="">Seleccionar subcategoría</option>
             {subcategories.map((sub) => (
@@ -213,7 +213,7 @@ export const CategorySelectorOptimized: React.FC<CategorySelectorProps> = ({ onS
           <select
             value={selectedBrand}
             onChange={(e) => handleBrandChange(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
           >
             <option value="">Seleccionar marca</option>
             {brands.map((brand) => (
@@ -234,7 +234,7 @@ export const CategorySelectorOptimized: React.FC<CategorySelectorProps> = ({ onS
           <select
             value={selectedModel}
             onChange={(e) => handleModelChange(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
           >
             <option value="">Seleccionar modelo</option>
             {models.map((model) => (

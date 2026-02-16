@@ -174,7 +174,7 @@ export default function GlobalSettingsPanel() {
       isChanged 
         ? 'border-yellow-400 bg-yellow-50' 
         : 'border-gray-300 bg-white'
-    } focus:outline-none focus:ring-2 focus:ring-green-500`;
+    } focus:outline-none focus:ring-2 focus:ring-brand-400`;
 
     return (
       <div className="flex items-center gap-2">
@@ -212,7 +212,7 @@ export default function GlobalSettingsPanel() {
           disabled={!isChanged || isSaving}
           className={`p-2 rounded-lg transition-all ${
             isChanged && !isSaving
-              ? 'bg-green-600 text-white hover:bg-green-700'
+              ? 'bg-brand-500 text-white hover:bg-brand-600'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
           }`}
           title="Guardar cambio"
@@ -220,7 +220,7 @@ export default function GlobalSettingsPanel() {
           {isSaving ? (
             <RefreshCw className="w-4 h-4 animate-spin" />
           ) : status?.success ? (
-            <CheckCircle className="w-4 h-4 text-green-600" />
+            <CheckCircle className="w-4 h-4 text-brand-500" />
           ) : status && !status.success ? (
             <AlertCircle className="w-4 h-4 text-red-600" />
           ) : (
@@ -234,7 +234,7 @@ export default function GlobalSettingsPanel() {
   if (loading && activeTab === 'settings') {
     return (
       <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-green-600" />
+        <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
       </div>
     );
   }
@@ -245,7 +245,7 @@ export default function GlobalSettingsPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Settings className="w-7 h-7 text-green-600" />
+            <Settings className="w-7 h-7 text-brand-500" />
             Configuración Global
           </h1>
           <p className="text-gray-600 mt-1">
@@ -270,7 +270,7 @@ export default function GlobalSettingsPanel() {
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'settings'
-                ? 'border-green-600 text-green-600'
+                ? 'border-brand-500 text-brand-500'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -281,7 +281,7 @@ export default function GlobalSettingsPanel() {
             onClick={() => setActiveTab('plans')}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'plans'
-                ? 'border-green-600 text-green-600'
+                ? 'border-brand-500 text-brand-500'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -322,7 +322,7 @@ export default function GlobalSettingsPanel() {
                     catInfo.color === 'yellow' ? 'from-yellow-50 to-white' :
                     catInfo.color === 'blue' ? 'from-blue-50 to-white' :
                     catInfo.color === 'purple' ? 'from-purple-50 to-white' :
-                    catInfo.color === 'green' ? 'from-green-50 to-white' :
+                    catInfo.color === 'green' ? 'from-brand-50 to-white' :
                     catInfo.color === 'pink' ? 'from-pink-50 to-white' :
                     catInfo.color === 'orange' ? 'from-orange-50 to-white' :
                     'from-gray-50 to-white'
@@ -332,7 +332,7 @@ export default function GlobalSettingsPanel() {
                         catInfo.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
                         catInfo.color === 'blue' ? 'bg-blue-100 text-blue-600' :
                         catInfo.color === 'purple' ? 'bg-purple-100 text-purple-600' :
-                        catInfo.color === 'green' ? 'bg-green-100 text-green-600' :
+                        catInfo.color === 'green' ? 'bg-brand-100 text-brand-500' :
                         catInfo.color === 'pink' ? 'bg-pink-100 text-pink-600' :
                         catInfo.color === 'orange' ? 'bg-orange-100 text-orange-600' :
                         'bg-gray-100 text-gray-600'
@@ -373,7 +373,7 @@ export default function GlobalSettingsPanel() {
                                   </button>
                                 )}
                                 {setting.is_public && (
-                                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+                                  <span className="px-2 py-0.5 bg-brand-100 text-brand-600 text-xs rounded-full">
                                     Público
                                   </span>
                                 )}

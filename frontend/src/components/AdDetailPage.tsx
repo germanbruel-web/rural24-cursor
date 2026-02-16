@@ -309,7 +309,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
       </div>
     );
   }
@@ -322,7 +322,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
           <h2 className="text-2xl font-bold text-gray-800 mb-2">{TEXTS.adDetail.notFound}</h2>
           <button
             onClick={onBack}
-            className="text-green-600 hover:underline"
+            className="text-brand-500 hover:underline"
           >
             {TEXTS.adDetail.backToResults}
           </button>
@@ -368,7 +368,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
           <nav id="breadcrumb-nav" className="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm">
             <button
               onClick={onBack}
-              className="text-gray-500 hover:text-green-600 transition-colors flex items-center gap-1"
+              className="text-gray-500 hover:text-brand-500 transition-colors flex items-center gap-1"
               aria-label={TEXTS.adDetail.back}
             >
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -379,7 +379,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
             
             <button
               onClick={onBack}
-              className="text-green-600 hover:underline font-medium"
+              className="text-brand-500 hover:underline font-medium"
             >
               {TEXTS.adDetail.home}
             </button>
@@ -393,7 +393,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     query: ad.category 
                   })}
                   disabled={!onSearch}
-                  className="text-green-600 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed max-w-[150px] truncate"
+                  className="text-brand-500 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed max-w-[150px] truncate"
                   title={ad.category}
                 >
                   {ad.category}
@@ -411,7 +411,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     query: `${ad.category} ${ad.subcategory}` 
                   })}
                   disabled={!onSearch}
-                  className="text-green-600 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed max-w-[150px] truncate"
+                  className="text-brand-500 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed max-w-[150px] truncate"
                   title={ad.subcategory}
                 >
                   {ad.subcategory}
@@ -429,7 +429,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     query: `${ad.category} ${ad.subcategory || ''} ${ad.brand}`.trim()
                   })}
                   disabled={!onSearch}
-                  className="text-green-600 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed max-w-[120px] truncate"
+                  className="text-brand-500 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed max-w-[120px] truncate"
                   title={ad.brand}
                 >
                   {ad.brand}
@@ -486,7 +486,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                           onClick={() => setCurrentImageIndex(idx)}
                           className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
                             currentImageIndex === idx
-                              ? 'border-green-600 scale-105'
+                              ? 'border-brand-500 scale-105'
                               : 'border-gray-200 hover:border-gray-400'
                           }`}
                         >
@@ -515,9 +515,9 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
             </div>
 
             {/* Descripción - Con borde verde */}
-            <div id="ad-description" className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600">
+            <div id="ad-description" className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-brand-500">
               <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <DocumentTextIcon className="w-5 h-5 text-green-600" />
+                <DocumentTextIcon className="w-5 h-5 text-brand-500" />
                 {TEXTS.adDetail.description}
               </h3>
               <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-base break-words overflow-wrap">
@@ -547,9 +547,9 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     return (
                       <>
                         {Object.entries(grouped).map(([groupKey, attrs]) => (
-                          <div key={groupKey} className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600">
+                          <div key={groupKey} className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-brand-500">
                             <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                              <Cog6ToothIcon className="w-6 h-6 text-green-600" />
+                              <Cog6ToothIcon className="w-6 h-6 text-brand-500" />
                               {groupTitles[groupKey as keyof typeof groupTitles] || groupKey}
                             </h3>
                             <div className="grid grid-cols-3 gap-x-6 gap-y-3">
@@ -567,7 +567,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                                       <ul className="mt-2 space-y-2">
                                         {attr.value.map((item: string, idx: number) => (
                                           <li key={idx} className="flex items-start gap-2">
-                                            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                                            <CheckCircle className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
                                             <span className="text-base font-bold text-gray-900">{item}</span>
                                           </li>
                                         ))}
@@ -590,9 +590,9 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                   })()
                 ) : ad.attributes && Object.keys(ad.attributes).length > 0 ? (
                   /* Fallback: mostrar atributos raw del JSONB sin schema */
-                  <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600">
+                  <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-brand-500">
                     <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <CheckBadgeIcon className="w-6 h-6 text-green-600" />
+                      <CheckBadgeIcon className="w-6 h-6 text-brand-500" />
                       Características
                     </h3>
                     <div className="grid grid-cols-3 gap-x-6 gap-y-3">
@@ -611,7 +611,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                                 <ul className="mt-2 space-y-2">
                                   {value.map((item: string, idx: number) => (
                                     <li key={idx} className="flex items-start gap-2">
-                                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                                      <CheckCircle className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
                                       <span className="text-base font-bold text-gray-900">{item}</span>
                                     </li>
                                   ))}
@@ -630,9 +630,9 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                   <>
                     {/* SECCIÓN 1: Información Básica - Compacta */}
                     {(ad.category || ad.subcategory || ad.brand || ad.model || ad.year || ad.condition) && (
-                      <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600">
+                      <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-brand-500">
                         <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                          <InformationCircleIcon className="w-5 h-5 text-green-600" />
+                          <InformationCircleIcon className="w-5 h-5 text-brand-500" />
                           Información General
                         </h3>
                         <div className="grid grid-cols-3 gap-x-6 gap-y-3">
@@ -674,7 +674,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                           {ad.condition && (
                             <div className="flex flex-col">
                               <span className="text-gray-600">{TEXTS.adDetail.condition}</span>
-                              <span className="text-base font-bold text-green-700 mt-1">{ad.condition}</span>
+                              <span className="text-base font-bold text-brand-600 mt-1">{ad.condition}</span>
                             </div>
                           )}
                         </div>
@@ -699,9 +699,9 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
 
             {/* Características adicionales - Con borde verde */}
             {ad.enriched_data && Object.keys(ad.enriched_data).length > 0 && (
-              <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-green-600">
+              <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-brand-500">
                 <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <CheckBadgeIcon className="w-5 h-5 text-green-600" />
+                  <CheckBadgeIcon className="w-5 h-5 text-brand-500" />
                   {TEXTS.adDetail.characteristics}
                 </h3>
                 <ul className="space-y-3">
@@ -710,7 +710,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     
                     return values.map((result, idx) => (
                       <li key={`${key}-${idx}`} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
                         <span className="text-base text-gray-900 leading-relaxed">{result.value}</span>
                       </li>
                     ));
@@ -737,7 +737,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                   {/* Mostrar nombre del vendedor con icono adelante */}
                   {ad.seller?.full_name ? (
                     <div className="text-base text-gray-900 font-semibold flex items-center gap-2">
-                      <User className="w-5 h-5 text-green-600 flex-shrink-0" />
+                      <User className="w-5 h-5 text-brand-500 flex-shrink-0" />
                       {(() => {
                         const names = ad.seller.full_name.split(' ');
                         if (names.length >= 2) {
@@ -748,7 +748,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                     </div>
                   ) : (
                     <div className="text-base text-gray-900 font-semibold flex items-center gap-2">
-                      <User className="w-5 h-5 text-green-600 flex-shrink-0" />
+                      <User className="w-5 h-5 text-brand-500 flex-shrink-0" />
                       Vendedor Anónimo
                     </div>
                   )}
@@ -767,7 +767,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                   {/* Fecha de registro del usuario */}
                   {ad.seller?.created_at && (
                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Calendar className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <Calendar className="w-4 h-4 text-brand-500 flex-shrink-0" />
                       <span>
                         Registrado desde {new Date(ad.seller.created_at).toLocaleDateString('es-AR', {
                           year: 'numeric',
@@ -781,7 +781,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                   {/* Ubicación */}
                   {(ad.province || ad.location) && (
                     <div className="flex items-start gap-2 text-sm text-gray-600 pt-2 border-t border-gray-200">
-                      <MapPin className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                      <MapPin className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
                       <div>
                         {ad.province && <span className="font-medium">{ad.province}</span>}
                         {ad.province && ad.location && <span className="text-gray-400"> • </span>}
@@ -793,7 +793,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                   {/* Fecha de publicación */}
                   {ad.created_at && (
                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Calendar className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <Calendar className="w-4 h-4 text-brand-500 flex-shrink-0" />
                       <span>
                         Publicado el {new Date(ad.created_at).toLocaleDateString('es-AR', {
                           year: 'numeric',
@@ -815,7 +815,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                       padding: 1rem 1.5rem;
                       font-size: 1.125rem;
                       font-weight: 600;
-                      border-radius: 0.5rem;
+                      border-radius: 9999px;
                       border: none;
                       cursor: pointer;
                       display: flex;
@@ -827,15 +827,15 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                       z-index: 1;
                     }
                     
-                    /* Estado activo (verde) */
+                    /* Estado activo (verde - brand-500) */
                     #contact-seller-btn:not(:disabled) {
-                      background: #16a135;
+                      background: rgb(var(--color-brand-500));
                       color: white;
                       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
                     }
                     
                     #contact-seller-btn:not(:disabled):hover {
-                      background: #0e7d25;
+                      background: rgb(var(--color-brand-700));
                       box-shadow: 0 4px 12px rgba(22, 161, 53, 0.3);
                       transform: translateY(-1px);
                     }
@@ -895,10 +895,10 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
               ) : (
                     <div id="contact-success-modal" className="space-y-3">
                       {contactSuccess ? (
-                        <div className="bg-white border-2 border-green-500 rounded-lg p-6 text-center shadow-lg">
+                        <div className="bg-white border-2 border-brand-400 rounded-lg p-6 text-center shadow-lg">
                           <div className="mb-4">
-                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                              <Check className="w-8 h-8 text-green-600" />
+                            <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                              <Check className="w-8 h-8 text-brand-500" />
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-2">{TEXTS.adDetail.messageSent}</h3>
                             <p className="text-gray-600 text-sm mb-4">
@@ -911,7 +911,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                               setContactSuccess(false);
                               setShowContactForm(false);
                             }}
-                            className="w-full bg-[#16a135] text-white px-6 py-3 rounded-lg text-base font-semibold hover:bg-[#0e7d25] transition-colors"
+                            className="w-full bg-brand-500 text-white px-6 py-3 rounded-lg text-base font-semibold hover:bg-brand-700 transition-colors"
                           >
                             {TEXTS.common.close}
                           </button>
@@ -933,15 +933,15 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                       ) : (
                         <form id="contact-form" onSubmit={handleContactSubmit} className="space-y-3">
                           {user && (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                            <div className="bg-brand-50 border border-brand-200 rounded-lg p-3 mb-3">
                               <div className="flex items-center gap-1.5 mb-1">
-                                <CheckCircleIcon className="w-4 h-4 text-green-600" />
-                                <p className="text-xs text-green-600">{TEXTS.adDetail.sendingAs}</p>
+                                <CheckCircleIcon className="w-4 h-4 text-brand-500" />
+                                <p className="text-xs text-brand-500">{TEXTS.adDetail.sendingAs}</p>
                               </div>
-                              <p className="text-sm font-medium text-green-900 break-words">
+                              <p className="text-sm font-medium text-brand-800 break-words">
                                 {contactForm.name} {contactForm.lastName} · {contactForm.phone}
                               </p>
-                              <p className="text-xs text-green-700 mt-1">{user.email}</p>
+                              <p className="text-xs text-brand-600 mt-1">{user.email}</p>
                             </div>
                           )}
                           {!user && (
@@ -999,7 +999,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                             <button 
                               type="submit" 
                               disabled={sendingContact} 
-                              className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-300"
+                              className="flex-1 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors disabled:bg-gray-300"
                             >
                               {sendingContact ? TEXTS.adDetail.sending : TEXTS.adDetail.sendMessage}
                             </button>
@@ -1043,7 +1043,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
             
             {loadingOtherAds ? (
               <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16a135]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
               </div>
             ) : sellerOtherAds.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

@@ -233,8 +233,8 @@ export function TemplateSuggestions({
             }}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-all text-sm font-medium ${
               selectedDescId
-                ? 'bg-green-50 border-green-300 text-green-700'
-                : 'bg-white border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50'
+                ? 'bg-brand-50 border-green-300 text-brand-600'
+                : 'bg-white border-gray-200 text-gray-700 hover:border-green-300 hover:bg-brand-50'
             }`}
           >
             <AlignLeft className="w-4 h-4" />
@@ -244,8 +244,8 @@ export function TemplateSuggestions({
 
           {showDescDropdown && (
             <div className="absolute z-50 mt-2 w-96 bg-white rounded-xl shadow-xl border-2 border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="p-3 bg-gradient-to-r from-green-50 to-green-100 border-b">
-                <p className="text-xs font-semibold text-green-700 flex items-center gap-1">
+              <div className="p-3 bg-gradient-to-r from-brand-50 to-brand-100 border-b">
+                <p className="text-xs font-semibold text-brand-600 flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
                   Plantillas de descripción ({descTemplates.length})
                 </p>
@@ -262,7 +262,7 @@ export function TemplateSuggestions({
                       onClick={() => handleSelectDescription(template)}
                       className={`w-full text-left p-3 border-b border-gray-100 last:border-0 transition-all ${
                         isSelected
-                          ? 'bg-green-50'
+                          ? 'bg-brand-50'
                           : 'hover:bg-gray-50'
                       }`}
                     >
@@ -274,7 +274,7 @@ export function TemplateSuggestions({
                           </p>
                         </div>
                         {isSelected && (
-                          <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-1" />
+                          <Check className="w-4 h-4 text-brand-500 flex-shrink-0 mt-1" />
                         )}
                       </div>
                     </button>
@@ -289,7 +289,7 @@ export function TemplateSuggestions({
       {/* Loading indicator */}
       {loading && (
         <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500">
-          <div className="w-4 h-4 border-2 border-gray-300 border-t-green-500 rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-gray-300 border-t-brand-400 rounded-full animate-spin" />
           <span>Cargando plantillas...</span>
         </div>
       )}

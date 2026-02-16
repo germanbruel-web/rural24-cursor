@@ -33,7 +33,7 @@ const tipsCardVariants = cva(
       variant: {
         default: 'bg-gray-50 border-gray-200',
         blue: 'bg-blue-50 border-blue-200',
-        green: 'bg-green-50 border-green-200',
+        green: 'bg-brand-50 border-brand-200',
         yellow: 'bg-yellow-50 border-yellow-200',
       },
     },
@@ -48,7 +48,7 @@ const iconContainerVariants = cva('flex-shrink-0 mt-0.5', {
     variant: {
       default: 'text-gray-600',
       blue: 'text-blue-600',
-      green: 'text-green-600',
+      green: 'text-brand-500',
       yellow: 'text-yellow-600',
     },
   },

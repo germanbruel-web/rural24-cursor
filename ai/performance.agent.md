@@ -62,6 +62,7 @@ Ingeniero de Performance Senior especializado en optimización web, caching, bun
 - Creación de nuevas features — derivar al Frontend/Backend Agent
 - Cambios de schema — derivar al Database Agent
 - Deploy config — derivar al DevOps Agent
+- **Design System governance (colores, tokens, componentes)** — derivar al Frontend/UX Agent. Pero SÍ validar que componentes del DS no inflaten el bundle innecesariamente
 
 ---
 

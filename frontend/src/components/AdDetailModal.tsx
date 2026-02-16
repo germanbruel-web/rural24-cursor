@@ -116,7 +116,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16a135] mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
                 <p className="text-gray-600">Cargando detalles...</p>
               </div>
             </div>
@@ -174,7 +174,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                         key={idx}
                         onClick={() => setCurrentImageIndex(idx)}
                         className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                          currentImageIndex === idx ? 'border-[#16a135]' : 'border-gray-200 hover:border-gray-400'
+                          currentImageIndex === idx ? 'border-brand-500' : 'border-gray-200 hover:border-gray-400'
                         }`}
                       >
                         <img src={img} alt={`Vista ${idx + 1}`} className="w-full h-full object-cover" />
@@ -191,7 +191,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                   {/* Badges */}
                   <div className="flex flex-wrap items-center gap-2 mb-3">
                     {ad.category && (
-                      <span className="px-3 py-1.5 bg-gradient-to-r from-green-600 to-green-700 text-white text-xs font-bold rounded uppercase shadow-sm">
+                      <span className="px-3 py-1.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-xs font-bold rounded uppercase shadow-sm">
                         📁 {ad.category}
                       </span>
                     )}
@@ -216,13 +216,13 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                   <h1 className="text-3xl font-bold text-gray-900 mb-4">{ad.title}</h1>
 
                   {/* Price */}
-                  <div className="text-4xl font-bold text-[#16a135] mb-4">
+                  <div className="text-4xl font-bold text-brand-500 mb-4">
                     {formatPrice(ad.price, ad.currency)}
                   </div>
 
                   {/* Location */}
                   <div className="flex items-center gap-2 text-gray-600 mb-2">
-                    <MapPin className="w-5 h-5 text-[#16a135]" />
+                    <MapPin className="w-5 h-5 text-brand-500" />
                     <span className="font-medium">
                       {ad.location || 'Sin ubicación'}{ad.province && `, ${ad.province}`}
                     </span>
@@ -261,7 +261,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                       {ad.condition && (
                         <div>
                           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Condición</span>
-                          <span className="text-base font-bold text-[#16a135]">{ad.condition}</span>
+                          <span className="text-base font-bold text-brand-500">{ad.condition}</span>
                         </div>
                       )}
                     </div>
@@ -294,7 +294,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                 {ad.enriched_data && Object.keys(ad.enriched_data).length > 0 && (
                   <div className="border-t pt-6">
                     <h3 className="font-semibold mb-3 flex items-center gap-2">
-                      <span className="text-green-600">✨</span>
+                      <span className="text-brand-500">✨</span>
                       Características
                     </h3>
                     <ul className="space-y-3">
@@ -334,7 +334,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                         
                         return values.map((val, idx) => (
                           <li key={`${key}-${idx}`} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                            <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span className="text-sm text-gray-900 leading-relaxed">{val}</span>
@@ -356,7 +356,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                           className={`w-full py-4 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 ${
                             isSellerAtLimit
                               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-[#16a135] hover:bg-[#0e7d25] text-white'
+                              : 'bg-brand-500 hover:bg-brand-700 text-white'
                           }`}
                         >
                           <Mail className="w-5 h-5" />
@@ -376,10 +376,10 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                     ) : (
                       <div className="space-y-4">
                         {contactSuccess ? (
-                          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                            <div className="text-green-600 text-2xl mb-2">✓</div>
-                            <p className="text-green-800 font-semibold">¡Mensaje enviado!</p>
-                            <p className="text-green-600 text-sm mt-1">El vendedor recibirá tu consulta por email</p>
+                          <div className="bg-brand-50 border border-brand-200 rounded-lg p-4 text-center">
+                            <div className="text-brand-500 text-2xl mb-2">✓</div>
+                            <p className="text-brand-700 font-semibold">¡Mensaje enviado!</p>
+                            <p className="text-brand-500 text-sm mt-1">El vendedor recibirá tu consulta por email</p>
                           </div>
                         ) : (
                           <form onSubmit={handleContactSubmit} className="space-y-3">
@@ -395,7 +395,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                                 required
                                 value={contactForm.name}
                                 onChange={(e) => setContactForm({...contactForm, name: e.target.value})}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                                 placeholder="Juan Pérez"
                               />
                             </div>
@@ -410,7 +410,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                                 required
                                 value={contactForm.email}
                                 onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                                 placeholder="tu@email.com"
                               />
                             </div>
@@ -424,7 +424,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                                 type="tel"
                                 value={contactForm.phone}
                                 onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                                 placeholder="+54 9 11 1234-5678"
                               />
                             </div>
@@ -438,7 +438,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                                 value={contactForm.message}
                                 onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
                                 rows={4}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent resize-none"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                                 placeholder="Hola, me interesa este producto..."
                               />
                             </div>
@@ -454,7 +454,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                               <button
                                 type="submit"
                                 disabled={sendingContact}
-                                className="flex-1 py-3 bg-[#16a135] hover:bg-[#0e7d25] text-white font-bold rounded-lg transition-colors disabled:opacity-50"
+                                className="flex-1 py-3 bg-brand-500 hover:bg-brand-700 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
                               >
                                 {sendingContact ? 'Enviando...' : 'Enviar Mensaje'}
                               </button>
@@ -476,7 +476,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
                       )}
                       <div className="flex items-center gap-2">
                         {ad.seller.email_verified && (
-                          <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
+                          <span className="px-2 py-0.5 bg-brand-100 text-brand-700 text-xs rounded-full">
                             ✓ Verificado
                           </span>
                         )}

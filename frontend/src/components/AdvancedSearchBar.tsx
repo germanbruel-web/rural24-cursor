@@ -206,14 +206,14 @@ export const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
           onFocus={() => setShowSuggestions(true)}
           onKeyDown={handleKeyDown}
           placeholder="Ej: Tractor en Buenos Aires..."
-          className="block w-full p-4 pl-12 text-lg text-gray-900 border border-gray-300 bg-white focus:ring-[#16a135] focus:border-[#16a135] shadow-lg transition"
+          className="block w-full p-4 pl-12 text-lg text-gray-900 border border-gray-300 bg-white focus:ring-brand-500 focus:border-brand-500 shadow-lg transition"
           style={{ borderRadius: '12px' }}
           disabled={isLoading}
           autoComplete="off"
         />
         <button
           type="submit"
-          className="text-white absolute right-2.5 bottom-2.5 bg-[#16a135] hover:bg-[#138a2e] focus:ring-4 focus:outline-none focus:ring-green-300 font-medium text-sm px-8 py-3 transition"
+          className="text-white absolute right-2.5 bottom-2.5 bg-brand-500 hover:bg-brand-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium text-sm px-8 py-3 transition"
           style={{ borderRadius: '8px' }}
           disabled={isLoading}
         >
@@ -229,7 +229,7 @@ export const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                   case 'popular':
                     return 'bg-orange-100 text-orange-700';
                   case 'category':
-                    return 'bg-green-100 text-green-700';
+                    return 'bg-brand-100 text-brand-600';
                   case 'province':
                     return 'bg-blue-100 text-blue-700';
                   case 'tag':
@@ -267,7 +267,7 @@ export const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
                     selectedIndex === idx 
-                      ? 'bg-[#16a135] text-white' 
+                      ? 'bg-brand-500 text-white' 
                       : 'hover:bg-gray-50 text-gray-700'
                   }`}
                 >
@@ -319,7 +319,7 @@ export const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
             }}
             className="rounded-lg p-4 transition-all duration-300 border-3 hover:border-white/30 hover:scale-105 shadow-lg flex flex-col items-center gap-2 aspect-square justify-center backdrop-blur-md relative overflow-hidden group"
             style={{ 
-              border: '3px solid #16a135',
+              border: '3px solid rgb(var(--color-brand-500))',
               backgroundColor: 'rgba(0, 0, 0, 0.5)'
             }}
           >

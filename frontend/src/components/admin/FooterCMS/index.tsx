@@ -193,8 +193,8 @@ export const FooterCMS: React.FC = () => {
         {/* Columna 1: Contacto */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
-            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-              <span className="text-green-600 font-bold">1</span>
+            <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
+              <span className="text-brand-500 font-bold">1</span>
             </div>
             <h3 className="font-bold text-gray-900">Información de Contacto</h3>
           </div>

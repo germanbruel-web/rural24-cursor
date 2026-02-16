@@ -209,7 +209,7 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
                 onClick={() => setMobileIndex(index)}
                 className={`rounded-full transition-all duration-300 ${
                   index === mobileIndex 
-                    ? 'bg-[#16a135] w-4 h-1.5' 
+                    ? 'bg-brand-500 w-4 h-1.5' 
                     : 'bg-gray-300 w-1.5 h-1.5 hover:bg-gray-400'
                 }`}
                 aria-label={`Ver banner ${index + 1}`}

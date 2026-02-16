@@ -308,7 +308,7 @@ export const CategoryIconsCMS: React.FC = () => {
       <div className="flex justify-between items-center">
         <button
           onClick={handleNew}
-          className="flex items-center gap-2 px-4 py-2 bg-[#16a135] hover:bg-[#138a2c] text-white rounded-lg font-semibold transition-colors shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg font-semibold transition-colors shadow-sm"
         >
           <Plus className="w-5 h-5" />
           Nuevo Icono
@@ -485,7 +485,7 @@ export const CategoryIconsCMS: React.FC = () => {
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium flex items-center gap-2 disabled:opacity-50"
+                  className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition font-medium flex items-center gap-2 disabled:opacity-50"
                 >
                   {uploading ? (
                     <>

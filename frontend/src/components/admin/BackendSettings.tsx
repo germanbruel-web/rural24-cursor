@@ -78,7 +78,7 @@ const TextSettingItem: React.FC<{
           <h3 className="font-semibold text-gray-900">{setting.description}</h3>
           <p className="text-xs text-gray-500 mt-1 font-mono">{setting.setting_key}</p>
         </div>
-        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded flex items-center gap-1">
+        <span className="px-2 py-1 bg-brand-100 text-brand-600 text-xs font-medium rounded flex items-center gap-1">
           Texto
         </span>
       </div>
@@ -355,7 +355,7 @@ export const BackendSettings: React.FC = () => {
             <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
               <div 
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  status === 'completed' ? 'bg-green-500' : 'bg-blue-500'
+                  status === 'completed' ? 'bg-brand-400' : 'bg-blue-500'
                 }`}
                 style={{ width: `${progress}%` }}
               />
@@ -370,7 +370,7 @@ export const BackendSettings: React.FC = () => {
               flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all font-medium
               ${isUploading 
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                : 'bg-[#16a135] hover:bg-[#138a2c] text-white shadow-sm hover:shadow-md'
+                : 'bg-brand-500 hover:bg-brand-600 text-white shadow-sm hover:shadow-md'
               }
             `}>
               {isUploading ? (
@@ -457,7 +457,7 @@ export const BackendSettings: React.FC = () => {
                 className={`
                   px-4 py-3 rounded-lg font-medium transition-all
                   ${activeSection === section
-                    ? 'bg-[#16a135] text-white shadow-sm'
+                    ? 'bg-brand-500 text-white shadow-sm'
                     : 'text-gray-600 hover:bg-gray-100'
                   }
                 `}

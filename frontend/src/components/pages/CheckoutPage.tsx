@@ -276,7 +276,7 @@ export const CheckoutPage: React.FC = () => {
             {/* Sección: Planes */}
             <section className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-green-600" />
+                <Sparkles className="w-5 h-5 text-brand-500" />
                 Elegí tu Plan
               </h2>
               
@@ -290,14 +290,14 @@ export const CheckoutPage: React.FC = () => {
                       onClick={() => handleSelectPlan(plan)}
                       className={`cursor-pointer border-2 rounded-xl p-4 transition-all ${
                         selectedPlan?.id === plan.id
-                          ? 'border-green-500 bg-green-50'
+                          ? 'border-brand-400 bg-brand-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-bold text-gray-900">{plan.display_name}</h3>
                         {selectedPlan?.id === plan.id && (
-                          <Check className="w-5 h-5 text-green-600" />
+                          <Check className="w-5 h-5 text-brand-500" />
                         )}
                       </div>
                       <p className="text-2xl font-black text-gray-900">
@@ -368,7 +368,7 @@ export const CheckoutPage: React.FC = () => {
                               {formatPrice(pack.pricePerCredit)} c/u
                             </div>
                             {pack.discount && (
-                              <div className="text-xs text-green-600 font-semibold">
+                              <div className="text-xs text-brand-500 font-semibold">
                                 Ahorrás {pack.discount}%
                               </div>
                             )}
@@ -412,7 +412,7 @@ export const CheckoutPage: React.FC = () => {
                             <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
                               banner.placement === 'hero' ? 'bg-purple-100 text-purple-600' :
                               banner.placement === 'carousel' ? 'bg-blue-100 text-blue-600' :
-                              'bg-green-100 text-green-600'
+                              'bg-brand-100 text-brand-500'
                             }`}>
                               {banner.placement === 'hero' ? <Home className="w-6 h-6" /> :
                                banner.placement === 'carousel' ? <ImageIcon className="w-6 h-6" /> :
@@ -480,7 +480,7 @@ export const CheckoutPage: React.FC = () => {
                     {cart.map((item) => (
                       <div key={item.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          item.type === 'plan' ? 'bg-green-100 text-green-600' :
+                          item.type === 'plan' ? 'bg-brand-100 text-brand-500' :
                           item.type === 'credits' ? 'bg-amber-100 text-amber-600' :
                           'bg-blue-100 text-blue-600'
                         }`}>
@@ -539,7 +539,7 @@ export const CheckoutPage: React.FC = () => {
                   {/* Botón de Pago */}
                   <button
                     onClick={handleCheckout}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
                   >
                     <CreditCard className="w-5 h-5" />
                     Continuar al Pago
@@ -553,12 +553,12 @@ export const CheckoutPage: React.FC = () => {
 
               {/* Promo si no tiene items */}
               {!hasItems && (
-                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-green-800">
+                <div className="mt-4 p-3 bg-brand-50 border border-brand-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-brand-700">
                     <Gift className="w-4 h-4" />
                     <span className="text-sm font-semibold">🎉 Promoción Activa</span>
                   </div>
-                  <p className="text-xs text-green-700 mt-1">
+                  <p className="text-xs text-brand-600 mt-1">
                     Reclamá 3 créditos GRATIS desde "Mis Avisos"
                   </p>
                 </div>

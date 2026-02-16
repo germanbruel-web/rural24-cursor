@@ -373,7 +373,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
             </button>
             <button
               onClick={() => setShowCouponModal(true)}
-              className="flex items-center gap-1 bg-white border border-[#386539] text-[#386539] hover:bg-green-50 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
+              className="flex items-center gap-1 bg-white border border-[#386539] text-[#386539] hover:bg-brand-50 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
             >
               <Ticket className="w-3.5 h-3.5" />
               Cupón
@@ -382,7 +382,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
         </div>
 
         {/* Aviso seleccionado */}
-        <div className="px-6 py-3 bg-green-50 border-b">
+        <div className="px-6 py-3 bg-brand-50 border-b">
           <p className="text-sm text-gray-600">Aviso a destacar:</p>
           <p className="font-semibold text-gray-900 truncate">{ad.title}</p>
           {ad.category_name && (
@@ -400,18 +400,18 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
             /* Sin créditos */
             <div className="text-center py-6">
               {promoStatus?.can_claim && (
-                <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
+                <div className="mb-6 p-4 bg-gradient-to-r from-brand-50 to-emerald-50 border-2 border-brand-200 rounded-xl">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <Gift className="w-6 h-6 text-green-600" />
-                    <span className="font-bold text-green-800">¡Promoción de Lanzamiento!</span>
+                    <Gift className="w-6 h-6 text-brand-500" />
+                    <span className="font-bold text-brand-700">¡Promoción de Lanzamiento!</span>
                   </div>
-                  <p className="text-sm text-green-700 mb-3">
+                  <p className="text-sm text-brand-600 mb-3">
                     {promoStatus.promo_message || `Reclamá ${promoStatus.credits_available} créditos GRATIS`}
                   </p>
                   <button
                     onClick={handleClaimPromo}
                     disabled={claimingPromo}
-                    className="inline-flex items-center gap-2 bg-[#169834] hover:bg-[#0e7d25] disabled:bg-green-400 text-white px-6 py-3 rounded-xl font-bold transition-colors"
+                    className="inline-flex items-center gap-2 bg-[#169834] hover:bg-brand-700 disabled:bg-green-400 text-white px-6 py-3 rounded-xl font-bold transition-colors"
                   >
                     {claimingPromo ? (
                       <>
@@ -485,10 +485,10 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                       disabled={isDisabled}
                       className={`relative flex flex-col items-center p-4 rounded-xl border-2 transition-all text-center ${
                         isSelected
-                          ? 'border-[#169834] bg-green-50 shadow-md'
+                          ? 'border-[#169834] bg-brand-50 shadow-md'
                           : isDisabled
                           ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                          : 'border-gray-200 hover:border-[#a2c037] hover:bg-green-50/50 cursor-pointer'
+                          : 'border-gray-200 hover:border-[#a2c037] hover:bg-brand-50/50 cursor-pointer'
                       }`}
                     >
                       {/* Checkmark */}
@@ -539,7 +539,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
 
               {/* Resumen de selección */}
               {selectedPlacements.length > 0 && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                <div className="bg-brand-50 border border-brand-200 rounded-xl p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm text-gray-600">Selección:</span>
@@ -592,7 +592,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               </button>
 
               {/* Resumen de placements seleccionados */}
-              <div className="p-3 bg-green-50 rounded-xl flex items-center justify-between">
+              <div className="p-3 bg-brand-50 rounded-xl flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {selectedPlacements.map(p => {
                     const opt = PLACEMENT_OPTIONS.find(o => o.value === p);
@@ -679,7 +679,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                                 ? 'bg-[#169834] text-white'
                                 : isDisabled
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : 'bg-green-50 text-green-800 hover:bg-green-100'
+                                : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
                             }`}
                             title={
                               isDisabled
@@ -699,7 +699,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
 
                 <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
                   <span className="inline-flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded bg-green-200" /> Disponible
+                    <span className="w-2.5 h-2.5 rounded bg-brand-200" /> Disponible
                   </span>
                   <span className="inline-flex items-center gap-1">
                     <span className="w-2.5 h-2.5 rounded bg-gray-200" /> Ocupado
@@ -714,13 +714,13 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
 
               {/* Disponibilidad */}
               {availability && (
-                <div className={`p-4 rounded-xl ${availability.is_available ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                <div className={`p-4 rounded-xl ${availability.is_available ? 'bg-brand-50 border border-brand-200' : 'bg-red-50 border border-red-200'}`}>
                   {availability.is_available ? (
                     <div className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <CheckCircle className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-semibold text-green-800">¡Lugar disponible!</p>
-                        <p className="text-sm text-green-700">
+                        <p className="font-semibold text-brand-700">¡Lugar disponible!</p>
+                        <p className="text-sm text-brand-600">
                           {availability.slots_available} de {availability.slots_total} lugares libres
                         </p>
                       </div>
@@ -845,7 +845,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               <button
                 onClick={handleConfirm}
                 disabled={submitting}
-                className="w-full bg-[#169834] hover:bg-[#0e7d25] disabled:bg-gray-400 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-[#169834] hover:bg-brand-700 disabled:bg-gray-400 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>

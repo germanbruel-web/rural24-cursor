@@ -4,14 +4,14 @@ import toast from 'react-hot-toast';
 const toastStyles = {
   success: {
     style: {
-      background: '#16a135',
+      background: '#16a135', // brand-500
       color: '#fff',
       padding: '16px',
       borderRadius: '8px',
     },
     iconTheme: {
       primary: '#fff',
-      secondary: '#16a135',
+      secondary: '#16a135', // brand-500
     },
   },
   error: {
@@ -40,7 +40,7 @@ const toastStyles = {
   },
   loading: {
     style: {
-      background: '#16a135',
+      background: '#16a135', // brand-500
       color: '#fff',
       padding: '16px',
       borderRadius: '8px',

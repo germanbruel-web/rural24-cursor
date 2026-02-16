@@ -418,7 +418,7 @@ export default function CouponsAdminPanel() {
     if (coupon.current_redemptions >= coupon.max_redemptions) {
       return <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">Agotado</span>;
     }
-    return <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700">Activo</span>;
+    return <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-brand-100 text-brand-600">Activo</span>;
   };
 
   // ============================================================
@@ -439,7 +439,7 @@ export default function CouponsAdminPanel() {
           </div>
           <button
             onClick={openCreateModal}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center gap-2 transition-colors"
+            className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white font-medium rounded-lg flex items-center gap-2 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Nuevo Cupón
@@ -456,11 +456,11 @@ export default function CouponsAdminPanel() {
             <p className="text-xl font-bold text-gray-900">{totalRecords}</p>
           </div>
           <div className="bg-white rounded-lg border p-3">
-            <div className="flex items-center gap-2 text-green-600 mb-1">
+            <div className="flex items-center gap-2 text-brand-500 mb-1">
               <ToggleRight className="w-4 h-4" />
               <span className="text-xs font-medium">Activos</span>
             </div>
-            <p className="text-xl font-bold text-green-700">
+            <p className="text-xl font-bold text-brand-600">
               {coupons.filter(c => c.is_active && !isExpired(c.expires_at)).length}
             </p>
           </div>
@@ -517,7 +517,7 @@ export default function CouponsAdminPanel() {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Buscar por código o nombre..."
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
               />
             </div>
 
@@ -589,7 +589,7 @@ export default function CouponsAdminPanel() {
 
                       {/* Créditos */}
                       <td className="px-4 py-3 text-center">
-                        <span className="font-bold text-green-700">{coupon.credits_amount}</span>
+                        <span className="font-bold text-brand-600">{coupon.credits_amount}</span>
                       </td>
 
                       {/* Canjes */}
@@ -634,7 +634,7 @@ export default function CouponsAdminPanel() {
                             className={`p-1.5 rounded ${
                               coupon.is_active
                                 ? 'hover:bg-yellow-50 text-yellow-600'
-                                : 'hover:bg-green-50 text-green-600'
+                                : 'hover:bg-brand-50 text-brand-500'
                             }`}
                             title={coupon.is_active ? 'Desactivar' : 'Activar'}
                           >
@@ -716,7 +716,7 @@ export default function CouponsAdminPanel() {
                   value={form.code}
                   onChange={(e) => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
                   placeholder="Ej: WELCOME2026"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono uppercase"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400 font-mono uppercase"
                   maxLength={50}
                 />
                 <p className="text-xs text-gray-400 mt-1">Código único que usarán los usuarios para canjear</p>
@@ -732,7 +732,7 @@ export default function CouponsAdminPanel() {
                   value={form.name}
                   onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="Ej: Bienvenida Febrero 2026"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
                   maxLength={100}
                 />
               </div>
@@ -747,7 +747,7 @@ export default function CouponsAdminPanel() {
                   value={form.title}
                   onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
                   placeholder="Ej: Créditos de bienvenida"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
                   maxLength={150}
                 />
               </div>
@@ -762,7 +762,7 @@ export default function CouponsAdminPanel() {
                   onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="Descripción opcional del cupón"
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400 resize-none"
                 />
               </div>
 
@@ -778,7 +778,7 @@ export default function CouponsAdminPanel() {
                     max={1000}
                     value={form.credits_amount}
                     onChange={(e) => setForm(f => ({ ...f, credits_amount: parseInt(e.target.value) || 1 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
                   />
                   <p className="text-xs text-gray-400 mt-1">Créditos por canje</p>
                 </div>
@@ -792,7 +792,7 @@ export default function CouponsAdminPanel() {
                     max={100000}
                     value={form.max_redemptions}
                     onChange={(e) => setForm(f => ({ ...f, max_redemptions: parseInt(e.target.value) || 1 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
                   />
                   <p className="text-xs text-gray-400 mt-1">Total de canjes permitidos</p>
                 </div>
@@ -807,7 +807,7 @@ export default function CouponsAdminPanel() {
                   type="datetime-local"
                   value={form.expires_at}
                   onChange={(e) => setForm(f => ({ ...f, expires_at: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
                 />
               </div>
 
@@ -817,7 +817,7 @@ export default function CouponsAdminPanel() {
                   type="button"
                   onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    form.is_active ? 'bg-green-500' : 'bg-gray-300'
+                    form.is_active ? 'bg-brand-400' : 'bg-gray-300'
                   }`}
                 >
                   <span
@@ -843,7 +843,7 @@ export default function CouponsAdminPanel() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-medium rounded-lg flex items-center gap-2 transition-colors"
+                className="px-4 py-2 text-sm bg-brand-500 hover:bg-brand-600 disabled:bg-gray-300 text-white font-medium rounded-lg flex items-center gap-2 transition-colors"
               >
                 {saving && <RefreshCw className="w-4 h-4 animate-spin" />}
                 {editingCoupon ? 'Guardar cambios' : 'Crear cupón'}
@@ -894,7 +894,7 @@ export default function CouponsAdminPanel() {
                         <p className="text-xs text-gray-500">{r.user_email}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-green-700">+{r.credits_granted} créditos</p>
+                        <p className="text-sm font-bold text-brand-600">+{r.credits_granted} créditos</p>
                         <p className="text-xs text-gray-400">
                           {new Date(r.redeemed_at).toLocaleString('es-AR')}
                         </p>

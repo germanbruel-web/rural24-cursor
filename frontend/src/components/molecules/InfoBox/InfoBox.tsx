@@ -28,7 +28,7 @@ const infoBoxVariants = cva(
   {
     variants: {
       variant: {
-        success: 'bg-green-50 border-green-200 text-green-900',
+        success: 'bg-brand-50 border-brand-200 text-brand-800',
         error: 'bg-red-50 border-red-200 text-red-900',
         warning: 'bg-yellow-50 border-yellow-200 text-yellow-900',
         info: 'bg-blue-50 border-blue-200 text-blue-900',
@@ -49,7 +49,7 @@ const infoBoxVariants = cva(
 const iconVariants = cva('flex-shrink-0 mt-0.5', {
   variants: {
     variant: {
-      success: 'text-green-600',
+      success: 'text-brand-500',
       error: 'text-red-600',
       warning: 'text-yellow-600',
       info: 'text-blue-600',

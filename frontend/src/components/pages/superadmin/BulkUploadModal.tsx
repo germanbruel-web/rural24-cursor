@@ -113,7 +113,7 @@ export default function BulkUploadModal({
               onChange={(e) => setText(e.target.value)}
               placeholder={placeholder}
               rows={12}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a135] focus:border-transparent resize-none font-mono text-sm"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none font-mono text-sm"
               disabled={loading}
             />
             <div className="mt-2 text-sm text-gray-500">
@@ -125,11 +125,11 @@ export default function BulkUploadModal({
           {result && (
             <div className={`rounded-lg p-4 ${
               result.errors.length === 0 
-                ? 'bg-green-50 border border-green-200' 
+                ? 'bg-brand-50 border border-brand-200' 
                 : 'bg-yellow-50 border border-yellow-200'
             }`}>
               <p className={`font-medium ${
-                result.errors.length === 0 ? 'text-green-800' : 'text-yellow-800'
+                result.errors.length === 0 ? 'text-brand-700' : 'text-yellow-800'
               }`}>
                 ✅ {result.success} items guardados exitosamente
               </p>
@@ -164,7 +164,7 @@ export default function BulkUploadModal({
           <button
             onClick={handleUpload}
             disabled={loading || !text.trim()}
-            className="flex-1 px-4 py-3 bg-[#16a135] text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

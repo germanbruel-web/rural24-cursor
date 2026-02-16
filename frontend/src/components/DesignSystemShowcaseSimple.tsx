@@ -12,7 +12,7 @@ import { Checkbox } from './atoms/Checkbox';
 import { Radio } from './atoms/Radio';
 import { Switch } from './atoms/Switch';
 import { FormField } from './molecules/FormField';
-import { Card, CardHeader, CardBody, CardFooter } from './molecules/Card';
+import { Card } from './molecules/Card';
 import { Modal } from './molecules/Modal';
 import { 
   // Acciones
@@ -29,7 +29,7 @@ import {
   // Navegación
   Home, Menu, X, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, ArrowRight, ArrowLeft,
   // Comercio
-  ShoppingCart, ShoppingBag, DollarSign, CreditCard, Package, Truck, Store,
+  ShoppingCart, ShoppingBag, DollarSign, CreditCard, Package, Truck, Store, Megaphone,
   // Herramientas
   Settings, Wrench, Hammer, Sliders, Filter, Search, Lock, Unlock, Key,
   // Tiempo
@@ -72,7 +72,7 @@ export function DesignSystemShowcaseSimple() {
         <header className="sticky top-0 z-50 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-green-600 dark:text-green-400">
+              <h1 className="text-3xl font-bold text-brand-500 dark:text-green-400">
                 Design System Rural24
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -102,15 +102,15 @@ export function DesignSystemShowcaseSimple() {
               <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">🎨 Brand (Verde Principal)</h3>
               <div className="grid grid-cols-5 md:grid-cols-11 gap-3">
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-green-50 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-50 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">50</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-green-100 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-100 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">100</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-green-200 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-200 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">200</p>
                 </div>
                 <div className="space-y-2">
@@ -122,23 +122,23 @@ export function DesignSystemShowcaseSimple() {
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">400</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-green-500 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-400 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400 font-bold">500</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-green-600 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-500 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400 font-bold">600</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-green-700 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-600 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">700</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-green-800 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-700 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">800</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-green-900 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-800 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">900</p>
                 </div>
                 <div className="space-y-2">
@@ -151,7 +151,7 @@ export function DesignSystemShowcaseSimple() {
             {/* Semantic Colors */}
             <div className="grid md:grid-cols-4 gap-6">
               <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <div className="h-16 rounded-lg bg-green-500 mb-4 shadow-sm"></div>
+                <div className="h-16 rounded-lg bg-brand-400 mb-4 shadow-sm"></div>
                 <p className="font-semibold text-gray-900 dark:text-white">Success</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Operaciones exitosas</p>
               </div>
@@ -513,7 +513,7 @@ export function DesignSystemShowcaseSimple() {
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
               <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">🚦 Estados y Alertas</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><CheckCircle size={20} className="text-green-600 dark:text-green-400" /><span className="text-xs text-center">Check</span></div>
+                <div className="flex flex-col items-center gap-2"><CheckCircle size={20} className="text-brand-500 dark:text-green-400" /><span className="text-xs text-center">Check</span></div>
                 <div className="flex flex-col items-center gap-2"><XCircle size={20} className="text-red-600 dark:text-red-400" /><span className="text-xs text-center">X</span></div>
                 <div className="flex flex-col items-center gap-2"><AlertCircle size={20} className="text-red-600 dark:text-red-400" /><span className="text-xs text-center">Alert</span></div>
                 <div className="flex flex-col items-center gap-2"><AlertTriangle size={20} className="text-yellow-600 dark:text-yellow-400" /><span className="text-xs text-center">Warning</span></div>
@@ -532,10 +532,10 @@ export function DesignSystemShowcaseSimple() {
                 <div className="flex flex-col items-center gap-2"><Users size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Users</span></div>
                 <div className="flex flex-col items-center gap-2"><UserPlus size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Add</span></div>
                 <div className="flex flex-col items-center gap-2"><UserMinus size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Remove</span></div>
-                <div className="flex flex-col items-center gap-2"><UserCheck size={20} className="text-green-600" /><span className="text-xs text-center">Verified</span></div>
+                <div className="flex flex-col items-center gap-2"><UserCheck size={20} className="text-brand-500" /><span className="text-xs text-center">Verified</span></div>
                 <div className="flex flex-col items-center gap-2"><UserX size={20} className="text-red-600" /><span className="text-xs text-center">Blocked</span></div>
                 <div className="flex flex-col items-center gap-2"><Shield size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Shield</span></div>
-                <div className="flex flex-col items-center gap-2"><ShieldCheck size={20} className="text-green-600" /><span className="text-xs text-center">Protected</span></div>
+                <div className="flex flex-col items-center gap-2"><ShieldCheck size={20} className="text-brand-500" /><span className="text-xs text-center">Protected</span></div>
               </div>
             </div>
 
@@ -592,7 +592,7 @@ export function DesignSystemShowcaseSimple() {
                 <div className="flex flex-col items-center gap-2"><Store size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Store</span></div>
                 <div className="flex flex-col items-center gap-2"><Package size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Package</span></div>
                 <div className="flex flex-col items-center gap-2"><Truck size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Delivery</span></div>
-                <div className="flex flex-col items-center gap-2"><DollarSign size={20} className="text-green-600" /><span className="text-xs text-center">Price</span></div>
+                <div className="flex flex-col items-center gap-2"><DollarSign size={20} className="text-brand-500" /><span className="text-xs text-center">Price</span></div>
                 <div className="flex flex-col items-center gap-2"><CreditCard size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Payment</span></div>
               </div>
             </div>
@@ -714,7 +714,7 @@ export function DesignSystemShowcaseSimple() {
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
               <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">📊 Datos y Analytics</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><TrendingUp size={20} className="text-green-600" /><span className="text-xs text-center">Up</span></div>
+                <div className="flex flex-col items-center gap-2"><TrendingUp size={20} className="text-brand-500" /><span className="text-xs text-center">Up</span></div>
                 <div className="flex flex-col items-center gap-2"><TrendingDown size={20} className="text-red-600" /><span className="text-xs text-center">Down</span></div>
                 <div className="flex flex-col items-center gap-2"><BarChart size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Bar</span></div>
                 <div className="flex flex-col items-center gap-2"><PieChart size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Pie</span></div>
@@ -902,190 +902,569 @@ export function DesignSystemShowcaseSimple() {
             </div>
           </section>
 
-          {/* ========== SECCIÓN NUEVA: CARD ========== */}
+          {/* ========== SECCIÓN: CARD (ProductCard) ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Card</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">Componente molecular contenedor - Diseño profesional Mobile First</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
+              ProductCard — Componente de producción. Card clickeable completa, sin botón "Ver Detalle". 
+              Variantes: <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs">featured</code> (homepage) y <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs">compact</code> (resultados).
+            </p>
             
-            <div className="space-y-8">
-              {/* Grid de Productos - 4 Columnas Mobile First */}
+            <div className="space-y-10">
+
+              {/* ── Variante Featured: Grid 4 columnas ── */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Cards de Productos - 4 Columnas Responsive</h3>
+                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-gray-200">Variante Featured</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Imagen 16/9 · Card clickeable · Hover lift + border brand · Badge contextual sobre imagen</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   
-                  {/* Card 1 - Default Variant */}
-                  <Card variant="default" padding="none">
-                    {/* Imagen */}
-                    <div className="aspect-video bg-gradient-to-br from-green-400 to-green-600 relative">
-                      <Badge variant="success" dot className="absolute top-2 right-2">
-                        Activo
-                      </Badge>
+                  {/* Card Featured 1 */}
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-full">
+                    <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[16/9]">
+                      <div className="w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center">
+                        <Package size={48} className="text-white/40" />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">Nuevo</span>
                     </div>
-                    {/* Content */}
-                    <div className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
-                          Tractor John Deere 5075E
-                        </h3>
-                        <Badge variant="primary" size="sm" leftIcon={<Star size={12} />}>
-                          Premium
-                        </Badge>
+                    <div className="flex flex-col p-5 gap-3">
+                      <div className="flex items-center gap-1.5 text-gray-600 text-xs">
+                        <Tag size={12} className="text-gray-400 flex-shrink-0" />
+                        <span className="font-medium truncate">Tractores · John Deere · 5075E</span>
                       </div>
-                      <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 text-xs mb-3">
-                        <MapPin size={14} />
-                        <span>Buenos Aires, AR</span>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                        Tractor John Deere 5075E 4WD
+                      </h3>
+                      <div>
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-3 py-1.5">
+                          <p className="font-black text-brand-600 text-base">USD 45.000</p>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
-                          USD 45,000
-                        </p>
-                        <Badge variant="outline" size="sm">2020</Badge>
+                      <div className="flex items-center gap-1.5 text-gray-500 text-xs mt-auto">
+                        <MapPin size={14} className="flex-shrink-0 text-gray-400" />
+                        <span className="truncate">Pergamino, Buenos Aires</span>
                       </div>
-                      <Button variant="outline" size="sm" className="w-full" leftIcon={<CheckCircle size={16} />}>
-                        Ver Detalles
-                      </Button>
                     </div>
                   </Card>
 
-                  {/* Card 2 - Outlined Variant */}
-                  <Card variant="outlined" padding="none">
-                    <div className="aspect-video bg-gradient-to-br from-blue-400 to-blue-600 relative">
-                      <Badge variant="primary" dot className="absolute top-2 right-2">
-                        Destacado
-                      </Badge>
+                  {/* Card Featured 2 */}
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-full">
+                    <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[16/9]">
+                      <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                        <Package size={48} className="text-white/40" />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">Usado</span>
                     </div>
-                    <div className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
-                          Cosechadora Case IH
-                        </h3>
-                        <Badge variant="success" size="sm">Nuevo</Badge>
+                    <div className="flex flex-col p-5 gap-3">
+                      <div className="flex items-center gap-1.5 text-gray-600 text-xs">
+                        <Tag size={12} className="text-gray-400 flex-shrink-0" />
+                        <span className="font-medium truncate">Cosechadoras · Case IH · 7250</span>
                       </div>
-                      <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 text-xs mb-3">
-                        <MapPin size={14} />
-                        <span>Córdoba, AR</span>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                        Cosechadora Case IH Axial-Flow 7250
+                      </h3>
+                      <div>
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-3 py-1.5">
+                          <p className="font-black text-brand-600 text-base">USD 120.000</p>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
-                          USD 120,000
-                        </p>
-                        <Badge variant="outline" size="sm">2023</Badge>
+                      <div className="flex items-center gap-1.5 text-gray-500 text-xs mt-auto">
+                        <MapPin size={14} className="flex-shrink-0 text-gray-400" />
+                        <span className="truncate">Marcos Juárez, Córdoba</span>
                       </div>
-                      <Button variant="primary" size="sm" className="w-full" leftIcon={<CheckCircle size={16} />}>
-                        Ver Detalles
-                      </Button>
-                    </div>
-                  </Card>
-
-                  {/* Card 3 - Elevated Variant */}
-                  <Card variant="elevated" padding="none">
-                    <div className="aspect-video bg-gradient-to-br from-yellow-400 to-orange-600 relative">
-                      <Badge variant="warning" dot className="absolute top-2 right-2">
-                        Oferta
-                      </Badge>
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
-                          Sembradora Agrometal
-                        </h3>
-                        <Badge variant="secondary" size="sm">Usado</Badge>
-                      </div>
-                      <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 text-xs mb-3">
-                        <MapPin size={14} />
-                        <span>Santa Fe, AR</span>
-                      </div>
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
-                          USD 28,000
-                        </p>
-                        <Badge variant="outline" size="sm">2019</Badge>
-                      </div>
-                      <Button variant="outline" size="sm" className="w-full" leftIcon={<CheckCircle size={16} />}>
-                        Ver Detalles
-                      </Button>
                     </div>
                   </Card>
 
-                  {/* Card 4 - Default Variant */}
-                  <Card variant="default" padding="none">
-                    <div className="aspect-video bg-gradient-to-br from-purple-400 to-pink-600 relative">
-                      <Badge variant="neutral" dot className="absolute top-2 right-2">
-                        Consultar
-                      </Badge>
+                  {/* Card Featured 3 - Consultar (sin precio) */}
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-full">
+                    <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[16/9]">
+                      <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center">
+                        <Package size={48} className="text-white/40" />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
-                    <div className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
-                          Fumigadora Hardi
-                        </h3>
-                        <Badge variant="success" size="sm">Stock</Badge>
+                    <div className="flex flex-col p-5 gap-3">
+                      <div className="flex items-center gap-1.5 text-gray-600 text-xs">
+                        <Tag size={12} className="text-gray-400 flex-shrink-0" />
+                        <span className="font-medium truncate">Sembradoras · Agrometal · TX Mega</span>
                       </div>
-                      <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 text-xs mb-3">
-                        <MapPin size={14} />
-                        <span>Entre Ríos, AR</span>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                        Sembradora Agrometal TX Mega 16/52
+                      </h3>
+                      <div>
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-3 py-1.5">
+                          <p className="font-black text-brand-600 text-base">Consultar</p>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
-                          USD 35,000
-                        </p>
-                        <Badge variant="outline" size="sm">2021</Badge>
+                      <div className="flex items-center gap-1.5 text-gray-500 text-xs mt-auto">
+                        <MapPin size={14} className="flex-shrink-0 text-gray-400" />
+                        <span className="truncate">Rafaela, Santa Fe</span>
                       </div>
-                      <Button variant="outline" size="sm" className="w-full" leftIcon={<CheckCircle size={16} />}>
-                        Ver Detalles
-                      </Button>
+                    </div>
+                  </Card>
+
+                  {/* Card Featured 4 - Ganadería (badge edad) */}
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-full">
+                    <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[16/9]">
+                      <div className="w-full h-full bg-gradient-to-br from-lime-400 to-green-600 flex items-center justify-center">
+                        <Package size={48} className="text-white/40" />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">2-3 años</span>
+                    </div>
+                    <div className="flex flex-col p-5 gap-3">
+                      <div className="flex items-center gap-1.5 text-gray-600 text-xs">
+                        <Tag size={12} className="text-gray-400 flex-shrink-0" />
+                        <span className="font-medium truncate">Ganadería · Vaquillonas · Angus</span>
+                      </div>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                        Vaquillonas Angus Preñadas x 50
+                      </h3>
+                      <div>
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-3 py-1.5">
+                          <p className="font-black text-brand-600 text-base">$ 850.000</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-gray-500 text-xs mt-auto">
+                        <MapPin size={14} className="flex-shrink-0 text-gray-400" />
+                        <span className="truncate">Villaguay, Entre Ríos</span>
+                      </div>
                     </div>
                   </Card>
 
                 </div>
               </div>
 
-              {/* Variants Simples */}
+              {/* ── Variante Compact: Grid más denso ── */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Variantes Básicas</h3>
+                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-gray-200">Variante Compact</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Imagen 4/3 · Padding y font más chicos · Usada en resultados de búsqueda</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                  
+                  {/* Compact 1 */}
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                    <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
+                      <div className="w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center">
+                        <Package size={32} className="text-white/40" />
+                      </div>
+                      <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">Nuevo</span>
+                    </div>
+                    <div className="flex flex-col p-4 gap-2">
+                      <div className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                        <Tag size={10} className="text-gray-400 flex-shrink-0" />
+                        <span className="font-medium truncate">Pulverizadoras · Hardi</span>
+                      </div>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                        Pulverizadora Hardi Commander
+                      </h3>
+                      <div>
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                          <p className="font-black text-brand-600 text-sm">USD 35.000</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-gray-500 text-[11px] mt-auto">
+                        <MapPin size={12} className="flex-shrink-0 text-gray-400" />
+                        <span className="truncate">Río Cuarto</span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Compact 2 */}
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                    <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
+                      <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                        <Package size={32} className="text-white/40" />
+                      </div>
+                      <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">Usado</span>
+                    </div>
+                    <div className="flex flex-col p-4 gap-2">
+                      <div className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                        <Tag size={10} className="text-gray-400 flex-shrink-0" />
+                        <span className="font-medium truncate">Mixers · Mainero</span>
+                      </div>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                        Mixer Mainero 2932
+                      </h3>
+                      <div>
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                          <p className="font-black text-brand-600 text-sm">$ 4.500.000</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-gray-500 text-[11px] mt-auto">
+                        <MapPin size={12} className="flex-shrink-0 text-gray-400" />
+                        <span className="truncate">Trenque Lauquen</span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Compact 3 */}
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                    <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
+                      <div className="w-full h-full bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center">
+                        <Package size={32} className="text-white/40" />
+                      </div>
+                    </div>
+                    <div className="flex flex-col p-4 gap-2">
+                      <div className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                        <Tag size={10} className="text-gray-400 flex-shrink-0" />
+                        <span className="font-medium truncate">Acoplados · Ombu</span>
+                      </div>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                        Acoplado Tolva Ombu CRV 22
+                      </h3>
+                      <div>
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                          <p className="font-black text-brand-600 text-sm">Consultar</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-gray-500 text-[11px] mt-auto">
+                        <MapPin size={12} className="flex-shrink-0 text-gray-400" />
+                        <span className="truncate">Rosario</span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Compact 4 */}
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                    <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
+                      <div className="w-full h-full bg-gradient-to-br from-rose-400 to-red-500 flex items-center justify-center">
+                        <Package size={32} className="text-white/40" />
+                      </div>
+                      <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">Nuevo</span>
+                    </div>
+                    <div className="flex flex-col p-4 gap-2">
+                      <div className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                        <Tag size={10} className="text-gray-400 flex-shrink-0" />
+                        <span className="font-medium truncate">Silos · Kepler Weber</span>
+                      </div>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                        Silo Aéreo 150 Toneladas
+                      </h3>
+                      <div>
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                          <p className="font-black text-brand-600 text-sm">USD 8.500</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-gray-500 text-[11px] mt-auto">
+                        <MapPin size={12} className="flex-shrink-0 text-gray-400" />
+                        <span className="truncate">Las Parejas</span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Compact 5 */}
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                    <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
+                      <div className="w-full h-full bg-gradient-to-br from-teal-400 to-cyan-600 flex items-center justify-center">
+                        <Package size={32} className="text-white/40" />
+                      </div>
+                      <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">3-4 años</span>
+                    </div>
+                    <div className="flex flex-col p-4 gap-2">
+                      <div className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                        <Tag size={10} className="text-gray-400 flex-shrink-0" />
+                        <span className="font-medium truncate">Ganadería · Novillos</span>
+                      </div>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                        Novillos Hereford x 30 cab
+                      </h3>
+                      <div>
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                          <p className="font-black text-brand-600 text-sm">$ 1.200.000</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-gray-500 text-[11px] mt-auto">
+                        <MapPin size={12} className="flex-shrink-0 text-gray-400" />
+                        <span className="truncate">Ayacucho</span>
+                      </div>
+                    </div>
+                  </Card>
+
+                </div>
+              </div>
+
+              {/* ── Avisos Destacados: Barra en Resultados ── */}
+              <div>
+                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-gray-200">Avisos Destacados — Barra en Resultados</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Contenedor <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">bg-brand-50/70</code> con borde <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">brand-100</code> · Máx 5 cards compact · Header con Megaphone icon</p>
+                
+                {/* Replica exacta del UserFeaturedAdsBar */}
+                <div className="mb-6">
+                  <div className="bg-brand-50/70 border border-brand-100 rounded-xl p-4">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Megaphone className="w-4 h-4 text-brand-500" />
+                        <h3 className="text-sm font-semibold text-brand-700 tracking-wide uppercase">Avisos Destacados</h3>
+                      </div>
+                      <span className="text-xs text-brand-500/70 font-medium">Publicidad</span>
+                    </div>
+
+                    {/* Grid 5 columnas desktop — cards compact */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                      
+                      {/* Destacado 1 */}
+                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                        <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
+                          <div className="w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center">
+                            <Package size={32} className="text-white/40" />
+                          </div>
+                          <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">Nuevo</span>
+                        </div>
+                        <div className="flex flex-col p-4 gap-2">
+                          <div className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                            <Tag size={10} className="text-gray-400 flex-shrink-0" />
+                            <span className="font-medium truncate">Tractores · Massey Ferguson</span>
+                          </div>
+                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                            Tractor MF 4292 Cabina
+                          </h3>
+                          <div>
+                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                              <p className="font-black text-brand-600 text-sm">USD 52.000</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-500 text-[11px] mt-auto">
+                            <MapPin size={12} className="flex-shrink-0 text-gray-400" />
+                            <span className="truncate">Junín</span>
+                          </div>
+                        </div>
+                      </Card>
+
+                      {/* Destacado 2 */}
+                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                        <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
+                          <div className="w-full h-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center">
+                            <Package size={32} className="text-white/40" />
+                          </div>
+                          <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">Usado</span>
+                        </div>
+                        <div className="flex flex-col p-4 gap-2">
+                          <div className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                            <Tag size={10} className="text-gray-400 flex-shrink-0" />
+                            <span className="font-medium truncate">Implementos · Metalfor</span>
+                          </div>
+                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                            Pulverizadora Metalfor 3200 SE
+                          </h3>
+                          <div>
+                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                              <p className="font-black text-brand-600 text-sm">USD 68.000</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-500 text-[11px] mt-auto">
+                            <MapPin size={12} className="flex-shrink-0 text-gray-400" />
+                            <span className="truncate">Venado Tuerto</span>
+                          </div>
+                        </div>
+                      </Card>
+
+                      {/* Destacado 3 */}
+                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                        <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
+                          <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center">
+                            <Package size={32} className="text-white/40" />
+                          </div>
+                        </div>
+                        <div className="flex flex-col p-4 gap-2">
+                          <div className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                            <Tag size={10} className="text-gray-400 flex-shrink-0" />
+                            <span className="font-medium truncate">Acoplados · Cestari</span>
+                          </div>
+                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                            Tolva Cestari 24 Tn
+                          </h3>
+                          <div>
+                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                              <p className="font-black text-brand-600 text-sm">$ 6.800.000</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-500 text-[11px] mt-auto">
+                            <MapPin size={12} className="flex-shrink-0 text-gray-400" />
+                            <span className="truncate">Armstrong</span>
+                          </div>
+                        </div>
+                      </Card>
+
+                      {/* Destacado 4 */}
+                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                        <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
+                          <div className="w-full h-full bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center">
+                            <Package size={32} className="text-white/40" />
+                          </div>
+                          <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">Nuevo</span>
+                        </div>
+                        <div className="flex flex-col p-4 gap-2">
+                          <div className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                            <Tag size={10} className="text-gray-400 flex-shrink-0" />
+                            <span className="font-medium truncate">Silos · Agromet</span>
+                          </div>
+                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                            Silo Bolsa 9 Pies Extractor
+                          </h3>
+                          <div>
+                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                              <p className="font-black text-brand-600 text-sm">USD 12.500</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-500 text-[11px] mt-auto">
+                            <MapPin size={12} className="flex-shrink-0 text-gray-400" />
+                            <span className="truncate">Las Parejas</span>
+                          </div>
+                        </div>
+                      </Card>
+
+                      {/* Destacado 5 */}
+                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                        <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
+                          <div className="w-full h-full bg-gradient-to-br from-rose-400 to-red-500 flex items-center justify-center">
+                            <Package size={32} className="text-white/40" />
+                          </div>
+                          <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">Usado</span>
+                        </div>
+                        <div className="flex flex-col p-4 gap-2">
+                          <div className="flex items-center gap-1.5 text-gray-600 text-[11px]">
+                            <Tag size={10} className="text-gray-400 flex-shrink-0" />
+                            <span className="font-medium truncate">Ganadería · Novillos</span>
+                          </div>
+                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                            Lote 80 Novillos Braford
+                          </h3>
+                          <div>
+                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                              <p className="font-black text-brand-600 text-sm">$ 1.450.000</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-500 text-[11px] mt-auto">
+                            <MapPin size={12} className="flex-shrink-0 text-gray-400" />
+                            <span className="truncate">Gualeguaychú</span>
+                          </div>
+                        </div>
+                      </Card>
+
+                    </div>
+                  </div>
+                </div>
+
+                {/* Specs del contenedor */}
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Card variant="ghost" padding="sm">
+                    <h4 className="font-semibold text-xs text-gray-900 dark:text-white mb-2">Contenedor</h4>
+                    <div className="space-y-1 text-[11px] text-gray-600 dark:text-gray-400">
+                      <p><span className="font-mono text-brand-600">bg-brand-50/70</span> fondo</p>
+                      <p><span className="font-mono text-brand-600">border-brand-100</span> borde</p>
+                      <p><span className="font-mono text-brand-600">rounded-xl</span> esquinas</p>
+                      <p><span className="font-mono text-brand-600">p-4</span> padding</p>
+                    </div>
+                  </Card>
+                  <Card variant="ghost" padding="sm">
+                    <h4 className="font-semibold text-xs text-gray-900 dark:text-white mb-2">Header</h4>
+                    <div className="space-y-1 text-[11px] text-gray-600 dark:text-gray-400">
+                      <p><span className="font-mono text-brand-600">Megaphone</span> icon 16px</p>
+                      <p><span className="font-mono text-brand-600">text-brand-700</span> título</p>
+                      <p><span className="font-mono text-brand-600">uppercase tracking-wide</span></p>
+                      <p>Label "Publicidad" <span className="font-mono text-brand-600">text-brand-500/70</span></p>
+                    </div>
+                  </Card>
+                  <Card variant="ghost" padding="sm">
+                    <h4 className="font-semibold text-xs text-gray-900 dark:text-white mb-2">Grid</h4>
+                    <div className="space-y-1 text-[11px] text-gray-600 dark:text-gray-400">
+                      <p><span className="font-mono text-brand-600">grid-cols-2</span> mobile</p>
+                      <p><span className="font-mono text-brand-600">sm:grid-cols-3</span> tablet</p>
+                      <p><span className="font-mono text-brand-600">lg:grid-cols-5</span> desktop</p>
+                      <p>Máx 5 ads · 1 por usuario · FIFO</p>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+
+              {/* ── Anatomía: Explicación visual ── */}
+              <div>
+                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-gray-200">Anatomía del ProductCard</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Estructura interna y tokens usados en producción</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Card anatomía */}
+                  <Card variant="outlined" padding="none" className="overflow-hidden">
+                    <div className="relative w-full overflow-hidden aspect-[16/9] bg-gray-100 dark:bg-gray-800 flex items-center justify-center border-b border-dashed border-gray-300 dark:border-gray-600">
+                      <div className="text-center">
+                        <p className="text-sm font-mono text-gray-500">aspect-[16/9] | aspect-[4/3]</p>
+                        <p className="text-[10px] text-gray-400 mt-1">Imagen lazy + gradient overlay en hover</p>
+                      </div>
+                      <div className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">
+                        Badge contextual
+                      </div>
+                    </div>
+                    <div className="p-5 space-y-3 border-l-2 border-dashed border-brand-200 ml-2">
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <Tag size={12} className="text-gray-400" />
+                        <span className="font-medium text-gray-500 font-mono">Label: Subcat · Marca · Modelo</span>
+                      </div>
+                      <div>
+                        <span className="font-bold text-gray-900 dark:text-white text-base font-mono">Título (line-clamp-2, hover → brand-500)</span>
+                      </div>
+                      <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-3 py-1.5">
+                        <span className="font-black text-brand-600 text-base font-mono">Precio (brand-600)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <MapPin size={14} className="text-gray-400" />
+                        <span className="text-gray-500 font-mono">Ubicación (mt-auto)</span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Especificaciones */}
+                  <div className="space-y-4">
+                    <Card variant="ghost" padding="md">
+                      <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-3">Tokens usados</h4>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex justify-between"><span className="text-gray-500">Precio pill bg</span><span className="font-mono text-brand-600">brand-50 → emerald-50</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Precio border</span><span className="font-mono text-brand-600">border-brand-500</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Precio texto</span><span className="font-mono text-brand-600">text-brand-600</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Título hover</span><span className="font-mono text-brand-500">text-brand-500</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Hover border</span><span className="font-mono text-brand-500">border-brand-500</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Hover lift</span><span className="font-mono text-gray-600">-translate-y-[3px]</span></div>
+                      </div>
+                    </Card>
+                    <Card variant="ghost" padding="md">
+                      <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-3">Comportamiento</h4>
+                      <div className="space-y-2 text-xs text-gray-600 dark:text-gray-400">
+                        <p>• Card completa clickeable → navega a <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">/ad/{'{slug}'}</code></p>
+                        <p>• Sin botón "Ver Detalle" — toda la superficie es el CTA</p>
+                        <p>• Badge contextual: ganadería muestra edad, otros Nuevo/Usado</p>
+                        <p>• Precio: se muestra "Consultar" si no hay precio</p>
+                        <p>• Ubicación: localidad + provincia opcional</p>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Card molecule: Variantes base ── */}
+              <div>
+                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-gray-200">Card Molecule — Variantes base</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Contenedor genérico CVA con 4 variantes + sub-componentes (Header, Body, Footer)</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card variant="default">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Default Card</h3>
-                    <p className="text-gray-600 dark:text-gray-400">Contenido con shadow-md y hover:shadow-lg</p>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">Default</h4>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs">shadow-md · hover:shadow-lg</p>
                   </Card>
                   <Card variant="outlined">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Outlined Card</h3>
-                    <p className="text-gray-600 dark:text-gray-400">Con borde, sin shadow</p>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">Outlined</h4>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs">borde · sin shadow</p>
                   </Card>
                   <Card variant="elevated">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Elevated Card</h3>
-                    <p className="text-gray-600 dark:text-gray-400">Con shadow-lg y hover:shadow-xl</p>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">Elevated</h4>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs">shadow-lg · hover:shadow-xl</p>
                   </Card>
                   <Card variant="ghost">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Ghost Card</h3>
-                    <p className="text-gray-600 dark:text-gray-400">Fondo transparente con hover</p>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">Ghost</h4>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs">transparente · hover bg</p>
                   </Card>
                 </div>
               </div>
 
-              {/* Con sub-componentes */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Card con Sub-componentes</h3>
-                <Card variant="elevated" padding="none">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-lg text-gray-900 dark:text-white">Título de la Card</h3>
-                      <Badge variant="success">Activo</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardBody>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Esta es una card con header, body y footer personalizados usando sub-componentes.
-                    </p>
-                  </CardBody>
-                  <CardFooter>
-                    <div className="flex gap-3">{/* Buttons aqui */}
-                      <Button variant="primary" size="sm">Aceptar</Button>
-                      <Button variant="outline" size="sm">Cancelar</Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              </div>
             </div>
           </section>
 
@@ -1175,7 +1554,7 @@ export function DesignSystemShowcaseSimple() {
               🎨 Design System Rural24 - Atomic Design + CVA + Tailwind CSS
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-              Ver documentación completa en Storybook: <code className="text-green-600 dark:text-green-400">npm run storybook</code>
+              Ver documentación completa en Storybook: <code className="text-brand-500 dark:text-green-400">npm run storybook</code>
             </p>
           </footer>
 
