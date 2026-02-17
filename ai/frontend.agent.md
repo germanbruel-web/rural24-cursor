@@ -49,13 +49,24 @@ CSS vars (index.css :root) → tailwind.config.js (brand-*) → Componentes (cla
 ### Paleta de colores — OBLIGATORIO usar tokens
 | Token | Uso | CSS var |
 |-------|-----|---------|
-| `brand-500` | Primary (botones, links, precio border) | `--color-brand-500` |
-| `brand-600` | Hover states | `--color-brand-600` |
+| `brand-600` | **Primary buttons background** | `--color-brand-600` |
+| `brand-500` | **Primary buttons hover**, links, precio border | `--color-brand-500` |
 | `brand-700` | Active/pressed | `--color-brand-700` |
 | `brand-950` | Dark headings | `--color-brand-950` |
 | `brand-50` | Backgrounds sutiles | `--color-brand-50` |
 | `brand-100` | Borders sutiles | `--color-brand-100` |
 | `brand-400` | Accent bars | `--color-brand-400` |
+
+### Botones Primary — PATRÓN OBLIGATORIO
+```
+✅ bg-brand-600 hover:bg-brand-500 (background + hover)
+✅ active:bg-brand-700 (pressed state)
+✅ disabled:opacity-50 disabled:cursor-not-allowed (disabled state)
+❌ bg-brand-500 hover:bg-brand-600 (INVERTIDO — patrón viejo)
+❌ bg-brand-400 hover:bg-brand-500 (muy claro)
+❌ bg-[#169834], bg-[#386539] (hex hardcoded)
+❌ bg-emerald-600, bg-green-600 (Tailwind defaults)
+```
 
 ### PROHIBIDO (causa inconsistencia)
 ```

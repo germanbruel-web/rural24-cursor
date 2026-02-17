@@ -114,35 +114,35 @@ export function DesignSystemShowcaseSimple() {
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">200</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-green-300 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-300 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">300</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-green-400 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-400 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">400</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-400 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-500 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400 font-bold">500</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-500 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400 font-bold">600</p>
-                </div>
-                <div className="space-y-2">
                   <div className="h-20 rounded-lg bg-brand-600 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">700</p>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">600</p>
                 </div>
                 <div className="space-y-2">
                   <div className="h-20 rounded-lg bg-brand-700 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">800</p>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">700</p>
                 </div>
                 <div className="space-y-2">
                   <div className="h-20 rounded-lg bg-brand-800 border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">800</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-brand-900 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">900</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-green-950 border border-gray-300 dark:border-gray-700"></div>
+                  <div className="h-20 rounded-lg bg-brand-950 border border-gray-300 dark:border-gray-700"></div>
                   <p className="text-xs text-center text-gray-600 dark:text-gray-400">950</p>
                 </div>
               </div>
