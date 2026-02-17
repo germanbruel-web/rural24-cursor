@@ -49,7 +49,7 @@ export const ScrapedSection: React.FC<ScrapedSectionProps> = ({ productsByCatego
                   </div>
                   <button 
                     onClick={() => handleViewAll(category)}
-                    className="bg-brand-500 hover:bg-brand-700 text-white font-medium px-6 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                    className="bg-brand-600 hover:bg-brand-500 text-white font-medium px-6 py-2 rounded-lg flex items-center gap-2 transition-colors"
                   >
                     Ver todos
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

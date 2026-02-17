@@ -649,8 +649,8 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                     Mostrando {((currentPage - 1) * RESULTS_PER_PAGE) + 1}-{Math.min(currentPage * RESULTS_PER_PAGE, totalFromBackend)} de {totalFromBackend} resultados
                   </div>
                   
-                  {/* Grid Responsive: Mobile 2, Tablet 3, Desktop 4 - Variante Compact */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                  {/* Grid Responsive: Mobile 2, Tablet 3, Desktop 5 - Variante Compact */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                     {paginatedResults.map((product, index) => (
                       <React.Fragment key={product.id}>
                         <ProductCard

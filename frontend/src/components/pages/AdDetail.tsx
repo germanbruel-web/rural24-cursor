@@ -5,6 +5,7 @@ import { getFieldsForSubcategory } from '../../services/formConfigService';
 import { MapPin, Phone, Calendar, DollarSign, Tag } from 'lucide-react';
 import { normalizeImages, type NormalizedImage } from '../../utils/imageHelpers';
 import { ContactVendorButton } from '../ContactVendorButton';
+import { UserFeaturedAdsBar } from '../sections/UserFeaturedAdsBar';
 
 interface AdDetailProps {
   adId: string;
@@ -366,6 +367,12 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
           vendorPhone={ad.phone}
         />
       </div>
+
+      {/* Avisos Destacados (Carrusel) */}
+      <UserFeaturedAdsBar
+        categoryId={(ad as any).category_id}
+        className="mt-2"
+      />
     </div>
   );
 };
