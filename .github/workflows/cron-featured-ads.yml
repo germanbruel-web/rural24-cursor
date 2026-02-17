@@ -18,9 +18,14 @@
 name: Featured Ads Cleanup Cron
 
 on:
-  # Ejecutar cada hora en punto
+  # Ejecutar 3 veces al día:
+  #   - 09:00 UTC = 06:00 Argentina → Activa destacados del día
+  #   - 15:00 UTC = 12:00 Argentina → Expira vencidos del mediodía
+  #   - 00:00 UTC = 21:00 Argentina → Cleanup nocturno
   schedule:
-    - cron: '0 * * * *'  # Cada hora a las :00
+    - cron: '0 9 * * *'
+    - cron: '0 15 * * *'
+    - cron: '0 0 * * *'
   
   # Permitir ejecución manual desde GitHub UI
   workflow_dispatch:
