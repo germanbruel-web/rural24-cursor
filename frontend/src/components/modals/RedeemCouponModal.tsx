@@ -306,7 +306,7 @@ const RedeemCouponModal: React.FC<RedeemCouponModalProps> = ({
                 className={`flex-1 py-3 px-4 font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
                   redeeming || success
                     ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                    : 'bg-brand-500 hover:bg-brand-600 text-white shadow-lg'
+                    : 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg'
                 }`}
               >
                 {redeeming && <Loader2 className="w-5 h-5 animate-spin" />}

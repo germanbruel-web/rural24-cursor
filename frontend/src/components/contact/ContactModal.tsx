@@ -130,7 +130,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
                 handleClose();
                 // TODO: Abrir modal de login
               }}
-              className="w-full bg-brand-500 hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
+              className="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-lg font-semibold"
             >
               Iniciar Sesión
             </button>
@@ -161,7 +161,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
             </p>
             <button
               onClick={handleClose}
-              className="w-full bg-brand-500 hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
+              className="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-lg font-semibold"
             >
               Entendido
             </button>
@@ -218,7 +218,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
 
             <button
               onClick={handleClose}
-              className="w-full bg-brand-500 hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
+              className="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-lg font-semibold"
             >
               Cerrar
             </button>
@@ -349,7 +349,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-3 bg-brand-500 hover:bg-[#0e7d28] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Enviando...' : 'Enviar Mensaje'}
                 </button>
@@ -370,7 +370,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
               </p>
               <button
                 onClick={() => setShowUpgradeModal(true)}
-                className="w-full bg-brand-500 hover:bg-[#0e7d28] text-white py-3 rounded-lg font-semibold"
+                className="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-lg font-semibold"
               >
                 Actualizar a Premium
               </button>

@@ -149,11 +149,11 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
           absolute bottom-0 right-0
           ${size === 'sm' ? 'w-6 h-6' : size === 'md' ? 'w-8 h-8' : 'w-10 h-10'}
           rounded-full
-          bg-brand-500
+          bg-brand-600
           text-white
           flex items-center justify-center
           shadow-lg
-          hover:bg-brand-700
+          hover:bg-brand-500
           disabled:opacity-50 disabled:cursor-not-allowed
           transition-colors
         `}

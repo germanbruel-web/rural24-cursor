@@ -734,7 +734,7 @@ export const CategoriesTreeView: React.FC = () => {
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => openCreateModal('category')}
-                className="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-medium"
               >
                 <Plus className="w-5 h-5" />
                 Nueva Categoría
@@ -1065,7 +1065,7 @@ export const CategoriesTreeView: React.FC = () => {
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2"
                   >
                     <Save className="w-5 h-5" />
                     Crear

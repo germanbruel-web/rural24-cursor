@@ -108,7 +108,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               </div>
               <button
                 onClick={() => navigateTo('/publicar')}
-                className="flex items-center gap-1 px-3 py-1 bg-brand-500 hover:bg-brand-600 text-white text-sm font-bold rounded-full min-h-[32px] transition-colors active:scale-95"
+                className="flex items-center gap-1 px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white text-sm font-bold rounded-full min-h-[32px] transition-colors active:scale-95"
               >
                 <PlusCircle size={14} />
                 PUBLICAR
@@ -328,7 +328,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               /* Usuario no autenticado - Desktop only */
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="hidden md:block px-4 py-1.5 text-sm font-medium text-white bg-brand-500 hover:bg-brand-600 rounded-md transition-colors"
+                className="hidden md:block px-4 py-1.5 text-sm font-medium text-white bg-brand-600 hover:bg-brand-500 rounded-md transition-colors"
               >
                 Ingresar
               </button>
@@ -430,7 +430,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               ) : (
                 <button
                   onClick={() => { setShowAuthModal(true); onCloseMobileMenu?.(); }}
-                  className="w-full px-4 py-3 text-base font-semibold text-white bg-brand-500 hover:bg-brand-600 rounded-lg flex items-center justify-center gap-2"
+                  className="w-full px-4 py-3 text-base font-semibold text-white bg-brand-600 hover:bg-brand-500 rounded-lg flex items-center justify-center gap-2"
                 >
                   <User size={20} />
                   Ingresar / Registrarse

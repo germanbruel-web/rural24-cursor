@@ -124,13 +124,13 @@ export const AdDetailDynamic: React.FC<AdDetailDynamicProps> = ({ attributes, sc
         key={attr.slug}
         className={`relative p-4 rounded-xl border transition-all hover:shadow-md ${
           isFeatured 
-            ? 'bg-gradient-to-br from-brand-50 to-emerald-50 border-green-300 ring-2 ring-brand-200' 
+            ? 'bg-gradient-to-br from-brand-50 to-brand-50 border-brand-300 ring-2 ring-brand-200' 
             : 'bg-white border-gray-200 hover:border-gray-300'
         }`}
       >
         {isFeatured && (
           <div className="absolute top-2 right-2">
-            <CheckCircle className="w-4 h-4 text-brand-500" />
+            <CheckCircle className="w-4 h-4 text-brand-600" />
           </div>
         )}
         <div className="flex flex-col gap-2">

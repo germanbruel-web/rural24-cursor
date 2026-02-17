@@ -216,7 +216,7 @@ export default function CreateFeaturedModal({ isOpen, onClose, onSuccess }: Crea
                 <button
                   onClick={handleSearch}
                   disabled={searching || !searchQuery.trim()}
-                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                  className="px-6 py-3 bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                 >
                   {searching ? (
                     <>
@@ -403,7 +403,7 @@ export default function CreateFeaturedModal({ isOpen, onClose, onSuccess }: Crea
             {step === 'configure' && (
               <button
                 onClick={() => setStep('preview')}
-                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
+                className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-medium transition-colors"
               >
                 Continuar →
               </button>
@@ -412,7 +412,7 @@ export default function CreateFeaturedModal({ isOpen, onClose, onSuccess }: Crea
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                className="px-6 py-2 bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
               >
                 {creating ? (
                   <>

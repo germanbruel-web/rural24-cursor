@@ -116,7 +116,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
                 <a 
                   key={social.id}
                   href={social.url} 
-                  className="w-10 h-10 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center transition-colors" 
+                  className="w-10 h-10 bg-brand-600 hover:bg-brand-500 rounded-full flex items-center justify-center transition-colors" 
                   aria-label={social.platform}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -357,7 +357,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
                     <a 
                       key={social.id}
                       href={social.url} 
-                      className="w-10 h-10 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center transition-colors" 
+                      className="w-10 h-10 bg-brand-600 hover:bg-brand-500 rounded-full flex items-center justify-center transition-colors" 
                       aria-label={social.platform}
                       target="_blank"
                       rel="noopener noreferrer"

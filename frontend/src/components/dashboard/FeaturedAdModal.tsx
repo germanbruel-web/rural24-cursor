@@ -366,7 +366,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setShowBuyModal(true)}
-              className="flex items-center gap-1 bg-[#386539] hover:bg-[#2d5230] text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
+              className="flex items-center gap-1 bg-brand-600 hover:bg-brand-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
             >
               <ShoppingCart className="w-3.5 h-3.5" />
               Comprar
@@ -411,7 +411,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                   <button
                     onClick={handleClaimPromo}
                     disabled={claimingPromo}
-                    className="inline-flex items-center gap-2 bg-[#169834] hover:bg-brand-700 disabled:bg-green-400 text-white px-6 py-3 rounded-xl font-bold transition-colors"
+                    className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 disabled:bg-green-400 text-white px-6 py-3 rounded-xl font-bold transition-colors"
                   >
                     {claimingPromo ? (
                       <>
@@ -443,7 +443,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               </p>
               <button 
                 onClick={() => setShowBuyModal(true)}
-                className="inline-flex items-center gap-2 bg-[#386539] hover:bg-[#2d5230] text-white px-6 py-3 rounded-xl font-bold transition-colors"
+                className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-xl font-bold transition-colors"
               >
                 <Zap className="w-5 h-5" />
                 Comprar créditos
@@ -573,7 +573,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               <button
                 onClick={handleContinueToDate}
                 disabled={selectedPlacements.length === 0 || !hasEnoughCredits}
-                className="w-full bg-[#386539] hover:bg-[#2d5230] disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
               >
                 Elegir fecha de inicio
                 <Calendar className="w-5 h-5" />
@@ -741,7 +741,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               <button
                 onClick={() => setStep('confirm')}
                 disabled={!selectedDate || !availability?.is_available || checkingAvailability}
-                className="w-full bg-[#386539] hover:bg-[#2d5230] disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
               >
                 {checkingAvailability ? (
                   <>
@@ -845,7 +845,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               <button
                 onClick={handleConfirm}
                 disabled={submitting}
-                className="w-full bg-[#169834] hover:bg-brand-700 disabled:bg-gray-400 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-gray-400 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>

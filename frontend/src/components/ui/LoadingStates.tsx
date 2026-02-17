@@ -119,7 +119,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {actionLabel && onAction && (
         <button
           onClick={onAction}
-          className="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+          className="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-medium hover:shadow-lg transition-all"
         >
           {actionLabel}
         </button>

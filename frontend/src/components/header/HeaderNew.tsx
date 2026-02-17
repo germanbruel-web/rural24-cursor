@@ -154,7 +154,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
               <button
                 onClick={handlePublish}
                 className="hidden sm:flex items-center gap-2 px-5 py-2.5 
-                         bg-brand-500 hover:bg-brand-600
+                         bg-brand-600 hover:bg-brand-500
                          text-white font-semibold rounded-full
                          shadow-md hover:shadow-lg
                          transition-all duration-200
@@ -382,7 +382,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
                     </button>
                     <button
                       onClick={() => { openAuth('register'); setShowMobileMenu(false); }}
-                      className="px-4 py-3 text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 rounded-lg flex items-center justify-center gap-2"
+                      className="px-4 py-3 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-500 rounded-lg flex items-center justify-center gap-2"
                     >
                       Registrarse
                     </button>

@@ -145,7 +145,7 @@ export const ReceivedContactsView: React.FC = () => {
           <div className="p-6 bg-gray-50 border-t flex gap-3">
             <a
               href={`mailto:${selectedMessage.sender_email}?subject=Re: ${selectedMessage.ads?.title || 'Consulta'}`}
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors font-medium"
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors font-medium"
             >
               <Mail className="w-5 h-5" />
               Responder por Email

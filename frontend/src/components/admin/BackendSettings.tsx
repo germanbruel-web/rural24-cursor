@@ -370,7 +370,7 @@ export const BackendSettings: React.FC = () => {
               flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all font-medium
               ${isUploading 
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                : 'bg-brand-500 hover:bg-brand-600 text-white shadow-sm hover:shadow-md'
+                : 'bg-brand-600 hover:bg-brand-500 text-white shadow-sm hover:shadow-md'
               }
             `}>
               {isUploading ? (

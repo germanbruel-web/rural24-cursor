@@ -228,7 +228,7 @@ export const PricingPage: React.FC = () => {
                       isComingSoon
                         ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                         : isFeatured
-                        ? 'bg-brand-500 hover:bg-brand-600 text-white shadow-lg hover:shadow-xl'
+                        ? 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg hover:shadow-xl'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
                     }`}
                   >

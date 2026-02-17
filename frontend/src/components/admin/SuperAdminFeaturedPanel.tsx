@@ -387,12 +387,12 @@ function ListTab() {
             </select>
           </div>
           <button onClick={() => handleSearch(1)} disabled={loading}
-            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white font-medium rounded-lg flex items-center gap-2 transition-colors">
+            className="px-5 py-2 bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 text-white font-medium rounded-lg flex items-center gap-2 transition-colors">
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
             Buscar
           </button>
           <button onClick={() => setShowCreateModal(true)}
-            className="px-5 py-2 bg-[#386539] hover:bg-[#2d5230] text-white font-medium rounded-lg flex items-center gap-2 transition-colors">
+            className="px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white font-medium rounded-lg flex items-center gap-2 transition-colors">
             <Zap className="w-4 h-4" />
             Destacar Aviso
           </button>
@@ -859,7 +859,7 @@ function StatsTab() {
         </div>
         <button
           onClick={loadStats}
-          className="mt-6 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+          className="mt-6 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors"
         >
           Aplicar
         </button>

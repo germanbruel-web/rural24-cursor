@@ -92,7 +92,7 @@ export default function ResetPasswordForm({ onSuccess, onBack }: ResetPasswordFo
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-brand-500 text-white rounded-lg font-medium hover:bg-brand-950 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Enviando...' : 'Enviar Instrucciones'}
         </button>

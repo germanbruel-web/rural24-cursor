@@ -87,7 +87,7 @@ export const EmailConfirmationPage = () => {
               const event = new CustomEvent('openAuthModal', { detail: { view: 'login' } });
               window.dispatchEvent(event);
             }}
-            className="bg-brand-500 hover:bg-brand-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className="bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
           >
             Iniciar Sesión Ahora
           </button>

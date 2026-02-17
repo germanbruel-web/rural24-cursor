@@ -59,8 +59,8 @@ const buttonVariants = cva(
           'shadow-sm hover:shadow-md',
         ],
         success: [
-          'bg-brand-500 text-white',
-          'hover:bg-brand-600',
+          'bg-brand-600 text-white',
+          'hover:bg-brand-500',
           'active:bg-brand-700',
           'focus-visible:ring-brand-400',
           'shadow-sm hover:shadow-md',

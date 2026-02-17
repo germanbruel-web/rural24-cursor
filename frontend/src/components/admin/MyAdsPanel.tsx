@@ -538,7 +538,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                       adFeatureds.length < 3 ? (
                         <button
                           onClick={() => setSelectedAdForFeatured(ad)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-[#169834] hover:bg-brand-700 rounded-lg transition-colors shadow-sm"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 rounded-lg transition-colors shadow-sm"
                         >
                           <Zap className="w-3.5 h-3.5" />
                           RENOVAR
@@ -547,7 +547,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                     ) : isPaidUser ? (
                       <button
                         onClick={() => setSelectedAdForFeatured(ad)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#386539] to-[#169834] hover:from-[#2d5230] hover:to-brand-700 rounded-lg transition-all shadow-sm"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 rounded-lg transition-all shadow-sm"
                       >
                         <Star className="w-3.5 h-3.5" />
                         DESTACAR

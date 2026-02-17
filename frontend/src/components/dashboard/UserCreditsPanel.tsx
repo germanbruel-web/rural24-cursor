@@ -155,7 +155,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
 
         <button
           onClick={() => setShowBuyCreditsModal(true)}
-          className="w-full py-3 sm:py-4 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
+          className="w-full py-3 sm:py-4 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
         >
           <ShoppingCart className="w-5 h-5" />
           Comprar Créditos

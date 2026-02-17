@@ -420,7 +420,7 @@ export const MessagesPanel: React.FC = () => {
                           href={`https://wa.me/${selectedMessage.sender_phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hola ${selectedMessage.sender_name}, te respondo sobre: ${selectedMessage.ads?.title}`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-2 bg-brand-500 text-white py-3 px-4 rounded-lg hover:bg-brand-600 font-medium transition-colors"
+                          className="flex-1 flex items-center justify-center gap-2 bg-brand-600 text-white py-3 px-4 rounded-lg hover:bg-brand-500 font-medium transition-colors"
                         >
                           <Phone className="w-5 h-5" />
                           WhatsApp

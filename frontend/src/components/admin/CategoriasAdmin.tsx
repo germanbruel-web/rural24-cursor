@@ -344,7 +344,7 @@ export const CategoriasAdmin: React.FC = () => {
         </div>
         <button
           onClick={() => handleNew('category')}
-          className="px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+          className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Nueva Categoría
@@ -575,7 +575,7 @@ export const CategoriasAdmin: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition font-semibold"
+                  className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition font-semibold"
                 >
                   {editingItem ? 'Guardar Cambios' : 'Crear'}
                 </button>

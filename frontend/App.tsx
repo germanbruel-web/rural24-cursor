@@ -828,7 +828,7 @@ const AppContent: React.FC = () => {
       {showScrollTop && currentPage === 'home' && !isSearching && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 bg-brand-500 hover:bg-brand-600 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 group"
+          className="fixed bottom-8 right-8 z-50 bg-brand-600 hover:bg-brand-500 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 group"
           aria-label="Volver arriba"
         >
           <svg 

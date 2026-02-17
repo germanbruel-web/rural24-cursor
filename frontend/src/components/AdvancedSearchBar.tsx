@@ -213,7 +213,7 @@ export const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
         />
         <button
           type="submit"
-          className="text-white absolute right-2.5 bottom-2.5 bg-brand-500 hover:bg-brand-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium text-sm px-8 py-3 transition"
+          className="text-white absolute right-2.5 bottom-2.5 bg-brand-600 hover:bg-brand-500 focus:ring-4 focus:outline-none focus:ring-brand-300 font-medium text-sm px-8 py-3 transition"
           style={{ borderRadius: '8px' }}
           disabled={isLoading}
         >

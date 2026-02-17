@@ -35,7 +35,7 @@ export const RegisterBanner: React.FC<RegisterBannerProps> = ({ onRegisterClick 
         <div className="flex items-center gap-2">
           <button
             onClick={onRegisterClick}
-            className="bg-brand-500 hover:bg-brand-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105 whitespace-nowrap"
+            className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105 whitespace-nowrap"
           >
             Registrarme ahora →
           </button>

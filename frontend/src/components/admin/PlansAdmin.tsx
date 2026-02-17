@@ -302,7 +302,7 @@ export default function PlansAdmin() {
           </button>
           <button
             onClick={handleCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
             Nuevo Plan
@@ -779,7 +779,7 @@ export default function PlansAdmin() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
               >
                 {saving ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />

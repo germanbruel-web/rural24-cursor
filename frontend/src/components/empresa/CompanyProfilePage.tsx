@@ -221,7 +221,7 @@ export function CompanyProfilePage() {
                 href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-6 py-3 bg-brand-400 text-white rounded-xl hover:bg-brand-500 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-500 transition-colors"
               >
                 <MessageCircle className="w-5 h-5" />
                 WhatsApp

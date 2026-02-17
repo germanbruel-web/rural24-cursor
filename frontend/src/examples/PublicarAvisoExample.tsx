@@ -202,7 +202,7 @@ function StepSeparator() {
 /**
  * ANTES (sin design system):
  * 
- * <button className="flex items-center gap-2 px-6 py-3 bg-brand-400 text-white rounded-xl hover:bg-brand-500 transition-all font-semibold shadow-lg shadow-brand-200">
+ * <button className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-500 transition-all font-semibold shadow-lg shadow-brand-200">
  *   Siguiente Paso
  * </button>
  * 

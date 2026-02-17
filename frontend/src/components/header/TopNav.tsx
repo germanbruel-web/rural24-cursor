@@ -104,7 +104,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
             </div>
             <button
               onClick={() => { window.location.hash = '#/publicar'; }}
-              className="flex items-center gap-1.5 px-5 py-1.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-bold rounded-full min-h-[34px] transition-colors active:scale-95"
+              className="flex items-center gap-1.5 px-5 py-1.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-bold rounded-full min-h-[34px] transition-colors active:scale-95"
             >
               <PlusCircle size={14} />
               PUBLICAR

@@ -325,7 +325,7 @@ export const ProfilePanel: React.FC = () => {
         {!isEditing ? (
           <button
             onClick={() => setIsEditing(true)}
-            className="px-4 py-2 bg-brand-500 text-white text-sm rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-brand-600 text-white text-sm rounded-lg hover:bg-brand-500 transition-colors flex items-center gap-2"
           >
             <Edit className="w-4 h-4" />
             Editar perfil
@@ -341,7 +341,7 @@ export const ProfilePanel: React.FC = () => {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2 bg-brand-500 text-white text-sm rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 bg-brand-600 text-white text-sm rounded-lg hover:bg-brand-500 transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               <Save className="w-4 h-4" /> {saving ? 'Guardando...' : 'Guardar'}
             </button>
@@ -469,7 +469,7 @@ export const ProfilePanel: React.FC = () => {
                           type="button"
                           onClick={handleSendVerificationCode}
                           disabled={verificationLoading || !formData.mobile.trim()}
-                          className="px-3 py-2 bg-brand-500 text-white text-xs font-medium rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-1.5 disabled:opacity-50 whitespace-nowrap"
+                          className="px-3 py-2 bg-brand-600 text-white text-xs font-medium rounded-lg hover:bg-brand-500 transition-colors flex items-center gap-1.5 disabled:opacity-50 whitespace-nowrap"
                         >
                           {verificationLoading ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -509,7 +509,7 @@ export const ProfilePanel: React.FC = () => {
                         type="button"
                         onClick={handleVerifyCode}
                         disabled={verificationLoading || verificationCode.length !== 4}
-                        className="px-4 py-2 bg-brand-500 text-white text-xs font-medium rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                        className="px-4 py-2 bg-brand-600 text-white text-xs font-medium rounded-lg hover:bg-brand-500 transition-colors flex items-center gap-1.5 disabled:opacity-50"
                       >
                         {verificationLoading ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />

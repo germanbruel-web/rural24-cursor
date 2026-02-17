@@ -260,7 +260,7 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
                 disabled={submitting || success}
                 className={`flex-1 py-3 px-4 font-bold rounded-xl transition-all text-sm sm:text-base flex items-center justify-center gap-2 ${
                   !submitting && !success
-                    ? 'bg-brand-500 hover:bg-brand-600 text-white shadow-lg'
+                    ? 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg'
                     : 'bg-gray-300 text-gray-600 cursor-not-allowed'
                 }`}
               >

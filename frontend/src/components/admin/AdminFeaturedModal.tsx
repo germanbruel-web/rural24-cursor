@@ -397,7 +397,7 @@ export default function AdminFeaturedModal({ isOpen, onClose, ad, onSuccess }: P
 
               <button
                 onClick={() => setStep('date')}
-                className="w-full mt-4 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
+                className="w-full mt-4 py-3 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-500 transition-colors"
               >
                 Continuar
               </button>
@@ -524,7 +524,7 @@ export default function AdminFeaturedModal({ isOpen, onClose, ad, onSuccess }: P
               <button
                 onClick={() => setStep('confirm')}
                 disabled={!selectedDate}
-                className="w-full py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-3 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-500 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 Continuar
               </button>
@@ -596,7 +596,7 @@ export default function AdminFeaturedModal({ isOpen, onClose, ad, onSuccess }: P
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="w-full py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 disabled:bg-emerald-400 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-500 disabled:bg-brand-400 transition-colors flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>

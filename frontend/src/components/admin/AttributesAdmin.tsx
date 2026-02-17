@@ -760,7 +760,7 @@ export function AttributesAdmin() {
           <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => setIsCreating(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-brand-400 text-white rounded-xl hover:bg-brand-500 transition-all font-semibold shadow-lg shadow-brand-200"
+              className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-500 transition-all font-semibold shadow-lg shadow-brand-200"
             >
               <Plus className="w-5 h-5" />
               Crear Atributo
@@ -1119,7 +1119,7 @@ export function AttributesAdmin() {
                   <button
                     onClick={addOption}
                     type="button"
-                    className="px-6 py-3 bg-brand-400 text-white rounded-xl hover:bg-brand-500 transition-all font-semibold"
+                    className="px-6 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-500 transition-all font-semibold"
                   >
                     Agregar
                   </button>
@@ -1209,7 +1209,7 @@ export function AttributesAdmin() {
             <button
               onClick={editingId ? handleUpdate : handleCreate}
               disabled={loading}
-              className="flex items-center gap-2 px-6 py-3 bg-brand-400 text-white rounded-xl hover:bg-brand-500 transition-all font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-500 transition-all font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
               <Save className="w-5 h-5" />
               {editingId ? 'Guardar Cambios' : 'Crear Atributo'}

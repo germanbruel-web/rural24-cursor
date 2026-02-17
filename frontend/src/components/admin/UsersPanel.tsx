@@ -397,7 +397,7 @@ export const UsersPanel: React.FC = () => {
                         </span>
                         <button
                           onClick={() => handleVerifyEmail(user.id)}
-                          className="px-2 py-1 bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold rounded transition-colors flex items-center gap-1"
+                          className="px-2 py-1 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded transition-colors flex items-center gap-1"
                           title="Verificar email manualmente"
                         >
                           <CheckCircle className="w-3 h-3" />

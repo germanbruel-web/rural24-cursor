@@ -391,7 +391,7 @@ export default function AllAdsTab() {
           <button
             onClick={() => handleSearch(1)}
             disabled={loading}
-            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white font-medium rounded-lg flex items-center gap-2 transition-colors"
+            className="px-5 py-2 bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 text-white font-medium rounded-lg flex items-center gap-2 transition-colors"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

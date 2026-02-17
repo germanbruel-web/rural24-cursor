@@ -134,7 +134,7 @@ export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ formData = {} }) =
           </div>
 
           {/* Botón acción */}
-          <button className="w-full mt-4 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg font-semibold transition-colors">
+          <button className="w-full mt-4 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-semibold transition-colors">
             Ver Detalles
           </button>
         </div>

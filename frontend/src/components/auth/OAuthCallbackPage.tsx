@@ -115,7 +115,7 @@ export default function OAuthCallbackPage({ onComplete, onError }: OAuthCallback
                 onClick={() => {
                   navigateTo('/');
                 }}
-                className="px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
+                className="px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-500 transition-colors"
               >
                 Volver al inicio
               </button>

@@ -223,7 +223,7 @@ export function ImportTemplateModal({
           <button
             onClick={handleApplyTemplate}
             disabled={!selectedTemplateId || applying}
-            className="px-6 py-3 rounded-xl bg-brand-400 text-white font-semibold hover:bg-brand-500 transition-all shadow-lg shadow-brand-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-3 rounded-xl bg-brand-600 text-white font-semibold hover:bg-brand-500 transition-all shadow-lg shadow-brand-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {applying ? (
               <>

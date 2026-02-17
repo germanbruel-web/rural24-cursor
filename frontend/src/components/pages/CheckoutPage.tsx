@@ -539,7 +539,7 @@ export const CheckoutPage: React.FC = () => {
                   {/* Botón de Pago */}
                   <button
                     onClick={handleCheckout}
-                    className="w-full bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
                   >
                     <CreditCard className="w-5 h-5" />
                     Continuar al Pago

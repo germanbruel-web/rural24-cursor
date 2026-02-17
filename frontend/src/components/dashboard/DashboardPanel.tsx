@@ -118,7 +118,7 @@ export const DashboardPanel: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigateTo('/my-ads')}
-              className="bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+              className="bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
             >
               <PenLine className="w-5 h-5" />
               Crear Aviso
@@ -242,7 +242,7 @@ export const DashboardPanel: React.FC = () => {
         </div>
         <button
           onClick={() => navigateTo('/my-ads')}
-          className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center gap-3"
+          className="bg-brand-600 hover:bg-brand-500 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center gap-3"
         >
           <PenLine className="w-6 h-6" />
           Crear Nuevo Aviso
@@ -300,7 +300,7 @@ export const DashboardPanel: React.FC = () => {
             </div>
             <button
               onClick={(e) => { e.preventDefault(); navigateTo('/dashboard/contacts'); }}
-              className="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
+              className="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
             >
               <MessageSquare className="w-5 h-5" />
               Ver Contactos

@@ -499,7 +499,7 @@ export default function ManualActivationTab() {
               <button
                 onClick={handleActivate}
                 disabled={submitting || !selectedAd || !reason.trim()}
-                className="flex-1 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>
