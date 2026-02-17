@@ -31,7 +31,7 @@ export function DynamicField({ attribute, value, onChange, error }: DynamicField
     text-base sm:text-lg
     ${error 
       ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
-      : 'border-gray-200 bg-white focus:border-brand-400 focus:ring-brand-100'
+      : 'border-gray-200 bg-white focus:border-brand-600 focus:ring-brand-100'
     }
     focus:outline-none focus:ring-4
     placeholder:text-gray-400
@@ -155,7 +155,7 @@ export function DynamicField({ attribute, value, onChange, error }: DynamicField
               relative inline-flex h-8 w-14 items-center rounded-full
               transition-colors duration-200 ease-in-out
               focus:outline-none focus:ring-4 focus:ring-brand-100
-              ${value ? 'bg-brand-400' : 'bg-gray-300'}
+              ${value ? 'bg-brand-600' : 'bg-gray-300'}
             `}
           >
             <span
@@ -223,7 +223,7 @@ export function DynamicField({ attribute, value, onChange, error }: DynamicField
                   px-5 py-3 rounded-full text-base font-semibold
                   transition-all duration-200
                   ${isSelected
-                    ? 'bg-brand-400 text-white shadow-lg shadow-brand-200'
+                    ? 'bg-brand-600 text-white shadow-lg shadow-brand-200'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }
                 `}

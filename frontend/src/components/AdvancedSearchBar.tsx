@@ -206,7 +206,7 @@ export const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
           onFocus={() => setShowSuggestions(true)}
           onKeyDown={handleKeyDown}
           placeholder="Ej: Tractor en Buenos Aires..."
-          className="block w-full p-4 pl-12 text-lg text-gray-900 border border-gray-300 bg-white focus:ring-brand-500 focus:border-brand-500 shadow-lg transition"
+          className="block w-full p-4 pl-12 text-lg text-gray-900 border border-gray-300 bg-white focus:ring-brand-600 focus:border-brand-600 shadow-lg transition"
           style={{ borderRadius: '12px' }}
           disabled={isLoading}
           autoComplete="off"
@@ -267,7 +267,7 @@ export const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
                     selectedIndex === idx 
-                      ? 'bg-brand-500 text-white' 
+                      ? 'bg-brand-600 text-white' 
                       : 'hover:bg-gray-50 text-gray-700'
                   }`}
                 >

@@ -159,7 +159,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, onShowAuthModal,
               className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-500 
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 
                           flex items-center justify-center text-white font-semibold text-sm
                           ring-2 ring-white shadow-sm">
               {getInitials()}

@@ -53,7 +53,7 @@ export const ResultsBannerIntercalated: React.FC<Props> = ({ category, position 
       <div className="col-span-full flex justify-center my-4">
         <a
           href="mailto:info@rural24.com.ar?subject=Consulta%20publicidad%20en%20Rural24"
-          className="block w-[650px] max-w-full h-[100px] bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.01] flex items-center justify-center"
+          className="block w-[650px] max-w-full h-[100px] bg-gradient-to-r from-brand-600 to-brand-700 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.01] flex items-center justify-center"
         >
           <div className="text-center text-white px-4">
             <p className="text-lg font-bold">📢 Publicite aquí</p>

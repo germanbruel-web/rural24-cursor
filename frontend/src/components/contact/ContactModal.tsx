@@ -186,7 +186,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
             </button>
           </div>
           <div className="text-center py-6">
-            <CheckCircle className="w-16 h-16 text-brand-400 mx-auto mb-4" />
+            <CheckCircle className="w-16 h-16 text-brand-600 mx-auto mb-4" />
             <p className="text-gray-600 mb-6">
               Tu mensaje fue enviado correctamente al vendedor. Recibirás una respuesta en tu correo electrónico.
             </p>
@@ -333,7 +333,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
                   onChange={(e) => setMessage(e.target.value)}
                   required
                   rows={4}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent resize-none"
                   placeholder="Hola, estoy interesado en..."
                 />
               </div>

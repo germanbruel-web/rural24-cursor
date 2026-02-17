@@ -59,7 +59,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
   }, [products.length, premiumAds.length, activeAds.length]);
 
   // Color verde unificado para todas las categorías (brand-500)
-  const colors = { border: 'rgb(var(--color-brand-500))', bg: 'rgba(var(--color-brand-500) / 0.05)' };
+  const colors = { border: 'rgb(var(--color-brand-600))', bg: 'rgba(var(--color-brand-600) / 0.05)' };
 
   // Iconos por categoría (sincronizado con botones del buscador)
   const categoryIcons: Record<string, string> = {
@@ -245,7 +245,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
               {/* Icono de carga animado en el centro */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="bg-white/90 backdrop-blur-sm rounded-full p-4 shadow-lg">
-                  <Loader2 className="w-12 h-12 text-brand-500 animate-spin" />
+                  <Loader2 className="w-12 h-12 text-brand-600 animate-spin" />
                 </div>
               </div>
             </div>
@@ -388,7 +388,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
                     {title}
                   </h2>
                   <button
-                    className="px-4 py-2 rounded-xl font-bold text-white text-xs bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-1.5 w-fit"
+                    className="px-4 py-2 rounded-xl font-bold text-white text-xs bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 transition-all shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center gap-1.5 w-fit"
                     onClick={() => onViewMore?.(category)}
                   >
                     Ver más
@@ -425,7 +425,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
                     <h2 className="text-5xl font-black text-gray-900 tracking-tight leading-tight">
                       {title}
                     </h2>
-                    <div className="h-1.5 w-24 bg-gradient-to-r from-brand-500 to-brand-700 rounded-full mt-3"></div>
+                    <div className="h-1.5 w-24 bg-gradient-to-r from-brand-600 to-brand-700 rounded-full mt-3"></div>
                   </div>
                 </div>
 
@@ -504,7 +504,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
                         }}
                         className={`px-4 py-2 rounded-xl font-semibold transition-all ${isMobile ? 'text-xs' : 'text-sm'} ${
                           count > 0 
-                            ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700 shadow-md hover:shadow-lg transform hover:scale-105' 
+                            ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white hover:from-brand-700 hover:to-brand-800 shadow-md hover:shadow-lg transform hover:scale-105' 
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
                         }`}
                       >
@@ -518,7 +518,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
                       e.preventDefault();
                       onViewMore?.(category);
                     }}
-                    className={`px-6 py-2 rounded-xl font-bold bg-brand-500 text-white hover:bg-brand-600 shadow-md hover:shadow-lg transform hover:scale-105 transition-all flex items-center gap-2 ${isMobile ? 'text-xs' : 'text-sm'}`}
+                    className={`px-6 py-2 rounded-xl font-bold bg-brand-600 text-white hover:bg-brand-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all flex items-center gap-2 ${isMobile ? 'text-xs' : 'text-sm'}`}
                   >
                     Ver todas
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

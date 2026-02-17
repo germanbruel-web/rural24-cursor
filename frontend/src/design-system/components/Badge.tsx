@@ -50,7 +50,7 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
       <span ref={ref} className={combinedClassName} {...props}>
         {dot && (
           <span className={`w-1.5 h-1.5 rounded-full ${
-            variant === 'success' ? 'bg-brand-400' :
+            variant === 'success' ? 'bg-brand-600' :
             variant === 'warning' ? 'bg-amber-500' :
             variant === 'error' ? 'bg-red-500' :
             variant === 'info' ? 'bg-blue-500' :

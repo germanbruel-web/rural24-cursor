@@ -152,16 +152,16 @@ export function DynamicForm({
           <span className="text-sm font-semibold text-gray-900">
             Progreso del formulario
           </span>
-          <span className="text-sm font-bold text-brand-500">{progress}%</span>
+          <span className="text-sm font-bold text-brand-600">{progress}%</span>
         </div>
         <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-green-400 to-brand-500 transition-all duration-500 ease-out"
+            className="h-full bg-gradient-to-r from-brand-600 to-brand-700 transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
         <div className="flex items-center gap-2 mt-2 text-xs text-gray-600">
-          <CheckCircle2 className="w-4 h-4 text-brand-400" />
+          <CheckCircle2 className="w-4 h-4 text-brand-600" />
           <span>
             {completedFields.length} de {requiredFields.length} campos obligatorios
           </span>
@@ -193,7 +193,7 @@ export function DynamicForm({
             transition-all duration-200
             flex items-center justify-center gap-3
             ${progress === 100 && !isSubmitting
-              ? 'bg-gradient-to-r from-brand-400 to-brand-500 hover:from-brand-500 hover:to-brand-600 text-white shadow-lg shadow-brand-200 hover:shadow-xl'
+              ? 'bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white shadow-lg shadow-brand-200 hover:shadow-xl'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }
           `}

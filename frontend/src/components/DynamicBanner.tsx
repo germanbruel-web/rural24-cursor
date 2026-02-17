@@ -107,7 +107,7 @@ export const HomepageSearchBanner: React.FC<HomepageSearchBannerProps> = ({
               onClick={() => setCurrentIndex(index)}
               className={`h-2 rounded-full transition-all duration-300 ${
                 index === currentIndex 
-                  ? 'w-8 bg-brand-500' 
+                  ? 'w-8 bg-brand-600' 
                   : 'w-2 bg-gray-300'
               }`}
               aria-label={`Ver banner ${index + 1}`}

@@ -42,7 +42,7 @@ export const PremiumSection: React.FC<PremiumSectionProps> = ({ products }) => {
 
               {/* Badge tipo de usuario */}
               {product.userType && product.userType !== 'free' && (
-                <div className="absolute top-2 left-2 z-10 bg-brand-500 text-white px-2 py-1 rounded text-xs font-medium">
+                <div className="absolute top-2 left-2 z-10 bg-brand-600 text-white px-2 py-1 rounded text-xs font-medium">
                   {product.userType === 'empresa' ? 'Empresa' : 'Particular'}
                 </div>
               )}
@@ -58,7 +58,7 @@ export const PremiumSection: React.FC<PremiumSectionProps> = ({ products }) => {
         {/* Ver más */}
         {products.length > 8 && (
           <div className="text-center mt-8">
-            <button className="px-8 py-3 bg-brand-500 text-white rounded-lg hover:bg-brand-950 transition-colors font-medium shadow-lg">
+            <button className="px-8 py-3 bg-brand-600 text-white rounded-lg hover:bg-brand-950 transition-colors font-medium shadow-lg">
               Ver todos los avisos premium
             </button>
           </div>

@@ -86,7 +86,7 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
         {/* ============================================
             HEADER
             ============================================ */}
-        <div className="sticky top-0 bg-gradient-to-r from-brand-500 to-emerald-600 px-6 py-4 sm:px-8 sm:py-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-gradient-to-r from-brand-600 to-brand-700 px-6 py-4 sm:px-8 sm:py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             <h2 className="text-xl sm:text-2xl font-bold text-white">
@@ -103,7 +103,7 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+            <Loader2 className="w-8 h-8 text-brand-600 animate-spin" />
           </div>
         ) : (
           <div className="p-6 sm:p-8 space-y-6">
@@ -127,7 +127,7 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
                       onClick={() => setSelectedQuantity(qty)}
                       className={`p-4 sm:p-6 rounded-xl border-2 transition-all relative ${
                         isSelected
-                          ? 'border-brand-500 bg-brand-50 shadow-md'
+                          ? 'border-brand-600 bg-brand-50 shadow-md'
                           : 'border-gray-200 bg-white hover:border-green-300 hover:shadow-sm'
                       }`}
                     >
@@ -137,7 +137,7 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
                         </div>
                       )}
 
-                      <div className="text-3xl sm:text-5xl font-black text-brand-500 mb-2">
+                      <div className="text-3xl sm:text-5xl font-black text-brand-600 mb-2">
                         {qty}
                       </div>
                       <p className="text-xs sm:text-sm text-gray-600 mb-2">
@@ -148,7 +148,7 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
                       </p>
 
                       {isSelected && (
-                        <div className="mt-3 w-5 h-5 bg-brand-500 rounded-full mx-auto"></div>
+                        <div className="mt-3 w-5 h-5 bg-brand-600 rounded-full mx-auto"></div>
                       )}
                     </button>
                   );
@@ -197,7 +197,7 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
               <div className="border-t border-gray-300 pt-3">
                 <div className="flex items-center justify-between text-base sm:text-lg">
                   <span className="font-bold text-gray-800">Total a pagar:</span>
-                  <span className="font-black text-brand-500 text-xl sm:text-2xl">
+                  <span className="font-black text-brand-600 text-xl sm:text-2xl">
                     ${totalPrice.toLocaleString('es-AR')}
                   </span>
                 </div>
@@ -232,12 +232,12 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
                 ============================================ */}
             {success && (
               <div className="bg-brand-50 border border-green-300 rounded-lg p-4 flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold text-brand-600 text-sm">
                     ¡Compra realizada exitosamente!
                   </p>
-                  <p className="text-xs text-brand-500 mt-1">
+                  <p className="text-xs text-brand-600 mt-1">
                     Se agregaron {selectedQuantity} créditos a tu cuenta
                   </p>
                 </div>

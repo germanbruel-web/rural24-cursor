@@ -38,7 +38,7 @@ export const ReceivedContactsView: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando contactos...</p>
         </div>
       </div>
@@ -59,7 +59,7 @@ export const ReceivedContactsView: React.FC = () => {
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white p-6">
+          <div className="bg-gradient-to-r from-brand-600 to-brand-700 text-white p-6">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold mb-2">
@@ -87,12 +87,12 @@ export const ReceivedContactsView: React.FC = () => {
             <h3 className="font-semibold text-gray-900 mb-4">Datos de Contacto</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <Mail className="w-5 h-5 text-brand-500" />
+                <Mail className="w-5 h-5 text-brand-600" />
                 <div>
                   <p className="text-xs text-gray-500">Email</p>
                   <a
                     href={`mailto:${selectedMessage.sender_email}`}
-                    className="font-medium text-gray-900 hover:text-brand-500 transition-colors"
+                    className="font-medium text-gray-900 hover:text-brand-600 transition-colors"
                   >
                     {selectedMessage.sender_email}
                   </a>
@@ -101,12 +101,12 @@ export const ReceivedContactsView: React.FC = () => {
 
               {selectedMessage.sender_phone && (
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Phone className="w-5 h-5 text-brand-500" />
+                  <Phone className="w-5 h-5 text-brand-600" />
                   <div>
                     <p className="text-xs text-gray-500">Teléfono</p>
                     <a
                       href={`tel:${selectedMessage.sender_phone}`}
-                      className="font-medium text-gray-900 hover:text-brand-500 transition-colors"
+                      className="font-medium text-gray-900 hover:text-brand-600 transition-colors"
                     >
                       {selectedMessage.sender_phone}
                     </a>
@@ -119,7 +119,7 @@ export const ReceivedContactsView: React.FC = () => {
           {/* Message */}
           <div className="p-6">
             <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-brand-500" />
+              <MessageSquare className="w-5 h-5 text-brand-600" />
               Mensaje
             </h3>
             <div className="bg-gray-50 rounded-lg p-4">
@@ -198,7 +198,7 @@ export const ReceivedContactsView: React.FC = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start gap-4">
                   <div className="bg-brand-100 rounded-full p-3">
-                    <User className="w-6 h-6 text-brand-500" />
+                    <User className="w-6 h-6 text-brand-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 text-lg">

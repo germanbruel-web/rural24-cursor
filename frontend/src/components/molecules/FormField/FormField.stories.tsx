@@ -294,7 +294,7 @@ export const ProductForm: Story = {
             Descripción <span className="text-danger-500">*</span>
           </label>
           <textarea
-            className="w-full h-32 px-4 py-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+            className="w-full h-32 px-4 py-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 outline-none transition-all"
             placeholder="Describí las características principales..."
           />
         </div>

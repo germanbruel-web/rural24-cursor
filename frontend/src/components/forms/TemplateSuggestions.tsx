@@ -274,7 +274,7 @@ export function TemplateSuggestions({
                           </p>
                         </div>
                         {isSelected && (
-                          <Check className="w-4 h-4 text-brand-500 flex-shrink-0 mt-1" />
+                          <Check className="w-4 h-4 text-brand-600 flex-shrink-0 mt-1" />
                         )}
                       </div>
                     </button>
@@ -289,7 +289,7 @@ export function TemplateSuggestions({
       {/* Loading indicator */}
       {loading && (
         <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500">
-          <div className="w-4 h-4 border-2 border-gray-300 border-t-brand-400 rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-gray-300 border-t-brand-600 rounded-full animate-spin" />
           <span>Cargando plantillas...</span>
         </div>
       )}

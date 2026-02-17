@@ -15,7 +15,7 @@ const CATEGORIES: Category[] = [
     id: 'maquinaria',
     name: 'Maquinaria Agr�cola',
     icon: 'tractor',
-    color: 'from-brand-500 to-brand-700',
+    color: 'from-brand-600 to-brand-700',
     description: 'Tractores, cosechadoras y equipos',
     count: 1247,
   },
@@ -23,7 +23,7 @@ const CATEGORIES: Category[] = [
     id: 'ganado',
     name: 'Ganado',
     icon: 'beef',
-    color: 'from-brand-500 to-brand-700',
+    color: 'from-brand-600 to-brand-700',
     description: 'Bovinos, ovinos y equinos',
     count: 856,
   },
@@ -31,7 +31,7 @@ const CATEGORIES: Category[] = [
     id: 'insumos',
     name: 'Insumos Agr�colas',
     icon: 'wheat',
-    color: 'from-brand-500 to-brand-700',
+    color: 'from-brand-600 to-brand-700',
     description: 'Semillas, fertilizantes y qu�micos',
     count: 3421,
   },
@@ -39,7 +39,7 @@ const CATEGORIES: Category[] = [
     id: 'inmuebles',
     name: 'Inmuebles Rurales',
     icon: 'mappin',
-    color: 'from-brand-500 to-brand-700',
+    color: 'from-brand-600 to-brand-700',
     description: 'Campos, lotes y propiedades rurales',
     count: 723,
   },
@@ -47,7 +47,7 @@ const CATEGORIES: Category[] = [
     id: 'equipos',
     name: 'Equipos y Herramientas',
     icon: 'wrench',
-    color: 'from-brand-500 to-brand-700',
+    color: 'from-brand-600 to-brand-700',
     description: 'Herramientas manuales y equipos',
     count: 1892,
   },
@@ -92,7 +92,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
             onClick={() => onCategoryClick?.('maquinaria')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform"><Tractor className="w-12 h-12" /></div>
               <h3 className="text-xl font-bold mb-2">Maquinaria Agr�cola</h3>
               <p className="text-white text-sm opacity-90 mb-4">Tractores, cosechadoras y equipos</p>
@@ -145,7 +145,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
             onClick={() => onCategoryClick?.('ganado')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform"><Beef className="w-12 h-12" /></div>
               <h3 className="text-xl font-bold mb-2">Ganado</h3>
               <p className="text-white text-sm opacity-90 mb-4">Bovinos, ovinos y equinos</p>
@@ -171,7 +171,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
             onClick={() => onCategoryClick?.('insumos')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform"><Wheat className="w-12 h-12" /></div>
               <h3 className="text-xl font-bold mb-2">Insumos Agr�colas</h3>
               <p className="text-white text-sm opacity-90 mb-4">Semillas, fertilizantes y qu�micos</p>
@@ -197,7 +197,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
             onClick={() => onCategoryClick?.('servicios')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform"><Briefcase className="w-12 h-12" /></div>
               <h3 className="text-xl font-bold mb-2">Servicios</h3>
               <p className="text-white text-sm opacity-90 mb-4">Asesoramiento y servicios profesionales</p>
@@ -241,7 +241,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
             onClick={() => onCategoryClick?.('tierras')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="mb-4 group-hover:scale-110 transition-transform"><MapPin className="w-12 h-12" /></div>
               <h3 className="text-xl font-bold mb-2">Campos y Tierras</h3>
               <p className="text-white text-sm opacity-90 mb-4">Campos, lotes y propiedades rurales</p>
@@ -285,7 +285,7 @@ export const CategoriesShowcase: React.FC<CategoriesShowcaseProps> = ({ onCatego
             onClick={() => onCategoryClick?.('equipos')}
             className="text-left group"
           >
-            <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
+            <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg p-8 text-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all h-full cursor-pointer">
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform"><Wrench className="w-12 h-12" /></div>
               <h3 className="text-xl font-bold mb-2">Equipos y Herramientas</h3>
               <p className="text-white text-sm opacity-90 mb-4">Herramientas manuales y equipos</p>

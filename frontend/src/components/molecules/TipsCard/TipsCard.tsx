@@ -48,7 +48,7 @@ const iconContainerVariants = cva('flex-shrink-0 mt-0.5', {
     variant: {
       default: 'text-gray-600',
       blue: 'text-blue-600',
-      green: 'text-brand-500',
+      green: 'text-brand-600',
       yellow: 'text-yellow-600',
     },
   },

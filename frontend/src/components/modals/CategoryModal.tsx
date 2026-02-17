@@ -109,7 +109,7 @@ export default function CategoryModal({
                   value={formData[field.name] || ''}
                   onChange={e => handleChange(field.name, e.target.value)}
                   placeholder={field.placeholder}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none"
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-brand-600 focus:outline-none"
                 />
               )}
 
@@ -119,7 +119,7 @@ export default function CategoryModal({
                   value={formData[field.name] || 0}
                   onChange={e => handleChange(field.name, parseInt(e.target.value))}
                   placeholder={field.placeholder}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none"
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-brand-600 focus:outline-none"
                 />
               )}
 
@@ -127,7 +127,7 @@ export default function CategoryModal({
                 <select
                   value={formData[field.name] || ''}
                   onChange={e => handleChange(field.name, e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none bg-white"
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-brand-600 focus:outline-none bg-white"
                 >
                   <option value="">Seleccionar...</option>
                   {field.options?.map(opt => (
@@ -144,7 +144,7 @@ export default function CategoryModal({
                     type="checkbox"
                     checked={formData[field.name] || false}
                     onChange={e => handleChange(field.name, e.target.checked)}
-                    className="w-5 h-5 text-brand-500 rounded focus:ring-brand-500"
+                    className="w-5 h-5 text-brand-600 rounded focus:ring-brand-600"
                   />
                   <span className="text-sm text-gray-700">{field.placeholder}</span>
                 </label>
@@ -171,7 +171,7 @@ export default function CategoryModal({
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors font-medium disabled:opacity-50"
+              className="flex-1 px-4 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors font-medium disabled:opacity-50"
             >
               {loading ? 'Guardando...' : initialData ? 'Actualizar' : 'Crear'}
             </button>

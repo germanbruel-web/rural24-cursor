@@ -72,7 +72,7 @@ export function DesignSystemShowcaseSimple() {
         <header className="sticky top-0 z-50 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-brand-500 dark:text-green-400">
+              <h1 className="text-3xl font-bold text-brand-600 dark:text-green-400">
                 Design System Rural24
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -513,7 +513,7 @@ export function DesignSystemShowcaseSimple() {
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
               <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">🚦 Estados y Alertas</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><CheckCircle size={20} className="text-brand-500 dark:text-green-400" /><span className="text-xs text-center">Check</span></div>
+                <div className="flex flex-col items-center gap-2"><CheckCircle size={20} className="text-brand-600 dark:text-green-400" /><span className="text-xs text-center">Check</span></div>
                 <div className="flex flex-col items-center gap-2"><XCircle size={20} className="text-red-600 dark:text-red-400" /><span className="text-xs text-center">X</span></div>
                 <div className="flex flex-col items-center gap-2"><AlertCircle size={20} className="text-red-600 dark:text-red-400" /><span className="text-xs text-center">Alert</span></div>
                 <div className="flex flex-col items-center gap-2"><AlertTriangle size={20} className="text-yellow-600 dark:text-yellow-400" /><span className="text-xs text-center">Warning</span></div>
@@ -532,10 +532,10 @@ export function DesignSystemShowcaseSimple() {
                 <div className="flex flex-col items-center gap-2"><Users size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Users</span></div>
                 <div className="flex flex-col items-center gap-2"><UserPlus size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Add</span></div>
                 <div className="flex flex-col items-center gap-2"><UserMinus size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Remove</span></div>
-                <div className="flex flex-col items-center gap-2"><UserCheck size={20} className="text-brand-500" /><span className="text-xs text-center">Verified</span></div>
+                <div className="flex flex-col items-center gap-2"><UserCheck size={20} className="text-brand-600" /><span className="text-xs text-center">Verified</span></div>
                 <div className="flex flex-col items-center gap-2"><UserX size={20} className="text-red-600" /><span className="text-xs text-center">Blocked</span></div>
                 <div className="flex flex-col items-center gap-2"><Shield size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Shield</span></div>
-                <div className="flex flex-col items-center gap-2"><ShieldCheck size={20} className="text-brand-500" /><span className="text-xs text-center">Protected</span></div>
+                <div className="flex flex-col items-center gap-2"><ShieldCheck size={20} className="text-brand-600" /><span className="text-xs text-center">Protected</span></div>
               </div>
             </div>
 
@@ -592,7 +592,7 @@ export function DesignSystemShowcaseSimple() {
                 <div className="flex flex-col items-center gap-2"><Store size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Store</span></div>
                 <div className="flex flex-col items-center gap-2"><Package size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Package</span></div>
                 <div className="flex flex-col items-center gap-2"><Truck size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Delivery</span></div>
-                <div className="flex flex-col items-center gap-2"><DollarSign size={20} className="text-brand-500" /><span className="text-xs text-center">Price</span></div>
+                <div className="flex flex-col items-center gap-2"><DollarSign size={20} className="text-brand-600" /><span className="text-xs text-center">Price</span></div>
                 <div className="flex flex-col items-center gap-2"><CreditCard size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Payment</span></div>
               </div>
             </div>
@@ -714,7 +714,7 @@ export function DesignSystemShowcaseSimple() {
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
               <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">📊 Datos y Analytics</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><TrendingUp size={20} className="text-brand-500" /><span className="text-xs text-center">Up</span></div>
+                <div className="flex flex-col items-center gap-2"><TrendingUp size={20} className="text-brand-600" /><span className="text-xs text-center">Up</span></div>
                 <div className="flex flex-col items-center gap-2"><TrendingDown size={20} className="text-red-600" /><span className="text-xs text-center">Down</span></div>
                 <div className="flex flex-col items-center gap-2"><BarChart size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Bar</span></div>
                 <div className="flex flex-col items-center gap-2"><PieChart size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Pie</span></div>
@@ -919,9 +919,9 @@ export function DesignSystemShowcaseSimple() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   
                   {/* Card Featured 1 */}
-                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-full">
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-full">
                     <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[16/9]">
-                      <div className="w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center">
+                      <div className="w-full h-full bg-gradient-to-br from-brand-600 to-brand-600 flex items-center justify-center">
                         <Package size={48} className="text-white/40" />
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -932,11 +932,11 @@ export function DesignSystemShowcaseSimple() {
                         <Tag size={12} className="text-gray-400 flex-shrink-0" />
                         <span className="font-medium truncate">Tractores · John Deere · 5075E</span>
                       </div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                         Tractor John Deere 5075E 4WD
                       </h3>
                       <div>
-                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-3 py-1.5">
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-3 py-1.5">
                           <p className="font-black text-brand-600 text-base">USD 45.000</p>
                         </div>
                       </div>
@@ -948,7 +948,7 @@ export function DesignSystemShowcaseSimple() {
                   </Card>
 
                   {/* Card Featured 2 */}
-                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-full">
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-full">
                     <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[16/9]">
                       <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
                         <Package size={48} className="text-white/40" />
@@ -961,11 +961,11 @@ export function DesignSystemShowcaseSimple() {
                         <Tag size={12} className="text-gray-400 flex-shrink-0" />
                         <span className="font-medium truncate">Cosechadoras · Case IH · 7250</span>
                       </div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                         Cosechadora Case IH Axial-Flow 7250
                       </h3>
                       <div>
-                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-3 py-1.5">
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-3 py-1.5">
                           <p className="font-black text-brand-600 text-base">USD 120.000</p>
                         </div>
                       </div>
@@ -977,7 +977,7 @@ export function DesignSystemShowcaseSimple() {
                   </Card>
 
                   {/* Card Featured 3 - Consultar (sin precio) */}
-                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-full">
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-full">
                     <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[16/9]">
                       <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center">
                         <Package size={48} className="text-white/40" />
@@ -989,11 +989,11 @@ export function DesignSystemShowcaseSimple() {
                         <Tag size={12} className="text-gray-400 flex-shrink-0" />
                         <span className="font-medium truncate">Sembradoras · Agrometal · TX Mega</span>
                       </div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                         Sembradora Agrometal TX Mega 16/52
                       </h3>
                       <div>
-                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-3 py-1.5">
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-3 py-1.5">
                           <p className="font-black text-brand-600 text-base">Consultar</p>
                         </div>
                       </div>
@@ -1005,7 +1005,7 @@ export function DesignSystemShowcaseSimple() {
                   </Card>
 
                   {/* Card Featured 4 - Ganadería (badge edad) */}
-                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-full">
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-full">
                     <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[16/9]">
                       <div className="w-full h-full bg-gradient-to-br from-lime-400 to-green-600 flex items-center justify-center">
                         <Package size={48} className="text-white/40" />
@@ -1018,11 +1018,11 @@ export function DesignSystemShowcaseSimple() {
                         <Tag size={12} className="text-gray-400 flex-shrink-0" />
                         <span className="font-medium truncate">Ganadería · Vaquillonas · Angus</span>
                       </div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight min-h-[2.5rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                         Vaquillonas Angus Preñadas x 50
                       </h3>
                       <div>
-                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-3 py-1.5">
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-3 py-1.5">
                           <p className="font-black text-brand-600 text-base">$ 850.000</p>
                         </div>
                       </div>
@@ -1043,9 +1043,9 @@ export function DesignSystemShowcaseSimple() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                   
                   {/* Compact 1 */}
-                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-auto">
                     <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
-                      <div className="w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center">
+                      <div className="w-full h-full bg-gradient-to-br from-brand-600 to-brand-600 flex items-center justify-center">
                         <Package size={32} className="text-white/40" />
                       </div>
                       <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">Nuevo</span>
@@ -1055,11 +1055,11 @@ export function DesignSystemShowcaseSimple() {
                         <Tag size={10} className="text-gray-400 flex-shrink-0" />
                         <span className="font-medium truncate">Pulverizadoras · Hardi</span>
                       </div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                         Pulverizadora Hardi Commander
                       </h3>
                       <div>
-                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
                           <p className="font-black text-brand-600 text-sm">USD 35.000</p>
                         </div>
                       </div>
@@ -1071,7 +1071,7 @@ export function DesignSystemShowcaseSimple() {
                   </Card>
 
                   {/* Compact 2 */}
-                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-auto">
                     <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
                       <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
                         <Package size={32} className="text-white/40" />
@@ -1083,11 +1083,11 @@ export function DesignSystemShowcaseSimple() {
                         <Tag size={10} className="text-gray-400 flex-shrink-0" />
                         <span className="font-medium truncate">Mixers · Mainero</span>
                       </div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                         Mixer Mainero 2932
                       </h3>
                       <div>
-                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
                           <p className="font-black text-brand-600 text-sm">$ 4.500.000</p>
                         </div>
                       </div>
@@ -1099,7 +1099,7 @@ export function DesignSystemShowcaseSimple() {
                   </Card>
 
                   {/* Compact 3 */}
-                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-auto">
                     <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
                       <div className="w-full h-full bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center">
                         <Package size={32} className="text-white/40" />
@@ -1110,11 +1110,11 @@ export function DesignSystemShowcaseSimple() {
                         <Tag size={10} className="text-gray-400 flex-shrink-0" />
                         <span className="font-medium truncate">Acoplados · Ombu</span>
                       </div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                         Acoplado Tolva Ombu CRV 22
                       </h3>
                       <div>
-                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
                           <p className="font-black text-brand-600 text-sm">Consultar</p>
                         </div>
                       </div>
@@ -1126,7 +1126,7 @@ export function DesignSystemShowcaseSimple() {
                   </Card>
 
                   {/* Compact 4 */}
-                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-auto">
                     <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
                       <div className="w-full h-full bg-gradient-to-br from-rose-400 to-red-500 flex items-center justify-center">
                         <Package size={32} className="text-white/40" />
@@ -1138,11 +1138,11 @@ export function DesignSystemShowcaseSimple() {
                         <Tag size={10} className="text-gray-400 flex-shrink-0" />
                         <span className="font-medium truncate">Silos · Kepler Weber</span>
                       </div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                         Silo Aéreo 150 Toneladas
                       </h3>
                       <div>
-                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
                           <p className="font-black text-brand-600 text-sm">USD 8.500</p>
                         </div>
                       </div>
@@ -1154,7 +1154,7 @@ export function DesignSystemShowcaseSimple() {
                   </Card>
 
                   {/* Compact 5 */}
-                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                  <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-auto">
                     <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
                       <div className="w-full h-full bg-gradient-to-br from-teal-400 to-cyan-600 flex items-center justify-center">
                         <Package size={32} className="text-white/40" />
@@ -1166,11 +1166,11 @@ export function DesignSystemShowcaseSimple() {
                         <Tag size={10} className="text-gray-400 flex-shrink-0" />
                         <span className="font-medium truncate">Ganadería · Novillos</span>
                       </div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                         Novillos Hereford x 30 cab
                       </h3>
                       <div>
-                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                        <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
                           <p className="font-black text-brand-600 text-sm">$ 1.200.000</p>
                         </div>
                       </div>
@@ -1195,19 +1195,19 @@ export function DesignSystemShowcaseSimple() {
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <Megaphone className="w-4 h-4 text-brand-500" />
+                        <Megaphone className="w-4 h-4 text-brand-600" />
                         <h3 className="text-sm font-semibold text-brand-700 tracking-wide uppercase">Avisos Destacados</h3>
                       </div>
-                      <span className="text-xs text-brand-500/70 font-medium">Publicidad</span>
+                      <span className="text-xs text-brand-600/70 font-medium">Publicidad</span>
                     </div>
 
                     {/* Grid 5 columnas desktop — cards compact */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                       
                       {/* Destacado 1 */}
-                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-auto">
                         <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
-                          <div className="w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center">
+                          <div className="w-full h-full bg-gradient-to-br from-brand-600 to-brand-600 flex items-center justify-center">
                             <Package size={32} className="text-white/40" />
                           </div>
                           <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">Nuevo</span>
@@ -1217,11 +1217,11 @@ export function DesignSystemShowcaseSimple() {
                             <Tag size={10} className="text-gray-400 flex-shrink-0" />
                             <span className="font-medium truncate">Tractores · Massey Ferguson</span>
                           </div>
-                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                             Tractor MF 4292 Cabina
                           </h3>
                           <div>
-                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
                               <p className="font-black text-brand-600 text-sm">USD 52.000</p>
                             </div>
                           </div>
@@ -1233,7 +1233,7 @@ export function DesignSystemShowcaseSimple() {
                       </Card>
 
                       {/* Destacado 2 */}
-                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-auto">
                         <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
                           <div className="w-full h-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center">
                             <Package size={32} className="text-white/40" />
@@ -1245,11 +1245,11 @@ export function DesignSystemShowcaseSimple() {
                             <Tag size={10} className="text-gray-400 flex-shrink-0" />
                             <span className="font-medium truncate">Implementos · Metalfor</span>
                           </div>
-                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                             Pulverizadora Metalfor 3200 SE
                           </h3>
                           <div>
-                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
                               <p className="font-black text-brand-600 text-sm">USD 68.000</p>
                             </div>
                           </div>
@@ -1261,7 +1261,7 @@ export function DesignSystemShowcaseSimple() {
                       </Card>
 
                       {/* Destacado 3 */}
-                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-auto">
                         <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
                           <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center">
                             <Package size={32} className="text-white/40" />
@@ -1272,11 +1272,11 @@ export function DesignSystemShowcaseSimple() {
                             <Tag size={10} className="text-gray-400 flex-shrink-0" />
                             <span className="font-medium truncate">Acoplados · Cestari</span>
                           </div>
-                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                             Tolva Cestari 24 Tn
                           </h3>
                           <div>
-                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
                               <p className="font-black text-brand-600 text-sm">$ 6.800.000</p>
                             </div>
                           </div>
@@ -1288,7 +1288,7 @@ export function DesignSystemShowcaseSimple() {
                       </Card>
 
                       {/* Destacado 4 */}
-                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-auto">
                         <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
                           <div className="w-full h-full bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center">
                             <Package size={32} className="text-white/40" />
@@ -1300,11 +1300,11 @@ export function DesignSystemShowcaseSimple() {
                             <Tag size={10} className="text-gray-400 flex-shrink-0" />
                             <span className="font-medium truncate">Silos · Agromet</span>
                           </div>
-                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                             Silo Bolsa 9 Pies Extractor
                           </h3>
                           <div>
-                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
                               <p className="font-black text-brand-600 text-sm">USD 12.500</p>
                             </div>
                           </div>
@@ -1316,7 +1316,7 @@ export function DesignSystemShowcaseSimple() {
                       </Card>
 
                       {/* Destacado 5 */}
-                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-500 h-auto">
+                      <Card variant="default" padding="none" className="group cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600 h-auto">
                         <div className="relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[4/3]">
                           <div className="w-full h-full bg-gradient-to-br from-rose-400 to-red-500 flex items-center justify-center">
                             <Package size={32} className="text-white/40" />
@@ -1328,11 +1328,11 @@ export function DesignSystemShowcaseSimple() {
                             <Tag size={10} className="text-gray-400 flex-shrink-0" />
                             <span className="font-medium truncate">Ganadería · Novillos</span>
                           </div>
-                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-500 transition-colors">
+                          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug min-h-[2rem] line-clamp-2 group-hover:text-brand-600 transition-colors">
                             Lote 80 Novillos Braford
                           </h3>
                           <div>
-                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                            <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
                               <p className="font-black text-brand-600 text-sm">$ 1.450.000</p>
                             </div>
                           </div>
@@ -1364,7 +1364,7 @@ export function DesignSystemShowcaseSimple() {
                       <p><span className="font-mono text-brand-600">Megaphone</span> icon 16px</p>
                       <p><span className="font-mono text-brand-600">text-brand-700</span> título</p>
                       <p><span className="font-mono text-brand-600">uppercase tracking-wide</span></p>
-                      <p>Label "Publicidad" <span className="font-mono text-brand-600">text-brand-500/70</span></p>
+                      <p>Label "Publicidad" <span className="font-mono text-brand-600">text-brand-600/70</span></p>
                     </div>
                   </Card>
                   <Card variant="ghost" padding="sm">
@@ -1402,9 +1402,9 @@ export function DesignSystemShowcaseSimple() {
                         <span className="font-medium text-gray-500 font-mono">Label: Subcat · Marca · Modelo</span>
                       </div>
                       <div>
-                        <span className="font-bold text-gray-900 dark:text-white text-base font-mono">Título (line-clamp-2, hover → brand-500)</span>
+                        <span className="font-bold text-gray-900 dark:text-white text-base font-mono">Título (line-clamp-2, hover → brand-600)</span>
                       </div>
-                      <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-3 py-1.5">
+                      <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-3 py-1.5">
                         <span className="font-black text-brand-600 text-base font-mono">Precio (brand-600)</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs">
@@ -1420,10 +1420,10 @@ export function DesignSystemShowcaseSimple() {
                       <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-3">Tokens usados</h4>
                       <div className="space-y-2 text-xs">
                         <div className="flex justify-between"><span className="text-gray-500">Precio pill bg</span><span className="font-mono text-brand-600">brand-50 → emerald-50</span></div>
-                        <div className="flex justify-between"><span className="text-gray-500">Precio border</span><span className="font-mono text-brand-600">border-brand-500</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Precio border</span><span className="font-mono text-brand-600">border-brand-600</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Precio texto</span><span className="font-mono text-brand-600">text-brand-600</span></div>
-                        <div className="flex justify-between"><span className="text-gray-500">Título hover</span><span className="font-mono text-brand-500">text-brand-500</span></div>
-                        <div className="flex justify-between"><span className="text-gray-500">Hover border</span><span className="font-mono text-brand-500">border-brand-500</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Título hover</span><span className="font-mono text-brand-600">text-brand-600</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Hover border</span><span className="font-mono text-brand-600">border-brand-600</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Hover lift</span><span className="font-mono text-gray-600">-translate-y-[3px]</span></div>
                       </div>
                     </Card>
@@ -1554,7 +1554,7 @@ export function DesignSystemShowcaseSimple() {
               🎨 Design System Rural24 - Atomic Design + CVA + Tailwind CSS
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-              Ver documentación completa en Storybook: <code className="text-brand-500 dark:text-green-400">npm run storybook</code>
+              Ver documentación completa en Storybook: <code className="text-brand-600 dark:text-green-400">npm run storybook</code>
             </p>
           </footer>
 

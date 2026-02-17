@@ -39,7 +39,7 @@ export const SubcategoriesExpressBar: React.FC<SubcategoriesExpressBarProps> = (
               transition-colors duration-200
               ${subcat.ads_count === 0
                 ? 'text-gray-400 cursor-not-allowed'
-                : 'text-gray-600 hover:text-brand-500 hover:underline cursor-pointer'
+                : 'text-gray-600 hover:text-brand-600 hover:underline cursor-pointer'
               }
             `}
           >

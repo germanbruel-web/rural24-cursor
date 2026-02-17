@@ -82,7 +82,7 @@ function SortableAttribute({ attr, onEdit, onDelete }: SortableAttributeProps) {
           className="cursor-grab active:cursor-grabbing p-2 hover:bg-brand-100 rounded-lg transition-all"
           title="Arrastrar para reordenar"
         >
-          <GripVertical className="w-5 h-5 text-gray-400 hover:text-brand-500" />
+          <GripVertical className="w-5 h-5 text-gray-400 hover:text-brand-600" />
         </button>
         
         {/* Contenido del atributo */}
@@ -651,7 +651,7 @@ export function AttributesAdmin() {
           message.type === 'success' ? 'bg-brand-50 border-2 border-brand-200' : 'bg-red-50 border-2 border-red-200'
         }`}>
           {message.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 text-brand-500" />
+            <CheckCircle2 className="w-5 h-5 text-brand-600" />
           ) : (
             <AlertCircle className="w-5 h-5 text-red-600" />
           )}
@@ -674,7 +674,7 @@ export function AttributesAdmin() {
               setSelectedSubcategoryId('');
               // setSelectedTypeId(''); // SOFT HIDE
             }}
-            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
           >
             <option value="">Seleccionar categoría</option>
             {categories.map((cat) => (
@@ -696,7 +696,7 @@ export function AttributesAdmin() {
               // setSelectedTypeId(''); // SOFT HIDE
             }}
             disabled={!selectedCategoryId}
-            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
           >
             <option value="">Seleccionar subcategoría</option>
             {subcategories.map((sub) => (
@@ -716,7 +716,7 @@ export function AttributesAdmin() {
             value={selectedTypeId}
             onChange={(e) => setSelectedTypeId(e.target.value)}
             disabled={!selectedSubcategoryId}
-            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
           >
             <option value="">Todos los tipos</option>
             {types.map((type) => (
@@ -852,7 +852,7 @@ export function AttributesAdmin() {
                 value={formData.field_name}
                 onChange={(e) => setFormData({ ...formData, field_name: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
                 placeholder="marca, modelo, potencia_hp..."
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
               />
               <p className="text-xs text-gray-500 mt-1">Se guardará en minúsculas con guiones bajos</p>
             </div>
@@ -867,7 +867,7 @@ export function AttributesAdmin() {
                 value={formData.field_label}
                 onChange={(e) => setFormData({ ...formData, field_label: e.target.value })}
                 placeholder="Marca, Modelo, Potencia (HP)..."
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
               />
             </div>
 
@@ -879,7 +879,7 @@ export function AttributesAdmin() {
               <select
                 value={formData.field_type}
                 onChange={(e) => setFormData({ ...formData, field_type: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
               >
                 {FIELD_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -897,7 +897,7 @@ export function AttributesAdmin() {
               <select
                 value={formData.field_group}
                 onChange={(e) => setFormData({ ...formData, field_group: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
               >
                 {availableGroups.map((group) => (
                   <option key={group.value} value={group.value}>
@@ -918,7 +918,7 @@ export function AttributesAdmin() {
                     type="number"
                     value={formData.min_value || ''}
                     onChange={(e) => setFormData({ ...formData, min_value: e.target.value ? Number(e.target.value) : null })}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
                   />
                 </div>
 
@@ -930,7 +930,7 @@ export function AttributesAdmin() {
                     type="number"
                     value={formData.max_value || ''}
                     onChange={(e) => setFormData({ ...formData, max_value: e.target.value ? Number(e.target.value) : null })}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
                   />
                 </div>
 
@@ -943,7 +943,7 @@ export function AttributesAdmin() {
                     value={formData.prefix || ''}
                     onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
                     placeholder="$, USD, etc."
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
                   />
                 </div>
 
@@ -956,7 +956,7 @@ export function AttributesAdmin() {
                     value={formData.suffix || ''}
                     onChange={(e) => setFormData({ ...formData, suffix: e.target.value })}
                     placeholder="HP, kg, hs, etc."
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
                   />
                 </div>
               </>
@@ -972,7 +972,7 @@ export function AttributesAdmin() {
                 value={formData.placeholder || ''}
                 onChange={(e) => setFormData({ ...formData, placeholder: e.target.value })}
                 placeholder="Ej: Ingrese la marca..."
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
               />
             </div>
 
@@ -986,7 +986,7 @@ export function AttributesAdmin() {
                 value={formData.help_text || ''}
                 onChange={(e) => setFormData({ ...formData, help_text: e.target.value })}
                 placeholder="Texto explicativo que aparecerá debajo del campo"
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
               />
             </div>
           </div>
@@ -1114,7 +1114,7 @@ export function AttributesAdmin() {
                       }
                     }}
                     placeholder="Escribe una opción y presiona Enter"
-                    className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                    className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
                   />
                   <button
                     onClick={addOption}
@@ -1135,7 +1135,7 @@ export function AttributesAdmin() {
                 type="checkbox"
                 checked={formData.is_required}
                 onChange={(e) => setFormData({ ...formData, is_required: e.target.checked })}
-                className="w-5 h-5 rounded border-2 border-gray-300 text-brand-400 focus:ring-4 focus:ring-brand-100"
+                className="w-5 h-5 rounded border-2 border-gray-300 text-brand-600 focus:ring-4 focus:ring-brand-100"
               />
               <span className="text-sm font-medium text-gray-700">Campo obligatorio</span>
             </label>
@@ -1156,7 +1156,7 @@ export function AttributesAdmin() {
                   type="checkbox"
                   checked={formData.is_active}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="w-5 h-5 rounded border-2 border-gray-300 text-brand-400 focus:ring-4 focus:ring-brand-100"
+                  className="w-5 h-5 rounded border-2 border-gray-300 text-brand-600 focus:ring-4 focus:ring-brand-100"
                 />
                 <span className="text-sm font-medium text-gray-700">Activo</span>
               </label>
@@ -1242,7 +1242,7 @@ export function AttributesAdmin() {
 
           {loading ? (
             <div className="p-12 text-center">
-              <div className="inline-block w-8 h-8 border-4 border-brand-400 border-t-transparent rounded-full animate-spin"></div>
+              <div className="inline-block w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : attributes.length === 0 ? (
             <div className="p-12 text-center text-gray-500">
@@ -1328,7 +1328,7 @@ export function AttributesAdmin() {
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
                   placeholder={`${categories.find(c => c.id === selectedCategoryId)?.display_name}_${subcategories.find(s => s.id === selectedSubcategoryId)?.display_name}`}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
                 />
               </div>
 
@@ -1341,7 +1341,7 @@ export function AttributesAdmin() {
                   onChange={(e) => setTemplateDescription(e.target.value)}
                   placeholder="Ej: Template completo con todos los campos de maquinaria agrícola"
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all resize-none"
                 />
               </div>
             </div>

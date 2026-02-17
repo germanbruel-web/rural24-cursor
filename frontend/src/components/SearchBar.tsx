@@ -77,7 +77,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => 
         {parts.map((part, i) =>
           // Direct, case-sensitive comparison
           part === highlight ? (
-            <strong key={i} className="font-bold text-brand-400">
+            <strong key={i} className="font-bold text-brand-600">
               {part}
             </strong>
           ) : (
@@ -100,7 +100,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => 
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setShowSuggestions(true)}
           placeholder="Ej: Tractor usado en Córdoba..."
-          className="block w-full p-4 pl-12 text-lg text-gray-900 border border-gray-300 rounded-full bg-white focus:ring-brand-400 focus:border-brand-400 shadow-lg transition"
+          className="block w-full p-4 pl-12 text-lg text-gray-900 border border-gray-300 rounded-full bg-white focus:ring-brand-600 focus:border-brand-600 shadow-lg transition"
           disabled={isLoading}
           autoComplete="off"
         />

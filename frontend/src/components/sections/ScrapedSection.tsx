@@ -72,7 +72,7 @@ export const ScrapedSection: React.FC<ScrapedSectionProps> = ({ productsByCatego
                   <div className="mt-6 text-center">
                     <button 
                       onClick={() => handleViewAll(category)}
-                      className="text-sm text-brand-500 hover:text-brand-700 font-medium hover:underline"
+                      className="text-sm text-brand-600 hover:text-brand-700 font-medium hover:underline"
                     >
                       Ver más avisos de {category} ({products.length - 4} más)
                     </button>

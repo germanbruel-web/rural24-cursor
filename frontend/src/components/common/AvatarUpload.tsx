@@ -115,12 +115,12 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
           rounded-full
           overflow-hidden
           border-4
-          ${dragOver ? 'border-brand-500 border-dashed' : 'border-gray-200'}
+          ${dragOver ? 'border-brand-600 border-dashed' : 'border-gray-200'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           bg-gray-100
           flex items-center justify-center
           transition-all
-          hover:border-brand-500/50
+          hover:border-brand-600/50
         `}
         onClick={() => !disabled && fileInputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -128,7 +128,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         onDrop={handleDrop}
       >
         {isUploading ? (
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600" />
         ) : displayUrl ? (
           <img
             src={displayUrl}
@@ -197,8 +197,8 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
       {/* Helper Text */}
       {dragOver && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="absolute inset-0 bg-brand-500/20 rounded-full" />
-          <Upload className="w-8 h-8 text-brand-500 z-10" />
+          <div className="absolute inset-0 bg-brand-600/20 rounded-full" />
+          <Upload className="w-8 h-8 text-brand-600 z-10" />
         </div>
       )}
     </div>

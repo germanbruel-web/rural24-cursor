@@ -199,7 +199,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
                       onClick={() => setPlacement(option.value)}
                       className={`p-3 border-2 rounded-lg flex items-center justify-center gap-2 transition-all ${
                         placement === option.value
-                          ? 'border-brand-500 bg-brand-50'
+                          ? 'border-brand-600 bg-brand-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -221,7 +221,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
                     value={scheduledStart}
                     onChange={(e) => setScheduledStart(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600"
                   />
                 </div>
 
@@ -232,7 +232,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
                   <select
                     value={durationDays}
                     onChange={(e) => setDurationDays(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600"
                   >
                     <option value={7}>7 días</option>
                     <option value={14}>14 días</option>
@@ -285,7 +285,7 @@ export default function EditFeaturedModal({ isOpen, onClose, featured, onSuccess
 
               {success && (
                 <div className="p-4 bg-brand-50 border border-brand-200 rounded-lg flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="font-semibold text-brand-700">
                       ✅ Cambios guardados exitosamente

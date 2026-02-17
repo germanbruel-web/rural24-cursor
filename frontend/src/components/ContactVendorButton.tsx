@@ -127,7 +127,7 @@ export const ContactVendorButton: React.FC<ContactVendorButtonProps> = ({
             {limits.can_send_more ? (
               <span className="text-gray-600">
                 {limits.max_sent === 999999 ? (
-                  <span className="text-brand-500 font-medium">✓ Contactos ilimitados</span>
+                  <span className="text-brand-600 font-medium">✓ Contactos ilimitados</span>
                 ) : (
                   <span>
                     Enviados: <span className="font-medium">{limits.current_sent}</span> de{' '}
@@ -177,7 +177,7 @@ export const ContactVendorButton: React.FC<ContactVendorButtonProps> = ({
 
             {success ? (
               <div className="flex flex-col items-center justify-center py-8">
-                <CheckCircle className="w-16 h-16 text-brand-500 mb-4" />
+                <CheckCircle className="w-16 h-16 text-brand-600 mb-4" />
                 <p className="text-lg font-medium text-gray-900">¡Mensaje enviado!</p>
                 <p className="text-gray-600 text-center mt-2">
                   El vendedor recibirá tu consulta y te responderá pronto.

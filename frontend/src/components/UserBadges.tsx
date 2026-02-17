@@ -27,7 +27,7 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
   if (verified) {
     return (
       <div className={`inline-flex items-center ${sizeClasses[size]}`}>
-        <CheckBadgeIcon className={`${iconSizes[size]} text-brand-500`} />
+        <CheckBadgeIcon className={`${iconSizes[size]} text-brand-600`} />
         {showLabel && <span className="text-gray-700 font-medium">Usuario Verificado</span>}
       </div>
     );

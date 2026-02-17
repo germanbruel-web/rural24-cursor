@@ -111,14 +111,14 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
       
       case 'tel':
         return (
-          <a href={`tel:${value}`} className="text-brand-500 hover:underline">
+          <a href={`tel:${value}`} className="text-brand-600 hover:underline">
             {value}
           </a>
         );
       
       case 'url':
         return (
-          <a href={value} target="_blank" rel="noopener noreferrer" className="text-brand-500 hover:underline">
+          <a href={value} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">
             {value}
           </a>
         );
@@ -216,7 +216,7 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
       </div>
     );
   }
@@ -288,7 +288,7 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
                   className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                    index === currentImageIndex ? 'border-brand-500' : 'border-gray-200'
+                    index === currentImageIndex ? 'border-brand-600' : 'border-gray-200'
                   }`}
                 >
                   <img
@@ -328,7 +328,7 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
           {ad.price && (
             <div className="text-right">
               <div className="text-sm text-gray-600">Precio</div>
-              <div className="text-3xl font-bold text-brand-500">
+              <div className="text-3xl font-bold text-brand-600">
                 ${ad.price.toLocaleString()}
               </div>
             </div>

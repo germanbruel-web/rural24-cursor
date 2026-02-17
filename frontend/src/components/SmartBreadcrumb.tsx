@@ -83,7 +83,7 @@ export const SmartBreadcrumb: React.FC<SmartBreadcrumbProps> = ({
           {seg.href ? (
             <button
               onClick={() => handleClick(seg.href)}
-              className="flex items-center gap-0.5 sm:gap-1 text-gray-600 hover:text-brand-500 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 rounded-sm px-0.5 sm:px-1"
+              className="flex items-center gap-0.5 sm:gap-1 text-gray-600 hover:text-brand-600 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 rounded-sm px-0.5 sm:px-1"
               aria-current={seg.isActive ? 'page' : undefined}
             >
               {i === 0 && <Home size={12} className="inline sm:w-[14px] sm:h-[14px]" />}

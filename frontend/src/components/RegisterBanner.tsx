@@ -27,9 +27,9 @@ export const RegisterBanner: React.FC<RegisterBannerProps> = ({ onRegisterClick 
     <div className="bg-brand-50 border-b-2 border-brand-200 py-3 px-4 relative animate-slideDown">
       <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1">
-          <Megaphone className="w-6 h-6 text-brand-500" />
+          <Megaphone className="w-6 h-6 text-brand-600" />
           <p className="text-sm md:text-base text-gray-800">
-            <strong className="text-brand-500">¿Querés vender?</strong> Registrate GRATIS y publicá tus avisos
+            <strong className="text-brand-600">¿Querés vender?</strong> Registrate GRATIS y publicá tus avisos
           </p>
         </div>
         <div className="flex items-center gap-2">

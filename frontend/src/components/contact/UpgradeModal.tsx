@@ -99,7 +99,7 @@ export default function UpgradeModal({ isOpen, onClose, planName }: UpgradeModal
                 <h5 className="font-bold text-lg text-gray-900">Premium Particular</h5>
               </div>
               <div className="mb-3">
-                <span className="text-3xl font-bold text-brand-500">$12.000</span>
+                <span className="text-3xl font-bold text-brand-600">$12.000</span>
                 <span className="text-gray-600 text-sm">/mes</span>
               </div>
               <ul className="text-xs text-gray-600 space-y-1 mb-4">
@@ -123,7 +123,7 @@ export default function UpgradeModal({ isOpen, onClose, planName }: UpgradeModal
                 <h5 className="font-bold text-lg text-gray-900">Premium Empresa</h5>
               </div>
               <div className="mb-3">
-                <span className="text-3xl font-bold text-brand-500">$50.000</span>
+                <span className="text-3xl font-bold text-brand-600">$50.000</span>
                 <span className="text-gray-600 text-sm">/mes</span>
               </div>
               <ul className="text-xs text-gray-600 space-y-1 mb-4">
@@ -153,7 +153,7 @@ export default function UpgradeModal({ isOpen, onClose, planName }: UpgradeModal
               onClose();
               window.location.href = '/planes'; // TODO: Ajustar ruta según tu app
             }}
-            className="flex-1 py-3 bg-gradient-to-r from-brand-500 to-[#0e7d28] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+            className="flex-1 py-3 bg-gradient-to-r from-brand-600 to-[#0e7d28] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
           >
             Ver Planes Completos
           </button>

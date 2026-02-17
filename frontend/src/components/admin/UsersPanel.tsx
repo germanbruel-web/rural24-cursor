@@ -186,7 +186,7 @@ export const UsersPanel: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando usuarios...</p>
         </div>
       </div>
@@ -251,7 +251,7 @@ export const UsersPanel: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por email o nombre..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               />
             </div>
           </div>
@@ -260,7 +260,7 @@ export const UsersPanel: React.FC = () => {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as any)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
           >
             <option value="all">Todos los roles</option>
             <option value="superadmin">SuperAdmin</option>
@@ -273,7 +273,7 @@ export const UsersPanel: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
           >
             <option value="all">Todos los estados</option>
             <option value="active">Verificados</option>
@@ -313,7 +313,7 @@ export const UsersPanel: React.FC = () => {
                 <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold">
                         {(user.first_name || user.full_name || user.email).charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -326,7 +326,7 @@ export const UsersPanel: React.FC = () => {
                           {user.email}
                           {user.email_verified ? (
                             <span title="Email verificado">
-                              <CheckCircle className="w-4 h-4 text-brand-400" />
+                              <CheckCircle className="w-4 h-4 text-brand-600" />
                             </span>
                           ) : (
                             <span title="Email no verificado">

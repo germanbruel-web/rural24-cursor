@@ -323,7 +323,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
       </div>
     );
   }
@@ -337,7 +337,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
       {/* Success Message */}
       {successMessage && (
         <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 flex items-center gap-3">
-          <CheckCircle className="w-5 h-5 text-brand-500" />
+          <CheckCircle className="w-5 h-5 text-brand-600" />
           <span className="text-brand-700">{successMessage}</span>
         </div>
       )}
@@ -347,7 +347,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
       {/* ================================================================== */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Camera className="w-5 h-5 text-brand-500" />
+          <Camera className="w-5 h-5 text-brand-600" />
           Imágenes de la Empresa
         </h3>
 
@@ -358,7 +358,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               Logo de la Empresa
             </label>
             <div className="relative group">
-              <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 group-hover:border-brand-400 transition-colors">
+              <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 group-hover:border-brand-500 transition-colors">
                 {uploadingLogo ? (
                   <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                 ) : logoUrl ? (
@@ -384,7 +384,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               Banner / Portada
             </label>
             <div className="relative group">
-              <div className="w-full h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 group-hover:border-brand-400 transition-colors">
+              <div className="w-full h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 group-hover:border-brand-500 transition-colors">
                 {uploadingBanner ? (
                   <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                 ) : bannerUrl ? (
@@ -411,7 +411,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
       {/* ================================================================== */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-brand-500" />
+          <Building2 className="w-5 h-5 text-brand-600" />
           Datos de la Empresa
         </h3>
 
@@ -427,7 +427,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               onChange={handleInputChange}
               className={`w-full px-4 py-2.5 rounded-xl border ${
                 errors.company_name ? 'border-red-300' : 'border-gray-200'
-              } focus:ring-2 focus:ring-brand-400 focus:border-transparent`}
+              } focus:ring-2 focus:ring-brand-600 focus:border-transparent`}
               placeholder="Ej: Agrícola San Martín S.R.L."
             />
             {errors.company_name && (
@@ -444,7 +444,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               value={formData.description}
               onChange={handleInputChange}
               rows={3}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="Describe brevemente tu empresa y los servicios que ofrece..."
             />
           </div>
@@ -458,7 +458,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="services_offered"
               value={formData.services_offered}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="Ej: Fumigación, Siembra, Cosecha (separados por coma)"
             />
             <p className="text-xs text-gray-500 mt-1">Separa los servicios con comas</p>
@@ -471,7 +471,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
       {/* ================================================================== */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <User className="w-5 h-5 text-brand-500" />
+          <User className="w-5 h-5 text-brand-600" />
           Persona de Contacto
         </h3>
 
@@ -487,7 +487,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               onChange={handleInputChange}
               className={`w-full px-4 py-2.5 rounded-xl border ${
                 errors.contact_first_name ? 'border-red-300' : 'border-gray-200'
-              } focus:ring-2 focus:ring-brand-400 focus:border-transparent`}
+              } focus:ring-2 focus:ring-brand-600 focus:border-transparent`}
               placeholder="Juan"
             />
             {errors.contact_first_name && (
@@ -506,7 +506,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               onChange={handleInputChange}
               className={`w-full px-4 py-2.5 rounded-xl border ${
                 errors.contact_last_name ? 'border-red-300' : 'border-gray-200'
-              } focus:ring-2 focus:ring-brand-400 focus:border-transparent`}
+              } focus:ring-2 focus:ring-brand-600 focus:border-transparent`}
               placeholder="Pérez"
             />
             {errors.contact_last_name && (
@@ -524,7 +524,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="contact_phone"
               value={formData.contact_phone}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="+54 9 11 1234-5678"
             />
           </div>
@@ -539,7 +539,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="contact_whatsapp"
               value={formData.contact_whatsapp}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="+54 9 11 1234-5678"
             />
           </div>
@@ -554,7 +554,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="contact_email"
               value={formData.contact_email}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="contacto@empresa.com"
             />
           </div>
@@ -570,9 +570,9 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="allow_whatsapp"
               checked={formData.allow_whatsapp}
               onChange={handleInputChange}
-              className="w-5 h-5 rounded text-brand-500 focus:ring-brand-400"
+              className="w-5 h-5 rounded text-brand-600 focus:ring-brand-600"
             />
-            <MessageCircle className={`w-5 h-5 ${formData.allow_whatsapp ? 'text-brand-500' : 'text-gray-400'}`} />
+            <MessageCircle className={`w-5 h-5 ${formData.allow_whatsapp ? 'text-brand-600' : 'text-gray-400'}`} />
             <span className={formData.allow_whatsapp ? 'text-gray-900' : 'text-gray-500'}>
               Permitir contacto por WhatsApp
             </span>
@@ -584,9 +584,9 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="allow_contact_form"
               checked={formData.allow_contact_form}
               onChange={handleInputChange}
-              className="w-5 h-5 rounded text-brand-500 focus:ring-brand-400"
+              className="w-5 h-5 rounded text-brand-600 focus:ring-brand-600"
             />
-            <FileText className={`w-5 h-5 ${formData.allow_contact_form ? 'text-brand-500' : 'text-gray-400'}`} />
+            <FileText className={`w-5 h-5 ${formData.allow_contact_form ? 'text-brand-600' : 'text-gray-400'}`} />
             <span className={formData.allow_contact_form ? 'text-gray-900' : 'text-gray-500'}>
               Permitir formulario de contacto
             </span>
@@ -599,7 +599,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
       {/* ================================================================== */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <MapPin className="w-5 h-5 text-brand-500" />
+          <MapPin className="w-5 h-5 text-brand-600" />
           Ubicación
         </h3>
 
@@ -612,7 +612,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="province"
               value={formData.province}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
             >
               <option value="">Seleccionar provincia</option>
               {PROVINCIAS.map(p => (
@@ -630,7 +630,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="city"
               value={formData.city}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="Ej: Rosario"
             />
           </div>
@@ -644,7 +644,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="address"
               value={formData.address}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="Ej: Av. San Martín 1234"
             />
           </div>
@@ -656,7 +656,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
       {/* ================================================================== */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Globe className="w-5 h-5 text-brand-500" />
+          <Globe className="w-5 h-5 text-brand-600" />
           Web y Redes Sociales
         </h3>
 
@@ -671,7 +671,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="website_url"
               value={formData.website_url}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="https://www.miempresa.com"
             />
           </div>
@@ -686,7 +686,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="facebook_url"
               value={formData.facebook_url}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="https://facebook.com/miempresa"
             />
           </div>
@@ -701,7 +701,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               name="instagram_url"
               value={formData.instagram_url}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="https://instagram.com/miempresa"
             />
           </div>
@@ -725,7 +725,7 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
         <button
           type="submit"
           disabled={saving}
-          className="px-6 py-2.5 rounded-xl bg-brand-500 text-white font-medium hover:bg-brand-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2.5 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? (
             <>

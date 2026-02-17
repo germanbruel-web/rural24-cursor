@@ -107,7 +107,7 @@ export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ data }) => {
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
                   className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                    index === currentImageIndex ? 'border-brand-500' : 'border-gray-200'
+                    index === currentImageIndex ? 'border-brand-600' : 'border-gray-200'
                   }`}
                 >
                   <img
@@ -161,7 +161,7 @@ export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ data }) => {
           {data.price && (
             <div className="text-right">
               <div className="text-sm text-gray-600">Precio</div>
-              <div className="text-3xl font-bold text-brand-500">
+              <div className="text-3xl font-bold text-brand-600">
                 {data.currency === 'USD' ? 'USD ' : '$'}
                 {data.price.toLocaleString('es-AR')}
               </div>
@@ -235,7 +235,7 @@ export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ data }) => {
       {/* Badge de confirmación - Solo en preview */}
       <div className="bg-brand-50 border-2 border-brand-200 rounded-lg p-6">
         <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 w-12 h-12 bg-brand-400 rounded-full flex items-center justify-center">
+          <div className="flex-shrink-0 w-12 h-12 bg-brand-600 rounded-full flex items-center justify-center">
             <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>

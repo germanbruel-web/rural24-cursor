@@ -36,7 +36,7 @@ const HowItWorks: React.FC = () => {
               className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow duration-300 border border-gray-200"
             >
               {/* Número del paso */}
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-500 text-white font-bold text-lg mb-4">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-600 text-white font-bold text-lg mb-4">
                 {step.number}
               </div>
               

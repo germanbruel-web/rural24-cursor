@@ -200,7 +200,7 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
       <span>
         {parts.map((part, i) =>
           part.toLowerCase() === highlight.toLowerCase() ? (
-            <strong key={i} className="font-semibold text-brand-500">
+            <strong key={i} className="font-semibold text-brand-600">
               {part}
             </strong>
           ) : (
@@ -242,7 +242,7 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
             autoFocus={autoFocus}
             className="w-full h-12 pl-12 pr-4 text-base text-gray-900 placeholder-gray-400 
                      border-2 border-gray-300 rounded-l-lg
-                     focus:outline-none focus:border-brand-400 focus:ring-0
+                     focus:outline-none focus:border-brand-600 focus:ring-0
                      transition-all duration-200
                      hover:border-gray-400"
           />
@@ -266,7 +266,7 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
           {/* Loading indicator */}
           {isSearching && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Loader2 className="w-4 h-4 text-brand-400 animate-spin" />
+              <Loader2 className="w-4 h-4 text-brand-600 animate-spin" />
             </div>
           )}
         </div>
@@ -280,7 +280,7 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
                      bg-white border-2 border-l-0 border-gray-300
                      text-sm text-gray-700 font-medium
                      hover:bg-gray-50 transition-colors
-                     focus:outline-none focus:border-brand-400"
+                     focus:outline-none focus:border-brand-600"
           >
             <MapPin className="w-4 h-4 text-gray-500" />
             <span className="hidden sm:inline">{location}</span>
@@ -316,11 +316,11 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
         <button
           type="submit"
           disabled={!query.trim()}
-          className="h-12 px-6 bg-gradient-to-r from-brand-500 to-brand-600
+          className="h-12 px-6 bg-gradient-to-r from-brand-600 to-brand-700
                    text-white font-semibold rounded-r-lg
-                   hover:from-brand-600 hover:to-brand-700
+                   hover:from-brand-700 hover:to-brand-800
                    disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed
-                   focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2
+                   focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2
                    transition-all duration-200
                    shadow-md hover:shadow-lg
                    transform hover:scale-[1.02] active:scale-100"

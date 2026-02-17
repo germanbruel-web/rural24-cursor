@@ -86,7 +86,7 @@ export const ProductCardOptimized: React.FC<ProductCardProps> = ({
         </h3>
 
         <div className="flex items-center justify-between mb-2">
-          <span className="text-2xl font-bold text-brand-500">
+          <span className="text-2xl font-bold text-brand-600">
             ${price.toLocaleString('es-AR')}
           </span>
         </div>

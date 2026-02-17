@@ -148,7 +148,7 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
               onClick={() => setPreviewMode('desktop')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 previewMode === 'desktop'
-                  ? 'bg-brand-500 text-white'
+                  ? 'bg-brand-600 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -158,7 +158,7 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
               onClick={() => setPreviewMode('mobile')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 previewMode === 'mobile'
-                  ? 'bg-brand-500 text-white'
+                  ? 'bg-brand-600 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -236,7 +236,7 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 flex-1">
                               {isComplete ? (
-                                <CheckCircle className="w-5 h-5 text-brand-500 flex-shrink-0" />
+                                <CheckCircle className="w-5 h-5 text-brand-600 flex-shrink-0" />
                               ) : !isUnlocked ? (
                                 <Lock className="w-5 h-5 text-gray-400 flex-shrink-0" />
                               ) : (
@@ -260,7 +260,7 @@ export function FormPreview({ attributes, categoryName, subcategoryName }: FormP
                             
                             <ChevronRight
                               className={`w-5 h-5 flex-shrink-0 ml-2 transition-transform ${
-                                isUnlocked ? 'text-brand-500' : 'text-gray-400'
+                                isUnlocked ? 'text-brand-600' : 'text-gray-400'
                               } ${isExpanded ? 'rotate-90' : ''}`}
                             />
                           </div>

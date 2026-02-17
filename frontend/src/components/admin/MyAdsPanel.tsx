@@ -316,7 +316,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando tus avisos...</p>
         </div>
       </div>
@@ -331,7 +331,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           <h2 className="text-2xl font-bold text-brand-950">Mis Avisos</h2>
           {!isSuperAdmin && (
             <p className="text-sm text-gray-600 mt-1">
-              Estás usando <span className="font-bold text-brand-500">{adLimit.current}</span> de{' '}
+              Estás usando <span className="font-bold text-brand-600">{adLimit.current}</span> de{' '}
               <span className="font-bold">{adLimit.limit}</span> avisos disponibles
             </p>
           )}
@@ -340,7 +340,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           <button
             onClick={() => navigateTo('/publicar')}
             disabled={!isSuperAdmin && adLimit.current >= adLimit.limit}
-            className="bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-600 hover:to-brand-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             <Plus className="w-5 h-5" />
             Crear Nuevo Aviso
@@ -366,7 +366,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
             onClick={() => setFilterStatus(status)}
             className={`px-4 py-2 rounded-full font-medium text-sm transition-colors ${
               filterStatus === status
-                ? 'bg-brand-500 text-white'
+                ? 'bg-brand-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -394,7 +394,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           {filterStatus === 'all' && adLimit.current < adLimit.limit && (
             <button
               onClick={() => navigateTo('/publicar')}
-              className="px-6 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-700 transition-colors inline-flex items-center gap-2"
+              className="px-6 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors inline-flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Publicar Aviso
@@ -411,7 +411,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
             return (
               <div
                 key={ad.id}
-                className="bg-white rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md hover:border-brand-500/40 transition-all overflow-hidden flex flex-col"
+                className="bg-white rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md hover:border-brand-600/40 transition-all overflow-hidden flex flex-col"
               >
                 {/* Thumbnail + Status Badge */}
                 <div className="relative w-full aspect-[16/9] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
@@ -425,7 +425,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                   {/* Status badge */}
                   <span className={`absolute top-2 left-2 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold shadow-sm ${
                     ad.status === 'active'
-                      ? 'bg-brand-400 text-white'
+                      ? 'bg-brand-600 text-white'
                       : 'bg-yellow-400 text-yellow-900'
                   }`}>
                     {ad.status === 'active' ? 'Activo' : 'Pausado'}
@@ -463,7 +463,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
 
                   {/* Price + Category */}
                   <div className="flex items-center justify-between mt-auto pt-2">
-                    <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-500 rounded-lg px-2.5 py-1">
+                    <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
                       <p className="font-black text-brand-600 text-sm">
                         {ad.currency} {ad.price?.toLocaleString() || '0'}
                       </p>
@@ -608,7 +608,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Precio</label>
-                  <p className="font-bold text-brand-500">
+                  <p className="font-bold text-brand-600">
                     {selectedAdForView.currency} {selectedAdForView.price?.toLocaleString() || '0'}
                   </p>
                 </div>

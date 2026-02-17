@@ -52,7 +52,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ options, onFilterC
                 type="checkbox"
                 checked={selectedCategories.includes(category)}
                 onChange={() => handleCategoryChange(category)}
-                className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500" 
+                className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600" 
               />
               <label htmlFor={`cat-${category}`} className="ml-2 text-gray-600 text-sm cursor-pointer">
                 {category}
@@ -67,7 +67,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ options, onFilterC
         <select 
           value={selectedLocation}
           onChange={(e) => setSelectedLocation(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500"
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-brand-600 focus:border-brand-600"
         >
           <option value="">Todas las provincias</option>
           {options.provinces?.map(province => (
@@ -84,14 +84,14 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ options, onFilterC
             placeholder="Mín"
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500" 
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-brand-600 focus:border-brand-600" 
           />
           <input 
             type="number" 
             placeholder="Máx"
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500" 
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-brand-600 focus:border-brand-600" 
           />
         </div>
       </div>
@@ -99,7 +99,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ options, onFilterC
       <div className="space-y-2">
         <button
           onClick={handleApplyFilters}
-          className="w-full px-4 py-3 bg-brand-500 text-white rounded-lg hover:bg-brand-700 transition-colors font-semibold"
+          className="w-full px-4 py-3 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-semibold"
         >
           Aplicar Filtros
         </button>

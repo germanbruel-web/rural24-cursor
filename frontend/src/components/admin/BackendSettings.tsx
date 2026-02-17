@@ -355,7 +355,7 @@ export const BackendSettings: React.FC = () => {
             <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
               <div 
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  status === 'completed' ? 'bg-brand-400' : 'bg-blue-500'
+                  status === 'completed' ? 'bg-brand-600' : 'bg-blue-500'
                 }`}
                 style={{ width: `${progress}%` }}
               />
@@ -457,7 +457,7 @@ export const BackendSettings: React.FC = () => {
                 className={`
                   px-4 py-3 rounded-lg font-medium transition-all
                   ${activeSection === section
-                    ? 'bg-brand-500 text-white shadow-sm'
+                    ? 'bg-brand-600 text-white shadow-sm'
                     : 'text-gray-600 hover:bg-gray-100'
                   }
                 `}

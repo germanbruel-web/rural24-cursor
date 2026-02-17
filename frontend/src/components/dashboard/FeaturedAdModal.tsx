@@ -402,7 +402,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               {promoStatus?.can_claim && (
                 <div className="mb-6 p-4 bg-gradient-to-r from-brand-50 to-emerald-50 border-2 border-brand-200 rounded-xl">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <Gift className="w-6 h-6 text-brand-500" />
+                    <Gift className="w-6 h-6 text-brand-600" />
                     <span className="font-bold text-brand-700">¡Promoción de Lanzamiento!</span>
                   </div>
                   <p className="text-sm text-brand-600 mb-3">
@@ -717,7 +717,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                 <div className={`p-4 rounded-xl ${availability.is_available ? 'bg-brand-50 border border-brand-200' : 'bg-red-50 border border-red-200'}`}>
                   {availability.is_available ? (
                     <div className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
+                      <CheckCircle className="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-semibold text-brand-700">¡Lugar disponible!</p>
                         <p className="text-sm text-brand-600">

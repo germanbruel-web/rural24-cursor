@@ -456,7 +456,7 @@ export default function CouponsAdminPanel() {
             <p className="text-xl font-bold text-gray-900">{totalRecords}</p>
           </div>
           <div className="bg-white rounded-lg border p-3">
-            <div className="flex items-center gap-2 text-brand-500 mb-1">
+            <div className="flex items-center gap-2 text-brand-600 mb-1">
               <ToggleRight className="w-4 h-4" />
               <span className="text-xs font-medium">Activos</span>
             </div>
@@ -517,7 +517,7 @@ export default function CouponsAdminPanel() {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Buscar por código o nombre..."
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
               />
             </div>
 
@@ -634,7 +634,7 @@ export default function CouponsAdminPanel() {
                             className={`p-1.5 rounded ${
                               coupon.is_active
                                 ? 'hover:bg-yellow-50 text-yellow-600'
-                                : 'hover:bg-brand-50 text-brand-500'
+                                : 'hover:bg-brand-50 text-brand-600'
                             }`}
                             title={coupon.is_active ? 'Desactivar' : 'Activar'}
                           >
@@ -716,7 +716,7 @@ export default function CouponsAdminPanel() {
                   value={form.code}
                   onChange={(e) => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
                   placeholder="Ej: WELCOME2026"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400 font-mono uppercase"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600 font-mono uppercase"
                   maxLength={50}
                 />
                 <p className="text-xs text-gray-400 mt-1">Código único que usarán los usuarios para canjear</p>
@@ -732,7 +732,7 @@ export default function CouponsAdminPanel() {
                   value={form.name}
                   onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="Ej: Bienvenida Febrero 2026"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
                   maxLength={100}
                 />
               </div>
@@ -747,7 +747,7 @@ export default function CouponsAdminPanel() {
                   value={form.title}
                   onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
                   placeholder="Ej: Créditos de bienvenida"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
                   maxLength={150}
                 />
               </div>
@@ -762,7 +762,7 @@ export default function CouponsAdminPanel() {
                   onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="Descripción opcional del cupón"
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400 resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600 resize-none"
                 />
               </div>
 
@@ -778,7 +778,7 @@ export default function CouponsAdminPanel() {
                     max={1000}
                     value={form.credits_amount}
                     onChange={(e) => setForm(f => ({ ...f, credits_amount: parseInt(e.target.value) || 1 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
                   />
                   <p className="text-xs text-gray-400 mt-1">Créditos por canje</p>
                 </div>
@@ -792,7 +792,7 @@ export default function CouponsAdminPanel() {
                     max={100000}
                     value={form.max_redemptions}
                     onChange={(e) => setForm(f => ({ ...f, max_redemptions: parseInt(e.target.value) || 1 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
                   />
                   <p className="text-xs text-gray-400 mt-1">Total de canjes permitidos</p>
                 </div>
@@ -807,7 +807,7 @@ export default function CouponsAdminPanel() {
                   type="datetime-local"
                   value={form.expires_at}
                   onChange={(e) => setForm(f => ({ ...f, expires_at: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
                 />
               </div>
 
@@ -817,7 +817,7 @@ export default function CouponsAdminPanel() {
                   type="button"
                   onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    form.is_active ? 'bg-brand-400' : 'bg-gray-300'
+                    form.is_active ? 'bg-brand-600' : 'bg-gray-300'
                   }`}
                 >
                   <span

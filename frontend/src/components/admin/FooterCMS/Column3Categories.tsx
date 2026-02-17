@@ -126,7 +126,7 @@ export const Column3Categories: React.FC<Props> = ({ column, onChange }) => {
               <ul className="space-y-2 text-sm">
                 {previewCategories.map(cat => (
                   <li key={cat.id} className="flex items-center gap-2 text-gray-700">
-                    <div className="w-1.5 h-1.5 bg-brand-400 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-brand-600 rounded-full"></div>
                     <span className="font-medium">{cat.display_name || cat.name}</span>
                     <span className="text-xs text-gray-400">→ #{cat.slug}</span>
                   </li>

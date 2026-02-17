@@ -60,7 +60,7 @@ export const HowItWorksPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-brand-50">
       {/* Hero Section */}
-      <section className="bg-brand-500 text-white py-16">
+      <section className="bg-brand-600 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="flex justify-center mb-4">
             <HelpCircle className="w-16 h-16 text-white/80" />
@@ -81,7 +81,7 @@ export const HowItWorksPage: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 text-center">
           <p className="text-lg text-gray-700 leading-relaxed">
             El sitio funciona como un espacio de contacto entre las partes, permitiendo publicar avisos 
-            y recibir consultas <strong className="text-brand-500">sin intermediarios ni comisiones</strong> por operación.
+            y recibir consultas <strong className="text-brand-600">sin intermediarios ni comisiones</strong> por operación.
           </p>
         </div>
       </section>
@@ -101,7 +101,7 @@ export const HowItWorksPage: React.FC = () => {
               >
                 {/* Question Header */}
                 <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-brand-50 to-white border-b border-brand-100">
-                  <div className="flex-shrink-0 w-12 h-12 bg-brand-500 rounded-full flex items-center justify-center text-white">
+                  <div className="flex-shrink-0 w-12 h-12 bg-brand-600 rounded-full flex items-center justify-center text-white">
                     {item.icon}
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">
@@ -120,7 +120,7 @@ export const HowItWorksPage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-brand-500">
+      <section className="py-16 bg-brand-600">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             ¿Listo para empezar?
@@ -130,7 +130,7 @@ export const HowItWorksPage: React.FC = () => {
           </p>
           <button 
             onClick={() => navigateTo('/')}
-            className="inline-block bg-white hover:bg-gray-100 text-brand-500 px-10 py-4 rounded-lg font-bold text-lg transition-all hover:scale-105 shadow-lg"
+            className="inline-block bg-white hover:bg-gray-100 text-brand-600 px-10 py-4 rounded-lg font-bold text-lg transition-all hover:scale-105 shadow-lg"
           >
             🚀 Publicar ahora
           </button>

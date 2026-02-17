@@ -135,7 +135,7 @@ export const Column1Contact: React.FC<Props> = ({ column, onChange }) => {
             <div className="flex-1">
               <span className="text-xs text-gray-600 block">Logo actual</span>
               {previewLogo && (
-                <span className="text-xs text-brand-500 block mt-1">✓ Cambio pendiente de guardar</span>
+                <span className="text-xs text-brand-600 block mt-1">✓ Cambio pendiente de guardar</span>
               )}
             </div>
             {previewLogo && (

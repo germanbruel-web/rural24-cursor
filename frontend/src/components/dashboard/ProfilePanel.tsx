@@ -380,7 +380,7 @@ export const ProfilePanel: React.FC = () => {
                     </span>
                   )}
                   {(profile as any)?.plan_name && (
-                    <span className="px-2 py-0.5 bg-brand-500 text-white text-[10px] font-bold rounded-full">
+                    <span className="px-2 py-0.5 bg-brand-600 text-white text-[10px] font-bold rounded-full">
                       {(profile as any).plan_name}
                     </span>
                   )}
@@ -404,7 +404,7 @@ export const ProfilePanel: React.FC = () => {
           {/* Datos Personales */}
           <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5">
             <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 uppercase tracking-wide">
-              <User className="w-4 h-4 text-brand-500" />
+              <User className="w-4 h-4 text-brand-600" />
               Datos Personales
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -437,7 +437,7 @@ export const ProfilePanel: React.FC = () => {
           {/* Contacto — con verificación de celular */}
           <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5">
             <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 uppercase tracking-wide">
-              <Phone className="w-4 h-4 text-brand-500" />
+              <Phone className="w-4 h-4 text-brand-600" />
               Contacto
             </h3>
             <div className="space-y-4">
@@ -462,7 +462,7 @@ export const ProfilePanel: React.FC = () => {
                         value={formData.mobile}
                         onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
                         placeholder="+54 9 11 1234-5678"
-                        className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                        className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
                       />
                       {verificationStep !== 'code-sent' && (
                         <button
@@ -502,7 +502,7 @@ export const ProfilePanel: React.FC = () => {
                         value={verificationCode}
                         onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
                         placeholder="1234"
-                        className="w-24 px-3 py-2 text-sm text-center font-mono tracking-widest border border-blue-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                        className="w-24 px-3 py-2 text-sm text-center font-mono tracking-widest border border-blue-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
                         autoFocus
                       />
                       <button
@@ -559,7 +559,7 @@ export const ProfilePanel: React.FC = () => {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="011 1234-5678"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
                   />
                 ) : (
                   <div className={`px-3 py-2 text-sm rounded-lg ${!isMobileVerified ? 'bg-gray-100 text-gray-400' : 'bg-gray-50 text-gray-900'}`}>
@@ -578,7 +578,7 @@ export const ProfilePanel: React.FC = () => {
           {/* Ubicación */}
           <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5">
             <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 uppercase tracking-wide">
-              <MapPin className="w-4 h-4 text-brand-500" />
+              <MapPin className="w-4 h-4 text-brand-600" />
               Ubicación
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -588,7 +588,7 @@ export const ProfilePanel: React.FC = () => {
                   <select
                     value={formData.province}
                     onChange={(e) => setFormData({ ...formData, province: e.target.value, location: '' })}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
                   >
                     <option value="">Seleccionar</option>
                     {PROVINCES.map(prov => (
@@ -608,7 +608,7 @@ export const ProfilePanel: React.FC = () => {
                     <select
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
                     >
                       <option value="">Seleccionar</option>
                       {LOCALITIES_BY_PROVINCE[formData.province]?.map(loc => (
@@ -629,7 +629,7 @@ export const ProfilePanel: React.FC = () => {
           {hasPremiumFeatures && (
             <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5">
               <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 uppercase tracking-wide">
-                <Briefcase className="w-4 h-4 text-brand-500" />
+                <Briefcase className="w-4 h-4 text-brand-600" />
                 Perfil Profesional
                 <span className="text-[10px] font-normal text-gray-400 ml-1">(opcional)</span>
               </h3>
@@ -650,7 +650,7 @@ export const ProfilePanel: React.FC = () => {
                       placeholder={labels.bio_placeholder}
                       rows={3}
                       maxLength={500}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent resize-none"
                     />
                   ) : (
                     <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg text-gray-900 min-h-[60px]">
@@ -668,7 +668,7 @@ export const ProfilePanel: React.FC = () => {
                       placeholder={labels.services_placeholder}
                       rows={2}
                       maxLength={300}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent resize-none"
                     />
                   ) : (
                     <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg text-gray-900">
@@ -690,7 +690,7 @@ export const ProfilePanel: React.FC = () => {
           <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-brand-400 to-emerald-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg flex items-center justify-center">
                   <Zap className="w-4 h-4 text-white" />
                 </div>
                 <div>
@@ -708,7 +708,7 @@ export const ProfilePanel: React.FC = () => {
                 { label: 'Soporte', value: '24/7' }
               ].map((item, idx) => (
                 <div key={idx} className="flex flex-col items-center">
-                  <CheckCircle className="w-3.5 h-3.5 text-brand-500 mb-0.5" />
+                  <CheckCircle className="w-3.5 h-3.5 text-brand-600 mb-0.5" />
                   <p className="text-lg font-bold text-gray-900 leading-tight">{item.value}</p>
                   <p className="text-[10px] text-gray-500">{item.label}</p>
                 </div>
@@ -771,7 +771,7 @@ export const ProfilePanel: React.FC = () => {
           {/* Paquetes */}
           <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5">
             <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-brand-500" />
+              <Sparkles className="w-4 h-4 text-brand-600" />
               Paquetes
             </h3>
             <div className="grid grid-cols-2 gap-2">
@@ -783,7 +783,7 @@ export const ProfilePanel: React.FC = () => {
                     key={qty}
                     className={`cursor-pointer transition-all hover:scale-105 text-center p-3 rounded-lg border-2 ${
                       isPopular
-                        ? 'border-brand-400 bg-brand-50'
+                        ? 'border-brand-600 bg-brand-50'
                         : 'border-gray-200 hover:border-brand-300'
                     }`}
                     onClick={() => setShowBuyCreditsModal(true)}
@@ -793,7 +793,7 @@ export const ProfilePanel: React.FC = () => {
                         Popular
                       </Badge>
                     )}
-                    <div className="text-xl font-black text-brand-500">{qty}</div>
+                    <div className="text-xl font-black text-brand-600">{qty}</div>
                     <div className="text-[10px] text-gray-500">{qty === 1 ? 'crédito' : 'créditos'}</div>
                     <div className="text-xs font-bold text-gray-900 mt-0.5">
                       ${price.toLocaleString('es-AR')}
@@ -895,7 +895,7 @@ const CompactField: React.FC<CompactFieldProps> = ({
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
       />
     ) : (
       <div className={`px-3 py-2 text-sm rounded-lg ${disabled ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 text-gray-900'}`}>

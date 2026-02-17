@@ -281,7 +281,7 @@ export const MessagesPanel: React.FC = () => {
                             {message.ads.title}
                           </div>
                           {message.ads.price && (
-                            <div className="text-xs font-bold text-brand-500">
+                            <div className="text-xs font-bold text-brand-600">
                               ${message.ads.price.toLocaleString()}
                             </div>
                           )}
@@ -333,7 +333,7 @@ export const MessagesPanel: React.FC = () => {
                             {new Date(selectedMessage.created_at).toLocaleString('es-AR')}
                           </div>
                           {selectedMessage.is_read && selectedMessage.read_at && activeTab === 'received' && (
-                            <div className="flex items-center gap-2 text-brand-500">
+                            <div className="flex items-center gap-2 text-brand-600">
                               <Eye className="w-4 h-4" />
                               Leído: {new Date(selectedMessage.read_at).toLocaleString('es-AR')}
                             </div>
@@ -374,7 +374,7 @@ export const MessagesPanel: React.FC = () => {
                                 {selectedMessage.ads.title}
                               </div>
                               {selectedMessage.ads.price && (
-                                <div className="text-xl font-bold text-brand-500 mb-1">
+                                <div className="text-xl font-bold text-brand-600 mb-1">
                                   ${selectedMessage.ads.price.toLocaleString()}
                                 </div>
                               )}

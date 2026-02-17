@@ -108,7 +108,7 @@ export default function PaymentsAdminPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <DollarSign className="w-7 h-7 text-brand-500" />
+            <DollarSign className="w-7 h-7 text-brand-600" />
             Panel de Cobranzas
           </h1>
           <p className="text-gray-600 mt-1">
@@ -130,9 +130,9 @@ export default function PaymentsAdminPanel() {
         <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-gray-500 text-sm font-medium">Este Mes</span>
-            <TrendingUp className="w-5 h-5 text-brand-500" />
+            <TrendingUp className="w-5 h-5 text-brand-600" />
           </div>
-          <div className="text-2xl font-bold text-brand-500">
+          <div className="text-2xl font-bold text-brand-600">
             {formatAmount(currentMonthSummary?.total_revenue || 0)}
           </div>
           <div className="text-sm text-gray-500 mt-1">
@@ -144,9 +144,9 @@ export default function PaymentsAdminPanel() {
         <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-gray-500 text-sm font-medium">Crecimiento</span>
-            <ArrowUpRight className={`w-5 h-5 ${Number(revenueGrowth) >= 0 ? 'text-brand-400' : 'text-red-500'}`} />
+            <ArrowUpRight className={`w-5 h-5 ${Number(revenueGrowth) >= 0 ? 'text-brand-600' : 'text-red-500'}`} />
           </div>
-          <div className={`text-2xl font-bold ${Number(revenueGrowth) >= 0 ? 'text-brand-500' : 'text-red-600'}`}>
+          <div className={`text-2xl font-bold ${Number(revenueGrowth) >= 0 ? 'text-brand-600' : 'text-red-600'}`}>
             {Number(revenueGrowth) >= 0 ? '+' : ''}{revenueGrowth}%
           </div>
           <div className="text-sm text-gray-500 mt-1">vs mes anterior</div>
@@ -188,7 +188,7 @@ export default function PaymentsAdminPanel() {
             return (
               <div key={month.month} className="flex-1 flex flex-col items-center">
                 <div 
-                  className="w-full bg-gradient-to-t from-brand-400 to-green-400 rounded-t-lg transition-all hover:from-brand-500 hover:to-brand-400"
+                  className="w-full bg-gradient-to-t from-brand-600 to-green-400 rounded-t-lg transition-all hover:from-brand-600 hover:to-brand-400"
                   style={{ height: `${Math.max(height, 4)}%` }}
                   title={formatAmount(month.total_revenue || 0)}
                 />
@@ -255,7 +255,7 @@ export default function PaymentsAdminPanel() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
+            <RefreshCw className="w-6 h-6 animate-spin text-brand-600" />
           </div>
         ) : payments.length === 0 ? (
           <div className="p-8 text-center">
@@ -314,7 +314,7 @@ export default function PaymentsAdminPanel() {
                             <button
                               onClick={() => handleMarkCompleted(payment.id)}
                               disabled={actionLoading === payment.id}
-                              className="p-1.5 text-brand-500 hover:bg-brand-50 rounded"
+                              className="p-1.5 text-brand-600 hover:bg-brand-50 rounded"
                               title="Marcar como pagado"
                             >
                               <CheckCircle className="w-4 h-4" />

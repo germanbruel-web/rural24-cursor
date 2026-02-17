@@ -85,7 +85,7 @@ export function CompanyProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-brand-500" />
+        <Loader2 className="w-12 h-12 animate-spin text-brand-600" />
       </div>
     );
   }
@@ -102,7 +102,7 @@ export function CompanyProfilePage() {
         </p>
         <button
           onClick={() => navigateTo('/search', { cat: 'servicios-rurales' })}
-          className="px-6 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors"
+          className="px-6 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-600 transition-colors"
         >
           Ver Servicios Rurales
         </button>
@@ -123,7 +123,7 @@ export function CompanyProfilePage() {
       {/* ================================================================== */}
       {/* BANNER */}
       {/* ================================================================== */}
-      <div className="relative h-48 md:h-64 bg-gradient-to-r from-brand-500 to-brand-600">
+      <div className="relative h-48 md:h-64 bg-gradient-to-r from-brand-600 to-brand-600">
         {profile.banner_url && (
           <img 
             src={profile.banner_url} 
@@ -291,7 +291,7 @@ export function CompanyProfilePage() {
       {catalogs.length > 0 && (
         <div className="max-w-5xl mx-auto px-4 py-8">
           <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <Package className="w-6 h-6 text-brand-500" />
+            <Package className="w-6 h-6 text-brand-600" />
             Catálogos de Productos y Servicios
           </h2>
 
@@ -347,7 +347,7 @@ export function CompanyProfilePage() {
           {(profile.city || profile.province || profile.address) && (
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-brand-500" />
+                <MapPin className="w-5 h-5 text-brand-600" />
                 Ubicación
               </h3>
               <div className="space-y-2 text-gray-600">
@@ -360,7 +360,7 @@ export function CompanyProfilePage() {
           {/* Contacto */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Phone className="w-5 h-5 text-brand-500" />
+              <Phone className="w-5 h-5 text-brand-600" />
               Contacto
             </h3>
             <div className="space-y-3">

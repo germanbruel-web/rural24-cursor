@@ -187,7 +187,7 @@ export default function SitemapSeoPanel() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-brand-100 rounded-xl">
-            <Globe className="w-6 h-6 text-brand-500" />
+            <Globe className="w-6 h-6 text-brand-600" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Sitemap SEO</h1>
@@ -211,7 +211,7 @@ export default function SitemapSeoPanel() {
           <div className="text-sm text-gray-500">Avisos activos</div>
         </div>
         <div className="bg-brand-50 p-4 rounded-xl border border-brand-200">
-          <div className="text-2xl font-bold text-brand-500">{summary.inSitemap}</div>
+          <div className="text-2xl font-bold text-brand-600">{summary.inSitemap}</div>
           <div className="text-sm text-brand-600">En Sitemap</div>
         </div>
         <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
@@ -235,7 +235,7 @@ export default function SitemapSeoPanel() {
               placeholder="Buscar por título..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
             />
           </div>
           
@@ -245,7 +245,7 @@ export default function SitemapSeoPanel() {
             <select
               value={filter}
               onChange={(e) => { setFilter(e.target.value as any); setPage(1); }}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600"
             >
               <option value="all">Todos</option>
               <option value="in_sitemap">En Sitemap</option>
@@ -300,7 +300,7 @@ export default function SitemapSeoPanel() {
                     type="checkbox"
                     checked={selectedIds.size === ads.length && ads.length > 0}
                     onChange={toggleSelectAll}
-                    className="rounded border-gray-300 text-brand-500 focus:ring-brand-400"
+                    className="rounded border-gray-300 text-brand-600 focus:ring-brand-600"
                   />
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Aviso</th>
@@ -333,7 +333,7 @@ export default function SitemapSeoPanel() {
                         type="checkbox"
                         checked={selectedIds.has(ad.id)}
                         onChange={() => toggleSelect(ad.id)}
-                        className="rounded border-gray-300 text-brand-500 focus:ring-brand-400"
+                        className="rounded border-gray-300 text-brand-600 focus:ring-brand-600"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -389,7 +389,7 @@ export default function SitemapSeoPanel() {
                           className={`p-1.5 rounded-lg transition-colors ${
                             ad.in_sitemap 
                               ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                              : 'bg-brand-100 text-brand-500 hover:bg-brand-200'
+                              : 'bg-brand-100 text-brand-600 hover:bg-brand-200'
                           }`}
                           title={ad.in_sitemap ? 'Quitar del sitemap' : 'Agregar al sitemap'}
                         >

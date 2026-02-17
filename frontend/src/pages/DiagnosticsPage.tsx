@@ -145,7 +145,7 @@ export const DiagnosticsPage: React.FC = () => {
                   key={index}
                   className={`p-4 rounded-lg border-l-4 ${
                     log.status === 'success'
-                      ? 'bg-brand-50 border-brand-400'
+                      ? 'bg-brand-50 border-brand-600'
                       : log.status === 'warning'
                       ? 'bg-yellow-50 border-yellow-500'
                       : 'bg-red-50 border-red-500'

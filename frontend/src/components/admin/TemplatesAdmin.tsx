@@ -160,7 +160,7 @@ export function TemplatesAdmin() {
             className={`
               flex items-center gap-2 px-4 py-2 rounded-lg font-medium
               ${isDirty 
-                ? 'bg-brand-500 text-white hover:bg-brand-600' 
+                ? 'bg-brand-600 text-white hover:bg-brand-700' 
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
             `}
           >
@@ -230,7 +230,7 @@ export function TemplatesAdmin() {
                         value={template}
                         onChange={(e) => handleTemplateChange(category.categorySlug, index, e.target.value)}
                         rows={3}
-                        className="w-full px-3 py-2 border rounded-lg text-sm resize-none focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                        className="w-full px-3 py-2 border rounded-lg text-sm resize-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
                       />
                     </div>
                     <div className="flex flex-col gap-1">
@@ -257,7 +257,7 @@ export function TemplatesAdmin() {
                 {/* Botón agregar */}
                 <button
                   onClick={() => handleAddTemplate(category.categorySlug)}
-                  className="flex items-center gap-2 text-sm text-brand-500 hover:text-brand-600 font-medium ml-8"
+                  className="flex items-center gap-2 text-sm text-brand-600 hover:text-brand-700 font-medium ml-8"
                 >
                   <Plus className="w-4 h-4" />
                   Agregar variante

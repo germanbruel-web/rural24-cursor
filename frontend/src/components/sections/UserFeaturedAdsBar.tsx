@@ -81,11 +81,11 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
   if (loading) {
     return (
       <div className={`mb-6 ${className}`}>
-        <div className="bg-brand-200 border border-brand-300 rounded-xl p-4">
+        <div className="bg-brand-100 border border-brand-300 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-4">
             <Megaphone className="w-4 h-4 text-brand-600" />
             <h3 className="text-sm font-semibold text-brand-700 tracking-wide uppercase">Avisos Destacados</h3>
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-400 ml-1" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-600 ml-1" />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map(i => (
@@ -124,7 +124,7 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
                     className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                       i === currentPage
                         ? 'bg-brand-600 w-3'
-                        : 'bg-brand-400/50 hover:bg-brand-400'
+                        : 'bg-brand-600/50 hover:bg-brand-500'
                     }`}
                     aria-label={`Página ${i + 1}`}
                   />

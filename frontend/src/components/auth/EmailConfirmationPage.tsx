@@ -49,7 +49,7 @@ export const EmailConfirmationPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
-          <Loader2 className="w-16 h-16 text-brand-500 mx-auto mb-4 animate-spin" />
+          <Loader2 className="w-16 h-16 text-brand-600 mx-auto mb-4 animate-spin" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Verificando tu email...
           </h1>
@@ -65,7 +65,7 @@ export const EmailConfirmationPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
-          <CheckCircle className="w-20 h-20 text-brand-500 mx-auto mb-4" />
+          <CheckCircle className="w-20 h-20 text-brand-600 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             ✅ Email Verificado!
           </h1>

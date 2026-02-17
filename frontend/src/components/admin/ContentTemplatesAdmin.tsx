@@ -100,7 +100,7 @@ function SortableTemplate({ template, onEdit, onDelete, onToggleActive, onPrevie
           className="cursor-grab active:cursor-grabbing p-2 hover:bg-brand-100 rounded-lg transition-all mt-1"
           title="Arrastrar para reordenar"
         >
-          <GripVertical className="w-5 h-5 text-gray-400 hover:text-brand-500" />
+          <GripVertical className="w-5 h-5 text-gray-400 hover:text-brand-600" />
         </button>
         
         {/* Contenido */}
@@ -110,7 +110,7 @@ function SortableTemplate({ template, onEdit, onDelete, onToggleActive, onPrevie
             {template.template_type === 'title' ? (
               <Type className="w-5 h-5 text-blue-600" />
             ) : (
-              <AlignLeft className="w-5 h-5 text-brand-500" />
+              <AlignLeft className="w-5 h-5 text-brand-600" />
             )}
             
             <h4 className="font-semibold text-gray-900">{template.name}</h4>
@@ -167,7 +167,7 @@ function SortableTemplate({ template, onEdit, onDelete, onToggleActive, onPrevie
             title={template.is_active ? 'Desactivar' : 'Activar'}
           >
             {template.is_active ? (
-              <Eye className="w-4 h-4 text-brand-500" />
+              <Eye className="w-4 h-4 text-brand-600" />
             ) : (
               <EyeOff className="w-4 h-4 text-gray-400" />
             )}
@@ -177,7 +177,7 @@ function SortableTemplate({ template, onEdit, onDelete, onToggleActive, onPrevie
             className="p-2 hover:bg-brand-100 rounded-lg transition-all"
             title="Editar"
           >
-            <Edit2 className="w-4 h-4 text-brand-500" />
+            <Edit2 className="w-4 h-4 text-brand-600" />
           </button>
           <button
             onClick={() => onDelete(template.id)}
@@ -454,7 +454,7 @@ export function ContentTemplatesAdmin() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
       </div>
     );
   }
@@ -465,7 +465,7 @@ export function ContentTemplatesAdmin() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="w-7 h-7 text-brand-500" />
+            <FileText className="w-7 h-7 text-brand-600" />
             Plantillas de Contenido
           </h1>
           <p className="text-gray-600 mt-1">
@@ -474,7 +474,7 @@ export function ContentTemplatesAdmin() {
         </div>
         <button
           onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-all"
         >
           <Plus className="w-5 h-5" />
           Nueva Plantilla
@@ -611,7 +611,7 @@ export function ContentTemplatesAdmin() {
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Ej: Título básico tractor"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
                 />
               </div>
               
@@ -636,7 +636,7 @@ export function ContentTemplatesAdmin() {
                     <span>Título</span>
                   </label>
                   <label className={`flex items-center gap-2 px-4 py-3 border rounded-lg cursor-pointer ${
-                    formData.template_type === 'description' ? 'border-brand-400 bg-brand-50' : 'hover:bg-gray-50'
+                    formData.template_type === 'description' ? 'border-brand-600 bg-brand-50' : 'hover:bg-gray-50'
                   }`}>
                     <input
                       type="radio"
@@ -644,9 +644,9 @@ export function ContentTemplatesAdmin() {
                       value="description"
                       checked={formData.template_type === 'description'}
                       onChange={() => setFormData(prev => ({ ...prev, template_type: 'description' }))}
-                      className="text-brand-500"
+                      className="text-brand-600"
                     />
-                    <AlignLeft className="w-5 h-5 text-brand-500" />
+                    <AlignLeft className="w-5 h-5 text-brand-600" />
                     <span>Descripción</span>
                   </label>
                 </div>
@@ -791,7 +791,7 @@ export function ContentTemplatesAdmin() {
                     ? '{marca} {modelo} {año} - {condicion}' 
                     : '{subcategoria} {marca} {modelo} en excelente estado.\n\n📍 Ubicación: {localidad}, {provincia}\n\nConsultá disponibilidad.'}
                   rows={formData.template_type === 'title' ? 3 : 8}
-                  className="w-full px-4 py-3 border rounded-lg font-mono text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                  className="w-full px-4 py-3 border rounded-lg font-mono text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
                 />
               </div>
               
@@ -801,7 +801,7 @@ export function ContentTemplatesAdmin() {
                   type="checkbox"
                   checked={formData.is_active}
                   onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                  className="w-5 h-5 text-brand-500 rounded"
+                  className="w-5 h-5 text-brand-600 rounded"
                 />
                 <span className="text-sm font-medium text-gray-700">Plantilla activa</span>
               </label>
@@ -818,7 +818,7 @@ export function ContentTemplatesAdmin() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-all"
+                className="flex items-center gap-2 px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-all"
               >
                 {saving ? (
                   <>

@@ -166,7 +166,7 @@ const HeroCmsPanel: React.FC = () => {
   if (isLoading || !config) {
     return (
       <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
+        <RefreshCw className="w-8 h-8 animate-spin text-brand-600" />
         <span className="ml-3 text-gray-600">Cargando configuración del Hero...</span>
       </div>
     );
@@ -185,7 +185,7 @@ const HeroCmsPanel: React.FC = () => {
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-400 to-emerald-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-600 to-emerald-600 flex items-center justify-center">
               <Monitor className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -207,7 +207,7 @@ const HeroCmsPanel: React.FC = () => {
               disabled={!hasChanges || isSaving}
               className={`px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
                 hasChanges
-                  ? 'bg-brand-500 text-white hover:bg-brand-600 shadow-sm'
+                  ? 'bg-brand-600 text-white hover:bg-brand-700 shadow-sm'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >
@@ -237,7 +237,7 @@ const HeroCmsPanel: React.FC = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-brand-500 text-brand-600 bg-brand-50/50'
+                  ? 'border-brand-600 text-brand-600 bg-brand-50/50'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -306,24 +306,24 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({ config, updateField, onIm
                 onClick={() => updateField('background_type', type.value)}
                 className={`relative p-4 rounded-xl border-2 text-left transition-all ${
                   isActive
-                    ? 'border-brand-400 bg-brand-50 shadow-md ring-1 ring-brand-200'
+                    ? 'border-brand-600 bg-brand-50 shadow-md ring-1 ring-brand-200'
                     : 'border-gray-200 hover:border-gray-300 bg-white opacity-60 hover:opacity-90'
                 }`}
               >
                 {/* Badge ACTIVO */}
                 {isActive && (
-                  <span className="absolute -top-2 -right-2 bg-brand-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                  <span className="absolute -top-2 -right-2 bg-brand-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
                     ACTIVO
                   </span>
                 )}
                 <div className="flex items-center gap-2 mb-1">
                   {/* Radio visual */}
                   <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                    isActive ? 'border-brand-400' : 'border-gray-300'
+                    isActive ? 'border-brand-600' : 'border-gray-300'
                   }`}>
-                    {isActive && <div className="w-2 h-2 rounded-full bg-brand-400" />}
+                    {isActive && <div className="w-2 h-2 rounded-full bg-brand-600" />}
                   </div>
-                  <div className={isActive ? 'text-brand-500' : 'text-gray-400'}>
+                  <div className={isActive ? 'text-brand-600' : 'text-gray-400'}>
                     {type.icon}
                   </div>
                   <span className={`font-medium text-sm ${
@@ -332,7 +332,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({ config, updateField, onIm
                     {type.label}
                   </span>
                 </div>
-                <p className={`text-xs ml-6 ${isActive ? 'text-brand-500' : 'text-gray-400'}`}>{type.desc}</p>
+                <p className={`text-xs ml-6 ${isActive ? 'text-brand-600' : 'text-gray-400'}`}>{type.desc}</p>
               </button>
             );
           })}
@@ -355,7 +355,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({ config, updateField, onIm
                 value={config.video_url}
                 onChange={(e) => updateField('video_url', e.target.value)}
                 placeholder="Pegá cualquier link de YouTube (navegador, compartir, embed...)"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
               />
               {config.video_url && extractYouTubeId(config.video_url) && (
                 <a
@@ -373,7 +373,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({ config, updateField, onIm
               <div className="mt-2 space-y-2">
                 {extractYouTubeId(config.video_url) ? (
                   <>
-                    <p className="text-xs text-brand-500 flex items-center gap-1">
+                    <p className="text-xs text-brand-600 flex items-center gap-1">
                       ✓ ID detectado: <code className="bg-brand-50 px-1.5 py-0.5 rounded font-mono">{extractYouTubeId(config.video_url)}</code>
                     </p>
                     <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-black">
@@ -411,7 +411,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({ config, updateField, onIm
                   type="checkbox"
                   checked={config[opt.key] as boolean}
                   onChange={(e) => updateField(opt.key, e.target.checked)}
-                  className="w-4 h-4 text-brand-500 rounded focus:ring-brand-400"
+                  className="w-4 h-4 text-brand-600 rounded focus:ring-brand-600"
                 />
                 <span className="text-sm text-gray-600">{opt.label}</span>
               </label>
@@ -451,7 +451,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({ config, updateField, onIm
               value={config.image_url}
               onChange={(e) => updateField('image_url', e.target.value)}
               placeholder="https://... o subí una imagen"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600"
             />
           </div>
 
@@ -462,7 +462,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({ config, updateField, onIm
               value={config.image_alt}
               onChange={(e) => updateField('image_alt', e.target.value)}
               placeholder="Descripción de la imagen para SEO"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600"
             />
           </div>
 
@@ -511,7 +511,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({ config, updateField, onIm
               max="80"
               value={config.overlay_opacity}
               onChange={(e) => updateField('overlay_opacity', parseInt(e.target.value))}
-              className="w-full accent-brand-500"
+              className="w-full accent-brand-600"
             />
             <div className="flex justify-between text-xs text-gray-400">
               <span>Transparente</span>
@@ -567,7 +567,7 @@ const TextsTab: React.FC<TextsTabProps> = ({ config, updateField }) => {
             value={config.title}
             onChange={(e) => updateField('title', e.target.value)}
             placeholder="Encontrá lo que necesitás para tu campo"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600"
           />
           <p className="text-xs text-gray-400 mt-1">{config.title.length}/80 caracteres</p>
         </div>
@@ -579,7 +579,7 @@ const TextsTab: React.FC<TextsTabProps> = ({ config, updateField }) => {
             onChange={(e) => updateField('subtitle', e.target.value)}
             placeholder="Miles de productos agrícolas, maquinarias y servicios..."
             rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-400 resize-none"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 resize-none"
           />
           <p className="text-xs text-gray-400 mt-1">{config.subtitle.length}/160 caracteres</p>
         </div>
@@ -641,8 +641,8 @@ const ImagesTab: React.FC<ImagesTabProps> = ({ images, onAddImage, onToggle, onD
       }`}>
         {isUploading ? (
           <>
-            <RefreshCw className="w-8 h-8 text-brand-400 animate-spin" />
-            <span className="text-sm text-brand-500 font-medium">Subiendo...</span>
+            <RefreshCw className="w-8 h-8 text-brand-600 animate-spin" />
+            <span className="text-sm text-brand-600 font-medium">Subiendo...</span>
           </>
         ) : (
           <>
@@ -688,7 +688,7 @@ const ImagesTab: React.FC<ImagesTabProps> = ({ images, onAddImage, onToggle, onD
                 />
                 <div className="absolute top-2 left-2">
                   <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                    image.is_active ? 'bg-brand-400 text-white' : 'bg-gray-500 text-white'
+                    image.is_active ? 'bg-brand-600 text-white' : 'bg-gray-500 text-white'
                   }`}>
                     #{index + 1}
                   </span>
@@ -746,7 +746,7 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({ config, previewMode, se
           <button
             onClick={() => setPreviewMode('desktop')}
             className={`p-1.5 rounded-md transition-colors ${
-              previewMode === 'desktop' ? 'bg-white shadow text-brand-500' : 'text-gray-400 hover:text-gray-600'
+              previewMode === 'desktop' ? 'bg-white shadow text-brand-600' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <Monitor className="w-4 h-4" />
@@ -754,7 +754,7 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({ config, previewMode, se
           <button
             onClick={() => setPreviewMode('mobile')}
             className={`p-1.5 rounded-md transition-colors ${
-              previewMode === 'mobile' ? 'bg-white shadow text-brand-500' : 'text-gray-400 hover:text-gray-600'
+              previewMode === 'mobile' ? 'bg-white shadow text-brand-600' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <Smartphone className="w-4 h-4" />

@@ -97,9 +97,9 @@ export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
               <span className="text-gray-300">·</span>
               <span className="font-medium">USD</span>
               {dollarRates.oficial > 0 ? (
-                <span className="text-brand-500 font-semibold">${dollarRates.oficial.toLocaleString()}</span>
+                <span className="text-brand-600 font-semibold">${dollarRates.oficial.toLocaleString()}</span>
               ) : (
-                <span className="text-brand-500 font-semibold">$1.085</span>
+                <span className="text-brand-600 font-semibold">$1.085</span>
               )}
             </div>
             <button

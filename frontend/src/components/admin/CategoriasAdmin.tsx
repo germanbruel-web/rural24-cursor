@@ -388,7 +388,7 @@ export const CategoriasAdmin: React.FC = () => {
                       <div className="flex gap-1">
                         <button
                           onClick={() => handleNew('subcategory', category.id)}
-                          className="p-1.5 text-brand-500 hover:bg-brand-50 rounded transition"
+                          className="p-1.5 text-brand-600 hover:bg-brand-50 rounded transition"
                           title="Agregar subcategoría"
                         >
                           <Plus className="w-4 h-4" />
@@ -441,7 +441,7 @@ export const CategoriasAdmin: React.FC = () => {
                                 <div className="flex gap-1">
                                   <button
                                     onClick={() => handleNew('type', sub.id)}
-                                    className="p-1.5 text-brand-500 hover:bg-brand-50 rounded transition"
+                                    className="p-1.5 text-brand-600 hover:bg-brand-50 rounded transition"
                                     title="Agregar tipo"
                                   >
                                     <Plus className="w-4 h-4" />
@@ -469,7 +469,7 @@ export const CategoriasAdmin: React.FC = () => {
                                   {subTypes.map(type => (
                                     <div key={type.id} className="flex items-center gap-2 py-2 px-3 hover:bg-gray-50 rounded">
                                       <div className="w-4" />
-                                      <FileText className="w-4 h-4 text-brand-500" />
+                                      <FileText className="w-4 h-4 text-brand-600" />
                                       <span className="text-gray-700 flex-1">
                                         {type.display_name}
                                       </span>

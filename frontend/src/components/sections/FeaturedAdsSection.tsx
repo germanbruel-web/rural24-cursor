@@ -217,7 +217,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
                 {/* Título de la Categoría */}
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
                   <span 
-                    className="w-1 sm:w-1.5 h-6 sm:h-8 bg-brand-500 rounded-full" 
+                    className="w-1 sm:w-1.5 h-6 sm:h-8 bg-brand-600 rounded-full" 
                     aria-hidden="true"
                   />
                   <button
@@ -240,7 +240,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
               {/* Subtítulo: Avisos Destacados */}
               {hasFeaturedAds && (
                 <div className="flex items-center gap-2 mb-4 sm:mb-5">
-                  <span className="w-1 h-5 bg-brand-400 rounded-full" aria-hidden="true" />
+                  <span className="w-1 h-5 bg-brand-600 rounded-full" aria-hidden="true" />
                   <h3 className="text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wide">
                     Avisos Destacados
                   </h3>

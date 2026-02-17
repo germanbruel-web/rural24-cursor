@@ -80,7 +80,7 @@ export default function OAuthCallbackPage({ onComplete, onError }: OAuthCallback
         <div className="bg-white rounded-xl shadow-lg p-8 text-center">
           {status === 'loading' && (
             <>
-              <Loader2 className="w-16 h-16 text-brand-500 animate-spin mx-auto mb-4" />
+              <Loader2 className="w-16 h-16 text-brand-600 animate-spin mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
                 {message}
               </h2>
@@ -92,7 +92,7 @@ export default function OAuthCallbackPage({ onComplete, onError }: OAuthCallback
 
           {status === 'success' && (
             <>
-              <CheckCircle className="w-16 h-16 text-brand-500 mx-auto mb-4" />
+              <CheckCircle className="w-16 h-16 text-brand-600 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
                 ¡Bienvenido a Rural24!
               </h2>

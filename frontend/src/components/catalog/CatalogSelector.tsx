@@ -167,7 +167,7 @@ export default function CatalogSelector({
           value={value.category?.id || ''}
           onChange={(e) => handleCategoryChange(e.target.value)}
           disabled={loading.categories}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
           required
         >
           <option value="">Seleccione una categoría</option>
@@ -189,7 +189,7 @@ export default function CatalogSelector({
             value={value.subcategory?.id || ''}
             onChange={(e) => handleSubcategoryChange(e.target.value)}
             disabled={loading.subcategories || subcategories.length === 0}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             required
           >
             <option value="">
@@ -218,7 +218,7 @@ export default function CatalogSelector({
             value={value.brand?.id || ''}
             onChange={(e) => handleBrandChange(e.target.value)}
             disabled={loading.brands || brands.length === 0}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             required={value.subcategory.has_models}
           >
             <option value="">
@@ -247,7 +247,7 @@ export default function CatalogSelector({
             value={value.model?.id || ''}
             onChange={(e) => handleModelChange(e.target.value)}
             disabled={loading.models || models.length === 0}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             required
           >
             <option value="">
@@ -308,7 +308,7 @@ export default function CatalogSelector({
             min="1950"
             max={new Date().getFullYear() + 1}
             placeholder="Ej: 2020"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
             required
           />
         </div>
@@ -321,7 +321,7 @@ export default function CatalogSelector({
             Condición *
           </label>
           <select
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
             required
           >
             <option value="">Seleccione la condición</option>

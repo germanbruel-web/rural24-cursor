@@ -176,7 +176,7 @@ export const SubscriptionPanel: React.FC = () => {
                 <p className="text-sm text-gray-700">Suscripción activa</p>
               </div>
             </div>
-            <span className="px-4 py-2 bg-brand-400 text-white rounded-full font-bold text-sm flex items-center gap-2">
+            <span className="px-4 py-2 bg-brand-600 text-white rounded-full font-bold text-sm flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               Activo
             </span>
@@ -246,7 +246,7 @@ export const SubscriptionPanel: React.FC = () => {
             <div
               key={plan.id}
               className={`bg-white rounded-lg shadow-lg border-2 overflow-hidden opacity-50 cursor-not-allowed ${
-                plan.popular ? 'border-brand-500' : 'border-gray-200'
+                plan.popular ? 'border-brand-600' : 'border-gray-200'
               }`}
             >
               {plan.popular && (
@@ -258,9 +258,9 @@ export const SubscriptionPanel: React.FC = () => {
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   {plan.userType === 'empresa' ? (
-                    <Building className="w-8 h-8 text-brand-500" />
+                    <Building className="w-8 h-8 text-brand-600" />
                   ) : (
-                    <Award className="w-8 h-8 text-brand-500" />
+                    <Award className="w-8 h-8 text-brand-600" />
                   )}
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
@@ -285,7 +285,7 @@ export const SubscriptionPanel: React.FC = () => {
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
                       {feature.included ? (
-                        <CheckCircle className="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" />
                       ) : (
                         <AlertCircle className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" />
                       )}
@@ -309,7 +309,7 @@ export const SubscriptionPanel: React.FC = () => {
       )}
 
       {/* Benefits Section */}
-      <div className="bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg p-8 text-white">
+      <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg p-8 text-white">
         <h2 className="text-2xl font-bold mb-6">¿Por qué elegir Premium?</h2>
         <div className="grid md:grid-cols-3 gap-6">
           <div>
@@ -352,7 +352,7 @@ export const SubscriptionPanel: React.FC = () => {
               >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-brand-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-brand-500" />
+                    <CheckCircle className="w-5 h-5 text-brand-600" />
                   </div>
                   <div>
                     <div className="font-medium text-gray-900">
@@ -365,7 +365,7 @@ export const SubscriptionPanel: React.FC = () => {
                 </div>
                 <button
                   onClick={() => handleDownloadInvoice(invoice.id)}
-                  className="px-4 py-2 text-brand-500 hover:bg-brand-50 rounded-lg transition-colors flex items-center gap-2"
+                  className="px-4 py-2 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />
                   Descargar

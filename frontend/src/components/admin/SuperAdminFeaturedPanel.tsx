@@ -868,7 +868,7 @@ function StatsTab() {
       {/* KPIs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          icon={<CheckCircle className="w-8 h-8 text-brand-500" />}
+          icon={<CheckCircle className="w-8 h-8 text-brand-600" />}
           label="Activos"
           value={stats.total_active}
           color="green"

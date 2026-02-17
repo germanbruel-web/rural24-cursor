@@ -162,7 +162,7 @@ export function TestDynamicForm() {
           <select
             value={selectedSubcategory}
             onChange={(e) => setSelectedSubcategory(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-brand-400 focus:ring-4 focus:ring-brand-100 focus:outline-none"
+            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-brand-600 focus:ring-4 focus:ring-brand-100 focus:outline-none"
           >
             {subcategories.map((sub) => (
               <option key={sub.value} value={sub.value}>
@@ -181,7 +181,7 @@ export function TestDynamicForm() {
         {/* Loading */}
         {loading && (
           <div className="bg-white rounded-2xl border-2 border-gray-200 p-12 flex flex-col items-center justify-center">
-            <Loader2 className="w-12 h-12 text-brand-400 animate-spin mb-4" />
+            <Loader2 className="w-12 h-12 text-brand-600 animate-spin mb-4" />
             <p className="text-gray-600">Cargando campos dinámicos...</p>
           </div>
         )}

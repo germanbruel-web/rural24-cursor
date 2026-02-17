@@ -62,7 +62,7 @@ export const PaymentComingSoonPage: React.FC = () => {
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <div className="w-12 h-12 bg-brand-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-6 h-6 text-brand-500" />
+                <Shield className="w-6 h-6 text-brand-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Pago Seguro</h3>
               <p className="text-sm text-gray-600">
@@ -100,15 +100,15 @@ export const PaymentComingSoonPage: React.FC = () => {
             
             <div className="space-y-4 text-left">
               <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-brand-400" />
+                <CheckCircle className="w-5 h-5 text-brand-600" />
                 <span className="text-gray-700">Sistema de planes y precios</span>
               </div>
               <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-brand-400" />
+                <CheckCircle className="w-5 h-5 text-brand-600" />
                 <span className="text-gray-700">Sistema de créditos y destacados</span>
               </div>
               <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-brand-400" />
+                <CheckCircle className="w-5 h-5 text-brand-600" />
                 <span className="text-gray-700">Carrito de compras</span>
               </div>
               <div className="flex items-center gap-3">
@@ -153,7 +153,7 @@ export const PaymentComingSoonPage: React.FC = () => {
             </div>
           ) : (
             <div className="bg-brand-100 p-8 rounded-2xl max-w-md mx-auto">
-              <CheckCircle className="w-12 h-12 text-brand-500 mx-auto mb-4" />
+              <CheckCircle className="w-12 h-12 text-brand-600 mx-auto mb-4" />
               <h3 className="font-semibold text-brand-700 mb-2">¡Listo!</h3>
               <p className="text-brand-600">
                 Te avisaremos a <strong>{email}</strong> cuando los pagos estén disponibles.

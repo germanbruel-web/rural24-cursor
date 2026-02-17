@@ -33,7 +33,7 @@ export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ formData = {} }) =
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-brand-500 text-white p-4 rounded-t-lg">
+      <div className="bg-brand-600 text-white p-4 rounded-t-lg">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -65,7 +65,7 @@ export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ formData = {} }) =
           
           {/* Badge de condición */}
           {formData.condition === 'nuevo' && (
-            <div className="absolute top-2 left-2 bg-brand-400 text-white px-3 py-1 rounded-full text-xs font-bold">
+            <div className="absolute top-2 left-2 bg-brand-600 text-white px-3 py-1 rounded-full text-xs font-bold">
               ¡NUEVO!
             </div>
           )}
@@ -79,7 +79,7 @@ export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ formData = {} }) =
         {/* Contenido del card */}
         <div className="p-4">
           {/* Precio */}
-          <div className="text-2xl font-bold text-brand-500 mb-2">
+          <div className="text-2xl font-bold text-brand-600 mb-2">
             {formatPrice(price)}
           </div>
 

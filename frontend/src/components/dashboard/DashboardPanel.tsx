@@ -96,7 +96,7 @@ export const DashboardPanel: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando dashboard...</p>
         </div>
       </div>
@@ -329,7 +329,7 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({ icon, title, value, subtitle, color, trend, isClickable, onClick }) => {
   const colorClasses = {
     blue: 'from-blue-500 to-blue-600',
-    green: 'from-brand-400 to-brand-500',
+    green: 'from-brand-600 to-brand-700',
     yellow: 'from-yellow-400 to-yellow-500',
     purple: 'from-purple-500 to-purple-600',
     red: 'from-red-500 to-red-600',
@@ -340,7 +340,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, title, value, subtitle, color
   return (
     <Component 
       onClick={onClick}
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow ${isClickable ? 'cursor-pointer hover:border-brand-400' : ''} w-full text-left`}
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow ${isClickable ? 'cursor-pointer hover:border-brand-600' : ''} w-full text-left`}
     >
       <div className="flex items-start justify-between mb-4">
         <div className={`p-3 rounded-lg bg-gradient-to-br ${colorClasses[color]} text-white`}>

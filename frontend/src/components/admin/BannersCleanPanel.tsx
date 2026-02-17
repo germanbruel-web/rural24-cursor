@@ -247,7 +247,7 @@ export default function BannersCleanPanel() {
             </div>
             <button
               onClick={handleCreate}
-              className="flex items-center gap-2 bg-brand-500 text-white px-4 py-2 rounded-lg hover:bg-brand-600 transition-colors"
+              className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-600 transition-colors"
             >
               <Plus className="w-5 h-5" />
               Crear Banner
@@ -315,7 +315,7 @@ export default function BannersCleanPanel() {
             <p className="text-gray-600">No hay banners creados</p>
             <button
               onClick={handleCreate}
-              className="mt-4 text-brand-500 hover:underline"
+              className="mt-4 text-brand-600 hover:underline"
             >
               Crear el primer banner
             </button>
@@ -405,7 +405,7 @@ export default function BannersCleanPanel() {
                           className={`p-1.5 rounded transition-colors ${
                             banner.is_active
                               ? 'text-orange-600 hover:bg-orange-50'
-                              : 'text-brand-500 hover:bg-brand-50'
+                              : 'text-brand-600 hover:bg-brand-50'
                           }`}
                           title={banner.is_active ? 'Pausar' : 'Activar'}
                         >
@@ -631,7 +631,7 @@ export default function BannersCleanPanel() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600"
+                  className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-600"
                 >
                   {editingBanner ? 'Guardar Cambios' : 'Crear Banner'}
                 </button>

@@ -167,7 +167,7 @@ export const BackendFormSection: React.FC<BackendFormSectionProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {hasValues ? (
-                    <CheckCircle className="w-5 h-5 text-brand-400 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-brand-600 flex-shrink-0" />
                   ) : (
                     <div className="w-5 h-5 rounded-full border-2 border-gray-300 flex-shrink-0" />
                   )}
@@ -179,14 +179,14 @@ export const BackendFormSection: React.FC<BackendFormSectionProps> = ({
                     <p className="text-xs text-gray-500">
                       {groupFields.length} campo{groupFields.length !== 1 ? 's' : ''}
                       {hasValues && !isExpanded && (
-                        <span className="text-brand-500 ml-1">• Completado</span>
+                        <span className="text-brand-600 ml-1">• Completado</span>
                       )}
                     </p>
                   </div>
                 </div>
                 
                 <ChevronRight
-                  className={`w-5 h-5 flex-shrink-0 transition-transform text-brand-500 ${
+                  className={`w-5 h-5 flex-shrink-0 transition-transform text-brand-600 ${
                     isExpanded ? 'rotate-90' : ''
                   }`}
                 />

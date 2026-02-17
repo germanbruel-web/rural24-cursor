@@ -348,12 +348,12 @@ export const SimpleImageUploader: React.FC<Props> = ({
           border-2 border-dashed rounded-lg p-4 sm:p-6 text-center cursor-pointer transition-all
           ${uploading || images.length >= maxFiles
             ? 'border-gray-300 bg-gray-50 cursor-not-allowed opacity-60'
-            : 'border-green-400 bg-brand-50 hover:bg-brand-100 hover:border-brand-400'
+            : 'border-brand-600 bg-brand-50 hover:bg-brand-100 hover:border-brand-500'
           }
         `}>
           {uploading ? (
             <div className="flex items-center justify-center gap-2">
-              <Loader className="w-5 h-5 animate-spin text-brand-500" />
+              <Loader className="w-5 h-5 animate-spin text-brand-600" />
               <span className="text-sm font-medium text-gray-700">Subiendo...</span>
             </div>
           ) : images.length >= maxFiles ? (
@@ -363,7 +363,7 @@ export const SimpleImageUploader: React.FC<Props> = ({
             </div>
           ) : (
             <div className="flex items-center justify-center gap-3">
-              <Upload className="w-6 h-6 text-brand-500" />
+              <Upload className="w-6 h-6 text-brand-600" />
               <span className="text-sm font-medium text-gray-700">Subir fotos</span>
               <span className="text-xs text-gray-400 hidden sm:inline">• máx 5MB</span>
             </div>
@@ -443,7 +443,7 @@ const SortableImage: React.FC<SortableImageProps> = ({ image, index, onRemove, o
       ref={setNodeRef}
       className={`relative aspect-square rounded overflow-hidden bg-gray-100 ${
         isDragging ? 'shadow-xl z-50 scale-105' : ''
-      } ${image.isPrimary ? 'ring-2 ring-brand-400' : ''}`}
+      } ${image.isPrimary ? 'ring-2 ring-brand-600' : ''}`}
       style={style}
       {...attributes}
       {...listeners}
@@ -457,7 +457,7 @@ const SortableImage: React.FC<SortableImageProps> = ({ image, index, onRemove, o
 
       {/* Badge PORTADA - solo icono */}
       {image.isPrimary && image.status === 'success' && (
-        <div className="absolute top-1 left-1 bg-brand-400 text-white p-1 rounded" title="Portada">
+        <div className="absolute top-1 left-1 bg-brand-600 text-white p-1 rounded" title="Portada">
           <Star className="w-3 h-3 fill-current" />
         </div>
       )}

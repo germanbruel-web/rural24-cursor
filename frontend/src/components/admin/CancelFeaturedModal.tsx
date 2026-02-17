@@ -293,7 +293,7 @@ export default function CancelFeaturedModal({ isOpen, onClose, featured, onSucce
 
               {success && (
                 <div className="p-4 bg-brand-50 border border-brand-200 rounded-lg flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="font-semibold text-brand-700">
                       ✅ Featured cancelado exitosamente

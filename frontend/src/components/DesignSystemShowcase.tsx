@@ -256,7 +256,7 @@ export function DesignSystemShowcase() {
                   </Label>
                   <textarea 
                     id="message"
-                    className="flex w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-4 py-3 text-base transition-all duration-200 outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 min-h-[120px]"
+                    className="flex w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-4 py-3 text-base transition-all duration-200 outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 min-h-[120px]"
                     placeholder="Escribí tu mensaje aquí..."
                   />
                 </div>

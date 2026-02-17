@@ -104,7 +104,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 <span className="font-medium">24°</span>
                 <span className="text-gray-300">·</span>
                 <span className="font-medium">USD</span>
-                <span className="text-brand-500 font-semibold">$1.085</span>
+                <span className="text-brand-600 font-semibold">$1.085</span>
               </div>
               <button
                 onClick={() => navigateTo('/publicar')}
@@ -135,7 +135,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               
               <button
                 onClick={() => navigateTo('/publicar')}
-                className="px-3 py-1.5 text-sm font-medium text-brand-500 hover:text-brand-600 hover:bg-brand-50 rounded-md transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 hover:bg-brand-50 rounded-md transition-colors flex items-center gap-1.5"
               >
                 <PlusCircle size={14} />
                 Publicar Gratis
@@ -152,7 +152,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-colors"
                 >
-                  <div className="w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-6 h-6 bg-brand-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                     {getUserDisplayName().charAt(0).toUpperCase()}
                   </div>
                   <span className="hidden sm:inline">{getUserDisplayName()}</span>
@@ -377,7 +377,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               
               <button
                 onClick={() => { navigateTo('/publicar'); onCloseMobileMenu?.(); }}
-                className="w-full text-left px-3 py-3 text-base font-semibold text-brand-500 bg-brand-50 hover:bg-brand-100 rounded-lg flex items-center gap-3"
+                className="w-full text-left px-3 py-3 text-base font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg flex items-center gap-3"
               >
                 <PlusCircle size={20} />
                 Publicar Gratis

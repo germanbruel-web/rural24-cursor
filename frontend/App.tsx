@@ -538,7 +538,7 @@ const AppContent: React.FC = () => {
                 navigateToPage('home');
                 navigateTo('/');
               }}
-              className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-700"
+              className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700"
             >
               Volver al Inicio
             </button>

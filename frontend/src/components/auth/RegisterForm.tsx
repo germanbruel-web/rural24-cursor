@@ -144,11 +144,11 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
             </button>
           )}
           <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Mail className="w-9 h-9 text-brand-500" />
+            <Mail className="w-9 h-9 text-brand-600" />
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">¡Cuenta Creada!</h2>
           <p className="text-sm text-gray-600 mb-1">Te enviamos un email de verificación a:</p>
-          <p className="text-base font-semibold text-brand-500 mb-5">{email}</p>
+          <p className="text-base font-semibold text-brand-600 mb-5">{email}</p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-5 text-left">
             <p className="text-sm text-blue-800">
               Revisá tu bandeja de entrada y hacé click en el enlace para activar tu cuenta.
@@ -198,7 +198,7 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
                 <div className="flex-1 text-sm">
                   <p className="font-semibold text-amber-900 mb-1">Límite temporal</p>
                   <p className="text-amber-800 mb-2">Demasiados registros. Probá en 30 min o usá Google/Facebook.</p>
-                  <button onClick={onSwitchToLogin} className="text-brand-500 font-medium underline">
+                  <button onClick={onSwitchToLogin} className="text-brand-600 font-medium underline">
                     ¿Ya tenés cuenta? Iniciá sesión
                   </button>
                 </div>
@@ -210,7 +210,7 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
               <div className="flex-1 text-sm text-red-800">
                 {error}
                 {error.includes('ya está registrado') && (
-                  <button onClick={onSwitchToLogin} className="block text-brand-500 font-medium underline mt-1">
+                  <button onClick={onSwitchToLogin} className="block text-brand-600 font-medium underline mt-1">
                     Ir a iniciar sesión
                   </button>
                 )}
@@ -293,7 +293,7 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
                 if (e.target.value !== 'empresa') setCompanyName('');
               }}
               className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2.5 pr-10 text-sm text-gray-900 
-                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                         focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-transparent
                          transition-colors cursor-pointer"
               required
             >
@@ -385,7 +385,7 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
       <div className="text-center mt-4 pt-3 border-t border-gray-100">
         <p className="text-sm text-gray-500">
           ¿Ya tenés cuenta?{' '}
-          <button onClick={onSwitchToLogin} className="text-brand-500 font-medium hover:underline">
+          <button onClick={onSwitchToLogin} className="text-brand-600 font-medium hover:underline">
             Iniciá sesión
           </button>
         </p>

@@ -76,7 +76,7 @@ export const SubscriptionPanel: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
+        <Loader2 className="w-10 h-10 text-brand-600 animate-spin" />
       </div>
     );
   }
@@ -107,7 +107,7 @@ export const SubscriptionPanel: React.FC = () => {
           <Card variant="outlined" padding="lg" className="hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-brand-400 to-emerald-600 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg flex items-center justify-center">
                   <Zap className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -136,7 +136,7 @@ export const SubscriptionPanel: React.FC = () => {
                 { label: 'Soporte', value: '24/7', icon: <CheckCircle className="w-4 h-4" /> }
               ].map((item, idx) => (
                 <div key={idx} className="flex flex-col items-center gap-1">
-                  <div className="text-brand-500">{item.icon}</div>
+                  <div className="text-brand-600">{item.icon}</div>
                   <p className="text-xl sm:text-2xl font-bold text-gray-900">{item.value}</p>
                   <p className="text-xs text-gray-500">{item.label}</p>
                 </div>
@@ -212,7 +212,7 @@ export const SubscriptionPanel: React.FC = () => {
           {/* PAQUETES DE CRÉDITOS - Grid compacto */}
           <Card variant="outlined" padding="md">
             <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-brand-500" />
+              <Sparkles className="w-5 h-5 text-brand-600" />
               Paquetes
             </h3>
 
@@ -227,7 +227,7 @@ export const SubscriptionPanel: React.FC = () => {
                     padding="sm"
                     className={`cursor-pointer transition-all hover:scale-105 text-center border-2 ${
                       isPopular
-                        ? 'border-brand-400 bg-brand-50'
+                        ? 'border-brand-600 bg-brand-50'
                         : 'border-gray-200 hover:border-green-300'
                     }`}
                     onClick={() => setShowBuyCreditsModal(true)}
@@ -237,7 +237,7 @@ export const SubscriptionPanel: React.FC = () => {
                         Popular
                       </Badge>
                     )}
-                    <div className="text-2xl font-black text-brand-500">{qty}</div>
+                    <div className="text-2xl font-black text-brand-600">{qty}</div>
                     <div className="text-xs text-gray-500 mb-1">
                       {qty === 1 ? 'crédito' : 'créditos'}
                     </div>

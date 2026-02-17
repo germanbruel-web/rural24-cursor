@@ -182,12 +182,12 @@ const RedeemCouponModal: React.FC<RedeemCouponModalProps> = ({
           {validated && couponInfo && !success && (
             <div className="bg-brand-50 border-2 border-green-300 rounded-xl p-4 sm:p-6">
               <div className="flex items-start gap-3 mb-4">
-                <CheckCircle2 className="w-6 h-6 text-brand-500 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-6 h-6 text-brand-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold text-brand-600 text-base sm:text-lg">
                     ✓ Cupón válido!
                   </p>
-                  <p className="text-sm text-brand-500 mt-1">
+                  <p className="text-sm text-brand-600 mt-1">
                     {couponInfo.description}
                   </p>
                 </div>
@@ -196,7 +196,7 @@ const RedeemCouponModal: React.FC<RedeemCouponModalProps> = ({
               <div className="bg-white rounded-lg p-4 border border-brand-200">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600 text-sm">Créditos a recibir:</span>
-                  <span className="font-black text-brand-500 text-2xl">
+                  <span className="font-black text-brand-600 text-2xl">
                     +{couponInfo.credits}
                   </span>
                 </div>
@@ -252,12 +252,12 @@ const RedeemCouponModal: React.FC<RedeemCouponModalProps> = ({
               ============================================ */}
           {success && (
             <div className="bg-brand-50 border border-green-300 rounded-lg p-4 flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold text-brand-600 text-sm">
                   ¡Cupón canjeado exitosamente!
                 </p>
-                <p className="text-xs text-brand-500 mt-1">
+                <p className="text-xs text-brand-600 mt-1">
                   Los créditos fueron agregados a tu balance
                 </p>
               </div>

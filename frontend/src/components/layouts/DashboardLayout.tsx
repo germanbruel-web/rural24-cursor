@@ -118,11 +118,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         }}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
           isActive
-            ? 'bg-brand-500 text-white shadow-md'
+            ? 'bg-brand-600 text-white shadow-md'
             : 'text-gray-700 hover:bg-gray-100'
         }`}
       >
-        <span className={isActive ? 'text-white' : 'text-gray-500 group-hover:text-brand-500'}>
+        <span className={isActive ? 'text-white' : 'text-gray-500 group-hover:text-brand-600'}>
           {item.icon}
         </span>
         {!sidebarCollapsed && (
@@ -244,7 +244,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {/* Header */}
           <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
             <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center text-white font-bold">
+              <div className="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg flex items-center justify-center text-white font-bold">
                 C
               </div>
               <span className="font-bold text-gray-900">Clasify</span>
@@ -320,7 +320,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <Menu className="w-6 h-6 text-gray-600" />
             </button>
             <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center text-white font-bold">
+              <div className="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg flex items-center justify-center text-white font-bold">
                 R
               </div>
               <span className="font-bold text-gray-900">RURAL24</span>

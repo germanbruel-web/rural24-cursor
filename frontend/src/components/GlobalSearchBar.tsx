@@ -221,7 +221,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
         <span>
           {parts.map((part, i) =>
             part.toLowerCase() === highlight.toLowerCase() ? (
-              <strong key={i} className="font-semibold text-brand-500">
+              <strong key={i} className="font-semibold text-brand-600">
                 {part}
               </strong>
             ) : (
@@ -270,7 +270,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
             placeholder={placeholder}
             autoFocus={autoFocus}
             className="w-full pl-10 pr-32 py-2.5 text-sm border border-gray-300 rounded-lg
-                     focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500
+                     focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600
                      transition-all bg-gray-50 hover:bg-white
                      placeholder:text-gray-400"
             autoComplete="off"
@@ -293,7 +293,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
           {/* Loading indicator */}
           {loading && (
             <div className="absolute right-24 top-1/2 -translate-y-1/2">
-              <Loader2 className="w-4 h-4 text-brand-500 animate-spin" />
+              <Loader2 className="w-4 h-4 text-brand-600 animate-spin" />
             </div>
           )}
 
@@ -304,9 +304,9 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
             className="absolute right-1.5 top-1/2 -translate-y-1/2 
                      px-4 py-1.5 
                      bg-gradient-to-b from-gray-50 to-gray-100 
-                     hover:from-brand-500/5 hover:to-brand-500/10
+                     hover:from-brand-600/5 hover:to-brand-600/10
                      border border-gray-200
-                     text-brand-500 font-medium text-sm 
+                     text-brand-600 font-medium text-sm 
                      rounded-md 
                      transition-all duration-200
                      disabled:opacity-40 disabled:cursor-not-allowed
@@ -394,7 +394,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
                 className={`w-4 h-4 flex-shrink-0 transition-transform
                          ${
                            selectedIndex === index
-                             ? 'text-brand-500 translate-x-0.5'
+                             ? 'text-brand-600 translate-x-0.5'
                              : 'text-gray-300 group-hover:text-gray-400'
                          }`}
               />

@@ -400,7 +400,7 @@ export default function CategoriesAdminPage() {
               </button>
               <button 
                 onClick={() => openCreateModal('category', operationType.id)}
-                className="p-2 text-brand-500 hover:bg-brand-50 rounded-lg transition-colors"
+                className="p-2 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -456,7 +456,7 @@ export default function CategoriesAdminPage() {
             </button>
             <button 
               onClick={() => openCreateModal(hasSubcategories ? 'subcategory' : 'service-main', category.id)}
-              className="p-1.5 text-brand-500 hover:bg-brand-50 rounded transition-colors"
+              className="p-1.5 text-brand-600 hover:bg-brand-50 rounded transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
@@ -525,7 +525,7 @@ export default function CategoriesAdminPage() {
                     </button>
                     <button 
                       onClick={() => openCreateModal('service-sub', mainCat.id)}
-                      className="p-1 text-brand-500 hover:bg-brand-50 rounded"
+                      className="p-1 text-brand-600 hover:bg-brand-50 rounded"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
@@ -574,7 +574,7 @@ export default function CategoriesAdminPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando categorías...</p>
         </div>
       </div>
@@ -597,7 +597,7 @@ export default function CategoriesAdminPage() {
           onClick={() => setSelectedTab('categories')}
           className={`px-4 py-2 font-medium transition-colors border-b-2 ${
             selectedTab === 'categories'
-              ? 'border-brand-500 text-brand-500'
+              ? 'border-brand-600 text-brand-600'
               : 'border-transparent text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -607,7 +607,7 @@ export default function CategoriesAdminPage() {
           onClick={() => setSelectedTab('brands')}
           className={`px-4 py-2 font-medium transition-colors border-b-2 ${
             selectedTab === 'brands'
-              ? 'border-brand-500 text-brand-500'
+              ? 'border-brand-600 text-brand-600'
               : 'border-transparent text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -617,7 +617,7 @@ export default function CategoriesAdminPage() {
           onClick={() => setSelectedTab('models')}
           className={`px-4 py-2 font-medium transition-colors border-b-2 ${
             selectedTab === 'models'
-              ? 'border-brand-500 text-brand-500'
+              ? 'border-brand-600 text-brand-600'
               : 'border-transparent text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -632,7 +632,7 @@ export default function CategoriesAdminPage() {
           <div className="mb-4 flex justify-end">
             <button 
               onClick={() => openCreateModal('operation-type', '')}
-              className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
               Nuevo Tipo de Operación
@@ -657,7 +657,7 @@ export default function CategoriesAdminPage() {
                 placeholder="Buscar marcas..."
                 value={brandSearch}
                 onChange={(e) => setBrandSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
               />
             </div>
             <button 
@@ -665,7 +665,7 @@ export default function CategoriesAdminPage() {
                 setSelectedBrand(null);
                 setBrandModalOpen(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
               Nueva Marca
@@ -749,7 +749,7 @@ export default function CategoriesAdminPage() {
                   placeholder="Buscar modelos..."
                   value={modelSearch}
                   onChange={(e) => setModelSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
                 />
               </div>
               <select
@@ -758,7 +758,7 @@ export default function CategoriesAdminPage() {
                   setSelectedBrandFilter(e.target.value);
                   loadModels();
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
               >
                 <option value="">Todas las marcas</option>
                 {brands.map(brand => (
@@ -771,7 +771,7 @@ export default function CategoriesAdminPage() {
                 setSelectedModel(null);
                 setModelModalOpen(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
               Nuevo Modelo
@@ -941,7 +941,7 @@ export default function CategoriesAdminPage() {
                       key={subcat.id} 
                       className={`flex items-center justify-between p-4 rounded-lg transition-all ${
                         isAssigned 
-                          ? 'border-2 border-brand-500 bg-brand-500/5' 
+                          ? 'border-2 border-brand-600 bg-brand-600/5' 
                           : 'border border-gray-200 bg-white'
                       }`}
                     >
@@ -949,7 +949,7 @@ export default function CategoriesAdminPage() {
                         <div className="flex items-center gap-2">
                           <p className="font-medium text-gray-900">{subcat.display_name}</p>
                           {isAssigned && (
-                            <span className="px-2 py-0.5 bg-brand-500 text-white text-xs rounded-full font-medium">
+                            <span className="px-2 py-0.5 bg-brand-600 text-white text-xs rounded-full font-medium">
                               ✓ Asignada
                             </span>
                           )}
@@ -967,7 +967,7 @@ export default function CategoriesAdminPage() {
                       ) : (
                         <button
                           onClick={() => handleAssignBrand(subcat.id)}
-                          className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
                         >
                           <Link2 className="w-4 h-4" />
                           Asignar

@@ -159,7 +159,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
                          shadow-md hover:shadow-lg
                          transition-all duration-200
                          transform hover:scale-105 active:scale-100
-                         focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2"
+                         focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Publicar Aviso Gratis</span>
@@ -195,10 +195,10 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
                       <img 
                         src={profile.avatar_url}
                         alt="Avatar"
-                        className="w-7 h-7 rounded-full object-cover ring-2 ring-brand-400"
+                        className="w-7 h-7 rounded-full object-cover ring-2 ring-brand-600"
                       />
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-400 to-brand-500 
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 
                                     flex items-center justify-center text-white font-semibold text-xs">
                         {(profile?.full_name?.charAt(0) || user.email?.charAt(0) || 'U').toUpperCase()}
                       </div>
@@ -375,7 +375,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
                   <div className="grid grid-cols-2 gap-2 px-4">
                     <button
                       onClick={() => { openAuth('login'); setShowMobileMenu(false); }}
-                      className="px-4 py-3 text-sm font-semibold text-brand-500 border-2 border-brand-500 hover:bg-brand-50 rounded-lg flex items-center justify-center gap-2"
+                      className="px-4 py-3 text-sm font-semibold text-brand-600 border-2 border-brand-600 hover:bg-brand-50 rounded-lg flex items-center justify-center gap-2"
                     >
                       <User className="w-4 h-4" />
                       Entrar

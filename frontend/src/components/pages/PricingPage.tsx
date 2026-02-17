@@ -17,7 +17,7 @@ const PLAN_ICONS: Record<string, React.ReactNode> = {
 const COLOR_CLASSES: Record<string, { bg: string; text: string; ring: string }> = {
   gray: { bg: 'bg-gray-100', text: 'text-gray-600', ring: '' },
   blue: { bg: 'bg-blue-100', text: 'text-blue-600', ring: '' },
-  green: { bg: 'bg-brand-100', text: 'text-brand-500', ring: 'ring-4 ring-brand-400 ring-opacity-50' },
+  green: { bg: 'bg-brand-100', text: 'text-brand-600', ring: 'ring-4 ring-brand-600 ring-opacity-50' },
   purple: { bg: 'bg-purple-100', text: 'text-purple-600', ring: '' },
   gold: { bg: 'bg-yellow-100', text: 'text-yellow-600', ring: '' },
   red: { bg: 'bg-red-100', text: 'text-red-600', ring: '' },
@@ -93,7 +93,7 @@ export const PricingPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
+        <RefreshCw className="w-8 h-8 animate-spin text-brand-600" />
       </div>
     );
   }
@@ -144,13 +144,13 @@ export const PricingPage: React.FC = () => {
                 className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all ${
                   isComingSoon ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-2xl hover:scale-105'
                 } ${
-                  isFeatured && !isComingSoon ? 'ring-4 ring-brand-400 ring-opacity-50' : ''
+                  isFeatured && !isComingSoon ? 'ring-4 ring-brand-600 ring-opacity-50' : ''
                 }`}
               >
                 {/* Badge */}
                 {badgeText && (
                   <div className="absolute top-4 right-4">
-                    <span className="bg-brand-400 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                    <span className="bg-brand-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
                       {badgeText}
                     </span>
                   </div>
@@ -170,7 +170,7 @@ export const PricingPage: React.FC = () => {
                   {isStarter ? (
                     <div className="mb-6">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-black text-brand-500">
+                        <span className="text-4xl font-black text-brand-600">
                           Gratis
                         </span>
                       </div>
@@ -214,7 +214,7 @@ export const PricingPage: React.FC = () => {
                   <ul className="space-y-3 mb-6">
                     {features.map((feature: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-2 text-sm">
-                        <Check className="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
+                        <Check className="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" />
                         <span className="text-gray-700">{feature}</span>
                       </li>
                     ))}

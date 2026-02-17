@@ -421,7 +421,7 @@ export const CategoriesTreeView: React.FC = () => {
   const getIcon = (type: string) => {
     switch (type) {
       case 'category': return <Layers className="w-5 h-5 text-blue-600" />;
-      case 'subcategory': return <Box className="w-4 h-4 text-brand-500" />;
+      case 'subcategory': return <Box className="w-4 h-4 text-brand-600" />;
       case 'brand': return <Tag className="w-4 h-4 text-purple-600" />;
       case 'model': return <Wrench className="w-4 h-4 text-orange-600" />;
       default: return <Package className="w-4 h-4 text-gray-600" />;
@@ -498,7 +498,7 @@ export const CategoriesTreeView: React.FC = () => {
 
           {/* Estado activo/inactivo */}
           {node.is_active ? (
-            <CheckCircle className="w-4 h-4 text-brand-400" />
+            <CheckCircle className="w-4 h-4 text-brand-600" />
           ) : (
             <XCircle className="w-4 h-4 text-red-500" />
           )}
@@ -512,7 +512,7 @@ export const CategoriesTreeView: React.FC = () => {
                   e.stopPropagation();
                   openCreateModal('subcategory', enrichedNode);
                 }}
-                className="p-1 hover:bg-brand-100 rounded text-brand-500"
+                className="p-1 hover:bg-brand-100 rounded text-brand-600"
                 title="Agregar Subcategoría"
               >
                 <Plus className="w-4 h-4" />
@@ -549,7 +549,7 @@ export const CategoriesTreeView: React.FC = () => {
                 e.stopPropagation();
                 handleToggleActive(node);
               }}
-              className={`p-1 rounded ${node.is_active ? 'hover:bg-gray-100 text-gray-600' : 'hover:bg-brand-100 text-brand-500'}`}
+              className={`p-1 rounded ${node.is_active ? 'hover:bg-gray-100 text-gray-600' : 'hover:bg-brand-100 text-brand-600'}`}
               title={node.is_active ? 'Desactivar' : 'Activar'}
             >
               {node.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -651,7 +651,7 @@ export const CategoriesTreeView: React.FC = () => {
         <div className="max-w-[1400px] mx-auto">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto"></div>
               <p className="mt-4 text-gray-600">Cargando árbol de categorías...</p>
             </div>
           </div>
@@ -697,13 +697,13 @@ export const CategoriesTreeView: React.FC = () => {
                 <Layers className="w-12 h-12 text-blue-600 opacity-20" />
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-brand-400">
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-brand-600">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-gray-600 mb-1">Subcategorías</div>
-                  <div className="text-3xl font-bold text-brand-500">{stats.subcategories}</div>
+                  <div className="text-3xl font-bold text-brand-600">{stats.subcategories}</div>
                 </div>
-                <Box className="w-12 h-12 text-brand-500 opacity-20" />
+                <Box className="w-12 h-12 text-brand-600 opacity-20" />
               </div>
             </div>
             <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
@@ -767,7 +767,7 @@ export const CategoriesTreeView: React.FC = () => {
                 disabled={isExporting || stats.categories === 0}
                 className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2 ${
                   exportSuccess 
-                    ? 'bg-brand-500 text-white shadow-lg' 
+                    ? 'bg-brand-600 text-white shadow-lg' 
                     : isExporting 
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-gray-700 hover:bg-gray-800 text-white hover:shadow-lg'
@@ -856,7 +856,7 @@ export const CategoriesTreeView: React.FC = () => {
                     <div className="flex items-center gap-2">
                       {selectedNode.is_active ? (
                         <>
-                          <CheckCircle className="w-4 h-4 text-brand-400" />
+                          <CheckCircle className="w-4 h-4 text-brand-600" />
                           <span className="text-brand-600 font-medium">Activo</span>
                         </>
                       ) : (
@@ -911,7 +911,7 @@ export const CategoriesTreeView: React.FC = () => {
                     <span className="text-gray-700">Categoría</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-brand-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-brand-600"></div>
                     <span className="text-gray-700">Subcategoría</span>
                   </div>
                   <div className="flex items-center gap-2">

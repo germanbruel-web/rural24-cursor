@@ -126,7 +126,7 @@ export function ImportTemplateModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por nombre, categoría o descripción..."
-              className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 transition-all"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-100 transition-all"
             />
           </div>
         </div>
@@ -135,7 +135,7 @@ export function ImportTemplateModal({
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 text-brand-400 animate-spin" />
+              <Loader2 className="w-8 h-8 text-brand-600 animate-spin" />
               <p className="ml-3 text-gray-600">Cargando templates...</p>
             </div>
           ) : filteredTemplates.length === 0 ? (
@@ -158,7 +158,7 @@ export function ImportTemplateModal({
                     onClick={() => setSelectedTemplateId(template.id)}
                     className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
                       isSelected
-                        ? 'border-brand-400 bg-brand-50 shadow-md'
+                        ? 'border-brand-600 bg-brand-50 shadow-md'
                         : 'border-gray-200 hover:border-green-400 hover:bg-brand-50'
                     }`}
                   >
@@ -169,7 +169,7 @@ export function ImportTemplateModal({
                             {template.name}
                           </h3>
                           {isSelected && (
-                            <div className="w-6 h-6 bg-brand-400 rounded-full flex items-center justify-center">
+                            <div className="w-6 h-6 bg-brand-600 rounded-full flex items-center justify-center">
                               <Check className="w-4 h-4 text-white" />
                             </div>
                           )}

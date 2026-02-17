@@ -67,7 +67,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
   if (loading || !credits || !config) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-brand-600 animate-spin" />
       </div>
     );
   }
@@ -77,7 +77,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
       {/* ============================================
           HEADER CON BALANCE
           ============================================ */}
-      <div className="bg-gradient-to-br from-brand-500 to-emerald-600 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
+      <div className="bg-gradient-to-br from-brand-600 to-emerald-600 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <p className="text-brand-100 text-xs sm:text-sm mb-2 flex items-center gap-2">
@@ -114,7 +114,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
           ============================================ */}
       <section className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100">
         <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-          <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 text-brand-500" />
+          <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 text-brand-600" />
           Comprar Créditos
         </h3>
 
@@ -130,16 +130,16 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
                 onClick={() => setShowBuyCreditsModal(true)}
                 className={`p-3 sm:p-6 rounded-xl border-2 transition-all text-center ${
                   isRecommended
-                    ? 'border-brand-500 bg-brand-50 shadow-lg scale-100 hover:scale-105'
+                    ? 'border-brand-600 bg-brand-50 shadow-lg scale-100 hover:scale-105'
                     : 'border-gray-200 bg-white hover:border-green-300 hover:shadow-md'
                 }`}
               >
                 {isRecommended && (
-                  <div className="text-xs sm:text-sm font-bold text-brand-500 mb-1">
+                  <div className="text-xs sm:text-sm font-bold text-brand-600 mb-1">
                     ⭐ MEJOR
                   </div>
                 )}
-                <div className="text-2xl sm:text-4xl font-black text-brand-500 mb-1">
+                <div className="text-2xl sm:text-4xl font-black text-brand-600 mb-1">
                   {qty}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-500 mb-2">
@@ -206,7 +206,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
               >
                 <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                   {tx.type === 'purchase' && (
-                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500 flex-shrink-0" />
+                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-brand-600 flex-shrink-0" />
                   )}
                   {tx.type === 'spend' && (
                     <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 flex-shrink-0" />
@@ -229,7 +229,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
                 </div>
 
                 <div className="text-right flex-shrink-0">
-                  <p className={`font-bold ${tx.amount > 0 ? 'text-brand-500' : 'text-red-600'}`}>
+                  <p className={`font-bold ${tx.amount > 0 ? 'text-brand-600' : 'text-red-600'}`}>
                     {tx.amount > 0 ? '+' : ''}{tx.amount}
                   </p>
                   <p className="text-xs text-gray-500">
