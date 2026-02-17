@@ -7,9 +7,14 @@ const nextConfig = {
   // Turbopack config (Next.js 16+ usa Turbopack por defecto)
   turbopack: {},
 
-  // Output standalone para producción (optimiza cold starts en Render)
-  // Solo activar en build, no en dev (agrega overhead al compilador)
-  ...(process.env.NODE_ENV === 'production' ? { output: 'standalone' } : {}),
+  // outputFileTracingRoot: apunta al root del monorepo para que Next.js
+  // resuelva correctamente las dependencias en npm workspaces.
+  // Sin esto, Next.js detecta múltiples lockfiles y puede inferir mal el root.
+  outputFileTracingRoot: require('path').join(__dirname, '..'),
+
+  // NOTA: NO usar output: 'standalone' con `next start`.
+  // Next.js 16 advierte: "next start does not work with output: standalone".
+  // Si se necesita standalone, cambiar startCommand a: node .next/standalone/server.js
 
   // TypeScript: ignorar errores de build temporalmente
   // TODO: Generar tipos de Supabase y remover esto

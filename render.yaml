@@ -22,7 +22,7 @@ services:
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: CRON_SECRET
-        generateValue: true  # Genera secret automáticamente
+        generateValue: true  # ⚠️ IMPORTANTE: verificar que existe en Dashboard de Render
     healthCheckPath: /api/health
 
   # Frontend (Vite)
@@ -39,47 +39,31 @@ services:
       - key: VITE_SUPABASE_ANON_KEY
         sync: false
       - key: VITE_BACKEND_URL
-        value: https://rural24-backend.onrender.com
+        value: https://rural24.onrender.com
 
 # ============================================================================
-# CRON JOBS (Plan Free - 1 job gratis)
 # ============================================================================
-# Ejecuta activate_pending_featured_ads() cada hora
-# Limpia avisos expirados y activa los pendientes
-
-jobs:
-  - type: cron
-    name: featured-ads-cleanup
-    plan: free
-    schedule: "0 * * * *"  # Cada hora en punto (formato cron)
-    buildCommand: echo "Cron job preparado"
-    startCommand: >
-      curl -X POST https://rural24-backend.onrender.com/api/featured-ads/cron
-      -H "X-Cron-Secret: ${CRON_SECRET}"
-      -H "Content-Type: application/json"
-      --connect-timeout 60
-      --max-time 120
-      --retry 2
-      --retry-delay 10
-      -f -s -o /dev/null -w "HTTP %{http_code}"
-    envVars:
-      - key: CRON_SECRET
-        fromService:
-          name: rural24-backend
-          type: web
-          envVarKey: CRON_SECRET
-
+# CRON JOBS
 # ============================================================================
-# ALTERNATIVA: Si no funciona el cron job, usar external cron
-# ============================================================================
-# Opción 1: GitHub Actions (gratis, ilimitado)
-#   - Crear .github/workflows/cron-featured.yml
-#   - Llamar al endpoint cada hora
+# ⚠️ Render free tier NO soporta cron jobs (requiere plan pago).
+# El cron se ejecuta via GitHub Actions: .github/workflows/cron-featured-ads.yml
+# 
+# Si se upgrade a plan pago, descomentar:
 #
-# Opción 2: cron-job.org (gratis, hasta 50 jobs)
-#   - URL: https://rural24-backend.onrender.com/api/featured-ads/cron
-#   - Headers: X-Cron-Secret: tu_secret_generado
-#   - Schedule: 0 * * * * (cada hora)
-#
-# Opción 3: EasyCron (gratis, 100 ejecuciones/día)
-#   - Por si Render Cron no está disponible en plan Free actual
+# jobs:
+#   - type: cron
+#     name: featured-ads-cleanup
+#     schedule: "0 * * * *"
+#     buildCommand: echo "Cron job preparado"
+#     startCommand: >
+#       curl -X POST https://rural24.onrender.com/api/featured-ads/cron
+#       -H "X-Cron-Secret: ${CRON_SECRET}"
+#       -H "Content-Type: application/json"
+#       --connect-timeout 60 --max-time 120 --retry 2 --retry-delay 10
+#       -f -s -o /dev/null -w "HTTP %{http_code}"
+#     envVars:
+#       - key: CRON_SECRET
+#         fromService:
+#           name: rural24-backend
+#           type: web
+#           envVarKey: CRON_SECRET

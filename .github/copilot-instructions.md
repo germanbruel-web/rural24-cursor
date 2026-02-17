@@ -85,6 +85,12 @@ Se eliminó `'featured-queue'` del `Page` type pero no se agregó en `isProtecte
 ### 3. Asumir estructura de tabla sin verificar (Feb 2026)
 Se confundieron columnas entre `featured_ads` y `featured_ads_queue` múltiples veces porque se asumió la estructura sin consultar `information_schema.columns`. **Regla: SIEMPRE verificar con SQL antes de operar.**
 
+### 4. output: standalone + next start = 404 total (Feb 2026)
+Next.js 16 con `output: 'standalone'` en `next.config.js` y `next start` como startCommand causa 404 en TODAS las rutas. Next.js lo advierte: `"next start" does not work with "output: standalone"`. Se debe usar `next start` SIN standalone, o cambiar startCommand a `node .next/standalone/server.js`. **Regla: NUNCA combinar `output: standalone` con `next start`.**
+
+### 5. URL de servicio Render no es {name}.onrender.com (Feb 2026)
+El servicio `rural24-backend` en render.yaml tiene URL real `rural24.onrender.com`, no `rural24-backend.onrender.com`. El cron job apuntaba a la URL incorrecta. **Regla: SIEMPRE verificar la URL real en el Dashboard de Render antes de configurar endpoints.**
+
 ---
 
 ## FLUJO DE TRABAJO

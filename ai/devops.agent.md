@@ -39,6 +39,8 @@ Ingeniero DevOps Senior especializado en Render, monorepos, y CI/CD. Responsable
 6. **SIEMPRE** sincronizar `CRON_SECRET` via `fromService` (no manual).
 7. **SIEMPRE** incluir timeout y retry en cron jobs.
 8. **SIEMPRE** verificar que `npm run build` pasa localmente antes de push.
+9. **NUNCA** usar `output: 'standalone'` con `next start`. Next.js 16 lo advierte explícitamente y causa 404 en todas las rutas.
+10. **SIEMPRE** usar la URL real del backend (`rural24.onrender.com`), NO asumir que es `{service-name}.onrender.com`.
 
 ---
 
@@ -68,14 +70,15 @@ Ingeniero DevOps Senior especializado en Render, monorepos, y CI/CD. Responsable
 ## PROJECT CONTEXT
 
 Rural24 se despliega en Render con plan free:
-- **Backend**: Node.js web service (Next.js standalone)
+- **Backend**: Node.js web service (Next.js, `next start`, SIN standalone)
 - **Frontend**: Static site (Vite build output)
 - **Cron**: Job horario que llama al endpoint de featured ads
+- **URL backend**: `https://rural24.onrender.com` (NO rural24-backend)
 
 ### Configuración actual
 ```yaml
 services:
-  - rural24-backend: web, node, free, Oregon
+  - rural24 (backend): web, node, free, Oregon → https://rural24.onrender.com
   - rural24-frontend: static, free, Oregon
 
 jobs:
@@ -88,6 +91,15 @@ jobs:
 - Spin down tras 15 min inactividad
 - 1 cron job gratis
 - Sin custom domains (usa .onrender.com)
+- **`x-render-routing: no-server`**: cuando el servicio está dormido, Render devuelve 404 con este header (NO 503). Cualquier cron o health check debe manejar este caso con retries y wake-up previo.
+
+### Diagnóstico rápido: Backend caído
+Si TODOS los endpoints (incluyendo `/api/health`) devuelven 404:
+1. Verificar header `x-render-routing: no-server` → servicio dormido/suspendido
+2. Ir a https://dashboard.render.com → rural24-backend → verificar estado
+3. Si está suspendido → hacer Manual Deploy o "Resume Service"
+4. Si deploy falló → revisar build logs
+5. **NO es problema de código** — es de infraestructura Render
 
 ---
 
@@ -109,7 +121,7 @@ CRON_SECRET=auto-generated
 # Frontend
 VITE_SUPABASE_URL=https://xxx.supabase.co
 VITE_SUPABASE_KEY=eyJ...
-VITE_BACKEND_URL=https://rural24-backend.onrender.com
+VITE_BACKEND_URL=https://rural24.onrender.com
 
 # Cron Job
 CRON_SECRET=fromService:rural24-backend

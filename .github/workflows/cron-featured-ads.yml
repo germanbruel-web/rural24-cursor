@@ -30,13 +30,71 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      # ================================================================
+      # Paso 1: Wake up del backend (Render free tier duerme tras 15min)
+      # ================================================================
+      - name: Wake up Render backend (cold start ~30-50s)
+        run: |
+          echo "⏳ Despertando backend (Render free tier cold start)..."
+          
+          # Primer intento: despertar el servidor con health check
+          # Render devuelve x-render-routing: no-server si está dormido
+          for attempt in 1 2 3; do
+            echo "  🔄 Intento wake-up $attempt/3..."
+            
+            wake_response=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 10 \
+              --max-time 90 \
+              https://rural24.onrender.com/api/health)
+            
+            echo "  📡 Health check response: HTTP $wake_response"
+            
+            if [ "$wake_response" -eq 200 ]; then
+              echo "  ✅ Backend despierto y healthy!"
+              break
+            elif [ "$wake_response" -eq 404 ]; then
+              echo "  💤 Servidor aún dormido (404 = no-server), esperando..."
+              sleep 30
+            else
+              echo "  ⚠️ Respuesta inesperada ($wake_response), esperando..."
+              sleep 15
+            fi
+          done
+          
+          # Verificar que despertó
+          final_check=$(curl -s -o /dev/null -w "%{http_code}" \
+            --connect-timeout 10 \
+            --max-time 60 \
+            https://rural24.onrender.com/api/health)
+          
+          if [ "$final_check" -ne 200 ]; then
+            echo "⚠️ Backend no respondió healthy (HTTP $final_check). Intentando cron de todos modos..."
+          fi
+
+      # ================================================================
+      # Paso 2: Ejecutar el cron de featured ads
+      # ================================================================
       - name: Activate pending and expire old featured ads
         run: |
           echo "🚀 Ejecutando featured ads cleanup..."
           
-          response=$(curl -X POST https://rural24-backend.onrender.com/api/featured-ads/cron \
-            -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}" \
+          # Validar que CRON_SECRET está configurado
+          if [ -z "$CRON_SECRET" ]; then
+            echo "❌ ERROR: CRON_SECRET no está configurado en GitHub Secrets"
+            echo "👉 Ir a: GitHub Repo → Settings → Secrets → Actions → New secret"
+            echo "👉 Nombre: CRON_SECRET"
+            echo "👉 Valor: copiarlo desde Render Dashboard → rural24-backend → Environment"
+            exit 1
+          fi
+          
+          response=$(curl -X POST https://rural24.onrender.com/api/featured-ads/cron \
+            -H "X-Cron-Secret: $CRON_SECRET" \
             -H "Content-Type: application/json" \
+            --connect-timeout 30 \
+            --max-time 120 \
+            --retry 2 \
+            --retry-delay 15 \
+            --retry-all-errors \
             -w "\nHTTP_STATUS:%{http_code}" \
             -s)
           
@@ -49,10 +107,21 @@ jobs:
           if [ "$http_status" -eq 200 ] || [ "$http_status" -eq 201 ]; then
             echo "✅ Cron ejecutado exitosamente"
             exit 0
+          elif [ "$http_status" -eq 401 ]; then
+            echo "❌ Error 401: CRON_SECRET inválido o no coincide con Render"
+            echo "👉 Verificar que el secret en GitHub Actions coincide con el de Render"
+            exit 1
+          elif [ "$http_status" -eq 404 ]; then
+            echo "❌ Error 404: Backend no está corriendo (Render free tier suspendido?)"
+            echo "👉 Verificar en https://dashboard.render.com que rural24-backend esté activo"
+            echo "👉 Header x-render-routing: no-server = el servicio está dormido/suspendido"
+            exit 1
           else
             echo "❌ Error en cron (HTTP $http_status)"
             exit 1
           fi
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
       
       - name: Log execution time
         if: always()
