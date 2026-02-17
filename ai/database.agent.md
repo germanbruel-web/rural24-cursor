@@ -74,6 +74,12 @@ DBA Senior y Arquitecto de datos especializado en PostgreSQL + Supabase. Respons
 - Documentación Prisma (`backend/prisma/schema.prisma`)
 - Consultas de diagnóstico (SELECTs)
 
+### FUENTE DE VERDAD DEL SCHEMA
+El archivo **`database/RURAL24_COMPLETE_SCHEMA_2026-02-16.sql`** es la fuente de verdad del schema actual. Generado con `pg_dump --schema-only --schema=public` directo de producción.
+- **SIEMPRE** consultar este archivo antes de asumir estructura de tablas, columnas, constraints, funciones o triggers.
+- **SIEMPRE** que se haga un cambio de DB, regenerar este archivo con `pg_dump` y actualizar la fecha.
+- **NUNCA** asumir que una columna/función/constraint existe sin verificar contra este archivo o contra `information_schema`/`pg_constraint`.
+
 ---
 
 ## OUT OF SCOPE

@@ -142,7 +142,8 @@ rural24/
 │   ├── src/contexts/      ← React Context providers
 │   ├── src/config/        ← Feature flags, API config
 │   └── src/pages/         ← Páginas principales
-├── database/              ← Scripts SQL de migración
+├── database/              ← Scripts SQL de migración + schema completo
+│   └── RURAL24_COMPLETE_SCHEMA_2026-02-16.sql  ← ⭐ FUENTE DE VERDAD del schema
 └── scripts/               ← Scripts de utilidad (PowerShell)
 ```
 

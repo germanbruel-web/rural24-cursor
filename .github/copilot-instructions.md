@@ -71,6 +71,7 @@ Antes de cada modificación, verificar mentalmente:
 | `ai/devops.agent.md` | Render, cron, env vars, deploy | Cambios infra |
 | `ai/performance.agent.md` | Cache, bundle, queries | Optimizaciones |
 | `ai/uxui.agent.md` | Flujos, estados UI, mobile-first | Diseño UX |
+| `database/RURAL24_COMPLETE_SCHEMA_2026-02-16.sql` | **FUENTE DE VERDAD** del schema DB | Antes de tocar DB, tablas, columnas, funciones |
 
 ---
 
