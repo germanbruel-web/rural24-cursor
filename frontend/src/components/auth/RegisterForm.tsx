@@ -13,6 +13,7 @@
 
 import { useState } from 'react';
 import { Mail, Lock, User, AlertCircle, Building2, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { useSiteSetting } from '../../hooks/useSiteSetting';
 import { registerUser, type RegisterUserInput } from '../../services/authService';
 import { signInWithGoogle, signInWithFacebook } from '../../services/socialAuthService';
 import { Button } from '../atoms/Button';
@@ -35,6 +36,7 @@ const ACTIVITY_OPTIONS: { value: Activity; label: string }[] = [
 ];
 
 export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: RegisterFormProps) {
+  const headerLogo = useSiteSetting('header_logo', '/images/logos/rural24-dark.webp');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -180,7 +182,7 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
           </button>
         )}
         <img 
-          src="/images/logos/rural24-dark.webp" 
+          src={headerLogo} 
           alt="RURAL24" 
           className="h-7 w-auto mx-auto mb-2" 
         />

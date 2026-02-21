@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSiteSetting } from '../../hooks/useSiteSetting';
 import { getMenuItems } from '../../utils/rolePermissions';
 import { navigateTo } from '../../hooks/useNavigate';
 import {
@@ -55,6 +56,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   onNavigate,
 }) => {
   const { profile, isAdmin, signOut } = useAuth();
+  const headerLogo = useSiteSetting('header_logo', '/images/logos/rural24-dark.webp');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -155,7 +157,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {!sidebarCollapsed && (
             <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
               <img 
-                src="/images/logos/rural24-dark.webp" 
+                src={headerLogo} 
                 alt="RURAL24" 
                 className="h-8 w-auto"
               />

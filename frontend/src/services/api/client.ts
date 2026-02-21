@@ -3,6 +3,8 @@
  * Cliente HTTP para comunicarse con el backend Next.js
  */
 
+import { supabase } from '@/services/supabaseClient';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface ApiResponse<T> {
@@ -41,11 +43,18 @@ async function fetchApi<T>(
 ): Promise<T> {
   const url = `${API_URL}${endpoint}`;
 
+  const { data: { session } } = await supabase.auth.getSession();
+  const authHeaders: Record<string, string> = {};
+  if (session?.access_token) {
+    authHeaders['Authorization'] = `Bearer ${session.access_token}`;
+  }
+
   try {
     const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...authHeaders,
         ...options.headers,
       },
     });

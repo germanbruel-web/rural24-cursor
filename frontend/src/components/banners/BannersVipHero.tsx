@@ -1,7 +1,7 @@
 // BannersVipHero.tsx
 // Banner VIP en Hero - Usa el nuevo sistema banners_clean
-// Desktop: Banner 1200x200, cambia en hover de categorías, muestra 1 random al cargar
-// Mobile: Carrusel automático 648x100 con TODOS los banners activos
+// Desktop/Notebook: Banner 1100x300, cambia en hover de categorías, muestra 1 random al cargar
+// Tablet/Mobile: Carrusel automático 480x100 con TODOS los banners activos
 
 import { useEffect, useState, useRef } from 'react';
 import { getHeroVIPBanners, incrementBannerImpression, incrementBannerClick } from '../../services/bannersCleanService';
@@ -38,9 +38,9 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
   const impressionsRecorded = useRef<Set<string>>(new Set());
   const hasLoadedInitial = useRef(false);
 
-  // Detectar mobile
+  // Detectar mobile/tablet (< 1024 usa versión mobile 480x100)
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -135,7 +135,7 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
   // Skeleton animado mientras carga
   if (loading) {
     return (
-      <div className={`w-full rounded-lg overflow-hidden relative bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse ${isMobile ? 'h-[100px]' : 'h-[200px]'}`}>
+      <div className={`w-full overflow-hidden relative bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse ${isMobile ? 'h-[100px]' : 'h-[300px]'}`}>
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skeleton-shimmer" />
         <style>{`
           @keyframes shimmer {
@@ -161,12 +161,12 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
 
     return (
       <div className="w-full">
-        {/* Contenedor de imagen con bordes redondeados */}
-        <div className="relative w-full overflow-hidden rounded shadow-lg bg-gray-100">
-          {/* Contenedor del carrusel con aspect ratio fijo */}
+        {/* Contenedor de imagen */}
+        <div className="relative w-full overflow-hidden bg-gray-100">
+          {/* Contenedor del carrusel con aspect ratio 480:100 = 20.83% */}
           <div 
             className="relative w-full"
-            style={{ paddingBottom: '22%' }} // Aspect ratio aumentado para mayor altura visual
+            style={{ paddingBottom: '20.83%' }} // Aspect ratio 480x100
           >
             {/* Track del carrusel */}
             <div 
@@ -184,10 +184,10 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
                   aria-hidden={idx !== mobileIndex}
                 >
                   <img
-                    src={optimizeCloudinaryUrl(banner.mobile_image_url!, { width: 650, quality: 'auto:good' })}
+                    src={optimizeCloudinaryUrl(banner.mobile_image_url!, { width: 480, quality: 'auto:good' })}
                     alt={banner.client_name}
                     loading={idx === 0 ? 'eager' : 'lazy'}
-                    className="absolute inset-0 w-full h-full object-cover object-center"
+                    className="absolute inset-0 w-full h-full object-contain object-center"
                     style={{ 
                       imageRendering: 'auto',
                       WebkitBackfaceVisibility: 'hidden',
@@ -228,7 +228,7 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
   if (!desktopBanner?.desktop_image_url) return null;
 
   return (
-    <div className="relative w-full overflow-hidden shadow-lg rounded-lg group">
+    <div className="relative w-full max-w-[1100px] mx-auto overflow-hidden">
       <a
         href={desktopBanner.link_url || '#'}
         target={desktopBanner.link_url ? '_blank' : '_self'}
@@ -237,9 +237,11 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
         onClick={() => handleClick(desktopBanner)}
       >
         <img
-          src={optimizeCloudinaryUrl(desktopBanner.desktop_image_url, { width: 1200, quality: 'auto:good' })}
+          src={optimizeCloudinaryUrl(desktopBanner.desktop_image_url, { width: 1100, quality: 'auto:good' })}
           alt={desktopBanner.client_name}
-          className="w-full h-[200px] object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          className="w-full h-auto object-contain"
+          width={1100}
+          height={300}
         />
       </a>
     </div>

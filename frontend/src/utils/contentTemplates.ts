@@ -11,6 +11,10 @@ const TEMPLATES_STORAGE_KEY = 'rural24_templates';
 // Clave para recordar qué variante se mostró último
 const LAST_INDEX_KEY = 'rural24_template_index';
 
+// Versión de templates: incrementar cuando se actualicen DEFAULT_TEMPLATES
+const TEMPLATES_VERSION = 2;
+const VERSION_KEY = 'rural24_templates_version';
+
 // ====================================================================
 // TIPOS
 // ====================================================================
@@ -169,10 +173,18 @@ const DEFAULT_TEMPLATES: CategoryTemplates[] = [
  */
 export function getTemplates(): CategoryTemplates[] {
   try {
+    const storedVersion = localStorage.getItem(VERSION_KEY);
     const stored = localStorage.getItem(TEMPLATES_STORAGE_KEY);
-    if (stored) {
+
+    if (stored && storedVersion === String(TEMPLATES_VERSION)) {
       return JSON.parse(stored);
     }
+
+    // Versión nueva o sin datos → usar defaults y guardar
+    const defaults = [...DEFAULT_TEMPLATES];
+    saveTemplates(defaults);
+    localStorage.setItem(VERSION_KEY, String(TEMPLATES_VERSION));
+    return defaults;
   } catch (e) {
     console.warn('Error loading templates:', e);
   }
@@ -246,19 +258,27 @@ function getNextIndex(categorySlug: string, totalTemplates: number): number {
  */
 function generateTitle(ctx: ContentContext): string {
   const parts: string[] = [];
-  
+
   // Campos principales para el título
   if (ctx.marca) parts.push(ctx.marca);
   if (ctx.modelo) parts.push(ctx.modelo);
   if (ctx.año) parts.push(ctx.año);
   if (ctx.condicion) parts.push(ctx.condicion);
-  
+
   // Si no hay datos, usar subcategoría
   if (parts.length === 0) {
-    return ctx.subcategoria || 'Nuevo aviso';
+    const base = ctx.subcategoria || 'Nuevo aviso';
+    if (base.length < 10 && ctx.categoria) {
+      return `${base} - ${ctx.categoria}`;
+    }
+    return base.length < 10 ? `${base} en venta` : base;
   }
-  
-  return parts.join(' - ');
+
+  let title = parts.join(' - ');
+  if (title.length < 10 && ctx.subcategoria) {
+    title = `${ctx.subcategoria} ${title}`;
+  }
+  return title;
 }
 
 /**

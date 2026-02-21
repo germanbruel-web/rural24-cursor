@@ -14,7 +14,7 @@ export const DynamicBanner: React.FC<DynamicBannerProps> = ({ banner, position, 
 
   // Dimensiones según el tipo de banner
   const dimensions = {
-    homepage_search: 'max-w-[1200px] mx-auto', // 1200x200
+    homepage_search: 'max-w-[1100px] mx-auto', // 1100x300
     homepage_carousel: 'max-w-[648px]',        // 648x100
     results_intercalated: 'max-w-[648px]',     // 648x100
     results_lateral: 'max-w-full',             // Variable

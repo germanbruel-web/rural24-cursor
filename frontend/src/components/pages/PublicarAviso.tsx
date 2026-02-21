@@ -128,6 +128,8 @@ export default function PublicarAviso() {
   const [editAdId, setEditAdId] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   // Step 1: Categorías
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -370,9 +372,9 @@ export default function PublicarAviso() {
     setDraftId(draft.draftId);
     setCurrentStep(draft.currentStep);
     
-    // Step 1
-    setSelectedCategory(draft.selectedCategory);
-    setSelectedSubcategory(draft.selectedSubcategory);
+    // Step 1 - validar UUIDs del draft
+    setSelectedCategory(UUID_REGEX.test(draft.selectedCategory) ? draft.selectedCategory : '');
+    setSelectedSubcategory(UUID_REGEX.test(draft.selectedSubcategory) ? draft.selectedSubcategory : '');
     
     // Step 2
     setAttributeValues(draft.attributeValues);
@@ -685,7 +687,17 @@ export default function PublicarAviso() {
         notify.error('Completa título y descripción');
         return;
       }
-      
+
+      if (title.trim().length < 10) {
+        notify.error('El título debe tener al menos 10 caracteres');
+        return;
+      }
+
+      if (description.trim().length < 20) {
+        notify.error('La descripción debe tener al menos 20 caracteres');
+        return;
+      }
+
       // 🔥 VALIDACIÓN ANTI-FRAUDE: Bloquear avance si hay errores
       if (titleError || descriptionError) {
         notify.error('Corrige los errores en título o descripción antes de continuar');
@@ -844,7 +856,14 @@ export default function PublicarAviso() {
           notify.error('Error interno: modo de edición inconsistente. Recarga la página.');
           return;
         }
-        
+
+        // Validar UUIDs antes de enviar
+        if (!UUID_REGEX.test(selectedCategory) || !UUID_REGEX.test(selectedSubcategory)) {
+          notify.error('Categoría o subcategoría inválida. Por favor seleccioná de nuevo.');
+          setCurrentStep(1);
+          return;
+        }
+
         // Usar provincia/localidad del vendedor si no se especificó
         const finalProvince = province || profile.province || null;
         const finalCity = locality || profile.location || null;
@@ -892,6 +911,7 @@ export default function PublicarAviso() {
 
     } catch (error: any) {
       console.error('Error guardando aviso:', error);
+      if (error?.fields) console.error('❌ Campos inválidos:', JSON.stringify(error.fields, null, 2));
       notify.error(error.message || 'Error guardando aviso');
     } finally {
       setSubmitting(false);

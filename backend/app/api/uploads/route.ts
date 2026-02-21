@@ -152,8 +152,9 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 7. VALIDAR ASPECT RATIO (solo para ads, NO para banners)
-    if (folder !== 'banners') {
+    // 7. VALIDAR ASPECT RATIO (solo para ads, NO para banners/logos/footer)
+    const skipAspectRatio = ['banners', 'logos', 'footer'].includes(folder);
+    if (!skipAspectRatio) {
       try {
         const metadata = await sharp(buffer).metadata();
         const { width = 0, height = 0 } = metadata;
@@ -185,7 +186,7 @@ export async function POST(request: NextRequest) {
         );
       }
     } else {
-      logger.debug(`[Uploads] Banner folder — skipping aspect ratio validation`);
+      logger.debug(`[Uploads] Folder "${folder}" — skipping aspect ratio validation`);
     }
 
     // 8. UPLOAD A CLOUDINARY

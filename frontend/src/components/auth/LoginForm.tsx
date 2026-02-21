@@ -6,6 +6,7 @@ import { Button } from '../atoms/Button';
 import { FormField } from '../molecules/FormField';
 import { socialAuthService } from '../../services/socialAuthService';
 import { setJustLoggedIn } from '../../utils/profileCompleteness';
+import { useSiteSetting } from '../../hooks/useSiteSetting';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -16,6 +17,7 @@ interface LoginFormProps {
 
 export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSwitchToReset }: LoginFormProps) {
   const { signIn, user } = useAuth();
+  const headerLogo = useSiteSetting('header_logo', '/images/logos/rural24-dark.webp');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -90,7 +92,7 @@ export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSw
           </button>
         )}
         <img 
-          src="/images/logos/rural24-dark.webp" 
+          src={headerLogo} 
           alt="RURAL24" 
           className="h-7 w-auto mx-auto mb-2" 
         />

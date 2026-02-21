@@ -78,7 +78,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* Hero con título, banner y botones */}
       <HeroWithCarousel 
         bannerSlot={
-          <div className="max-w-[1200px] mx-auto">
+          <div className="max-w-[1100px] mx-auto">
             <BannersVipHero category={hoveredCategory || undefined} />
           </div>
         }

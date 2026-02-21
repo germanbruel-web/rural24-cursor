@@ -18,6 +18,35 @@
   --color-brand-800: 12 90 28;
   --color-brand-900: 9 69 21;
   --color-brand-950: 27 47 35;     /* Headings dark green */
+
+  /* NATURE COLORS — Colores Secundarios (Agricultura & Naturaleza) */
+  /* Greens */
+  --color-nature-mint: 168 224 204;       /* #A8E0CC - Eco-Friendly Mint */
+  --color-nature-lime: 164 184 114;       /* #A4B872 - Eco Lime Sprout */
+  --color-nature-crop: 108 207 103;       /* #6CCF67 - Young Crop Green */
+  --color-nature-meadow: 79 165 77;       /* #4FA54D - Organic Meadow Green */
+  --color-nature-leaf: 76 175 80;         /* #4CAF50 - Fresh Leaf Green */
+  --color-nature-moss: 114 140 79;        /* #728C4F - Natural Moss Green */
+  --color-nature-canopy: 63 123 63;       /* #3F7B3F - Forest Canopy Green */
+  --color-nature-evergreen: 15 83 36;     /* #0F5324 - Deep Evergreen */
+  /* Sky & Earth */
+  --color-nature-air: 246 249 243;        /* #F6F9F3 - Clean Air White */
+  --color-nature-wheat: 232 210 99;       /* #E8D263 - Wheat Straw Beige */
+  --color-nature-corn: 244 208 88;        /* #F4D058 - Cornfield Gold */
+  --color-nature-harvest: 242 201 76;     /* #F2C94C - Golden Harvest Yellow */
+  --color-nature-sky: 132 200 244;        /* #84C8F4 - Blue Sky Horizon */
+  --color-nature-daylight: 133 175 245;   /* #85AFF5 - Clear Daylight Blue */
+  --color-nature-water: 93 175 245;       /* #5DAFF5 - Pure Water Blue */
+  --color-nature-teal: 44 157 138;        /* #2C9D8A - River Stream Teal */
+  /* Earth & Brown */
+  --color-nature-gray: 184 168 160;       /* #B8A8A0 - Eco Neutral Gray */
+  --color-nature-clay: 169 127 111;       /* #A97F6F - Clay Earth Brown */
+  --color-nature-stem: 125 97 56;         /* #7D6138 - Plant Stem Brown */
+  --color-nature-soil: 139 106 54;        /* #8B6A36 - Earth Soil Brown */
+  --color-nature-barn: 168 50 35;         /* #A83223 - Farm Barn Red */
+  --color-nature-brick: 126 54 54;        /* #7E3636 - Rustic Brick Red */
+  --color-nature-farm: 106 78 48;         /* #6A4E30 - Fertile Farm Soil */
+  --color-nature-compost: 60 42 24;       /* #3C2A18 - Compost Dark Brown */
   
   /* SECONDARY COLORS (Tierra/Amber) */
   --color-secondary-50: 254 243 199;
@@ -392,3 +421,82 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ====================================================================
+   NATURE COLORS — Utilidades CSS (Colores Secundarios Agricultura)
+   ==================================================================== */
+/* Backgrounds */
+.bg-nature-mint { background-color: rgb(var(--color-nature-mint)); }
+.bg-nature-lime { background-color: rgb(var(--color-nature-lime)); }
+.bg-nature-crop { background-color: rgb(var(--color-nature-crop)); }
+.bg-nature-meadow { background-color: rgb(var(--color-nature-meadow)); }
+.bg-nature-leaf { background-color: rgb(var(--color-nature-leaf)); }
+.bg-nature-moss { background-color: rgb(var(--color-nature-moss)); }
+.bg-nature-canopy { background-color: rgb(var(--color-nature-canopy)); }
+.bg-nature-evergreen { background-color: rgb(var(--color-nature-evergreen)); }
+.bg-nature-air { background-color: rgb(var(--color-nature-air)); }
+.bg-nature-wheat { background-color: rgb(var(--color-nature-wheat)); }
+.bg-nature-corn { background-color: rgb(var(--color-nature-corn)); }
+.bg-nature-harvest { background-color: rgb(var(--color-nature-harvest)); }
+.bg-nature-sky { background-color: rgb(var(--color-nature-sky)); }
+.bg-nature-daylight { background-color: rgb(var(--color-nature-daylight)); }
+.bg-nature-water { background-color: rgb(var(--color-nature-water)); }
+.bg-nature-teal { background-color: rgb(var(--color-nature-teal)); }
+.bg-nature-gray { background-color: rgb(var(--color-nature-gray)); }
+.bg-nature-clay { background-color: rgb(var(--color-nature-clay)); }
+.bg-nature-stem { background-color: rgb(var(--color-nature-stem)); }
+.bg-nature-soil { background-color: rgb(var(--color-nature-soil)); }
+.bg-nature-barn { background-color: rgb(var(--color-nature-barn)); }
+.bg-nature-brick { background-color: rgb(var(--color-nature-brick)); }
+.bg-nature-farm { background-color: rgb(var(--color-nature-farm)); }
+.bg-nature-compost { background-color: rgb(var(--color-nature-compost)); }
+/* Text */
+.text-nature-mint { color: rgb(var(--color-nature-mint)); }
+.text-nature-lime { color: rgb(var(--color-nature-lime)); }
+.text-nature-crop { color: rgb(var(--color-nature-crop)); }
+.text-nature-meadow { color: rgb(var(--color-nature-meadow)); }
+.text-nature-leaf { color: rgb(var(--color-nature-leaf)); }
+.text-nature-moss { color: rgb(var(--color-nature-moss)); }
+.text-nature-canopy { color: rgb(var(--color-nature-canopy)); }
+.text-nature-evergreen { color: rgb(var(--color-nature-evergreen)); }
+.text-nature-air { color: rgb(var(--color-nature-air)); }
+.text-nature-wheat { color: rgb(var(--color-nature-wheat)); }
+.text-nature-corn { color: rgb(var(--color-nature-corn)); }
+.text-nature-harvest { color: rgb(var(--color-nature-harvest)); }
+.text-nature-sky { color: rgb(var(--color-nature-sky)); }
+.text-nature-daylight { color: rgb(var(--color-nature-daylight)); }
+.text-nature-water { color: rgb(var(--color-nature-water)); }
+.text-nature-teal { color: rgb(var(--color-nature-teal)); }
+.text-nature-gray { color: rgb(var(--color-nature-gray)); }
+.text-nature-clay { color: rgb(var(--color-nature-clay)); }
+.text-nature-stem { color: rgb(var(--color-nature-stem)); }
+.text-nature-soil { color: rgb(var(--color-nature-soil)); }
+.text-nature-barn { color: rgb(var(--color-nature-barn)); }
+.text-nature-brick { color: rgb(var(--color-nature-brick)); }
+.text-nature-farm { color: rgb(var(--color-nature-farm)); }
+.text-nature-compost { color: rgb(var(--color-nature-compost)); }
+/* Borders */
+.border-nature-mint { border-color: rgb(var(--color-nature-mint)); }
+.border-nature-lime { border-color: rgb(var(--color-nature-lime)); }
+.border-nature-crop { border-color: rgb(var(--color-nature-crop)); }
+.border-nature-meadow { border-color: rgb(var(--color-nature-meadow)); }
+.border-nature-leaf { border-color: rgb(var(--color-nature-leaf)); }
+.border-nature-moss { border-color: rgb(var(--color-nature-moss)); }
+.border-nature-canopy { border-color: rgb(var(--color-nature-canopy)); }
+.border-nature-evergreen { border-color: rgb(var(--color-nature-evergreen)); }
+.border-nature-air { border-color: rgb(var(--color-nature-air)); }
+.border-nature-wheat { border-color: rgb(var(--color-nature-wheat)); }
+.border-nature-corn { border-color: rgb(var(--color-nature-corn)); }
+.border-nature-harvest { border-color: rgb(var(--color-nature-harvest)); }
+.border-nature-sky { border-color: rgb(var(--color-nature-sky)); }
+.border-nature-daylight { border-color: rgb(var(--color-nature-daylight)); }
+.border-nature-water { border-color: rgb(var(--color-nature-water)); }
+.border-nature-teal { border-color: rgb(var(--color-nature-teal)); }
+.border-nature-gray { border-color: rgb(var(--color-nature-gray)); }
+.border-nature-clay { border-color: rgb(var(--color-nature-clay)); }
+.border-nature-stem { border-color: rgb(var(--color-nature-stem)); }
+.border-nature-soil { border-color: rgb(var(--color-nature-soil)); }
+.border-nature-barn { border-color: rgb(var(--color-nature-barn)); }
+.border-nature-brick { border-color: rgb(var(--color-nature-brick)); }
+.border-nature-farm { border-color: rgb(var(--color-nature-farm)); }
+.border-nature-compost { border-color: rgb(var(--color-nature-compost)); }

@@ -92,7 +92,7 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
   const hasAnyBackground = hasVideoContent || hasImageContent || hasCarouselContent;
 
   return (
-    <section className="relative bg-white md:bg-black py-6 md:py-28 px-4 overflow-hidden">
+    <section className="relative bg-white md:bg-black py-16 px-4 overflow-hidden">
       {/* ── FONDO: VIDEO (solo desktop) ──────────────────────────── */}
       {hasVideoContent && (
         <div className="hidden md:block absolute inset-0 w-full h-full overflow-hidden">

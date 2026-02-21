@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Sun, Cloud, Wind, Thermometer, Menu, X } from 'lucide-react';
 import { GlobalSearchBar } from './GlobalSearchBar';
+import { useSiteSetting } from '../hooks/useSiteSetting';
 import type { Page } from '../../App';
 
 interface HeaderProps {
@@ -23,8 +24,8 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   
-  // Logo estático para evitar latencia
-  const LOGO_PATH = '/images/logos/rural24-dark.webp';
+  // Logo dinámico desde site_settings (CMS), con fallback estático
+  const LOGO_PATH = useSiteSetting('header_logo', '/images/logos/rural24-dark.webp');
 
   const handleSearch = (query: string) => {
     if (onSearch) {

@@ -63,7 +63,7 @@ const CATEGORIES = [
 ];
 
 const PLACEMENTS = [
-  { value: 'hero_vip' as BannerPlacement, label: 'Hero VIP', desc: '1 por categoría (Desktop 1200x200 + Mobile 480x100)' },
+  { value: 'hero_vip' as BannerPlacement, label: 'Hero VIP', desc: '1 por categoría (Desktop 1100x300 + Mobile 480x100)' },
   { value: 'category_carousel' as BannerPlacement, label: 'Carrusel Categorías', desc: '4 por categoría (650x100 responsive)' },
   { value: 'results_intercalated' as BannerPlacement, label: 'Intercalado Resultados', desc: 'Entre productos cada 8 cards (650x100)' },
   { value: 'results_below_filter' as BannerPlacement, label: 'Debajo del Filtro', desc: 'Sticky bajo filtros (280x250)' }
@@ -183,7 +183,7 @@ export default function BannersCleanPanel() {
     // Validación según tipo de placement
     if (formData.placement === 'hero_vip') {
       if (!formData.desktop_image_url.trim() || !formData.mobile_image_url.trim()) {
-        alert('Hero VIP requiere imagen Desktop (1200x200) y Mobile (480x100)');
+        alert('Hero VIP requiere imagen Desktop (1100x300) y Mobile (480x100)');
         return;
       }
     } else if (formData.placement === 'category_carousel') {
@@ -538,8 +538,8 @@ export default function BannersCleanPanel() {
                       value={formData.desktop_image_url}
                       onChange={(url) => setFormData({ ...formData, desktop_image_url: url })}
                       label="Imagen Desktop *"
-                      requiredWidth={1200}
-                      requiredHeight={200}
+                      requiredWidth={1100}
+                      requiredHeight={300}
                       maxSizeMB={2}
                     />
                     <ImageUploader

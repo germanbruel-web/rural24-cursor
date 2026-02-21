@@ -25,6 +25,7 @@ import { GlobalSearchBar } from '../GlobalSearchBar';
 import { UserMenu } from './UserMenu';
 import { useAuth } from '../../contexts/AuthContext';
 import { canAccessPage } from '../../utils/rolePermissions';
+import { useSiteSetting } from '../../hooks/useSiteSetting';
 import AuthModal from '../auth/AuthModal';
 import type { Page } from '../../../App';
 
@@ -43,8 +44,8 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
   const [isScrolled, setIsScrolled] = useState(false);
   const mobileUserMenuRef = useRef<HTMLDivElement>(null);
 
-  // Logo estático para evitar latencia
-  const LOGO_PATH = '/images/logos/rural24-dark.webp';
+  // Logo dinámico desde site_settings (CMS), con fallback estático
+  const LOGO_PATH = useSiteSetting('header_logo', '/images/logos/rural24-dark.webp');
 
   // Detect scroll para sticky header
   useEffect(() => {

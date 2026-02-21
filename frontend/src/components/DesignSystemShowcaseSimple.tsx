@@ -148,6 +148,147 @@ export function DesignSystemShowcaseSimple() {
               </div>
             </div>
 
+            {/* Nature Colors — Colores Secundarios */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">🌿 Colores Secundarios (Naturaleza)</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Paleta agricultura & naturaleza — uso: <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">bg-nature-mint</code>, <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">text-nature-barn</code>, etc.</p>
+
+              {/* Greens */}
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">Greens</p>
+              <div className="grid grid-cols-4 md:grid-cols-8 gap-3 mb-4">
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-mint border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">mint</p>
+                  <p className="text-[10px] text-center text-gray-400">#A8E0CC</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-lime border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">lime</p>
+                  <p className="text-[10px] text-center text-gray-400">#A4B872</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-crop border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">crop</p>
+                  <p className="text-[10px] text-center text-gray-400">#6CCF67</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-meadow border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">meadow</p>
+                  <p className="text-[10px] text-center text-gray-400">#4FA54D</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-leaf border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">leaf</p>
+                  <p className="text-[10px] text-center text-gray-400">#4CAF50</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-moss border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">moss</p>
+                  <p className="text-[10px] text-center text-gray-400">#728C4F</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-canopy border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">canopy</p>
+                  <p className="text-[10px] text-center text-gray-400">#3F7B3F</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-evergreen border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">evergreen</p>
+                  <p className="text-[10px] text-center text-gray-400">#0F5324</p>
+                </div>
+              </div>
+
+              {/* Sky & Earth */}
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">Sky & Earth</p>
+              <div className="grid grid-cols-4 md:grid-cols-8 gap-3 mb-4">
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-air border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">air</p>
+                  <p className="text-[10px] text-center text-gray-400">#F6F9F3</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-wheat border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">wheat</p>
+                  <p className="text-[10px] text-center text-gray-400">#E8D263</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-corn border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">corn</p>
+                  <p className="text-[10px] text-center text-gray-400">#F4D058</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-harvest border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">harvest</p>
+                  <p className="text-[10px] text-center text-gray-400">#F2C94C</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-sky border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">sky</p>
+                  <p className="text-[10px] text-center text-gray-400">#84C8F4</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-daylight border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">daylight</p>
+                  <p className="text-[10px] text-center text-gray-400">#85AFF5</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-water border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">water</p>
+                  <p className="text-[10px] text-center text-gray-400">#5DAFF5</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-teal border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">teal</p>
+                  <p className="text-[10px] text-center text-gray-400">#2C9D8A</p>
+                </div>
+              </div>
+
+              {/* Earth & Brown */}
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">Earth & Brown</p>
+              <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-gray border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">gray</p>
+                  <p className="text-[10px] text-center text-gray-400">#B8A8A0</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-clay border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">clay</p>
+                  <p className="text-[10px] text-center text-gray-400">#A97F6F</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-stem border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">stem</p>
+                  <p className="text-[10px] text-center text-gray-400">#7D6138</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-soil border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">soil</p>
+                  <p className="text-[10px] text-center text-gray-400">#8B6A36</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-barn border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">barn</p>
+                  <p className="text-[10px] text-center text-gray-400">#A83223</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-brick border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">brick</p>
+                  <p className="text-[10px] text-center text-gray-400">#7E3636</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-farm border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">farm</p>
+                  <p className="text-[10px] text-center text-gray-400">#6A4E30</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-nature-compost border border-gray-300 dark:border-gray-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">compost</p>
+                  <p className="text-[10px] text-center text-gray-400">#3C2A18</p>
+                </div>
+              </div>
+            </div>
+
             {/* Semantic Colors */}
             <div className="grid md:grid-cols-4 gap-6">
               <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">

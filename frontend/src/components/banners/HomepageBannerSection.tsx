@@ -1,5 +1,5 @@
 // HomepageBannerSection.tsx
-// Banner Buscador Dinámico - Posición 1 (1200x200)
+// Banner Buscador Dinámico - Posición 1 (1100x300)
 // Muestra hasta 6 banners rotativos filtrados por categoría
 
 import { useEffect, useState } from 'react';
@@ -40,7 +40,7 @@ export const HomepageBannerSection: React.FC<Props> = ({ category }) => {
 
   if (loading) {
     return (
-      <div className="w-full h-[200px] bg-gray-200 animate-pulse rounded-lg" />
+      <div className="w-full h-[200px] bg-gray-200 animate-pulse" />
     );
   }
 
@@ -51,7 +51,7 @@ export const HomepageBannerSection: React.FC<Props> = ({ category }) => {
   const currentBanner = banners[currentIndex];
 
   return (
-    <div className="relative w-full h-[200px] rounded-lg overflow-hidden shadow-lg group">
+    <div className="relative w-full h-[200px] overflow-hidden shadow-lg group">
       {/* Banner Image */}
       <a
         href={currentBanner.link_url || '#'}
@@ -62,7 +62,7 @@ export const HomepageBannerSection: React.FC<Props> = ({ category }) => {
         <img
           src={currentBanner.image_url}
           alt={currentBanner.title}
-          className="w-full h-full object-cover rounded-lg"
+          className="w-full h-full object-cover"
         />
       </a>
 
