@@ -17,6 +17,7 @@ import type { DynamicAttributeDB } from '../services/v2/attributesService';
 import type { DynamicAttribute } from '../services/catalogService';
 import { normalizeImages, getFirstImage } from '../utils/imageHelpers';
 import { DEFAULT_PLACEHOLDER_IMAGE } from '../constants/defaultImages';
+import { getImageVariant } from '../utils/imageOptimizer';
 import { TEXTS } from '../constants/texts';
 import { formatPrice, formatBoolean } from '../utils/currency';
 import { separateValues, formatAttributeLabel } from '../utils/textProcessing';
@@ -456,7 +457,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                 <>
                   <div className="relative aspect-[16/9] bg-gray-100">
                     <img
-                      src={images[currentImageIndex]?.url || images[currentImageIndex]}
+                      src={getImageVariant(images[currentImageIndex]?.url || images[currentImageIndex], 'original')}
                       alt={ad.title}
                       className="w-full h-full object-cover"
                       onLoad={() => {
@@ -491,7 +492,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                           }`}
                         >
                           <img
-                            src={img?.url || img}
+                            src={getImageVariant(img?.url || img, 'thumb')}
                             alt={`${ad.title} ${idx + 1}`}
                             className="w-full h-full object-cover"
                             onError={(e) => {

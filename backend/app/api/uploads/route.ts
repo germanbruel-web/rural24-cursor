@@ -1,22 +1,22 @@
 /**
  * Uploads API - Cloudinary Proxy con Anti-Bot y Rate Limiting
  * POST /api/uploads
- * 
+ *
  * Protecciones:
  * 1. Rate limiting (10 uploads / 5 min por IP)
  * 2. Validación de tipos MIME (solo imágenes)
  * 3. Honeypot anti-bot
- * 4. Validación aspect ratio (solo horizontales: 16:9, 4:3)
- * 5. Máximo 5 imágenes por request
+ * 4. Máximo 10MB por archivo
+ *
+ * Aspect ratio: NO se valida. Se acepta cualquier proporción.
+ * Cloudinary genera variantes (1:1, 4:3, 16:9) on-the-fly via URL transforms.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter } from '@/infrastructure/rate-limiter';
 import { uploadToCloudinary } from '@/infrastructure/cloudinary.service';
-import { validateImageAspectRatio } from '@/domain/images/service';
 import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 import { logger } from '@/infrastructure/logger';
-import sharp from 'sharp';
 
 // Tipos MIME permitidos (SOLO IMÁGENES)
 const ALLOWED_MIME_TYPES = [
@@ -152,44 +152,7 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 7. VALIDAR ASPECT RATIO (solo para ads, NO para banners/logos/footer)
-    const skipAspectRatio = ['banners', 'logos', 'footer'].includes(folder);
-    if (!skipAspectRatio) {
-      try {
-        const metadata = await sharp(buffer).metadata();
-        const { width = 0, height = 0 } = metadata;
-
-        const aspectValidation = validateImageAspectRatio(width, height, {
-          min: 1.2,  // 6:5 mínimo (casi cuadrado)
-          max: 2.5   // 21:9 máximo (ultra wide)
-        });
-
-        if (!aspectValidation.valid) {
-          logger.warn(`[INVALID ASPECT] IP: ${clientIP} - Ratio: ${aspectValidation.ratio.toFixed(2)}:1`);
-          
-          return NextResponse.json(
-            { 
-              error: aspectValidation.reason,
-              ratio: aspectValidation.ratio.toFixed(2),
-              dimensions: { width, height }
-            },
-            { status: 400 }
-          );
-        }
-
-        logger.debug(`[VALID ASPECT] ${width}x${height} - Ratio: ${aspectValidation.ratio.toFixed(2)}:1`);
-      } catch (sharpError: any) {
-        logger.error(`[SHARP ERROR] Failed to process image:`, sharpError);
-        return NextResponse.json(
-          { error: 'Failed to process image', details: sharpError.message },
-          { status: 400 }
-        );
-      }
-    } else {
-      logger.debug(`[Uploads] Folder "${folder}" — skipping aspect ratio validation`);
-    }
-
-    // 8. UPLOAD A CLOUDINARY
+    // 7. UPLOAD A CLOUDINARY (acepta cualquier aspect ratio)
     const result = await uploadToCloudinary(buffer, folder);
 
     // 9. REGISTRAR UPLOAD EXITOSO (para rate limiting)

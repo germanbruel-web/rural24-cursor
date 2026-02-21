@@ -15,7 +15,7 @@ import { getAdDetailUrl } from '../../../utils/slugUtils';
 import { cn } from '../../../design-system/utils';
 import { DEFAULT_PLACEHOLDER_IMAGE } from '../../../constants/defaultImages';
 import { navigateTo } from '../../../hooks/useNavigate';
-import { optimizeCloudinaryUrl } from '../../../utils/imageOptimizer';
+import { getImageVariant } from '../../../utils/imageOptimizer';
 
 interface ProductCardProps {
   product: Product;
@@ -44,14 +44,10 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
   const isFeatured = variant === 'featured';
   const isCompact = variant === 'compact';
 
-  // Optimizar imagen de Cloudinary (2MB → 80KB, -96%)
-  const optimizedImageUrl = optimizeCloudinaryUrl(
+  // Optimizar imagen con crop inteligente por variante
+  const optimizedImageUrl = getImageVariant(
     imageError ? DEFAULT_PLACEHOLDER_IMAGE : imageUrl,
-    { 
-      width: isFeatured ? 800 : 600,
-      quality: 'auto:good',
-      crop: 'limit'
-    }
+    isFeatured ? 'detail' : 'card'
   );
 
   // Formateo de precio

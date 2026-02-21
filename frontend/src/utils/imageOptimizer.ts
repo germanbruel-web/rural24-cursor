@@ -138,3 +138,43 @@ export function getPlaceholderUrl(url: string): string {
     format: 'jpg',
   });
 }
+
+// ====================================================================
+// IMAGE VARIANTS - Crop inteligente por contexto de uso
+// ====================================================================
+
+export type ImageVariant = 'card' | 'card-square' | 'detail' | 'hero' | 'thumb' | 'original';
+
+const VARIANT_CONFIG: Record<ImageVariant, { width: number; ar?: string; crop: string }> = {
+  'card':        { width: 600,  ar: '4:3',  crop: 'fill' },
+  'card-square': { width: 400,  ar: '1:1',  crop: 'fill' },
+  'detail':      { width: 1200, ar: '16:9', crop: 'fill' },
+  'hero':        { width: 1200, ar: '16:9', crop: 'fill' },
+  'thumb':       { width: 150,  ar: '1:1',  crop: 'fill' },
+  'original':    { width: 1920, crop: 'limit' },
+};
+
+/**
+ * Genera URL de Cloudinary con crop inteligente para cada contexto.
+ * Usa g_auto (detección automática de sujeto) + aspect ratio forzado.
+ *
+ * @example
+ * getImageVariant(url, 'card')       → 600px, 4:3, crop fill, g_auto
+ * getImageVariant(url, 'detail')     → 1200px, 16:9, crop fill, g_auto
+ * getImageVariant(url, 'thumb')      → 150px, 1:1, crop fill, g_auto
+ * getImageVariant(url, 'original')   → 1920px, sin crop, c_limit
+ */
+export function getImageVariant(url: string, variant: ImageVariant): string {
+  if (!url?.includes('cloudinary.com')) return url;
+
+  const config = VARIANT_CONFIG[variant];
+  const parts = [`f_auto`, `q_auto`, `w_${config.width}`, `c_${config.crop}`];
+  if (config.crop === 'fill') {
+    parts.push(`g_auto`);
+  }
+  if (config.ar) {
+    parts.push(`ar_${config.ar}`);
+  }
+
+  return url.replace('/upload/', `/upload/${parts.join(',')}/`);
+}
