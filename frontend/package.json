@@ -31,6 +31,7 @@
     "react-fast-compare": "^3.2.2",
     "react-helmet-async": "^2.0.5",
     "react-hot-toast": "^2.6.0",
+    "shallowequal": "^1.1.0",
     "tailwind-merge": "^3.4.0",
     "warning": "^4.0.3"
   },
