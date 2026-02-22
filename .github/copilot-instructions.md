@@ -92,6 +92,9 @@ Next.js 16 con `output: 'standalone'` en `next.config.js` y `next start` como st
 ### 5. URL de servicio Render no es {name}.onrender.com (Feb 2026)
 El servicio `rural24-backend` en render.yaml tiene URL real `rural24.onrender.com`, no `rural24-backend.onrender.com`. El cron job apuntaba a la URL incorrecta. **Regla: SIEMPRE verificar la URL real en el Dashboard de Render antes de configurar endpoints.**
 
+### 6. Mezclar React 19 + react-helmet-async + Next 16 causó ERESOLVE (Feb 2026)
+Next 16 requiere React 19, pero `react-helmet-async` solo soporta React 18. Además, Storybook 8.6 no soporta Vite 7. El monorepo falló con ERESOLVE y `npm ci` requería `--force`. **Solución:** Downgrade a Next 15 + React 18 en todo el monorepo, agregar `overrides` en root `package.json`, remover Storybook temporalmente (re-agregar como v9+ que soporta Vite 7). **Regla: SIEMPRE verificar peerDependencies cruzadas antes de upgradear frameworks mayores. NUNCA usar `turbo: "latest"` ni versiones `latest` en producción.**
+
 ---
 
 ## FLUJO DE TRABAJO

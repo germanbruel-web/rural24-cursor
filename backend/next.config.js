@@ -4,9 +4,6 @@ const nextConfig = {
   compress: true,
   reactStrictMode: true,
 
-  // Turbopack config (Next.js 16+ usa Turbopack por defecto)
-  turbopack: {},
-
   // outputFileTracingRoot: apunta al root del monorepo para que Next.js
   // resuelva correctamente las dependencias en npm workspaces.
   // Sin esto, Next.js detecta múltiples lockfiles y puede inferir mal el root.

@@ -1,7 +1,7 @@
 # ARCHITECTURE — Rural24
 > Fuente de verdad arquitectónica. Ningún agente puede contradecir este documento.
 
-**Última actualización:** 2026-02-16  
+**Última actualización:** 2026-02-22  
 **Producto:** Marketplace de clasificados agropecuarios (Argentina)  
 **Etapa:** MVP en producción, pre-growth  
 
@@ -21,8 +21,8 @@
 
 | Capa | Tecnología | Versión | Decisión |
 |------|-----------|---------|----------|
-| **Frontend** | React + Vite | 19 + 7.3 | SPA, NO SSR en frontend |
-| **Backend** | Next.js (API Routes only) | 16 | Solo API, SSR mínimo (SEO pages) |
+| **Frontend** | React + Vite | 18 + 7.3 | SPA, NO SSR en frontend |
+| **Backend** | Next.js (API Routes only) | 15 | Solo API, SSR mínimo (SEO pages) |
 | **Base de datos** | PostgreSQL via Supabase | — | Auth + DB + RLS + RPCs |
 | **ORM** | Supabase JS SDK | 2.89 | Prisma solo para schema docs |
 | **Imágenes** | Cloudinary | 2.8 | CDN + transformaciones |

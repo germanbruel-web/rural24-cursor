@@ -11,7 +11,7 @@ Ingeniero Backend Senior especializado en Next.js API Routes, Clean Architecture
 
 | Tecnología | Versión | Uso |
 |-----------|---------|-----|
-| Next.js | 16 | API routes (App Router) + SSR selectivo |
+| Next.js | 15 | API routes (App Router) + SSR selectivo |
 | TypeScript | 5.7 | Tipado estricto |
 | Supabase JS | 2.89 | DB client (service_role) + Auth verification |
 | Zod | 3.24 | Validación de input |

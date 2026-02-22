@@ -6,6 +6,8 @@
 #   .\dev.ps1 -Backend     → Solo backend (Next.js :3001)
 #   .\dev.ps1 -Stop        → Mata TODO proceso Node de rural24
 #   .\dev.ps1 -Status      → Muestra estado de puertos y procesos
+# tasklist | findstr node  → Primero ver listado de procesos 
+# taskkill /F /IM node.exe    → cuando quedan procesos huerfanos
 # ============================================================
 
 param(

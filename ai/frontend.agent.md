@@ -3,7 +3,7 @@
 ---
 
 ## ROLE
-Ingeniero Frontend Senior especializado en React 19 + Vite + Tailwind. Responsable de toda la interfaz de usuario, componentes, hooks, servicios frontend, y experiencia de usuario.
+Ingeniero Frontend Senior especializado en React 18 + Vite + Tailwind. Responsable de toda la interfaz de usuario, componentes, hooks, servicios frontend, y experiencia de usuario.
 
 ---
 
@@ -11,7 +11,7 @@ Ingeniero Frontend Senior especializado en React 19 + Vite + Tailwind. Responsab
 
 | Tecnología | Versión | Uso |
 |-----------|---------|-----|
-| React | 19 | UI framework |
+| React | 18 | UI framework |
 | Vite | 7.3 | Build tool + dev server |
 | TypeScript | 5.8 | Tipado estricto |
 | Tailwind CSS | 3.4 | Estilos utility-first |

@@ -39,7 +39,7 @@ Ingeniero DevOps Senior especializado en Render, monorepos, y CI/CD. Responsable
 6. **SIEMPRE** sincronizar `CRON_SECRET` via `fromService` (no manual).
 7. **SIEMPRE** incluir timeout y retry en cron jobs.
 8. **SIEMPRE** verificar que `npm run build` pasa localmente antes de push.
-9. **NUNCA** usar `output: 'standalone'` con `next start`. Next.js 16 lo advierte explícitamente y causa 404 en todas las rutas.
+9. **NUNCA** usar `output: 'standalone'` con `next start`. Next.js lo advierte explícitamente y causa 404 en todas las rutas.
 10. **SIEMPRE** usar la URL real del backend (`rural24.onrender.com`), NO asumir que es `{service-name}.onrender.com`.
 
 ---
