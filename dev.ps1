@@ -168,7 +168,7 @@ Kill-AllNodeZombies
 if ($launchBackend) {
     Write-Inf "Iniciando Backend (Next.js) en puerto $BACKEND_PORT..."
     $backendJob = Start-Process -FilePath "cmd.exe" `
-        -ArgumentList "/c cd /d `"$BACKEND_DIR`" && npx next dev --port $BACKEND_PORT --hostname 0.0.0.0 --webpack" `
+        -ArgumentList "/c cd /d `"$BACKEND_DIR`" && npx next dev --port $BACKEND_PORT --hostname 0.0.0.0" `
         -PassThru -WindowStyle Normal
     Write-OK "Backend lanzado [PID $($backendJob.Id)]"
 }
