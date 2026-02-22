@@ -25,12 +25,14 @@
     "invariant": "^2.2.4",
     "lucide-react": "^0.553.0",
     "nsfwjs": "^4.2.1",
+    "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-fast-compare": "^3.2.2",
     "react-helmet-async": "^2.0.5",
     "react-hot-toast": "^2.6.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "warning": "^4.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
