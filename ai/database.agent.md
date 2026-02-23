@@ -115,7 +115,7 @@ global_settings        → 5 registros (config de créditos, promos, duraciones)
 global_config          → Config general
 ```
 
-**Funciones SQL existentes (31):**
+**Funciones SQL existentes (30):**
 ```
 activate_pending_featured_ads    activate_scheduled_featured_ads (LEGACY→queue, NO USAR)
 activate_featured_with_credits   admin_cancel_featured_ad
@@ -128,9 +128,15 @@ expire_featured_ads              featured_ads_audit_trigger
 featured_ads_daily_maintenance   get_featured_by_category (x2)
 get_featured_for_detail          get_featured_for_homepage
 get_featured_for_results         get_featured_month_availability
-get_user_featured_ads            set_featured_order
-sync_ad_featured_status          trigger_featured_ads_audit
-update_featured_ads_timestamp    update_featured_queue_timestamp (LEGACY, NO USAR)
+get_user_featured_ads            redeem_coupon (SECURITY DEFINER, atómica)
+set_featured_order               sync_ad_featured_status
+trigger_featured_ads_audit       update_featured_ads_timestamp
+update_featured_queue_timestamp (LEGACY, NO USAR)
+```
+
+**Funciones ELIMINADAS:**
+```
+increment_coupon_redemptions     → DROPPED 2026-02-23 (redundante, redeem_coupon ya hace el incremento)
 ```
 
 ---
@@ -223,8 +229,8 @@ CREATE POLICY "SuperAdmin can manage all" ON tabla
 | Problema | Riesgo | Estado |
 |----------|--------|--------|
 | 3 fuentes de verdad para featured | Datos inconsistentes | Pendiente migración |
-| 2 tablas de créditos desincronizadas | Reembolsos invisibles | Pendiente unificación |
-| 6 funciones SQL duplicadas | Confusión | Pendiente limpieza |
+| 2 tablas de créditos desincronizadas | Reembolsos invisibles | Pendiente unificación. Canje de cupones unificado a `user_featured_credits` via RPC `redeem_coupon()` (Feb 2026). `user_credits` sigue activa para featured ads. |
+| 6 funciones SQL duplicadas (5 tras DROP increment_coupon_redemptions) | Confusión | Parcial: `increment_coupon_redemptions` eliminada Feb 2026 |
 | `ads.featured` columns legacy | Tercera fuente de verdad | Pendiente deprecar |
 | 1 ad fantasma (featured=true sin registro) | Dato huérfano | Pendiente limpiar |
 | Queue con registros sin `scheduled_end` (null) | Nunca expiran | Pendiente corregir |
@@ -256,3 +262,36 @@ CREATE INDEX idx_users_mobile ON public.users (mobile);
 - **Archivo**: `database/20260216_mobile_verification.sql`
 - **Impacto**: Solo agrega columnas e índices, no modifica datos existentes
 - **Rollback**: DROP de columnas e índices documentado en el script
+
+---
+
+## CANJE DE CUPONES — FLUJO UNIFICADO (Feb 2026)
+
+### Principio
+El módulo de créditos se trata como **sistema financiero interno**. Toda operación que modifique balance pasa por backend → RPC atómica. El frontend NUNCA escribe balance, redemptions ni transacciones.
+
+### Flujo
+```
+Frontend: POST /api/coupons/redeem { code }
+  → Backend: withAuth() → userId del JWT
+    → supabaseAdmin.rpc('redeem_coupon', { p_user_id, p_code })
+      → DB (transacción atómica SECURITY DEFINER):
+        1. Valida cupón (activo, no expirado, no agotado)
+        2. Verifica usuario no canjeó antes
+        3. UPDATE coupons.current_redemptions +1
+        4. UPSERT user_featured_credits (créditos)
+        5. INSERT credit_transactions
+        6. INSERT coupon_redemptions
+        7. Otorga membresía si aplica
+```
+
+### Tablas involucradas
+- `coupons` → CRUD por SuperAdmin, incremento atómico en canje
+- `coupon_redemptions` → registro de cada canje (1 por usuario por cupón)
+- `user_featured_credits` → balance de créditos (tabla correcta para cupones)
+- `credit_transactions` → log de transacciones con `type = 'coupon_redemption'`
+
+### Migración ejecutada
+- `database/20260223_drop_increment_coupon_redemptions.sql` — eliminó RPC helper redundante
+- Frontend `creditsService.redeemCoupon()` → reescrito como llamada a API
+- Frontend `creditsService.validateCoupon()` → simplificado a lectura read-only (preview)

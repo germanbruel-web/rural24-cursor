@@ -2,12 +2,12 @@
  * RedeemCouponModal.tsx
  * Modal para canjear cupones de créditos
  * ========================================
+ * Flujo: validateCoupon (read-only preview) → redeemCoupon (API → RPC atómica)
  */
 
 import { useState } from 'react';
 import { X, Gift, Loader2, CheckCircle2, AlertCircle, Ticket } from 'lucide-react';
 import { validateCoupon, redeemCoupon } from '../../services/creditsService';
-import { supabase } from '../../services/supabaseClient';
 
 export interface RedeemCouponModalProps {
   isOpen: boolean;
@@ -71,15 +71,8 @@ const RedeemCouponModal: React.FC<RedeemCouponModalProps> = ({
     setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        setError('Debes estar autenticado para canjear cupones');
-        setRedeeming(false);
-        return;
-      }
-
-      const result = await redeemCoupon(user.id, couponCode);
+      // El backend extrae userId del JWT — no se envía desde frontend
+      const result = await redeemCoupon(couponCode);
 
       if (result.success && result.creditsGranted !== undefined && result.newBalance !== undefined) {
         setSuccess(true);

@@ -99,6 +99,7 @@ backend/app/api/
 ├── featured-ads/cron/route.ts   → GET/POST (cron job)
 ├── phone/send-code/route.ts     → POST (enviar OTP, withAuth)
 ├── phone/verify/route.ts        → POST (verificar OTP, withAuth)
+├── coupons/redeem/route.ts      → POST (canjear cupón, withAuth → RPC redeem_coupon)
 ├── admin/users/route.ts         → GET/PATCH (superadmin)
 └── admin/featured-ads/...       → CRUD admin featured
 ```
@@ -214,3 +215,34 @@ FRONTEND_URL                 → URL frontend (CORS)
 CRON_SECRET                  → Secret para cron job
 NODE_ENV                     → development | production
 ```
+
+---
+
+## CANJE DE CUPONES VÍA API — Feb 2026
+
+### Endpoint
+
+#### `POST /api/coupons/redeem`
+- **Guard**: `withAuth()` (cualquier usuario autenticado)
+- **Input**: `{ code: string }` (código del cupón)
+- **userId**: extraído del JWT — NUNCA del body
+- **Lógica**:
+  1. Valida input con Zod
+  2. Invoca `supabaseAdmin.rpc('redeem_coupon', { p_user_id, p_code })`
+  3. La RPC es `SECURITY DEFINER` y ejecuta atómicamente:
+     - Valida cupón (activo, no expirado, no agotado)
+     - Verifica que el usuario no lo haya canjeado
+     - Incrementa `current_redemptions`
+     - Actualiza `user_featured_credits` (créditos)
+     - Inserta en `credit_transactions`
+     - Inserta en `coupon_redemptions`
+     - Otorga membresía si corresponde
+  4. Retorna resultado estructurado
+- **Response éxito**: `{ success: true, credits_granted, new_balance, message }`
+- **Response error**: `{ error: string }` con status 400/401/500
+
+### Principio
+El módulo de créditos se trata como sistema financiero interno:
+- **Toda lógica financiera en backend/DB** — NUNCA en frontend
+- **Único punto transaccional** — RPC `redeem_coupon()` es la fuente de verdad
+- **Frontend solo invoca la API** — no hace inserts/upserts de balance

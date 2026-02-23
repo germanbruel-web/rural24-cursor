@@ -95,6 +95,9 @@ El servicio `rural24-backend` en render.yaml tiene URL real `rural24.onrender.co
 ### 6. Mezclar React 19 + react-helmet-async + Next 16 causó ERESOLVE (Feb 2026)
 Next 16 requiere React 19, pero `react-helmet-async` solo soporta React 18. Además, Storybook 8.6 no soporta Vite 7. El monorepo falló con ERESOLVE y `npm ci` requería `--force`. **Solución:** Downgrade a Next 15 + React 18 en todo el monorepo, agregar `overrides` en root `package.json`, remover Storybook temporalmente (re-agregar como v9+ que soporta Vite 7). **Regla: SIEMPRE verificar peerDependencies cruzadas antes de upgradear frameworks mayores. NUNCA usar `turbo: "latest"` ni versiones `latest` en producción.**
 
+### 7. Lógica financiera en frontend con múltiples queries no atómicas (Feb 2026)
+El canje de cupones (`creditsService.redeemCoupon()`) ejecutaba 7 queries separadas desde el frontend con anon key: SELECT, UPSERT, INSERT × 3, RPC helper. Sin atomicidad, con race conditions posibles, y escribiendo en la tabla incorrecta (`user_credits` en vez de `user_featured_credits`). Existía una RPC atómica `redeem_coupon()` en DB que no se usaba. **Solución:** Migrar a `POST /api/coupons/redeem` → backend invoca RPC con service_role. Frontend solo llama a la API. **Regla: NUNCA ejecutar lógica financiera (créditos, balance, transacciones) desde el frontend. Toda operación que modifique balance DEBE pasar por backend → RPC atómica.**
+
 ---
 
 ## FLUJO DE TRABAJO

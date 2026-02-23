@@ -428,7 +428,7 @@ export async function getDaysRemainingInBillingPeriod(userId: string): Promise<n
 }
 
 // ============================================
-// CUPONES (lee desde tabla `coupons` en Supabase)
+// CUPONES
 // ============================================
 
 export interface CouponValidation {
@@ -436,11 +436,13 @@ export interface CouponValidation {
   credits?: number;
   description?: string;
   error?: string;
-  couponId?: string;
 }
 
 /**
- * Validar un cupón contra la base de datos
+ * Preview de cupón — lectura read-only informativa.
+ * Solo hace un SELECT sobre `coupons` para mostrar info previa al usuario.
+ * NO valida límites reales ni redenciones por usuario.
+ * El canje definitivo se realiza a través de redeemCoupon() → API → RPC.
  */
 export async function validateCoupon(code: string): Promise<CouponValidation> {
   try {
@@ -451,7 +453,7 @@ export async function validateCoupon(code: string): Promise<CouponValidation> {
 
     const { data: coupon, error } = await supabase
       .from('coupons')
-      .select('id, code, name, description, credits_amount, max_redemptions, current_redemptions, expires_at, is_active')
+      .select('code, name, description, credits_amount, expires_at, is_active')
       .eq('code', upperCode)
       .single();
 
@@ -467,15 +469,10 @@ export async function validateCoupon(code: string): Promise<CouponValidation> {
       return { valid: false, error: 'Este cupón ha expirado' };
     }
 
-    if (coupon.current_redemptions >= coupon.max_redemptions) {
-      return { valid: false, error: 'Este cupón ya alcanzó el máximo de canjes' };
-    }
-
     return {
       valid: true,
       credits: coupon.credits_amount,
       description: coupon.description || coupon.name,
-      couponId: coupon.id,
     };
   } catch (error) {
     console.error('Error validando cupón:', error);
@@ -484,10 +481,12 @@ export async function validateCoupon(code: string): Promise<CouponValidation> {
 }
 
 /**
- * Canjear cupón de créditos (DB-backed)
+ * Canjear cupón — invoca POST /api/coupons/redeem.
+ * Toda la lógica transaccional (validación real, atomicidad, escrituras)
+ * se ejecuta en backend vía RPC `redeem_coupon` con service_role key.
+ * El frontend NUNCA modifica balance ni escribe redemptions directamente.
  */
 export async function redeemCoupon(
-  userId: string,
   code: string
 ): Promise<{
   success: boolean;
@@ -496,83 +495,35 @@ export async function redeemCoupon(
   error?: string;
 }> {
   try {
-    const validation = await validateCoupon(code);
-    
-    if (!validation.valid || !validation.couponId) {
-      return { success: false, error: validation.error || 'Cupón inválido' };
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      return { success: false, error: 'Debes estar autenticado para canjear cupones' };
     }
 
-    // Verificar si el usuario ya canjeó este cupón
-    const { data: existingRedemption } = await supabase
-      .from('coupon_redemptions')
-      .select('id')
-      .eq('coupon_id', validation.couponId)
-      .eq('user_id', userId)
-      .limit(1);
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/api/coupons/redeem`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ code: code.toUpperCase().trim() }),
+    });
 
-    if (existingRedemption && existingRedemption.length > 0) {
-      return { success: false, error: 'Ya canjeaste este cupón' };
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      return {
+        success: false,
+        error: data.error || 'Error al canjear el cupón',
+      };
     }
-
-    const creditsToGrant = validation.credits || 0;
-
-    // Obtener balance actual
-    const currentCredits = await getUserCredits(userId);
-    const currentBalance = currentCredits?.balance || 0;
-    const newBalance = currentBalance + creditsToGrant;
-
-    // Actualizar balance del usuario
-    const { error: updateError } = await supabase
-      .from('user_credits')
-      .upsert({
-        user_id: userId,
-        balance: newBalance,
-        monthly_allowance: currentCredits?.monthly_allowance || 0,
-        last_monthly_reset: currentCredits?.last_monthly_reset || null,
-      }, { onConflict: 'user_id' });
-
-    if (updateError) {
-      console.error('Error actualizando balance:', updateError);
-      return { success: false, error: 'Error al otorgar créditos' };
-    }
-
-    // Registrar en coupon_redemptions
-    await supabase
-      .from('coupon_redemptions')
-      .insert({
-        coupon_id: validation.couponId,
-        user_id: userId,
-        credits_granted: creditsToGrant,
-      });
-
-    // Incrementar current_redemptions en el cupón
-    await supabase.rpc('increment_coupon_redemptions', { coupon_uuid: validation.couponId })
-      .then(({ error }) => {
-        // Si no existe la función RPC, hacer update manual
-        if (error) {
-          supabase
-            .from('coupons')
-            .update({ current_redemptions: (currentCredits as any)?.current_redemptions + 1 || 1 })
-            .eq('id', validation.couponId);
-        }
-      });
-
-    // Registrar transacción de créditos
-    await supabase
-      .from('credit_transactions')
-      .insert({
-        user_id: userId,
-        type: 'promo_grant',
-        amount: creditsToGrant,
-        balance_after: newBalance,
-        description: `Cupón canjeado: ${code.toUpperCase()} - ${validation.description}`,
-        promo_code: code.toUpperCase(),
-      });
 
     return {
       success: true,
-      creditsGranted: creditsToGrant,
-      newBalance,
+      creditsGranted: data.credits_granted || 0,
+      newBalance: data.new_balance || 0,
     };
   } catch (error) {
     console.error('Error en redeemCoupon:', error);

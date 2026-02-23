@@ -58,6 +58,13 @@
 - **Backend → Supabase** (service_role key): operaciones privilegiadas, cron, admin
 - **Migración en curso:** Frontend migrando de Supabase directo a Backend API (feature flags en `config/features.ts`)
 
+### Créditos y cupones (sistema financiero interno)
+- **Canje de cupones:** Frontend → `POST /api/coupons/redeem` → Backend → RPC `redeem_coupon()` (SECURITY DEFINER, atómica)
+- **NUNCA** ejecutar lógica financiera desde frontend (no inserts, no upserts de balance)
+- **Tabla de balance para cupones:** `user_featured_credits` (credits_total / credits_used)
+- **Tabla de balance para featured ads:** `user_credits` (balance / monthly_allowance) — pendiente unificación
+- **Único punto transaccional:** RPC en DB es la fuente de verdad
+
 ### Imágenes
 - Upload: Cliente comprime → Backend valida → Cloudinary almacena
 - Servido desde CDN de Cloudinary con auto-format y auto-quality
