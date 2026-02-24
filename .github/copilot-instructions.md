@@ -15,6 +15,7 @@ Antes de escribir UNA sola línea de código o proponer CUALQUIER cambio, el age
 ¿Toca backend?   → Leer ai/backend.agent.md
 ¿Toca base datos? → Leer ai/database.agent.md
 ¿Toca deploy?    → Leer ai/devops.agent.md
+¿Toca entornos/migraciones? → Leer ai/DEVPROD_ARCHITECTURE.md
 ¿Toca performance? → Leer ai/performance.agent.md
 ¿Toca UX/flujos? → Leer ai/uxui.agent.md
 ¿Toca múltiples? → Leer ai/SUPERAGENT.md + los agentes involucrados
@@ -69,6 +70,7 @@ Antes de cada modificación, verificar mentalmente:
 | `ai/backend.agent.md` | API routes, auth, domain services | Cambios backend |
 | `ai/database.agent.md` | Schema, RPCs, constraints, estado datos | Cambios DB |
 | `ai/devops.agent.md` | Render, cron, env vars, deploy | Cambios infra |
+| `ai/DEVPROD_ARCHITECTURE.md` | Flujo DEV→PROD, migraciones, versionado, snapshots | Deploy, migraciones, entornos |
 | `ai/performance.agent.md` | Cache, bundle, queries | Optimizaciones |
 | `ai/uxui.agent.md` | Flujos, estados UI, mobile-first | Diseño UX |
 | `database/RURAL24_COMPLETE_SCHEMA_2026-02-16.sql` | **FUENTE DE VERDAD** del schema DB | Antes de tocar DB, tablas, columnas, funciones |

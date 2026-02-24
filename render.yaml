@@ -1,10 +1,9 @@
 # ============================================================================
-# Render Configuration - rural24
+# Render Configuration - rural24 (multi-environment)
 # ============================================================================
-# Docs: https://render.com/docs/yaml-spec
 
 services:
-  # Backend (Next.js)
+  # --- STAGING ---
   - type: web
     name: rural24-backend
     runtime: node
@@ -14,18 +13,18 @@ services:
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
-        value: production
+        value: development
       - key: NEXT_PUBLIC_SUPABASE_URL
-        sync: false
+        sync: false  # Set in env group 'staging'
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: CRON_SECRET
-        generateValue: true  # ⚠️ IMPORTANTE: verificar que existe en Dashboard de Render
+        generateValue: true
+    envGroup: staging
     healthCheckPath: /api/health
 
-  # Frontend (Vite)
   - type: web
     name: rural24-frontend
     runtime: static
@@ -35,28 +34,61 @@ services:
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_SUPABASE_URL
-        sync: false
+        sync: false  # Set in env group 'staging'
       - key: VITE_SUPABASE_ANON_KEY
         sync: false
       - key: VITE_BACKEND_URL
         value: https://rural24.onrender.com
+    envGroup: staging
+
+  # --- PRODUCCIÓN ---
+  - type: web
+    name: rural24-backend-prod
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false  # Set in env group 'production'
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CRON_SECRET
+        generateValue: true
+    envGroup: production
+    healthCheckPath: /api/health
+
+  - type: web
+    name: rural24-frontend-prod
+    runtime: static
+    region: oregon
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false  # Set in env group 'production'
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_BACKEND_URL
+        value: https://rural24-oo01.onrender.com
+    envGroup: production
 
 # ============================================================================
+# CRON JOBS (solo si tienes plan pago)
 # ============================================================================
-# CRON JOBS
-# ============================================================================
-# ⚠️ Render free tier NO soporta cron jobs (requiere plan pago).
-# El cron se ejecuta via GitHub Actions: .github/workflows/cron-featured-ads.yml
-# 
-# Si se upgrade a plan pago, descomentar:
-#
 # jobs:
 #   - type: cron
-#     name: featured-ads-cleanup
+#     name: featured-ads-cleanup-prod
 #     schedule: "0 * * * *"
 #     buildCommand: echo "Cron job preparado"
 #     startCommand: >
-#       curl -X POST https://rural24.onrender.com/api/featured-ads/cron
+#       curl -X POST https://rural24-oo01.onrender.com/api/featured-ads/cron
 #       -H "X-Cron-Secret: ${CRON_SECRET}"
 #       -H "Content-Type: application/json"
 #       --connect-timeout 60 --max-time 120 --retry 2 --retry-delay 10
@@ -64,6 +96,6 @@ services:
 #     envVars:
 #       - key: CRON_SECRET
 #         fromService:
-#           name: rural24-backend
+#           name: rural24-backend-prod
 #           type: web
 #           envVarKey: CRON_SECRET

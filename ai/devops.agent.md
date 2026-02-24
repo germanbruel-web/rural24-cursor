@@ -135,9 +135,13 @@ scripts/*.ps1        → Scripts de utilidad
 ```
 
 ### Git workflow
-- Main branch: `main`
-- Push to main → auto-deploy en Render
-- No branches de feature (equipo unipersonal)
+- Branches: `main` (PROD), `staging` (Testing), `feature/*`, `fix/*`, `hotfix/*`
+- Push to `main` → auto-deploy Render PROD
+- Push to `staging` → auto-deploy Render Testing
+- Feature branches → PR a staging → merge → QA → PR a main
+- Hotfixes → PR directo a main (emergencias) → luego merge main → staging
+- Versionado: Git tags semánticos (v2.1.0) en cada release
+- **Detalle completo:** `ai/DEVPROD_ARCHITECTURE.md`
 
 ### Build commands
 ```bash
