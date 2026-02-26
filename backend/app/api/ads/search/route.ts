@@ -594,7 +594,6 @@ export async function GET(request: NextRequest) {
         province,
         location,
         images,
-        featured,
         created_at,
         attributes,
         user_id,
@@ -726,9 +725,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Ordenar: primero destacados, luego por fecha
+    // Ordenar por fecha. El flag "featured" se resuelve desde featured_ads (tabla canónica)
     query = query
-      .order('featured', { ascending: false })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -743,7 +741,25 @@ export async function GET(request: NextRequest) {
     }
 
     // ============================================================
-    // 3. RESOLVER NOMBRES DE MARCAS/MODELOS (batch)
+    // 3. RESOLVER FLAG FEATURED desde featured_ads (fuente canónica)
+    // ============================================================
+    const adIds = (ads || []).map((ad: any) => ad.id);
+    const featuredAdIds = new Set<string>();
+
+    if (adIds.length > 0) {
+      const { data: featuredRows } = await supabase
+        .from('featured_ads')
+        .select('ad_id')
+        .in('ad_id', adIds)
+        .eq('status', 'active');
+
+      (featuredRows || []).forEach((row: any) => {
+        if (row?.ad_id) featuredAdIds.add(row.ad_id);
+      });
+    }
+
+    // ============================================================
+    // 4. RESOLVER NOMBRES DE MARCAS/MODELOS (batch)
     // ============================================================
     const brandIds = [...new Set((ads || []).map((a: any) => a.brand_id).filter(Boolean))];
     const modelIds = [...new Set((ads || []).map((a: any) => a.model_id).filter(Boolean))];
@@ -767,7 +783,7 @@ export async function GET(request: NextRequest) {
     }
 
     // ============================================================
-    // 4. TRANSFORMAR RESPONSE
+    // 5. TRANSFORMAR RESPONSE
     // ============================================================
     const transformedAds = (ads || []).map((ad: any) => {
       // Extraer imagen principal del array images
@@ -794,7 +810,7 @@ export async function GET(request: NextRequest) {
         location: ad.location,
         images: images,
         image_urls: imageUrls,
-        featured: ad.featured || false,
+        featured: featuredAdIds.has(ad.id),
         created_at: ad.created_at,
         condition: ad.condition,
         brand: resolvedBrand || attrs.brand || attrs.marca || null,
@@ -807,6 +823,12 @@ export async function GET(request: NextRequest) {
         category_slug: categorySlug || '',
         subcategory_slug: subcategorySlug || '',
       };
+    });
+
+    // Mantener experiencia de ranking visual: destacados primero dentro de la página
+    transformedAds.sort((a, b) => {
+      if (a.featured !== b.featured) return a.featured ? -1 : 1;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
 
     const elapsed = Date.now() - startTime;

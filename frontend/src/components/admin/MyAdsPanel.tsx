@@ -12,14 +12,15 @@ import { DEFAULT_PLACEHOLDER_IMAGE } from '../../constants/defaultImages';
 import { isSuperAdmin as checkIsSuperAdmin } from '../../utils/rolePermissions';
 import { supabase } from '../../services/supabaseClient';
 import { QuickEditAdModal } from './QuickEditAdModal';
+import BulkVisibilityModal from './BulkVisibilityModal';
 import { FeaturedAdModal } from '../dashboard';
 
-import { getUserCredits, cancelActiveFeaturedAd, cancelUserFeaturedAd } from '../../services/userFeaturedService';
+import { getUserCredits, cancelActiveFeaturedAd } from '../../services/userFeaturedService';
 import { navigateTo } from '../../hooks/useNavigate';
 
 /**
  * Extraer public_id de Cloudinary URL para borrado
- * https://res.cloudinary.com/xxx/image/upload/.../rural24/ads/abc123.jpg → rural24/ads/abc123
+ * https://res.cloudinary.com/xxx/image/upload/.../rural24/ads/abc123.jpg â†’ rural24/ads/abc123
  */
 function extractCloudinaryPublicId(url: string): string | null {
   try {
@@ -57,19 +58,20 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   const [selectedAdForEdit, setSelectedAdForEdit] = useState<Ad | null>(null);
   const [selectedAdForDelete, setSelectedAdForDelete] = useState<Ad | null>(null);
   const [selectedAdForFeatured, setSelectedAdForFeatured] = useState<Ad | null>(null);
+  const [showBulkVisibility, setShowBulkVisibility] = useState(false);
   const [featuredMap, setFeaturedMap] = useState<Record<string, FeaturedInfo[]>>({});
   
   
-  // Créditos del usuario
+  // CrÃ©ditos del usuario
   const [userCredits, setUserCredits] = useState<number>(0);
   
   // Cancel featured
   const [cancelFeaturedTarget, setCancelFeaturedTarget] = useState<{ adTitle: string; featured: FeaturedInfo } | null>(null);
   const [cancellingFeatured, setCancellingFeatured] = useState(false);
   
-  // Determinar permisos según rol
+  // Determinar permisos segÃºn rol
   const isSuperAdmin = checkIsSuperAdmin(profile?.role);
-  const isPaidUser = profile?.role && ['superadmin', 'revendedor', 'premium-particular', 'premium-empresa'].includes(profile.role);
+  const canUseFeaturedFlow = Boolean(profile?.id);
   
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused'>('active');
   
@@ -182,13 +184,12 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     if (!cancelFeaturedTarget) return;
     setCancellingFeatured(true);
     try {
-      const { featured } = cancelFeaturedTarget;
-      let result;
-      if (featured.status === 'active') {
-        result = await cancelActiveFeaturedAd(featured.featured_id);
-      } else {
-        result = await cancelUserFeaturedAd(featured.featured_id);
+      if (!isSuperAdmin) {
+        notify.error('Solo SuperAdmin puede cancelar destacados');
+        return;
       }
+      const { featured } = cancelFeaturedTarget;
+      const result = await cancelActiveFeaturedAd(featured.featured_id);
       if (result.success) {
         notify.success('Destacado cancelado correctamente');
         setCancelFeaturedTarget(null);
@@ -211,7 +212,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     try {
       const adId = selectedAdForDelete.id;
       
-      // PASO 1: Obtener todas las imágenes asociadas (soporta ambos sistemas)
+      // PASO 1: Obtener todas las imÃ¡genes asociadas (soporta ambos sistemas)
       const imageUrls: string[] = [];
       
       // Sistema nuevo: tabla ad_images
@@ -235,7 +236,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         imageUrls.push(...adData.images);
       }
       
-      // PASO 2: Eliminar imágenes de Cloudinary (si existen)
+      // PASO 2: Eliminar imÃ¡genes de Cloudinary (si existen)
       if (imageUrls.length > 0) {
         const publicIds = imageUrls
           .map(extractCloudinaryPublicId)
@@ -251,19 +252,19 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
             });
             
             if (!response.ok) {
-              console.warn('⚠️ Error al eliminar imágenes de Cloudinary:', await response.text());
+              console.warn('âš ï¸ Error al eliminar imÃ¡genes de Cloudinary:', await response.text());
             } else {
               const result = await response.json();
-              console.log(`✅ Cloudinary cleanup: ${result.success}/${publicIds.length} imágenes eliminadas`);
+              console.log(`âœ… Cloudinary cleanup: ${result.success}/${publicIds.length} imÃ¡genes eliminadas`);
             }
           } catch (cloudinaryError) {
-            console.warn('⚠️ No se pudieron eliminar las imágenes de Cloudinary:', cloudinaryError);
+            console.warn('âš ï¸ No se pudieron eliminar las imÃ¡genes de Cloudinary:', cloudinaryError);
             // Continuamos con el delete del aviso aunque falle Cloudinary
           }
         }
       }
       
-      // PASO 3: Hard delete del aviso en Supabase (CASCADE eliminará ad_images automáticamente)
+      // PASO 3: Hard delete del aviso en Supabase (CASCADE eliminarÃ¡ ad_images automÃ¡ticamente)
       const { error: deleteError } = await supabase
         .from('ads')
         .delete()
@@ -271,7 +272,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
       
       if (deleteError) throw deleteError;
 
-      notify.success('Aviso e imágenes eliminados correctamente');
+      notify.success('Aviso e imÃ¡genes eliminados correctamente');
       setSelectedAdForDelete(null);
       loadData();
     } catch (error: any) {
@@ -293,7 +294,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     paused: ads.filter(a => a.status === 'paused').length,
   };
 
-  /** Calcular días restantes de un featured */
+  /** Calcular dÃ­as restantes de un featured */
   const getRemainingDays = (expiresAt?: string): number => {
     if (!expiresAt) return 0;
     const now = new Date();
@@ -307,9 +308,17 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     const labels: Record<string, string> = {
       homepage: 'ALTO',
       results: 'MEDIO',
-      detail: 'BÁSICO',
+      detail: 'BÃSICO',
     };
     return labels[placement] || placement;
+  };
+
+  const formatExpiryDate = (expiresAt?: string): string => {
+    if (!expiresAt) return 'Sin vencimiento';
+    return new Date(expiresAt).toLocaleDateString('es-AR', {
+      day: 'numeric',
+      month: 'long',
+    });
   };
 
   if (loading) {
@@ -331,12 +340,20 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           <h2 className="text-2xl font-bold text-brand-950">Mis Avisos</h2>
           {!isSuperAdmin && (
             <p className="text-sm text-gray-600 mt-1">
-              Estás usando <span className="font-bold text-brand-600">{adLimit.current}</span> de{' '}
+              EstÃ¡s usando <span className="font-bold text-brand-600">{adLimit.current}</span> de{' '}
               <span className="font-bold">{adLimit.limit}</span> avisos disponibles
             </p>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          {isSuperAdmin && (
+            <button
+              onClick={() => setShowBulkVisibility(true)}
+              className="bg-white border border-brand-600 text-brand-700 px-4 py-3 rounded-xl font-bold hover:bg-brand-50 transition-colors"
+            >
+              Visibilidad Bulk
+            </button>
+          )}
           <button
             onClick={() => navigateTo('/publicar')}
             disabled={!isSuperAdmin && adLimit.current >= adLimit.limit}
@@ -352,7 +369,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
       {!isSuperAdmin && adLimit.current >= adLimit.limit && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-800 font-medium">
-            Has alcanzado el límite de avisos de tu plan. Para publicar más avisos, 
+            Has alcanzado el lÃ­mite de avisos de tu plan. Para publicar mÃ¡s avisos, 
             elimina o pausa algunos existentes.
           </p>
         </div>
@@ -377,7 +394,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         ))}
       </div>
 
-      {/* Cards de avisos — Mobile-first responsive grid */}
+      {/* Cards de avisos â€” Mobile-first responsive grid */}
       {filteredAds.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
           <div className="text-gray-400 mb-4">
@@ -388,7 +405,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           </h3>
           <p className="text-gray-600 mb-6">
             {filterStatus === 'all' 
-              ? 'Publicá tu primer aviso para empezar a vender'
+              ? 'PublicÃ¡ tu primer aviso para empezar a vender'
               : `No hay avisos con estado "${filterStatus}"`}
           </p>
           {filterStatus === 'all' && adLimit.current < adLimit.limit && (
@@ -490,18 +507,20 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                               {feat.status === 'active' ? (
                                 <span className="text-xs text-gray-600 flex items-center gap-1">
                                   <Calendar className="w-3 h-3" />
-                                  {remaining > 0 ? `${remaining} días restantes` : 'Expira hoy'}
+                                  {remaining > 0 ? `Vence: ${formatExpiryDate(feat.expires_at)}` : 'Vence: hoy'}
                                 </span>
                               ) : (
                                 <span className="text-xs text-yellow-600 font-medium">Pendiente</span>
                               )}
-                              <button
-                                onClick={() => setCancelFeaturedTarget({ adTitle: ad.title, featured: feat })}
-                                className="p-0.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                title="Cancelar destacado"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
+                              {isSuperAdmin && (
+                                <button
+                                  onClick={() => setCancelFeaturedTarget({ adTitle: ad.title, featured: feat })}
+                                  className="p-0.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  title="Cancelar destacado"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              )}
                             </div>
                           </div>
                         );
@@ -510,7 +529,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                   )}
                 </div>
 
-                {/* Footer — Actions */}
+                {/* Footer â€” Actions */}
                 <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-between bg-gray-50/50">
                   {/* CRUD actions */}
                   <div className="flex items-center gap-1">
@@ -544,7 +563,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                           RENOVAR
                         </button>
                       ) : null
-                    ) : isPaidUser ? (
+                    ) : canUseFeaturedFlow ? (
                       <button
                         onClick={() => setSelectedAdForFeatured(ad)}
                         className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 rounded-lg transition-all shadow-sm"
@@ -596,12 +615,12 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               </div>
               
               <div>
-                <label className="text-sm font-medium text-gray-500">Título</label>
+                <label className="text-sm font-medium text-gray-500">TÃ­tulo</label>
                 <p className="text-gray-900 font-medium">{selectedAdForView.title}</p>
               </div>
               
               <div>
-                <label className="text-sm font-medium text-gray-500">Descripción</label>
+                <label className="text-sm font-medium text-gray-500">DescripciÃ³n</label>
                 <p className="text-gray-900 whitespace-pre-wrap">{selectedAdForView.description}</p>
               </div>
               
@@ -620,11 +639,11 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Categoría</label>
+                  <label className="text-sm font-medium text-gray-500">CategorÃ­a</label>
                   <p className="text-gray-900">{selectedAdForView.category_name || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Subcategoría</label>
+                  <label className="text-sm font-medium text-gray-500">SubcategorÃ­a</label>
                   <p className="text-gray-900">{selectedAdForView.subcategory_name || 'N/A'}</p>
                 </div>
               </div>
@@ -682,14 +701,27 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           }}
           onSuccess={() => {
             setSelectedAdForFeatured(null);
-            notify.success('¡Aviso destacado exitosamente!');
+            notify.success('Â¡Aviso destacado exitosamente!');
             loadData();
             loadUserCredits();
           }}
         />
       )}
 
-      {/* Modal Confirmar Eliminación */}
+      {isSuperAdmin && showBulkVisibility && (
+        <BulkVisibilityModal
+          isOpen={showBulkVisibility}
+          onClose={() => setShowBulkVisibility(false)}
+          ads={ads}
+          featuredMap={featuredMap}
+          onApplied={() => {
+            loadData();
+            loadUserCredits();
+          }}
+        />
+      )}
+
+      {/* Modal Confirmar EliminaciÃ³n */}
       {selectedAdForDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
@@ -699,11 +731,11 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               </div>
               
               <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
-                ¿Eliminar aviso?
+                Â¿Eliminar aviso?
               </h3>
               
               <p className="text-gray-600 text-center mb-1">
-                Estás por eliminar el aviso:
+                EstÃ¡s por eliminar el aviso:
               </p>
               <p className="text-gray-900 font-medium text-center mb-4">
                 "{selectedAdForDelete.title}"
@@ -711,7 +743,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
                 <p className="text-red-800 text-sm text-center font-medium">
-                  Esta acción es PERMANENTE y no se puede deshacer
+                  Esta acciÃ³n es PERMANENTE y no se puede deshacer
                 </p>
               </div>
               
@@ -726,7 +758,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                   onClick={confirmDelete}
                   className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
                 >
-                  Sí, Eliminar
+                  SÃ­, Eliminar
                 </button>
               </div>
             </div>
@@ -735,7 +767,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
       )}
 
       {/* Modal Confirmar Cancelar Destacado */}
-      {cancelFeaturedTarget && (
+      {isSuperAdmin && cancelFeaturedTarget && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6">
@@ -744,7 +776,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               </div>
               
               <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
-                ¿Cancelar destacado?
+                Â¿Cancelar destacado?
               </h3>
               
               <p className="text-gray-600 text-center mb-1">
@@ -758,9 +790,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
                 <p className="text-yellow-800 text-sm text-center font-medium">
-                  {cancelFeaturedTarget.featured.status === 'active'
-                    ? 'Los créditos consumidos NO se devuelven'
-                    : 'Se devolverán los créditos consumidos'}
+                  No hay reembolso por cancelaciÃ³n de destacado
                 </p>
               </div>
               
@@ -776,7 +806,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                   disabled={cancellingFeatured}
                   className="flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white rounded-lg transition-colors font-medium"
                 >
-                  {cancellingFeatured ? 'Cancelando...' : 'Sí, Cancelar'}
+                  {cancellingFeatured ? 'Cancelando...' : 'SÃ­, Cancelar'}
                 </button>
               </div>
             </div>
@@ -787,3 +817,4 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     </div>
   );
 }
+

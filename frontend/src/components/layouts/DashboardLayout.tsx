@@ -17,7 +17,6 @@ import {
   MessageSquare,
   Edit3,
   Settings as SettingsIcon,
-  Star,
   Globe,
   Image as ImageIcon,
   CreditCard,
@@ -71,7 +70,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     profile: <User className="w-5 h-5" />,
     subscription: <CreditCard className="w-5 h-5" />,
     // Gestión Avisos
-    'featured-ads': <Star className="w-5 h-5" />,
     'categories-admin': <Layers className="w-5 h-5" />,
     'attributes-admin': <Sliders className="w-5 h-5" />,
     'templates-admin': <FileText className="w-5 h-5" />,

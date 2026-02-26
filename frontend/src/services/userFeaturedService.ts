@@ -11,6 +11,7 @@
  */
 
 import { supabase } from './supabaseClient';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // ============================================================================
 // TIPOS
@@ -306,54 +307,24 @@ export async function cancelUserFeaturedAd(
   featuredId: string
 ): Promise<{ success: boolean; error: Error | null }> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
       return { success: false, error: new Error('No autenticado') };
     }
 
-    // Verificar que pertenece al usuario y está pendiente
-    const { data: featured, error: fetchError } = await supabase
-      .from('featured_ads')
-      .select('user_id, status, credit_consumed')
-      .eq('id', featuredId)
-      .single();
+    const response = await fetch(`${API_URL}/api/featured-ads/${featuredId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
 
-    if (fetchError || !featured) {
-      return { success: false, error: new Error('Destacado no encontrado') };
-    }
-
-    if (featured.user_id !== user.id) {
-      return { success: false, error: new Error('No sos el dueño de este destacado') };
-    }
-
-    if (featured.status !== 'pending') {
-      return { success: false, error: new Error('Solo se pueden cancelar destacados pendientes') };
-    }
-
-    // Actualizar estado
-    const { error: updateError } = await supabase
-      .from('featured_ads')
-      .update({ status: 'cancelled' })
-      .eq('id', featuredId);
-
-    if (updateError) {
-      return { success: false, error: updateError };
-    }
-
-    // Devolver crédito si fue consumido
-    if (featured.credit_consumed) {
-      const { data: credits } = await supabase
-        .from('user_credits')
-        .select('balance')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (credits) {
-        await supabase
-          .from('user_credits')
-          .update({ balance: (credits.balance || 0) + 1 })
-          .eq('user_id', user.id);
-      }
+    const result = await response.json();
+    if (!response.ok || !result?.success) {
+      return {
+        success: false,
+        error: new Error(result?.error || 'Error al cancelar destacado pendiente'),
+      };
     }
 
     return { success: true, error: null };
@@ -370,37 +341,24 @@ export async function cancelActiveFeaturedAd(
   featuredId: string
 ): Promise<{ success: boolean; error: Error | null }> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
       return { success: false, error: new Error('No autenticado') };
     }
 
-    const { data: featured, error: fetchError } = await supabase
-      .from('featured_ads')
-      .select('user_id, status')
-      .eq('id', featuredId)
-      .single();
+    const response = await fetch(`${API_URL}/api/featured-ads/${featuredId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
 
-    if (fetchError || !featured) {
-      return { success: false, error: new Error('Destacado no encontrado') };
-    }
-
-    if (featured.user_id !== user.id) {
-      return { success: false, error: new Error('No sos el dueño de este destacado') };
-    }
-
-    if (featured.status !== 'active') {
-      return { success: false, error: new Error('Solo se pueden cancelar destacados activos') };
-    }
-
-    // Cancelar SIN devolver créditos
-    const { error: updateError } = await supabase
-      .from('featured_ads')
-      .update({ status: 'cancelled' })
-      .eq('id', featuredId);
-
-    if (updateError) {
-      return { success: false, error: updateError };
+    const result = await response.json();
+    if (!response.ok || !result?.success) {
+      return {
+        success: false,
+        error: new Error(result?.error || 'Error al cancelar destacado activo'),
+      };
     }
 
     return { success: true, error: null };

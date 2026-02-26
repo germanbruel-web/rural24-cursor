@@ -74,21 +74,29 @@ export default function CreateFeaturedModal({ isOpen, onClose, onSuccess }: Crea
 
   // Buscar avisos
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
+    const queryText = searchQuery.trim();
+    if (!queryText) {
       notify.warning('Ingresá un término de búsqueda');
       return;
     }
 
     setSearching(true);
     try {
-      // Búsqueda simple sin joins para evitar problemas de RLS
-      const { data, error } = await supabase
+      // Evitar id.eq cuando el texto no es UUID válido
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      let query = supabase
         .from('ads')
         .select('id, title, price, currency, category_id, subcategory_id, user_id')
-        .or(`title.ilike.%${searchQuery}%,id.eq.${searchQuery}`)
         .eq('status', 'active')
         .limit(10);
 
+      if (uuidRegex.test(queryText)) {
+        query = query.eq('id', queryText);
+      } else {
+        query = query.ilike('title', `%${queryText}%`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
 
       const formatted = (data || []).map((ad: any) => ({
@@ -246,6 +254,7 @@ export default function CreateFeaturedModal({ isOpen, onClose, onSuccess }: Crea
                         className="w-full p-4 border border-gray-200 rounded-lg hover:border-emerald-500 hover:bg-emerald-50 transition-colors text-left"
                       >
                         <h3 className="font-medium text-gray-900 mb-1">{ad.title}</h3>
+                        <p className="text-xs text-gray-500 mb-1 font-mono">{ad.id}</p>
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                           <span>{ad.price ? `${ad.currency} ${ad.price.toLocaleString()}` : 'Sin precio'}</span>
                           <span>•</span>

@@ -328,6 +328,14 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
   const creditsAvailable = credits?.credits_available ?? 0;
   const hasCredits = creditsAvailable > 0;
   const hasEnoughCredits = creditsAvailable >= totalCost;
+  const resultingLevel =
+    selectedPlacements.length >= 3
+      ? 'ALTO (Premium)'
+      : selectedPlacements.length === 2
+      ? 'MEDIO'
+      : selectedPlacements.length === 1
+      ? 'BASICO'
+      : 'Sin nivel';
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-60 p-4">
@@ -446,138 +454,92 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                 className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-xl font-bold transition-colors"
               >
                 <Zap className="w-5 h-5" />
-                Comprar créditos
+                Comprar creditos
               </button>
             </div>
           ) : step === 'placement' ? (
-            /* ═══════════════════════════════════════════
-               PASO 1: Seleccionar placements — Layout 3 columnas
-               ═══════════════════════════════════════════ */
             <div className="space-y-4">
-              <h4 className="font-semibold text-gray-900 text-center">
-                ¿Dónde querés destacar tu aviso?
-              </h4>
-              <p className="text-sm text-gray-500 text-center">
-                Podés seleccionar uno o más destinos
-              </p>
-
               {!hasCategoryData && (
                 <div className="flex items-start gap-2 p-3 bg-red-50 rounded-lg text-sm text-red-700">
                   <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-medium">Categoría y subcategoría requeridas</p>
-                    <p className="text-xs mt-0.5">Este aviso debe tener categoría y subcategoría asignadas.</p>
+                    <p className="font-medium">Categoria y subcategoria requeridas</p>
+                    <p className="text-xs mt-0.5">Este aviso debe tener categoria y subcategoria asignadas.</p>
                   </div>
                 </div>
               )}
 
-              {/* 3 Columnas de placement */}
-              <div className="grid grid-cols-3 gap-3">
-                {PLACEMENT_OPTIONS.map((option) => {
-                  const isSelected = selectedPlacements.includes(option.value);
-                  const canAfford = creditsAvailable >= creditCosts[option.value];
-                  const isDisabled = !hasCategoryData || !canAfford;
-
-                  return (
-                    <button
-                      key={option.value}
-                      onClick={() => !isDisabled && togglePlacement(option.value)}
-                      disabled={isDisabled}
-                      className={`relative flex flex-col items-center p-4 rounded-xl border-2 transition-all text-center ${
-                        isSelected
-                          ? 'border-[#169834] bg-brand-50 shadow-md'
-                          : isDisabled
-                          ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                          : 'border-gray-200 hover:border-[#a2c037] hover:bg-brand-50/50 cursor-pointer'
-                      }`}
-                    >
-                      {/* Checkmark */}
-                      {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#169834] rounded-full flex items-center justify-center shadow">
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-
-                      {/* Short label (PP/PR/PA) */}
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full mb-2 ${
-                        isSelected ? 'bg-[#169834] text-white' : 'bg-gray-200 text-gray-600'
-                      }`}>
-                        {option.shortLabel}
-                      </span>
-
-                      {/* Icon */}
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-2 ${
-                        isSelected ? 'bg-[#169834]/10 text-[#169834]' : 'bg-gray-100 text-gray-500'
-                      }`}>
-                        {option.icon}
-                      </div>
-
-                      {/* Label */}
-                      <span className="text-xs font-semibold text-gray-900 leading-tight">
-                        {option.label}
-                      </span>
-
-                      {/* Description */}
-                      <span className="text-[10px] text-gray-500 mt-1 leading-tight">
-                        {option.description}
-                      </span>
-
-                      {/* Cost */}
-                      <span className={`text-sm font-bold mt-2 ${
-                        isSelected ? 'text-[#169834]' : 'text-gray-700'
-                      }`}>
-                        {creditCosts[option.value]} créd.
-                      </span>
-
-                      {!canAfford && (
-                        <span className="text-[10px] text-red-500 mt-1">Insuficiente</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Resumen de selección */}
-              {selectedPlacements.length > 0 && (
-                <div className="bg-brand-50 border border-brand-200 rounded-xl p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-sm text-gray-600">Selección:</span>
-                      <div className="flex gap-1.5 mt-1">
-                        {selectedPlacements.map(p => {
-                          const opt = PLACEMENT_OPTIONS.find(o => o.value === p);
-                          return (
-                            <span key={p} className="text-xs font-bold bg-[#169834] text-white px-2 py-0.5 rounded-full">
-                              {opt?.shortLabel}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm text-gray-600">Costo total:</span>
-                      <p className={`text-xl font-bold ${hasEnoughCredits ? 'text-[#169834]' : 'text-red-500'}`}>
-                        {totalCost} crédito{totalCost !== 1 ? 's' : ''}
-                      </p>
-                    </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="border rounded-xl overflow-hidden">
+                  <div className="px-3 py-2 bg-emerald-600 text-white text-sm font-bold">
+                    1. Aviso Seleccionado
                   </div>
-                  {!hasEnoughCredits && (
-                    <p className="text-xs text-red-500 mt-2 text-center">
-                      No tenés suficientes créditos. Disponibles: {creditsAvailable}
+                  <div className="p-3">
+                    <p className="text-sm font-semibold text-gray-900 line-clamp-2">{ad.title}</p>
+                    <p className="text-xs text-gray-500 mt-1">{ad.category_name || 'Sin categoria'}</p>
+                    <p className="text-xs text-gray-500 mt-2">1 aviso seleccionado</p>
+                  </div>
+                </div>
+
+                <div className="border rounded-xl overflow-hidden">
+                  <div className="px-3 py-2 bg-blue-600 text-white text-sm font-bold">
+                    2. Configurar Ubicaciones
+                  </div>
+                  <div className="p-3 space-y-2">
+                    {PLACEMENT_OPTIONS.map((option) => {
+                      const isSelected = selectedPlacements.includes(option.value);
+                      const canAfford = creditsAvailable >= creditCosts[option.value];
+                      const isDisabled = !hasCategoryData || !canAfford;
+
+                      return (
+                        <button
+                          key={option.value}
+                          onClick={() => !isDisabled && togglePlacement(option.value)}
+                          disabled={isDisabled}
+                          className={`w-full text-left px-3 py-2 rounded-lg border flex items-center justify-between ${
+                            isSelected
+                              ? 'border-blue-500 bg-blue-50'
+                              : isDisabled
+                              ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                              : 'border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 text-sm font-medium">
+                            {option.icon}
+                            {option.label}
+                          </span>
+                          <span className="text-xs font-bold text-gray-700">{creditCosts[option.value]} cred.</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="border rounded-xl overflow-hidden">
+                  <div className="px-3 py-2 bg-orange-500 text-white text-sm font-bold">
+                    3. Resumen y Precio
+                  </div>
+                  <div className="p-3 space-y-2">
+                    <p className="text-sm text-gray-700">
+                      Nivel resultante: <span className="font-bold">{resultingLevel}</span>
                     </p>
-                  )}
+                    <p className="text-sm text-gray-700">
+                      Precio por aviso: <span className="font-bold">{totalCost} creditos</span>
+                    </p>
+                    <p className="text-xs text-gray-500">Disponibles: {creditsAvailable} creditos</p>
+                    {!hasEnoughCredits && selectedPlacements.length > 0 && (
+                      <p className="text-xs text-red-500">No tenes creditos suficientes</p>
+                    )}
+                    <button
+                      onClick={handleContinueToDate}
+                      disabled={selectedPlacements.length === 0 || !hasEnoughCredits}
+                      className="w-full mt-2 bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-bold transition-colors"
+                    >
+                      Elegir fecha de inicio
+                    </button>
+                  </div>
                 </div>
-              )}
-
-              {/* Botón continuar */}
-              <button
-                onClick={handleContinueToDate}
-                disabled={selectedPlacements.length === 0 || !hasEnoughCredits}
-                className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
-              >
-                Elegir fecha de inicio
-                <Calendar className="w-5 h-5" />
-              </button>
+              </div>
             </div>
           ) : step === 'date' ? (
             /* ═══════════════════════════════════════════

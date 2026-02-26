@@ -29,7 +29,6 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   
   // Solo SuperAdmin - Publicidad
   banners: ['superadmin'],
-  'featured-ads': ['superadmin'],
   coupons: ['superadmin'],
   'credits-config': ['superadmin'],
   'payments-admin': ['superadmin'],
@@ -134,11 +133,6 @@ export const MENU_STRUCTURE: MenuItem[] = [
     label: 'GESTIÓN AVISOS',
     allowedRoles: ['superadmin'],
     divider: true,
-  },
-  {
-    id: 'featured-ads',
-    label: 'Avisos y Destacados',
-    allowedRoles: ['superadmin'],
   },
   {
     id: 'categories-admin',
