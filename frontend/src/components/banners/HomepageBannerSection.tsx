@@ -1,5 +1,5 @@
 // HomepageBannerSection.tsx
-// Banner Buscador Dinámico - Posición 1 (1100x300)
+// Banner Buscador Dinámico - Posición 1 (1100x200)
 // Muestra hasta 6 banners rotativos filtrados por categoría
 
 import { useEffect, useState } from 'react';

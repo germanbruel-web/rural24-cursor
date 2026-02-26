@@ -35,7 +35,7 @@ services:
     envVars:
       - key: VITE_SUPABASE_URL
         sync: false  # Set in env group 'staging'
-      - key: VITE_SUPABASE_ANON_KEY
+      - key: VITE_SUPABASE_KEY
         sync: false
       - key: VITE_BACKEND_URL
         value: https://rural24.onrender.com
@@ -73,7 +73,7 @@ services:
     envVars:
       - key: VITE_SUPABASE_URL
         sync: false  # Set in env group 'production'
-      - key: VITE_SUPABASE_ANON_KEY
+      - key: VITE_SUPABASE_KEY
         sync: false
       - key: VITE_BACKEND_URL
         value: https://rural24-oo01.onrender.com

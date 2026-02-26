@@ -165,7 +165,7 @@ export interface UpdateAdInput extends Partial<CreateAdInput> {
 // ============================================
 
 export type BannerType = 
-  | 'homepage_vip'          // Banner VIP Hero (1100x300 desktop, 480x100 mobile)
+  | 'homepage_vip'          // Banner VIP Hero (1100x200 desktop, 480x100 mobile)
   | 'homepage_category'     // Banner Categorías Homepage (650x120)
   | 'results_intercalated'  // Banner Intercalado Resultados (650x100)
   | 'results_below_filter'  // Banner Debajo del Filtro (280x250)
@@ -241,7 +241,7 @@ export interface BannerClean {
   category: string;  // 'all', 'inmuebles', 'vehiculos', 'maquinarias', 'insumos', 'empleos'
   client_name: string;
   link_url?: string;
-  desktop_image_url?: string;  // 1100x300 (solo hero_vip)
+  desktop_image_url?: string;  // 1100x200 (solo hero_vip)
   mobile_image_url?: string;   // 480x100 (solo hero_vip)
   carousel_image_url?: string; // 650x100 (solo category_carousel)
   is_active: boolean;

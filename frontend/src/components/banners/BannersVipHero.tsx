@@ -1,6 +1,6 @@
 // BannersVipHero.tsx
 // Banner VIP en Hero - Usa el nuevo sistema banners_clean
-// Desktop/Notebook: Banner 1100x300, cambia en hover de categorías, muestra 1 random al cargar
+// Desktop/Notebook: Banner 1100x200, cambia en hover de categorías, muestra 1 random al cargar
 // Tablet/Mobile: Carrusel automático 480x100 con TODOS los banners activos
 
 import { useEffect, useState, useRef } from 'react';
@@ -135,7 +135,7 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
   // Skeleton animado mientras carga
   if (loading) {
     return (
-      <div className={`w-full overflow-hidden relative bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse ${isMobile ? 'h-[100px]' : 'h-[300px]'}`}>
+      <div className={`w-full overflow-hidden relative bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse ${isMobile ? 'h-[100px]' : 'h-[200px]'}`}>
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skeleton-shimmer" />
         <style>{`
           @keyframes shimmer {
@@ -241,7 +241,7 @@ export const BannersVipHero: React.FC<Props> = ({ category }) => {
           alt={desktopBanner.client_name}
           className="w-full h-auto object-contain"
           width={1100}
-          height={300}
+          height={200}
         />
       </a>
     </div>

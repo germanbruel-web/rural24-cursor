@@ -17,6 +17,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Sparkles } from 'lucide-react';
 import { getFeaturedForHomepage } from '../../services/userFeaturedService';
+import { getCategoryCarouselBanners } from '../../services/bannersCleanService';
 import { useCategories } from '../../contexts/CategoryContext';
 import { ProductCard } from '../organisms/ProductCard';
 import { SubcategoriesExpressBar } from './SubcategoriesExpressBar';
@@ -27,7 +28,12 @@ interface CategoryWithBanners {
   category_id: string;
   category_name: string;
   category_slug: string;
-  banners: any[];
+  banners: Array<{
+    id: string;
+    image_url: string;
+    link_url?: string;
+    title: string;
+  }>;
   subcategories: any[];
 }
 
@@ -71,6 +77,8 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
       // NOTA: Banners se manejan vía CategoryBannerSlider (tabla banners_clean)
       const categoriesWithData = await Promise.all(
         categories.map(async (cat) => {
+          const categoryLookupValue = cat.slug || cat.display_name || cat.name;
+
           // Subcategorías con conteo de avisos activos
           const { data: subcategories } = await supabase
             .from('subcategories')
@@ -78,6 +86,26 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
             .eq('category_id', cat.id)
             .eq('is_active', true)
             .order('sort_order');
+
+          // Banners de carrusel por categoría (banners_clean v2)
+          // Incluye banners específicos + banners con category='all'
+          let banners: CategoryWithBanners['banners'] = [];
+          try {
+            const categoryBanners = await getCategoryCarouselBanners(categoryLookupValue);
+            banners = categoryBanners
+              .filter((banner) => !!banner.carousel_image_url)
+              .map((banner) => ({
+                id: banner.id,
+                image_url: banner.carousel_image_url || '',
+                link_url: banner.link_url,
+                title: banner.client_name || 'Banner',
+              }));
+          } catch (bannerError) {
+            console.error(
+              `[FeaturedAdsSection] Error loading category banners for ${categoryLookupValue}:`,
+              bannerError
+            );
+          }
 
           // Contar avisos activos por subcategoría
           const subcatsWithCount = await Promise.all(
@@ -101,7 +129,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
             category_id: cat.id,
             category_name: cat.display_name || cat.name,
             category_slug: cat.slug,
-            banners: [],
+            banners,
             subcategories: subcatsWithCount,
           };
         })

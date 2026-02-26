@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
   
   // Backend API URL configurable (default: 3001 para evitar conflictos)
   const apiUrl = env.VITE_API_URL || 'http://localhost:3001';
+  const supabaseKey = env.VITE_SUPABASE_KEY || env.VITE_SUPABASE_ANON_KEY || '';
   const isProduction = mode === 'production';
 
   return {
@@ -135,7 +136,8 @@ export default defineConfig(({ mode }) => {
     define: {
       // Exponer Supabase
       'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
-      'process.env.VITE_SUPABASE_KEY': JSON.stringify(env.VITE_SUPABASE_KEY),
+      'process.env.VITE_SUPABASE_KEY': JSON.stringify(supabaseKey),
+      'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
       // Polyfill para Buffer en browser
       global: 'globalThis',
     },
