@@ -1,0 +1,5 @@
+version: 1
+interface:
+  display_name: Rural24 Incident Debug
+  short_description: Protocolo de incidentes para staging/prod por capas
+  default_prompt: Ejecuta triage de incidente Rural24 y propon mitigacion segura

@@ -12,6 +12,7 @@ import {
 import { 
   getAllSettings, 
   setSetting, 
+  createSetting,
   type GlobalSetting 
 } from '../../services/v2/globalSettingsService';
 import PlansAdmin from './PlansAdmin';
@@ -68,6 +69,12 @@ const CATEGORY_INFO: Record<string, {
     description: 'Configuración de publicación de avisos',
     color: 'orange'
   },
+  payments: {
+    icon: <CreditCard className="w-5 h-5" />,
+    label: 'Pagos',
+    description: 'Activar o desactivar metodos de pago',
+    color: 'green'
+  },
 };
 
 // Explicaciones detalladas por setting key
@@ -80,8 +87,40 @@ const SETTING_HELP: Record<string, string> = {
   site_maintenance_mode: 'Si está activado, solo los administradores pueden acceder al sitio. Los usuarios ven una página de mantenimiento.',
   new_user_default_plan: 'Nombre del plan que se asigna automáticamente cuando un usuario se registra (ej: "free").',
   analytics_enabled: 'Si los usuarios pueden ver las estadísticas de vistas de sus avisos.',
+  featured_payments_enabled: 'Interruptor global para checkout de destacados.',
+  mercadopago_enabled: 'Habilita checkout con MercadoPago para destacados.',
+  mercadopago_sandbox_mode: 'Usa entorno Sandbox de MercadoPago (staging).',
 };
 
+const PAYMENT_DEFAULT_SETTINGS: Array<Omit<GlobalSetting, 'id' | 'updated_at'>> = [
+  {
+    key: 'featured_payments_enabled',
+    value: false,
+    category: 'payments',
+    display_name: 'Cobros Destacados Habilitados',
+    description: 'Activa o desactiva checkout para avisos destacados',
+    value_type: 'boolean',
+    is_public: true,
+  },
+  {
+    key: 'mercadopago_enabled',
+    value: false,
+    category: 'payments',
+    display_name: 'MercadoPago Habilitado',
+    description: 'Muestra MercadoPago como método de pago',
+    value_type: 'boolean',
+    is_public: true,
+  },
+  {
+    key: 'mercadopago_sandbox_mode',
+    value: true,
+    category: 'payments',
+    display_name: 'MercadoPago Sandbox',
+    description: 'Usa entorno de prueba en lugar de producción',
+    value_type: 'boolean',
+    is_public: false,
+  },
+];
 export default function GlobalSettingsPanel() {
   const [activeTab, setActiveTab] = useState<TabType>('settings');
   const [settings, setSettings] = useState<GlobalSetting[]>([]);
@@ -94,7 +133,16 @@ export default function GlobalSettingsPanel() {
   // Cargar settings
   const loadSettings = async () => {
     setLoading(true);
-    const data = await getAllSettings();
+    let data = await getAllSettings();
+
+    const existingKeys = new Set(data.map((s) => s.key));
+    for (const setting of PAYMENT_DEFAULT_SETTINGS) {
+      if (!existingKeys.has(setting.key)) {
+        await createSetting(setting);
+      }
+    }
+
+    data = await getAllSettings();
     setSettings(data);
     // Inicializar valores editados
     const values: Record<string, string> = {};
@@ -422,3 +470,5 @@ export default function GlobalSettingsPanel() {
     </div>
   );
 }
+
+

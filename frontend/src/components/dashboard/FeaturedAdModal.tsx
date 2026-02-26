@@ -42,6 +42,7 @@ import {
   type UserFeaturedCredits,
   type PromoStatus
 } from '../../services/userFeaturedService';
+import { getSettingBool } from '../../services/v2/globalSettingsService';
 
 interface FeaturedAdModalProps {
   isOpen: boolean;
@@ -123,6 +124,10 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
   // Sub-modals de créditos
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showCouponModal, setShowCouponModal] = useState(false);
+  const [paymentToggles, setPaymentToggles] = useState({
+    featuredPaymentsEnabled: false,
+    mercadoPagoEnabled: false,
+  });
 
   // Costo total de placements seleccionados
   const totalCost = selectedPlacements.reduce((sum, p) => sum + creditCosts[p], 0);
@@ -133,6 +138,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
       loadCredits();
       loadPromoStatus();
       loadSettings();
+      loadPaymentToggles();
       setStep('placement');
       setSelectedPlacements([]);
       setSelectedDate('');
@@ -192,6 +198,18 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
       setDurationDays(settings.durationDays || DEFAULT_DURATION_DAYS);
     } catch (e) {
       // Fallback a defaults
+    }
+  };
+
+  const loadPaymentToggles = async () => {
+    try {
+      const [featuredPaymentsEnabled, mercadoPagoEnabled] = await Promise.all([
+        getSettingBool('featured_payments_enabled', false),
+        getSettingBool('mercadopago_enabled', false),
+      ]);
+      setPaymentToggles({ featuredPaymentsEnabled, mercadoPagoEnabled });
+    } catch {
+      setPaymentToggles({ featuredPaymentsEnabled: false, mercadoPagoEnabled: false });
     }
   };
 
@@ -456,6 +474,20 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                 <Zap className="w-5 h-5" />
                 Comprar creditos
               </button>
+              <div className="mt-4">
+                {paymentToggles.featuredPaymentsEnabled && paymentToggles.mercadoPagoEnabled ? (
+                  <button
+                    onClick={() => setError('Checkout MercadoPago pendiente de implementacion backend.')}
+                    className="inline-flex items-center gap-2 bg-[#009ee3] hover:bg-[#0088c7] text-white px-6 py-3 rounded-xl font-bold transition-colors"
+                  >
+                    Pagar con Mercado Pago
+                  </button>
+                ) : (
+                  <p className="text-xs text-gray-500">
+                    Metodo de pago desactivado por configuracion global.
+                  </p>
+                )}
+              </div>
             </div>
           ) : step === 'placement' ? (
             <div className="space-y-4">
@@ -527,6 +559,9 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                       Precio por aviso: <span className="font-bold">{totalCost} creditos</span>
                     </p>
                     <p className="text-xs text-gray-500">Disponibles: {creditsAvailable} creditos</p>
+                    <p className="text-xs text-gray-500">
+                      Checkout MP: {paymentToggles.featuredPaymentsEnabled && paymentToggles.mercadoPagoEnabled ? 'activo' : 'inactivo'}
+                    </p>
                     {!hasEnoughCredits && selectedPlacements.length > 0 && (
                       <p className="text-xs text-red-500">No tenes creditos suficientes</p>
                     )}

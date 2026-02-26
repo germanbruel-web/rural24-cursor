@@ -1,0 +1,5 @@
+version: 1
+interface:
+  display_name: Rural24 Featured Ops
+  short_description: Guia tecnica+UX para destacados, checkout y settings globales
+  default_prompt: Revisa destacados y checkout con foco en rol, UX y despliegue staging/prod
