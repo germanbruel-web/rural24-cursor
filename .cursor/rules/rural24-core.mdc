@@ -1,0 +1,61 @@
+---
+description: Reglas nucleares de arquitectura y uso de agentes IA para el proyecto Rural24 en Cursor.
+alwaysApply: true
+---
+
+# Núcleo de reglas — Rural24 (Cursor)
+
+## 1. Fuente de verdad del proyecto
+
+- **Arquitectura técnica**: seguir siempre `ARCHITECTURE.md` y `DEVPROD_ARCHITECTURE.md` del repo (carpeta `ai/` o `.cursor/rules/`).
+- **Stack inmutable**: React + Vite en frontend, Next.js API Routes en backend, Supabase (PostgreSQL + Auth + RLS), Cloudinary para imágenes, monorepo npm + Turborepo.
+- **Nada de frameworks/ORM extra**: no introducir nuevos ORMs (Drizzle, TypeORM, etc.), frameworks frontend (Vue, Svelte...) ni GraphQL.
+
+## 2. Uso de agentes especializados
+
+- **Superagent**:
+  - Tratar `SUPERAGENT.md` como orquestador.
+  - Ante tareas amplias (full feature, cross-frontend/backend/db), aplicar el flujo: plan → DB → backend → frontend → validación.
+- **Agentes por dominio** (invocar con `@` cuando corresponda):
+  - Backend: `backend.agent.md`
+  - Frontend: `frontend.agent.md`
+  - Database: `database.agent.md`
+  - DevOps: `devops.agent.md`
+  - Performance: `performance.agent.md`
+  - UX/UI: `uxui.agent.md`
+
+Cuando una tarea toque varias capas, seguir la jerarquía indicada en `SUPERAGENT.md` (backend manda sobre contrato de datos, UX/UI sobre decisiones visuales, database sobre integridad de schema).
+
+## 3. Convenciones fuertes que SIEMPRE se respetan
+
+- **Autenticación y datos**:
+  - Auth y sesiones siempre via Supabase; no reinventar auth ni sesiones propias.
+  - En frontend se leen datos públicos/lecturas; escrituras sensibles siempre via backend.
+  - Operaciones financieras (créditos, cupones) van siempre a través de RPCs en la DB y endpoints backend, nunca desde el frontend directo.
+
+- **Design System**:
+  - Colores y estilos salen de las CSS vars del Design System (tokens `brand-*`), nunca hex sueltos ni paletas de Tailwind genéricas como `green-600`.
+  - Componentes UI deben respetar los patrones definidos en los agentes Frontend y UX/UI (por ejemplo `ProductCard`, `UserFeaturedAdsBar`).
+
+- **Límites de complejidad**:
+  - Archivos con más de ~500 líneas deben considerarse para refactor (split en servicios, hooks o componentes más chicos).
+  - Endpoints y componentes grandes deben mover lógica a capas dedicadas (`domain/`, servicios, hooks).
+
+## 4. Seguridad, performance y despliegue
+
+- **Seguridad**:
+  - RLS en Supabase es la primera línea; `withAuth()` y validación Zod en backend son la segunda.
+  - Nunca exponer `service_role` al frontend.
+  - No escribir SQL ad‑hoc en producción: siempre scripts versionados en `database/migrations/` según guías de `DEVPROD_ARCHITECTURE.md` y `database.agent.md`.
+
+- **Performance**:
+  - Antes de optimizar, revisar `performance.agent.md` y respetar sus restricciones (no agregar librerías pesadas sin motivo, evitar N+1 queries, usar caching definido).
+
+- **DevOps / entornos**:
+  - Respetar el flujo `feature/* → staging → main` y la separación de entornos Render/Supabase descrita en `DEVPROD_ARCHITECTURE.md` y `devops.agent.md`.
+
+## 5. Idioma, tono y UX
+
+- **Lenguaje**: documentación, mensajes y textos de interfaz en español argentino, tuteando al usuario.
+- **UX**: siempre considerar los contextos de uso del usuario rural (conexiones lentas, mobile‑first) y aplicar los patrones de feedback/estados múltiples descritos en `uxui.agent.md`.
+

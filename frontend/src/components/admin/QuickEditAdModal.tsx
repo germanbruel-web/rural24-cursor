@@ -67,6 +67,12 @@ interface AdData {
   user_id: string;
 }
 
+interface OwnerInfo {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
 export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
   adId,
   onClose,
@@ -104,6 +110,7 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
   
   // Imágenes
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
 
   // Permisos: revendedor/superadmin puede editar otros
   const canEditOthers = profile?.role === 'revendedor' || profile?.role === 'superadmin';
@@ -177,6 +184,23 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
           isPrimary: idx === 0,
         }));
         setUploadedImages(imgs);
+      }
+
+      // Titular del aviso
+      const { data: ownerData } = await supabase
+        .from('users')
+        .select('id, full_name, email')
+        .eq('id', data.user_id)
+        .maybeSingle();
+
+      if (ownerData) {
+        setOwnerInfo({
+          id: ownerData.id,
+          full_name: ownerData.full_name || 'Sin nombre',
+          email: ownerData.email || 'Sin email',
+        });
+      } else {
+        setOwnerInfo(null);
       }
     } catch (error) {
       console.error('Error cargando aviso:', error);
@@ -312,6 +336,27 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
               {modifiedFields.size} cambio{modifiedFields.size > 1 ? 's' : ''}
             </div>
           )}
+        </div>
+
+        {/* Metadata operativa requerida para superadmin */}
+        <div className="px-3 sm:px-4 py-2 border-b border-gray-100 bg-gray-50">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+            <div className="px-2 py-1.5 rounded bg-white border border-gray-200">
+              <span className="text-gray-500">ID Aviso:</span>{' '}
+              <span className="font-mono text-gray-900">{ad.id}</span>
+            </div>
+            <div className="px-2 py-1.5 rounded bg-white border border-gray-200">
+              <span className="text-gray-500">Titular:</span>{' '}
+              <span className="font-semibold text-gray-900">
+                {ownerInfo?.full_name || 'Usuario'}
+              </span>{' '}
+              <span className="text-gray-500">({ownerInfo?.email || ad.user_id})</span>
+            </div>
+            <div className="px-2 py-1.5 rounded bg-white border border-gray-200">
+              <span className="text-gray-500">Status:</span>{' '}
+              <span className="font-semibold text-gray-900 uppercase">{status}</span>
+            </div>
+          </div>
         </div>
 
         {/* Body - 3 columnas Mobile First */}
@@ -510,10 +555,10 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
             {/* Atributos Dinámicos */}
             {subcategoryId && (
               <div className="border border-gray-200 rounded-lg p-2 bg-white">
-                <h4 className="text-xs font-bold text-gray-600 mb-2 flex items-center gap-1">
-                  <Tag className="w-3.5 h-3.5" />
-                  Atributos Técnicos
-                </h4>
+              <h4 className="text-xs font-bold text-gray-600 mb-2 flex items-center gap-1">
+                <Tag className="w-3.5 h-3.5" />
+                Atributos Técnicos
+              </h4>
                 <div className="max-h-[250px] overflow-y-auto">
                   <DynamicFormLoader
                     subcategoryId={subcategoryId}
@@ -551,6 +596,7 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
                 <option value="paused">Pausado (oculto)</option>
                 <option value="sold">Vendido</option>
                 <option value="draft">Borrador</option>
+                <option value="deleted">Eliminado</option>
               </select>
             </div>
 

@@ -80,25 +80,7 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
       onConnectionError?.(false);
       console.log(`✅ ${response.length} campos cargados desde backend`);
       
-      // Auto-abrir primer grupo disponible (usando nombres normalizados)
-      if (response.length > 0 && onGroupToggle && !expandedGroup) {
-        // Obtener grupos únicos normalizados
-        const groupsNormalized = response.reduce((acc, field) => {
-          const group = field.field_group || 'General';
-          const normalized = normalizeGroupName(group);
-          if (!acc.includes(normalized)) acc.push(normalized);
-          return acc;
-        }, [] as string[]);
-        
-        // Orden de prioridad
-        const groupOrder = ['informacion_general', 'especificaciones_tecnicas', 'caracteristicas'];
-        const firstGroup = groupOrder.find(g => groupsNormalized.includes(g)) || groupsNormalized[0];
-        
-        if (firstGroup) {
-          console.log(`🔓 Auto-abriendo grupo: ${firstGroup}`);
-          onGroupToggle(firstGroup);
-        }
-      }
+      // No auto-abrir grupos: iniciar siempre colapsado.
       
     } catch (error) {
       // ERROR DE CONEXIÓN - NO hay fallback, bloquear avance

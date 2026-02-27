@@ -32,9 +32,11 @@ const normalizeGroupName = (name: string): string => {
  * El backend puede enviar cualquier nombre, se normaliza para ordenar
  */
 const GROUP_ORDER = [
+  'informacion_basica',
+  'caracteristicas',
+  'financiacion',
   'informacion_general',
-  'especificaciones_tecnicas', 
-  'caracteristicas'
+  'especificaciones_tecnicas'
 ];
 
 /**

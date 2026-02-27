@@ -422,6 +422,18 @@
   overflow: hidden;
 }
 
+/* Mobile horizontal carousel helpers (Homepage Featured sections) */
+@media (max-width: 767px) {
+  .mobile-hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .mobile-hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* ====================================================================
    NATURE COLORS — Utilidades CSS (Colores Secundarios Agricultura)
    ==================================================================== */

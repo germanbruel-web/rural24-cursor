@@ -14,6 +14,7 @@ import { supabase } from '../../services/supabaseClient';
 import { QuickEditAdModal } from './QuickEditAdModal';
 import BulkVisibilityModal from './BulkVisibilityModal';
 import { FeaturedAdModal } from '../dashboard';
+import SuperAdminFeaturedPanel from './SuperAdminFeaturedPanel';
 
 import { getUserCredits, cancelActiveFeaturedAd } from '../../services/userFeaturedService';
 import { navigateTo } from '../../hooks/useNavigate';
@@ -72,6 +73,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   // Determinar permisos segÃºn rol
   const isSuperAdmin = checkIsSuperAdmin(profile?.role);
   const canUseFeaturedFlow = Boolean(profile?.id);
+  const [superAdminView, setSuperAdminView] = useState<'mine' | 'clients'>('mine');
   
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused'>('active');
   
@@ -332,8 +334,46 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     );
   }
 
+  if (isSuperAdmin && superAdminView === 'clients') {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setSuperAdminView('mine')}
+            className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+          >
+            Mis Avisos
+          </button>
+          <button
+            onClick={() => setSuperAdminView('clients')}
+            className="px-4 py-2 rounded-lg text-sm font-semibold border border-brand-600 bg-brand-600 text-white"
+          >
+            Avisos Clientes
+          </button>
+        </div>
+        <SuperAdminFeaturedPanel />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {isSuperAdmin && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setSuperAdminView('mine')}
+            className="px-4 py-2 rounded-lg text-sm font-semibold border border-brand-600 bg-brand-600 text-white"
+          >
+            Mis Avisos
+          </button>
+          <button
+            onClick={() => setSuperAdminView('clients')}
+            className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+          >
+            Avisos Clientes
+          </button>
+        </div>
+      )}
       {/* Header simple */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

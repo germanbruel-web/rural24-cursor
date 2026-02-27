@@ -186,11 +186,11 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
               </header>
               
               {/* Skeleton Grid - Mobile First: 2 → 3 → 4 → 5 columnas */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+              <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory mobile-hide-scrollbar -mx-3 px-3 md:mx-0 md:px-0 md:overflow-visible">
                 {[1, 2, 3, 4, 5].map((cardIndex) => (
                   <div 
                     key={cardIndex} 
-                    className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border border-gray-100"
+                    className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border border-gray-100 shrink-0 w-[48vw] min-w-[230px] max-w-[300px] snap-start md:w-auto md:min-w-0 md:max-w-none md:shrink"
                   >
                     <div className="w-full aspect-[4/3] bg-gray-200 animate-pulse" />
                     <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
@@ -282,7 +282,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
               {hasFeaturedAds ? (
                 <div 
                   id={gridId}
-                  className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4"
+                  className="flex md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4 overflow-x-auto snap-x snap-mandatory mobile-hide-scrollbar -mx-3 px-3 md:mx-0 md:px-0 md:overflow-visible"
                 >
                   {featuredAds.map((ad, adIdx) => {
                     // Extraer URL de imagen correctamente
@@ -296,6 +296,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
                         key={ad.id}
                         id={`HomePage_ad_${ad.id}`}
                         data-position={adIdx + 1}
+                        className="shrink-0 w-[48vw] min-w-[230px] max-w-[300px] snap-start md:w-auto md:min-w-0 md:max-w-none md:shrink"
                       >
                         <ProductCard
                           product={{

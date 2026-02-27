@@ -1,33 +1,21 @@
-/**
- * AllAdsTab.tsx
- * Tab para gestionar todos los avisos (CRUD completo)
- * Integrado en SuperAdminFeaturedPanel
- */
-
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Search,
-  RefreshCw,
-  Eye,
-  Edit2,
-  Trash2,
+  AlertCircle,
+  ArrowDown,
+  ArrowUp,
   ChevronLeft,
   ChevronRight,
+  Edit2,
+  Eye,
   Loader2,
-  AlertCircle,
   Package,
+  Search,
+  Trash2,
   User,
-  CheckCircle,
-  X,
-  Hash
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
 import { QuickEditAdModal } from './QuickEditAdModal';
-
-// ============================================================
-// TYPES
-// ============================================================
 
 interface Category {
   id: string;
@@ -52,55 +40,38 @@ interface AdRow {
   category_id: string;
   subcategory_id: string | null;
   created_at: string;
+  updated_at: string;
   user_id: string;
-  images: string[];
-  // JOINs
   seller_name?: string;
   seller_email?: string;
   category_name?: string;
-  // Featured status (from featured_ads table)
-  featured_ad_id?: string;
-  featured_placement?: string;
   featured_status?: string;
-  featured_expires_at?: string;
+  featured_placement?: string;
 }
 
-// ============================================================
-// CONSTANTS
-// ============================================================
+const RECORDS_PER_PAGE = 20;
 
-const RECORDS_PER_PAGE = 15;
-
-// ============================================================
-// COMPONENT
-// ============================================================
+type StatusFilter = 'all' | 'active' | 'paused' | 'draft' | 'sold' | 'deleted' | 'featured';
 
 export default function AllAdsTab() {
-  // Filtros
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [titleFilter, setTitleFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused' | 'featured'>('all');
-  
-  // Resultados
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
   const [ads, setAds] = useState<AdRow[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  // Paginación
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-  
-  // Modales
+
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
   const [deletingAd, setDeletingAd] = useState<AdRow | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  // ============================================================
-  // LOAD CATEGORIES
-  // ============================================================
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -111,7 +82,7 @@ export default function AllAdsTab() {
         .order('display_name');
       setCategories(data || []);
     };
-    loadCategories();
+    void loadCategories();
   }, []);
 
   useEffect(() => {
@@ -120,7 +91,6 @@ export default function AllAdsTab() {
       setSelectedSubcategory('');
       return;
     }
-    
     const loadSubcategories = async () => {
       const { data } = await supabase
         .from('subcategories')
@@ -131,31 +101,20 @@ export default function AllAdsTab() {
       setSubcategories(data || []);
       setSelectedSubcategory('');
     };
-    loadSubcategories();
+    void loadSubcategories();
   }, [selectedCategory]);
-
-  // ============================================================
-  // SEARCH ADS
-  // ============================================================
 
   const handleSearch = useCallback(async (page = 1) => {
     setLoading(true);
     setHasSearched(true);
-    
+
     try {
-      // Base query
-      let countQuery = supabase
-        .from('ads')
-        .select('id', { count: 'exact', head: true })
-        .neq('status', 'deleted');
-      
+      let countQuery = supabase.from('ads').select('id', { count: 'exact', head: true });
       let query = supabase
         .from('ads')
-        .select('id, title, slug, price, currency, status, category_id, subcategory_id, created_at, user_id, images')
-        .neq('status', 'deleted')
-        .order('created_at', { ascending: false });
+        .select('id, title, slug, price, currency, status, category_id, subcategory_id, created_at, updated_at, user_id')
+        .order('created_at', { ascending: sortOrder === 'asc' });
 
-      // Apply filters
       if (selectedCategory) {
         countQuery = countQuery.eq('category_id', selectedCategory);
         query = query.eq('category_id', selectedCategory);
@@ -164,19 +123,18 @@ export default function AllAdsTab() {
         countQuery = countQuery.eq('subcategory_id', selectedSubcategory);
         query = query.eq('subcategory_id', selectedSubcategory);
       }
-      if (statusFilter === 'active') {
-        countQuery = countQuery.eq('status', 'active');
-        query = query.eq('status', 'active');
-      } else if (statusFilter === 'paused') {
-        countQuery = countQuery.eq('status', 'paused');
-        query = query.eq('status', 'paused');
+      if (statusFilter !== 'all' && statusFilter !== 'featured') {
+        countQuery = countQuery.eq('status', statusFilter);
+        query = query.eq('status', statusFilter);
+      }
+      if (titleFilter.trim()) {
+        countQuery = countQuery.ilike('title', `%${titleFilter.trim()}%`);
+        query = query.ilike('title', `%${titleFilter.trim()}%`);
       }
 
-      // Count
       const { count } = await countQuery;
       setTotalRecords(count || 0);
 
-      // Paginate
       const from = (page - 1) * RECORDS_PER_PAGE;
       const to = from + RECORDS_PER_PAGE - 1;
       query = query.range(from, to);
@@ -184,349 +142,236 @@ export default function AllAdsTab() {
       const { data: adsData, error } = await query;
       if (error) throw error;
 
-      // Load seller info
-      const userIds = [...new Set((adsData || []).map(d => d.user_id).filter(Boolean))];
-      let usersMap: Record<string, { name: string; email: string }> = {};
-      if (userIds.length > 0) {
-        const { data: users } = await supabase
-          .from('users')
-          .select('id, full_name, email')
-          .in('id', userIds);
+      const userIds = [...new Set((adsData || []).map((row) => row.user_id).filter(Boolean))];
+      const usersMap: Record<string, { name: string; email: string }> = {};
+      if (userIds.length) {
+        const { data: users } = await supabase.from('users').select('id, full_name, email').in('id', userIds);
         (users || []).forEach((u: any) => {
-          usersMap[u.id] = {
-            name: u.full_name || u.email?.split('@')[0] || 'Usuario',
-            email: u.email || ''
-          };
+          usersMap[u.id] = { name: u.full_name || 'Usuario', email: u.email || '' };
         });
       }
 
-      // Load category names
-      const catIds = [...new Set((adsData || []).map(d => d.category_id).filter(Boolean))];
-      let catsMap: Record<string, string> = {};
-      if (catIds.length > 0) {
-        const { data: cats } = await supabase
-          .from('categories')
-          .select('id, display_name')
-          .in('id', catIds);
+      const catIds = [...new Set((adsData || []).map((row) => row.category_id).filter(Boolean))];
+      const catsMap: Record<string, string> = {};
+      if (catIds.length) {
+        const { data: cats } = await supabase.from('categories').select('id, display_name').in('id', catIds);
         (cats || []).forEach((c: any) => {
-          catsMap[c.id] = c.display_name || c.id;
+          catsMap[c.id] = c.display_name || '';
         });
       }
 
-      // Load featured status from featured_ads table
-      const adIds = (adsData || []).map(d => d.id);
-      let featuredMap: Record<string, { id: string; placement: string; status: string; expires_at: string }> = {};
-      if (adIds.length > 0) {
-        const { data: featuredAds } = await supabase
+      const adIds = (adsData || []).map((row) => row.id);
+      const featuredMap: Record<string, { status: string; placement: string }> = {};
+      if (adIds.length) {
+        const { data: featured } = await supabase
           .from('featured_ads')
-          .select('id, ad_id, placement, status, expires_at')
+          .select('ad_id, status, placement')
           .in('ad_id', adIds)
           .in('status', ['active', 'pending']);
-        (featuredAds || []).forEach((f: any) => {
-          featuredMap[f.ad_id] = {
-            id: f.id,
-            placement: f.placement,
-            status: f.status,
-            expires_at: f.expires_at
-          };
+        (featured || []).forEach((f: any) => {
+          featuredMap[f.ad_id] = { status: f.status, placement: f.placement };
         });
       }
 
-      // Merge data
-      const enrichedAds = (adsData || []).map(ad => ({
+      let enriched = (adsData || []).map((ad: any) => ({
         ...ad,
         seller_name: usersMap[ad.user_id]?.name || 'Usuario',
         seller_email: usersMap[ad.user_id]?.email || '',
         category_name: catsMap[ad.category_id] || '',
-        featured_ad_id: featuredMap[ad.id]?.id,
-        featured_placement: featuredMap[ad.id]?.placement,
         featured_status: featuredMap[ad.id]?.status,
-        featured_expires_at: featuredMap[ad.id]?.expires_at
-      }));
+        featured_placement: featuredMap[ad.id]?.placement,
+      })) as AdRow[];
 
-      setAds(enrichedAds);
+      if (statusFilter === 'featured') {
+        enriched = enriched.filter((row) => Boolean(row.featured_status));
+      }
+
+      setAds(enriched);
       setCurrentPage(page);
     } catch (err) {
-      console.error('Error loading ads:', err);
+      console.error(err);
       notify.error('Error al cargar avisos');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
-  }, [selectedCategory, selectedSubcategory, statusFilter]);
+  }, [selectedCategory, selectedSubcategory, statusFilter, titleFilter, sortOrder]);
 
-  // ============================================================
-  // FILTER BY FEATURED STATUS
-  // ============================================================
+  const totalPages = Math.ceil(totalRecords / RECORDS_PER_PAGE);
 
-  const filteredAds = useMemo(() => {
-    let result = ads;
-    
-    // Filter by title
-    if (titleFilter.trim()) {
-      const search = titleFilter.toLowerCase();
-      result = result.filter(ad => ad.title.toLowerCase().includes(search));
-    }
-    
-    // Filter featured only
-    if (statusFilter === 'featured') {
-      result = result.filter(ad => ad.featured_status);
-    }
-    
-    return result;
-  }, [ads, titleFilter, statusFilter]);
-
-  // ============================================================
-  // ACTIONS
-  // ============================================================
+  const filteredSubcategories = useMemo(
+    () => subcategories.filter((sub) => sub.category_id === selectedCategory),
+    [subcategories, selectedCategory]
+  );
 
   const handleViewAd = (ad: AdRow) => {
-    // Usar slug si existe, sino fallback a ID
     const identifier = ad.slug || ad.id;
     window.open(`/#/ad/${identifier}`, '_blank');
   };
 
-  const handleEditAd = (ad: AdRow) => {
-    setEditingAdId(ad.id);
-  };
-
-  const handleDeleteAd = (ad: AdRow) => {
-    setDeletingAd(ad);
-  };
-
   const confirmDelete = async () => {
     if (!deletingAd) return;
-    
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from('ads')
-        .delete()
-        .eq('id', deletingAd.id);
-
+      const { error } = await supabase.from('ads').delete().eq('id', deletingAd.id);
       if (error) throw error;
-
-      notify.success(`Aviso "${deletingAd.title}" eliminado correctamente`);
+      notify.success('Aviso eliminado');
       setDeletingAd(null);
-      handleSearch(currentPage);
+      void handleSearch(currentPage);
     } catch (error: any) {
-      console.error('Error eliminando aviso:', error);
-      notify.error(error.message || 'Error al eliminar el aviso');
+      notify.error(error.message || 'No se pudo eliminar');
     } finally {
       setDeleting(false);
     }
   };
 
-  // ============================================================
-  // PAGINATION
-  // ============================================================
-
-  const totalPages = Math.ceil(totalRecords / RECORDS_PER_PAGE);
-
-  // ============================================================
-  // RENDER
-  // ============================================================
-
   return (
     <div className="space-y-4">
-      {/* Filtros */}
       <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
         <div className="flex flex-wrap items-end gap-3">
-          {/* Categoría */}
-          <div className="flex-1 min-w-[180px]">
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Categoría
-            </label>
+          <div className="min-w-[170px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Categoría</label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             >
-              <option value="">Todas las categorías</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.display_name || cat.name}
-                </option>
+              <option value="">Todas</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.display_name || cat.name}</option>
               ))}
             </select>
           </div>
 
-          {/* Subcategoría */}
-          <div className="flex-1 min-w-[180px]">
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Subcategoría
-            </label>
+          <div className="min-w-[170px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Subcategoría</label>
             <select
               value={selectedSubcategory}
               onChange={(e) => setSelectedSubcategory(e.target.value)}
               disabled={!selectedCategory}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:bg-gray-100"
             >
               <option value="">Todas</option>
-              {subcategories.map(sub => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.display_name || sub.name}
-                </option>
+              {filteredSubcategories.map((sub) => (
+                <option key={sub.id} value={sub.id}>{sub.display_name || sub.name}</option>
               ))}
             </select>
           </div>
 
-          {/* Estado */}
-          <div className="min-w-[140px]">
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Estado
-            </label>
+          <div className="min-w-[150px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Estado</label>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             >
               <option value="all">Todos</option>
-              <option value="active">Activos</option>
-              <option value="paused">Pausados</option>
-              <option value="featured">Destacados</option>
+              <option value="active">Activo</option>
+              <option value="paused">Pausado</option>
+              <option value="draft">Borrador</option>
+              <option value="sold">Vendido</option>
+              <option value="deleted">Eliminado</option>
+              <option value="featured">Destacado</option>
             </select>
           </div>
 
-          {/* Buscar */}
+          <div className="min-w-[220px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Buscar título</label>
+            <input
+              type="text"
+              value={titleFilter}
+              onChange={(e) => setTitleFilter(e.target.value)}
+              placeholder="Título..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+          </div>
+
+          <button
+            onClick={() => setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'))}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50 inline-flex items-center gap-2"
+          >
+            {sortOrder === 'desc' ? <ArrowDown className="w-4 h-4" /> : <ArrowUp className="w-4 h-4" />}
+            {sortOrder === 'desc' ? 'Reciente' : 'Antiguo'}
+          </button>
+
           <button
             onClick={() => handleSearch(1)}
             disabled={loading}
-            className="px-5 py-2 bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 text-white font-medium rounded-lg flex items-center gap-2 transition-colors"
+            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 text-white rounded-lg inline-flex items-center gap-2"
           >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Search className="w-4 h-4" />
-            )}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
             Buscar
           </button>
         </div>
       </div>
 
-      {/* Resultados */}
       {!hasSearched ? (
-        <div className="text-center py-16">
-          <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Usa los filtros para buscar avisos</p>
+        <div className="text-center py-12 text-gray-500">
+          <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+          Buscar avisos de clientes para administrar.
         </div>
       ) : loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
         </div>
-      ) : filteredAds.length === 0 ? (
-        <div className="text-center py-16">
-          <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No se encontraron avisos</p>
+      ) : ads.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <AlertCircle className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+          Sin resultados para esos filtros.
         </div>
       ) : (
         <>
-          {/* Toolbar */}
-          <div className="flex items-center justify-between">
-            <div className="relative max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={titleFilter}
-                onChange={(e) => setTitleFilter(e.target.value)}
-                placeholder="Filtrar por título..."
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
-            <span className="text-sm text-gray-500">
-              {totalRecords} aviso{totalRecords !== 1 ? 's' : ''} encontrados
-            </span>
-          </div>
+          <div className="text-sm text-gray-500">{totalRecords} avisos encontrados</div>
 
-          {/* Tabla */}
           <div className="overflow-x-auto border border-gray-200 rounded-lg">
-            <table className="w-full">
+            <table className="w-full min-w-[1100px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Aviso
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Vendedor
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">ID Aviso</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Fechas</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Aviso</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Titular</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                  <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAds.map((ad) => (
+              <tbody className="divide-y divide-gray-100">
+                {ads.map((ad) => (
                   <tr key={ad.id} className="hover:bg-gray-50">
-                    {/* Aviso */}
-                    <td className="px-4 py-3">
-                      <div className="min-w-0 space-y-1">
-                        <p className="text-sm font-medium text-gray-900 truncate max-w-[300px]">
-                          {ad.title}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">{ad.category_name}</span>
-                          <span className="text-xs text-gray-400">•</span>
-                          <span className="text-xs text-gray-400 font-mono flex items-center gap-1">
-                            <Hash className="w-3 h-3" />
-                            {ad.id.slice(0, 8)}
-                          </span>
-                        </div>
-                      </div>
+                    <td className="px-3 py-2 text-xs font-mono text-gray-700">{ad.id}</td>
+                    <td className="px-3 py-2 text-xs text-gray-600">
+                      <p>Alta: {new Date(ad.created_at).toLocaleDateString('es-AR')}</p>
+                      <p>Upd: {new Date(ad.updated_at).toLocaleDateString('es-AR')}</p>
                     </td>
-                    
-                    {/* Vendedor */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
+                    <td className="px-3 py-2">
+                      <p className="text-sm font-medium text-gray-900 max-w-[320px] truncate">{ad.title}</p>
+                      <p className="text-xs text-gray-500">
+                        {ad.category_name || 'Sin categoría'}
+                        {ad.featured_status ? ` • Destacado ${ad.featured_placement || ''}` : ''}
+                      </p>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="inline-flex items-center gap-2">
                         <User className="w-4 h-4 text-gray-400" />
                         <div>
-                          <p className="text-sm text-gray-900">{ad.seller_name}</p>
-                          <p className="text-xs text-gray-500">{ad.seller_email}</p>
+                          <p className="text-sm text-gray-900">{ad.seller_name || 'Usuario'}</p>
+                          <p className="text-xs text-gray-500">{ad.seller_email || ad.user_id}</p>
                         </div>
                       </div>
                     </td>
-                    
-                    {/* Estado */}
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        ad.status === 'active'
-                          ? 'bg-brand-100 text-brand-700'
-                          : ad.status === 'paused'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {ad.status === 'active' ? 'Activo' : ad.status === 'paused' ? 'Pausado' : ad.status}
+                    <td className="px-3 py-2">
+                      <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                        {ad.status}
                       </span>
                     </td>
-                    
-                    {/* Acciones */}
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3 py-2">
                       <div className="flex items-center justify-end gap-1">
-                        {/* Ver */}
-                        <button
-                          onClick={() => handleViewAd(ad)}
-                          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Ver aviso público"
-                        >
+                        <button onClick={() => handleViewAd(ad)} className="p-2 rounded hover:bg-blue-50 text-gray-500 hover:text-blue-600">
                           <Eye className="w-4 h-4" />
                         </button>
-                        
-                        {/* Editar */}
-                        <button
-                          onClick={() => handleEditAd(ad)}
-                          className="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                          title="Editar aviso"
-                        >
+                        <button onClick={() => setEditingAdId(ad.id)} className="p-2 rounded hover:bg-brand-50 text-gray-500 hover:text-brand-600">
                           <Edit2 className="w-4 h-4" />
                         </button>
-                        
-                        {/* Eliminar */}
-                        <button
-                          onClick={() => handleDeleteAd(ad)}
-                          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Eliminar aviso"
-                        >
+                        <button onClick={() => setDeletingAd(ad)} className="p-2 rounded hover:bg-red-50 text-gray-500 hover:text-red-600">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -537,24 +382,21 @@ export default function AllAdsTab() {
             </table>
           </div>
 
-          {/* Paginación */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-2">
-              <p className="text-sm text-gray-600">
-                Página {currentPage} de {totalPages}
-              </p>
-              <div className="flex gap-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600">Página {currentPage} de {totalPages}</p>
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleSearch(currentPage - 1)}
                   disabled={currentPage === 1 || loading}
-                  className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-2 border border-gray-300 rounded disabled:opacity-50"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleSearch(currentPage + 1)}
-                  disabled={currentPage === totalPages || loading}
-                  className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  disabled={currentPage >= totalPages || loading}
+                  className="px-3 py-2 border border-gray-300 rounded disabled:opacity-50"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -564,64 +406,36 @@ export default function AllAdsTab() {
         </>
       )}
 
-      {/* Modal Editar */}
       {editingAdId && (
         <QuickEditAdModal
           adId={editingAdId}
           onClose={() => setEditingAdId(null)}
           onSuccess={() => {
             setEditingAdId(null);
-            handleSearch(currentPage);
+            void handleSearch(currentPage);
           }}
         />
       )}
 
-      {/* Modal Confirmar Eliminación */}
       {deletingAd && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                <AlertCircle className="w-5 h-5 text-red-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                  ¿Eliminar aviso?
-                </h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  Esta acción no se puede deshacer.
-                </p>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-sm font-medium text-gray-900">{deletingAd.title}</p>
-                  <p className="text-xs text-gray-500 mt-1">ID: {deletingAd.id.slice(0, 8)}</p>
-                </div>
-              </div>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-5">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Eliminar aviso</h3>
+            <p className="text-sm text-gray-600 mb-4">Esta acción no se puede deshacer.</p>
+            <div className="bg-gray-50 border border-gray-200 rounded p-3 mb-4">
+              <p className="text-sm font-medium text-gray-900">{deletingAd.title}</p>
+              <p className="text-xs text-gray-500 mt-1">{deletingAd.id}</p>
             </div>
-            
             <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setDeletingAd(null)}
-                disabled={deleting}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-              >
+              <button onClick={() => setDeletingAd(null)} className="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200 text-gray-700">
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
               >
-                {deleting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Eliminando...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4" />
-                    Eliminar
-                  </>
-                )}
+                {deleting ? 'Eliminando...' : 'Eliminar'}
               </button>
             </div>
           </div>
