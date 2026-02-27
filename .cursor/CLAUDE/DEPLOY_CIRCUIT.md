@@ -41,12 +41,18 @@ Render detecta el push y deploya automáticamente. Las migraciones se aplican ma
 
 ## Publicar Producción
 
-1. Ir a GitHub → [Comparar main vs prod](https://github.com/germanbruel-web/rural24-cursor/compare/prod...main)
-2. Crear PR `main → prod`
-3. Revisar el diff en la pestaña **Files changed**
-4. Mergear cuando estés conforme
-5. Correr `npm run db:push:prod` desde VSCode (sincroniza Supabase PROD)
-6. Ir a **Render → servicio Prod** → trigger manual de deploy
+```bash
+# 1. Revisás el diff (antes de correr el comando)
+#    https://github.com/germanbruel-web/rural24-cursor/compare/prod...main
+
+# 2. Un solo comando hace todo lo demás:
+npm run publish:prod
+#    → git push origin main:prod  (actualiza rama prod en GitHub)
+#    → db:push:prod               (sincroniza Supabase PROD)
+#    → te pide confirmación antes de ejecutar
+
+# 3. Trigger manual en Render Prod (siempre vos)
+```
 
 ## Gestión de Base de Datos (Supabase)
 
