@@ -13,9 +13,9 @@
 ## Flujo de trabajo
 
 ```
-Desarrollo
+Desarrollo + migraciones SQL nuevas
     ↓
-git push origin main
+git push origin main  +  npm run db:push:dev
     ↓
 Render Staging auto-deploya  ← "Publicar Staging"
     ↓ (cuando estás listo)
@@ -25,6 +25,8 @@ Revisás diff (Files changed)
     ↓
 Mergeas el PR
     ↓
+npm run db:push:prod          ← sincroniza Supabase PROD
+    ↓
 Render → trigger manual deploy Prod  ← "Publicar Producción"
 ```
 
@@ -32,9 +34,10 @@ Render → trigger manual deploy Prod  ← "Publicar Producción"
 
 ```bash
 git push origin main
+npm run db:push:dev   # solo si hay nuevas migraciones SQL
 ```
 
-Render detecta el push y deploya automáticamente el servicio de staging. No requiere acción adicional.
+Render detecta el push y deploya automáticamente. Las migraciones se aplican manualmente desde VSCode.
 
 ## Publicar Producción
 
@@ -42,7 +45,47 @@ Render detecta el push y deploya automáticamente el servicio de staging. No req
 2. Crear PR `main → prod`
 3. Revisar el diff en la pestaña **Files changed**
 4. Mergear cuando estés conforme
-5. Ir a **Render → servicio Prod** → trigger manual de deploy
+5. Correr `npm run db:push:prod` desde VSCode (sincroniza Supabase PROD)
+6. Ir a **Render → servicio Prod** → trigger manual de deploy
+
+## Gestión de Base de Datos (Supabase)
+
+### Setup inicial (una sola vez)
+
+```bash
+# 1. Copiá el template de credenciales
+cp .env.db.example .env.db.local
+
+# 2. Editá .env.db.local con las URLs reales de cada proyecto Supabase
+#    Supabase Dashboard → Settings → Database → Connection string → URI
+```
+
+### Scripts disponibles
+
+```bash
+npm run db:push:dev    # Aplica supabase/migrations/ → Supabase DEV
+npm run db:push:prod   # Aplica supabase/migrations/ → Supabase PROD
+```
+
+### Dónde van las nuevas migraciones
+
+**Siempre en** `supabase/migrations/` con formato `YYYYMMDDHHMMSS_nombre.sql`
+
+```
+supabase/
+└── migrations/
+    ├── 20260223135857_remote_schema.sql   ← baseline completo
+    └── 20260227000000_fix_featured_ad.sql ← ejemplo de nueva migration
+```
+
+> Los archivos en `database/*.sql` son referencia histórica. Las migraciones activas van en `supabase/migrations/`.
+
+### Render env groups
+
+| Env Group | SUPABASE_URL | SERVICE_ROLE_KEY |
+|-----------|--------------|-----------------|
+| Staging   | DEV project  | DEV key         |
+| Production| PROD project | PROD key        |
 
 ## Git tracking configurado
 

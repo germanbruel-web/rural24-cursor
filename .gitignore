@@ -45,3 +45,6 @@ temp-*.js
 temp-*.cjs
 temp_*.sql
 debug-*.log
+
+# Supabase DB credentials (local only)
+.env.db.local

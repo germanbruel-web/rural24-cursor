@@ -25,7 +25,9 @@
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
-    "clean": "turbo run clean && Remove-Item -Recurse -Force node_modules"
+    "clean": "turbo run clean && Remove-Item -Recurse -Force node_modules",
+    "db:push:dev": "node scripts/db-push.mjs dev",
+    "db:push:prod": "node scripts/db-push.mjs prod"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
