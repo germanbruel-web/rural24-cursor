@@ -10,12 +10,14 @@ import {
   Loader2,
   Package,
   Search,
+  Star,
   Trash2,
   User,
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
 import { QuickEditAdModal } from './QuickEditAdModal';
+import CreateFeaturedModal from './CreateFeaturedModal';
 
 interface Category {
   id: string;
@@ -47,6 +49,7 @@ interface AdRow {
   category_name?: string;
   featured_status?: string;
   featured_placement?: string;
+  featured_expires_at?: string;
 }
 
 const RECORDS_PER_PAGE = 20;
@@ -72,6 +75,7 @@ export default function AllAdsTab() {
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
   const [deletingAd, setDeletingAd] = useState<AdRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [featuredModalAd, setFeaturedModalAd] = useState<AdRow | null>(null);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -161,15 +165,15 @@ export default function AllAdsTab() {
       }
 
       const adIds = (adsData || []).map((row) => row.id);
-      const featuredMap: Record<string, { status: string; placement: string }> = {};
+      const featuredMap: Record<string, { status: string; placement: string; expires_at?: string }> = {};
       if (adIds.length) {
         const { data: featured } = await supabase
           .from('featured_ads')
-          .select('ad_id, status, placement')
+          .select('ad_id, status, placement, expires_at')
           .in('ad_id', adIds)
           .in('status', ['active', 'pending']);
         (featured || []).forEach((f: any) => {
-          featuredMap[f.ad_id] = { status: f.status, placement: f.placement };
+          featuredMap[f.ad_id] = { status: f.status, placement: f.placement, expires_at: f.expires_at };
         });
       }
 
@@ -180,6 +184,7 @@ export default function AllAdsTab() {
         category_name: catsMap[ad.category_id] || '',
         featured_status: featuredMap[ad.id]?.status,
         featured_placement: featuredMap[ad.id]?.placement,
+        featured_expires_at: featuredMap[ad.id]?.expires_at,
       })) as AdRow[];
 
       if (statusFilter === 'featured') {
@@ -331,6 +336,7 @@ export default function AllAdsTab() {
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Aviso</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Titular</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Destacado</th>
                   <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
                 </tr>
               </thead>
@@ -364,12 +370,40 @@ export default function AllAdsTab() {
                       </span>
                     </td>
                     <td className="px-3 py-2">
+                      {ad.featured_status ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
+                            ad.featured_status === 'active'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {ad.featured_status === 'active' ? 'Activo' : 'Pendiente'}
+                          </span>
+                          <span className="text-xs text-gray-500 capitalize">{ad.featured_placement}</span>
+                          {ad.featured_expires_at && (
+                            <span className="text-xs text-gray-400">
+                              Vence {new Date(ad.featured_expires_at).toLocaleDateString('es-AR')}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => handleViewAd(ad)} className="p-2 rounded hover:bg-blue-50 text-gray-500 hover:text-blue-600">
                           <Eye className="w-4 h-4" />
                         </button>
                         <button onClick={() => setEditingAdId(ad.id)} className="p-2 rounded hover:bg-brand-50 text-gray-500 hover:text-brand-600">
                           <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setFeaturedModalAd(ad)}
+                          className="p-2 rounded hover:bg-amber-50 text-gray-500 hover:text-amber-500"
+                          title="Destacar aviso"
+                        >
+                          <Star className="w-4 h-4" />
                         </button>
                         <button onClick={() => setDeletingAd(ad)} className="p-2 rounded hover:bg-red-50 text-gray-500 hover:text-red-600">
                           <Trash2 className="w-4 h-4" />
@@ -413,6 +447,25 @@ export default function AllAdsTab() {
           onSuccess={() => {
             setEditingAdId(null);
             void handleSearch(currentPage);
+          }}
+        />
+      )}
+
+      {featuredModalAd && (
+        <CreateFeaturedModal
+          isOpen={true}
+          onClose={() => setFeaturedModalAd(null)}
+          onSuccess={() => {
+            setFeaturedModalAd(null);
+            void handleSearch(currentPage);
+          }}
+          preSelectedAd={{
+            id: featuredModalAd.id,
+            title: featuredModalAd.title,
+            price: featuredModalAd.price,
+            currency: featuredModalAd.currency,
+            category_name: featuredModalAd.category_name || '',
+            user_name: featuredModalAd.seller_name || 'Usuario',
           }}
         />
       )}

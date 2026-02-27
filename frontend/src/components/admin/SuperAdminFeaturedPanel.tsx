@@ -56,7 +56,7 @@ import AllAdsTab from './AllAdsTab';
 import { Package } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 
-type TabView = 'all-ads' | 'list' | 'calendar' | 'stats';
+type TabView = 'all-ads';
 
 export default function SuperAdminFeaturedPanel() {
   // Estado de tabs - Por defecto mostrar todos los avisos
@@ -72,68 +72,15 @@ export default function SuperAdminFeaturedPanel() {
               Gestión de Avisos y Destacados
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              CRUD completo, destacados con calendario y estadísticas
+              Gestión completa de avisos y destacados
             </p>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8 px-6" aria-label="Tabs">
-          <button
-            onClick={() => setActiveTab('all-ads')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
-              activeTab === 'all-ads'
-                ? 'border-emerald-500 text-emerald-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <Package className="w-5 h-5" />
-            Todos los Avisos
-          </button>
-          <button
-            onClick={() => setActiveTab('list')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
-              activeTab === 'list'
-                ? 'border-emerald-500 text-emerald-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <List className="w-5 h-5" />
-            Destacados
-          </button>
-          <button
-            onClick={() => setActiveTab('calendar')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
-              activeTab === 'calendar'
-                ? 'border-emerald-500 text-emerald-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <Calendar className="w-5 h-5" />
-            Calendario
-          </button>
-          <button
-            onClick={() => setActiveTab('stats')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
-              activeTab === 'stats'
-                ? 'border-emerald-500 text-emerald-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <TrendingUp className="w-5 h-5" />
-            Estadísticas
-          </button>
-        </nav>
-      </div>
-
       {/* Content */}
       <div className="p-6">
-        {activeTab === 'all-ads' && <AllAdsTab />}
-        {activeTab === 'list' && <ListTab />}
-        {activeTab === 'calendar' && <CalendarTab />}
-        {activeTab === 'stats' && <StatsTab />}
+        <AllAdsTab />
       </div>
     </div>
   );

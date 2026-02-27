@@ -43,34 +43,35 @@ interface CreateFeaturedModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  preSelectedAd?: Ad;
 }
 
-export default function CreateFeaturedModal({ isOpen, onClose, onSuccess }: CreateFeaturedModalProps) {
-  const [step, setStep] = useState<'search' | 'configure' | 'preview'>('search');
+export default function CreateFeaturedModal({ isOpen, onClose, onSuccess, preSelectedAd }: CreateFeaturedModalProps) {
+  const [step, setStep] = useState<'search' | 'configure' | 'preview'>(preSelectedAd ? 'configure' : 'search');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Ad[]>([]);
   const [searching, setSearching] = useState(false);
-  const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
-  
+  const [selectedAd, setSelectedAd] = useState<Ad | null>(preSelectedAd ?? null);
+
   // Configuración
   const [placement, setPlacement] = useState<FeaturedPlacement>('homepage');
   const [scheduledStart, setScheduledStart] = useState(
     new Date().toISOString().split('T')[0]
   );
-  
+
   const [creating, setCreating] = useState(false);
 
   // Reset al abrir/cerrar
   useEffect(() => {
     if (isOpen) {
-      setStep('search');
+      setStep(preSelectedAd ? 'configure' : 'search');
       setSearchQuery('');
       setSearchResults([]);
-      setSelectedAd(null);
+      setSelectedAd(preSelectedAd ?? null);
       setPlacement('homepage');
       setScheduledStart(new Date().toISOString().split('T')[0]);
     }
-  }, [isOpen]);
+  }, [isOpen, preSelectedAd]);
 
   // Buscar avisos
   const handleSearch = async () => {
@@ -148,10 +149,10 @@ export default function CreateFeaturedModal({ isOpen, onClose, onSuccess }: Crea
 
       const result = data?.[0];
       if (!result?.success) {
-        throw new Error(result?.error_message || 'Error al crear destacado');
+        throw new Error(result?.message || 'Error al crear destacado');
       }
 
-      notify.success(result.error_message || 'Aviso destacado exitosamente');
+      notify.success(result.message || 'Aviso destacado exitosamente');
       onSuccess();
     } catch (error: any) {
       console.error('Error creating featured ad:', error);

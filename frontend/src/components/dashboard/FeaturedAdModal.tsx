@@ -122,7 +122,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
     const today = new Date().toISOString().split('T')[0];
     const { data, error: createError } = await createUserFeaturedAd(ad.id, selectedPlacement, today);
     if (createError || !data?.success) {
-      setError(data?.error_message || createError?.message || 'No se pudo activar el destacado');
+      setError(data?.message || createError?.message || 'No se pudo activar el destacado');
       setSubmitting(false);
       return;
     }

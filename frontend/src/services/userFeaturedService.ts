@@ -90,7 +90,7 @@ export interface MonthlyAvailabilityDay {
 export interface CreateFeaturedResult {
   success: boolean;
   featured_id: string | null;
-  error_message: string | null;
+  message: string | null;
 }
 
 // ============================================================================
@@ -108,8 +108,8 @@ export async function getUserCredits(): Promise<{ data: UserFeaturedCredits | nu
     }
 
     const { data, error } = await supabase
-      .from('user_credits')
-      .select('*')
+      .from('user_featured_credits')
+      .select('id, user_id, credits_total, credits_used, created_at, updated_at')
       .eq('user_id', user.id)
       .single();
 
@@ -131,10 +131,12 @@ export async function getUserCredits(): Promise<{ data: UserFeaturedCredits | nu
       return { data: null, error };
     }
 
+    const available = (data.credits_total ?? 0) - (data.credits_used ?? 0);
     return {
       data: {
         ...data,
-        credits_available: data.balance ?? 0
+        balance: available,
+        credits_available: available,
       },
       error: null
     };
@@ -274,7 +276,7 @@ export async function createUserFeaturedAd(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return { 
-        data: { success: false, featured_id: null, error_message: 'No autenticado' }, 
+        data: { success: false, featured_id: null, message: 'No autenticado' },
         error: null 
       };
     }
