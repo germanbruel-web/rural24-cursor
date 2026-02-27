@@ -17,7 +17,8 @@
     // ========================================
     "usernamehw.errorlens",           // Inline errors (muy ligero)
     "christian-kohler.path-intellisense", // Path autocomplete
-    "bradlc.vscode-tailwindcss"       // Tailwind IntelliSense
+    "bradlc.vscode-tailwindcss",
+    "anthropic.claude-code" // Tailwind IntelliSense
   ],
   
   "unwantedRecommendations": [

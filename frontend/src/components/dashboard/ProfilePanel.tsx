@@ -727,7 +727,7 @@ export const ProfilePanel: React.FC = () => {
           <div className="rounded-lg overflow-hidden bg-gradient-to-br from-cyan-500 to-blue-600 p-4 sm:p-5">
             <div className="flex items-center justify-between mb-1">
               <p className="text-cyan-100 text-[10px] font-medium uppercase tracking-wider">
-                Créditos Disponibles
+                Saldo Disponible
               </p>
               <Coins className="w-4 h-4 text-white/50" />
             </div>
@@ -740,9 +740,9 @@ export const ProfilePanel: React.FC = () => {
                   <span className="text-4xl font-black text-white leading-none">
                     {credits?.balance || 0}
                   </span>
-                  <span className="text-sm text-cyan-100 font-medium">créditos</span>
+                  <span className="text-sm text-cyan-100 font-medium">ARS</span>
                 </div>
-                <p className="text-cyan-200 text-[10px]">1 crédito = 7 días de visibilidad destacada</p>
+                <p className="text-cyan-200 text-[10px]">Usá tu saldo para destacar avisos</p>
               </>
             )}
 

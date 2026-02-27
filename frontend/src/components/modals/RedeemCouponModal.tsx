@@ -88,7 +88,7 @@ const RedeemCouponModal: React.FC<RedeemCouponModalProps> = ({ isOpen, onClose, 
 
         <div className="p-5 space-y-4">
           <p className="text-sm text-gray-700">
-            Ingresa tu cupon para sumar ARS virtuales al saldo interno.
+            Ingresá tu cupón para sumar saldo a tu cuenta.
           </p>
 
           <div className="space-y-2">
@@ -108,7 +108,7 @@ const RedeemCouponModal: React.FC<RedeemCouponModalProps> = ({ isOpen, onClose, 
           {validated && couponInfo && !success && (
             <div className="p-3 rounded-lg border border-green-200 bg-green-50">
               <p className="text-sm font-semibold text-green-700">{couponInfo.description}</p>
-              <p className="text-xs text-green-700 mt-1">Monto: +{couponInfo.amount} ARSV</p>
+              <p className="text-xs text-green-700 mt-1">Saldo a sumar: +{couponInfo.amount} ARS</p>
             </div>
           )}
 

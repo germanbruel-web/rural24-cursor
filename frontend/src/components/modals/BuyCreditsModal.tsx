@@ -90,7 +90,7 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
           <div className="flex items-center gap-3">
             <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             <h2 className="text-xl sm:text-2xl font-bold text-white">
-              Comprar Créditos
+              Cargar saldo
             </h2>
           </div>
           <button
@@ -112,7 +112,7 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
                 ============================================ */}
             <div>
               <h3 className="font-bold text-gray-800 mb-4 text-base sm:text-lg">
-                Elegí cuántos créditos querés comprar
+                Elegí cuánto saldo querés cargar
               </h3>
 
               <div className="grid grid-cols-2 gap-2 sm:gap-4">
@@ -141,7 +141,7 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
                         {qty}
                       </div>
                       <p className="text-xs sm:text-sm text-gray-600 mb-2">
-                        {qty === 1 ? 'crédito' : 'créditos'}
+                        {qty === 1 ? 'destacado' : 'destacados'}
                       </p>
                       <p className="text-xl sm:text-2xl font-bold text-gray-800">
                         ${price.toLocaleString('es-AR')}
@@ -161,24 +161,24 @@ export const BuyCreditsModal: React.FC<Props> = ({ isOpen, onClose, onSuccess })
                 ============================================ */}
             <div className="bg-blue-50 rounded-lg p-4 sm:p-6 border border-blue-200">
               <h4 className="font-bold text-blue-900 mb-3 text-sm sm:text-base">
-                💡 ¿Cómo funcionan los créditos?
+                💡 ¿Cómo funciona el saldo?
               </h4>
               <ul className="space-y-2 text-xs sm:text-sm text-blue-800">
                 <li className="flex gap-2">
                   <span className="font-bold flex-shrink-0">•</span>
-                  <span>1 crédito = {config?.featured_durations?.[0]?.label || '7 días'}</span>
+                  <span>1 ARS = {config?.featured_durations?.[0]?.label || '7 días'} de visibilidad</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold flex-shrink-0">•</span>
-                  <span>4 créditos = {config?.featured_durations?.[3]?.label || '28 días'}</span>
+                  <span>4 ARS = {config?.featured_durations?.[3]?.label || '28 días'} de visibilidad</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold flex-shrink-0">•</span>
-                  <span>Usá créditos para destacar tus anuncios en búsquedas</span>
+                  <span>Usá tu saldo para destacar tus avisos</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold flex-shrink-0">•</span>
-                  <span>Los créditos no caducan</span>
+                  <span>El saldo no caduca</span>
                 </li>
               </ul>
             </div>

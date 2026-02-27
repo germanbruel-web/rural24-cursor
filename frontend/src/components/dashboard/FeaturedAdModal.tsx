@@ -1,12 +1,20 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Calendar, CheckCircle2, Loader2, Star, Ticket, X, Zap } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Ticket,
+  X,
+  Zap,
+} from 'lucide-react';
 import {
   createUserFeaturedAd,
   getFeaturedSettings,
   getUserCredits,
   type FeaturedPlacement,
 } from '../../services/userFeaturedService';
-import { getSettingBool } from '../../services/v2/globalSettingsService';
 import { redeemCoupon } from '../../services/creditsService';
 
 interface FeaturedAdModalProps {
@@ -23,147 +31,105 @@ interface FeaturedAdModalProps {
   onSuccess?: () => void;
 }
 
-interface PlacementOption {
-  value: FeaturedPlacement;
-  label: string;
-  description: string;
-}
-
-const PLACEMENT_OPTIONS: PlacementOption[] = [
-  { value: 'homepage', label: 'ALTO', description: 'Inicio + resultados + detalle' },
-  { value: 'results', label: 'MEDIO', description: 'Resultados + detalle' },
-  { value: 'detail', label: 'BASICO', description: 'Solo en detalle' },
+const PLACEMENT_OPTIONS: { value: FeaturedPlacement; label: string; description: string; defaultCost: number }[] = [
+  { value: 'homepage', label: 'PREMIUM',   description: 'Inicio + resultados + detalle del aviso', defaultCost: 6 },
+  { value: 'results',  label: 'ESTÁNDAR',  description: 'Resultados + detalle del aviso',          defaultCost: 2 },
+  { value: 'detail',   label: 'BÁSICO',    description: 'Solo en el detalle del aviso',             defaultCost: 1 },
 ];
 
-const DEFAULT_COSTS: Record<FeaturedPlacement, number> = {
-  homepage: 6,
-  results: 2,
-  detail: 1,
-};
-
 export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: FeaturedAdModalProps) {
-  const [selectedPlacements, setSelectedPlacements] = useState<FeaturedPlacement[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [costs, setCosts] = useState<Record<FeaturedPlacement, number>>(DEFAULT_COSTS);
+  const [selectedPlacement, setSelectedPlacement] = useState<FeaturedPlacement | null>(null);
+  const [costs, setCosts] = useState<Record<FeaturedPlacement, number>>({ homepage: 6, results: 2, detail: 1 });
   const [durationDays, setDurationDays] = useState<number>(15);
-  const [virtualBalance, setVirtualBalance] = useState<number>(0);
+  const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successText, setSuccessText] = useState<string | null>(null);
-
   const [couponCode, setCouponCode] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
-
-  const [paymentToggles, setPaymentToggles] = useState({
-    featuredPaymentsEnabled: false,
-    mercadoPagoEnabled: false,
-  });
+  const [couponOpen, setCouponOpen] = useState(false);
 
   const hasCategoryData = Boolean(ad.category_id && ad.subcategory_id);
-
-  const totalCost = useMemo(
-    () => selectedPlacements.reduce((sum, placement) => sum + costs[placement], 0),
-    [selectedPlacements, costs]
-  );
-  const hasEnoughBalance = virtualBalance >= totalCost;
+  const totalCost = selectedPlacement ? costs[selectedPlacement] : 0;
+  const balanceAfter = balance - totalCost;
+  const hasEnoughBalance = selectedPlacement ? balance >= costs[selectedPlacement] : false;
 
   useEffect(() => {
     if (!isOpen) return;
-    setSelectedPlacements([]);
-    setSelectedDate(new Date().toISOString().split('T')[0]);
+    setSelectedPlacement(null);
     setError(null);
     setSuccessText(null);
     setCouponCode('');
+    setCouponOpen(false);
     void boot();
   }, [isOpen]);
 
   const boot = async () => {
     setLoading(true);
     try {
-      const [creditsResp, settings, featuredPaymentsEnabled, mercadoPagoEnabled] = await Promise.all([
+      const [creditsResp, settings] = await Promise.all([
         getUserCredits(),
         getFeaturedSettings(),
-        getSettingBool('featured_payments_enabled', false),
-        getSettingBool('mercadopago_enabled', false),
       ]);
-
-      setVirtualBalance(creditsResp.data?.credits_available ?? 0);
+      setBalance(creditsResp.data?.credits_available ?? 0);
       setDurationDays(settings.durationDays || 15);
-      setCosts(DEFAULT_COSTS);
-      setPaymentToggles({ featuredPaymentsEnabled, mercadoPagoEnabled });
+      setCosts({ homepage: 6, results: 2, detail: 1 });
     } catch {
-      setError('No se pudo cargar la configuracion de visibilidad');
+      setError('No se pudo cargar la configuración');
     } finally {
       setLoading(false);
     }
   };
 
-  const togglePlacement = (placement: FeaturedPlacement) => {
-    setSelectedPlacements((prev) =>
-      prev.includes(placement) ? prev.filter((value) => value !== placement) : [...prev, placement]
-    );
-  };
-
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
-      setError('Ingresa un cupon valido');
+      setError('Ingresá un código de cupón');
       return;
     }
-
     setCouponLoading(true);
     setError(null);
     setSuccessText(null);
     const result = await redeemCoupon(couponCode.trim());
-
     if (result.success) {
       const creditsResp = await getUserCredits();
-      setVirtualBalance(creditsResp.data?.credits_available ?? virtualBalance);
+      setBalance(creditsResp.data?.credits_available ?? balance);
       setCouponCode('');
-      setSuccessText('Cupon aplicado. Tu saldo ARS virtual fue actualizado.');
+      setCouponOpen(false);
+      setSuccessText('Cupón aplicado. Tu saldo fue actualizado.');
     } else {
-      setError(result.error || 'No se pudo canjear el cupon');
+      setError(result.error || 'No se pudo canjear el cupón');
     }
     setCouponLoading(false);
   };
 
   const handleConfirm = async () => {
-    if (!selectedDate || selectedPlacements.length === 0) {
-      setError('Selecciona ubicaciones y fecha de inicio');
+    if (!selectedPlacement) {
+      setError('Elegí dónde querés que aparezca el aviso');
       return;
     }
     if (!hasCategoryData) {
-      setError('El aviso debe tener categoria y subcategoria');
+      setError('El aviso debe tener categoría y subcategoría para destacarse');
       return;
     }
     if (!hasEnoughBalance) {
-      setError('Saldo ARS virtual insuficiente');
+      setError('Saldo insuficiente para esta selección');
       return;
     }
-
     setSubmitting(true);
     setError(null);
     setSuccessText(null);
-
-    const placementErrors: string[] = [];
-
-    for (const placement of selectedPlacements) {
-      const { data, error: createError } = await createUserFeaturedAd(ad.id, placement, selectedDate);
-      if (createError || !data?.success) {
-        placementErrors.push(`${placement}: ${data?.error_message || createError?.message || 'Error'}`);
-      }
-    }
-
-    if (placementErrors.length > 0) {
-      setError(placementErrors.join(' | '));
+    const today = new Date().toISOString().split('T')[0];
+    const { data, error: createError } = await createUserFeaturedAd(ad.id, selectedPlacement, today);
+    if (createError || !data?.success) {
+      setError(data?.error_message || createError?.message || 'No se pudo activar el destacado');
       setSubmitting(false);
       return;
     }
-
     const creditsResp = await getUserCredits();
-    setVirtualBalance(creditsResp.data?.credits_available ?? virtualBalance);
+    setBalance(creditsResp.data?.credits_available ?? balance);
     setSubmitting(false);
-    setSuccessText('Visibilidad aplicada correctamente');
+    setSuccessText('¡Aviso destacado correctamente!');
     onSuccess?.();
     onClose();
   };
@@ -172,153 +138,178 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b flex items-center justify-between bg-brand-700">
-          <div className="flex items-center gap-3">
-            <Star className="w-5 h-5 text-white" />
-            <div>
-              <h3 className="text-xl font-bold text-white">Gestionar visibilidad</h3>
-              <p className="text-sm text-white/90">1 aviso por operacion para usuarios no superadmin</p>
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+        {/* Header */}
+        <div className="px-5 py-4 flex items-center justify-between bg-brand-700">
+          <div className="flex items-center gap-3 min-w-0">
+            <Zap className="w-5 h-5 text-white flex-shrink-0" />
+            <div className="min-w-0">
+              <h3 className="text-lg font-bold text-white leading-tight">Destacar aviso</h3>
+              <p className="text-sm text-white/80 truncate">{ad.title}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/20">
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0 ml-3"
+          >
             <X className="w-5 h-5 text-white" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
-          <div className="border rounded-xl">
-            <div className="px-4 py-3 bg-emerald-600 text-white font-bold rounded-t-xl">
-              1. Aviso Seleccionado
-            </div>
-            <div className="p-3 space-y-2">
-              <p className="text-sm font-semibold text-gray-900 line-clamp-2">{ad.title}</p>
-              <p className="text-xs text-gray-500">{ad.category_name || 'Sin categoria'}</p>
-              <p className="text-xs text-gray-500">Cantidad: 1 aviso</p>
-              {!hasCategoryData && (
-                <div className="mt-2 p-2 bg-red-50 text-red-700 text-xs rounded flex items-start gap-1.5">
-                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  Faltan categoria y subcategoria para destacar.
-                </div>
-              )}
-            </div>
-          </div>
+        <div className="p-5 space-y-4">
 
-          <div className="border rounded-xl">
-            <div className="px-4 py-3 bg-blue-600 text-white font-bold rounded-t-xl">
-              2. Configurar Ubicaciones
+          {/* Saldo disponible */}
+          {loading ? (
+            <div className="flex items-center gap-2 text-sm text-gray-500 py-1">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Cargando saldo...
             </div>
-            <div className="p-3 space-y-2">
-              {PLACEMENT_OPTIONS.map((option) => {
-                const selected = selectedPlacements.includes(option.value);
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => togglePlacement(option.value)}
-                    className={`w-full text-left p-2 rounded-lg border ${
-                      selected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold">{option.label}</span>
-                      <span className="text-xs font-bold">{costs[option.value]} ARSV</span>
+          ) : (
+            <div className="flex items-center justify-between bg-brand-50 border border-brand-100 rounded-xl px-4 py-3">
+              <span className="text-sm font-medium text-brand-800">Saldo disponible</span>
+              <span className="text-lg font-bold text-brand-700">{balance} ARS</span>
+            </div>
+          )}
+
+          {/* Alerta categoría faltante */}
+          {!hasCategoryData && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 text-red-700 text-sm rounded-xl border border-red-100">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              El aviso necesita categoría y subcategoría para poder destacarse.
+            </div>
+          )}
+
+          {/* Opciones de placement */}
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-gray-700">¿Dónde querés que aparezca?</p>
+            {PLACEMENT_OPTIONS.map((option) => {
+              const cost = costs[option.value];
+              const selected = selectedPlacement === option.value;
+              const canAfford = balance >= cost;
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => { setSelectedPlacement(option.value); setError(null); }}
+                  disabled={!canAfford}
+                  className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
+                    selected
+                      ? 'border-brand-600 bg-brand-50'
+                      : canAfford
+                      ? 'border-gray-200 hover:border-brand-300 hover:bg-gray-50'
+                      : 'border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                          selected ? 'border-brand-600 bg-brand-600' : 'border-gray-300 bg-white'
+                        }`}
+                      >
+                        {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </div>
+                      <span className={`text-sm font-bold ${selected ? 'text-brand-700' : 'text-gray-800'}`}>
+                        {option.label}
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{option.description}</p>
-                  </button>
-                );
-              })}
-
-              <div className="pt-3 border-t mt-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Fecha inicio</label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full border rounded-lg px-2 py-1.5 text-sm"
-                />
-                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  Duracion estimada: {durationDays} dias
-                </p>
-              </div>
-            </div>
+                    <span className={`text-sm font-bold tabular-nums ${selected ? 'text-brand-700' : 'text-gray-500'}`}>
+                      {cost} ARS
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1 ml-6.5 pl-0.5">
+                    {option.description} · {durationDays} días
+                  </p>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="border rounded-xl">
-            <div className="px-4 py-3 bg-orange-500 text-white font-bold rounded-t-xl">
-              3. Resumen y Pago
-            </div>
-            <div className="p-4 space-y-3">
-              {loading ? (
-                <div className="text-sm text-gray-600 inline-flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Cargando saldo...
-                </div>
-              ) : (
-                <>
-                  <p className="text-sm text-gray-700">
-                    Saldo ARS virtual: <span className="font-bold">{virtualBalance} ARSV</span>
-                  </p>
-                  <p className="text-sm text-gray-700">
-                    Total seleccionado: <span className="font-bold">{totalCost} ARSV</span>
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Checkout MercadoPago: {paymentToggles.featuredPaymentsEnabled && paymentToggles.mercadoPagoEnabled ? 'ON' : 'OFF'}
-                  </p>
-                </>
-              )}
-
-              <div className="pt-2 border-t space-y-2">
-                <label className="block text-xs font-medium text-gray-600">Aplicar cupon</label>
-                <div className="flex items-center gap-2">
+          {/* Cupón — colapsado por defecto */}
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setCouponOpen((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Ticket className="w-4 h-4" />
+                ¿Tenés un cupón?
+              </span>
+              {couponOpen
+                ? <ChevronUp className="w-4 h-4" />
+                : <ChevronDown className="w-4 h-4" />}
+            </button>
+            {couponOpen && (
+              <div className="px-4 pb-4 pt-1 border-t border-gray-100">
+                <div className="flex gap-2">
                   <input
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    className="flex-1 border rounded-lg px-2 py-1.5 text-sm"
-                    placeholder="CODIGO"
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    placeholder="CÓDIGO"
                   />
                   <button
                     onClick={handleApplyCoupon}
                     disabled={couponLoading}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold border border-brand-700 text-brand-700 rounded-lg hover:bg-brand-50"
+                    className="px-4 py-2 text-sm font-semibold border border-brand-700 text-brand-700 rounded-lg hover:bg-brand-50 transition-colors disabled:opacity-50"
                   >
-                    <Ticket className="w-3.5 h-3.5" />
                     {couponLoading ? 'Aplicando...' : 'Aplicar'}
                   </button>
                 </div>
               </div>
-
-              {error && (
-                <div className="text-xs bg-red-50 text-red-700 border border-red-200 rounded p-2">{error}</div>
-              )}
-              {successText && (
-                <div className="text-xs bg-green-50 text-green-700 border border-green-200 rounded p-2 inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4" />
-                  {successText}
-                </div>
-              )}
-
-              <button
-                onClick={handleConfirm}
-                disabled={submitting || selectedPlacements.length === 0 || !hasEnoughBalance}
-                className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-semibold"
-              >
-                {submitting ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Aplicando...
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-2">
-                    <Zap className="w-4 h-4" />
-                    Activar visibilidad
-                  </span>
-                )}
-              </button>
-            </div>
+            )}
           </div>
+
+          {/* Feedback */}
+          {error && (
+            <div className="flex items-start gap-2 text-sm bg-red-50 text-red-700 border border-red-200 rounded-xl p-3">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              {error}
+            </div>
+          )}
+          {successText && (
+            <div className="flex items-center gap-2 text-sm bg-green-50 text-green-700 border border-green-200 rounded-xl p-3">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              {successText}
+            </div>
+          )}
+
+          {/* Resumen + CTA */}
+          <div className="pt-2 border-t border-gray-100 space-y-3">
+            {selectedPlacement && (
+              <div className="space-y-1.5 text-sm">
+                <div className="flex items-center justify-between text-gray-600">
+                  <span>Costo</span>
+                  <span className="font-semibold">{totalCost} ARS</span>
+                </div>
+                <div className="flex items-center justify-between text-gray-600">
+                  <span>Saldo después</span>
+                  <span className={`font-semibold ${balanceAfter < 0 ? 'text-red-600' : 'text-brand-700'}`}>
+                    {balanceAfter} ARS
+                  </span>
+                </div>
+              </div>
+            )}
+            <button
+              onClick={handleConfirm}
+              disabled={submitting || !selectedPlacement || !hasEnoughBalance || !hasCategoryData}
+              className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 py-3 rounded-xl font-semibold transition-colors"
+            >
+              {submitting ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Activando...
+                </span>
+              ) : (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Zap className="w-4 h-4" />
+                  {selectedPlacement ? `Destacar por ${durationDays} días` : 'Elegí una opción'}
+                </span>
+              )}
+            </button>
+          </div>
+
         </div>
       </div>
     </div>

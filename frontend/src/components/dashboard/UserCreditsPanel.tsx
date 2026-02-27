@@ -82,19 +82,19 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
           <div>
             <p className="text-brand-100 text-xs sm:text-sm mb-2 flex items-center gap-2">
               <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
-              TU BALANCE DE CRÉDITOS
+              SALDO DISPONIBLE
             </p>
             <div className="flex items-baseline gap-2 sm:gap-3">
               <span className="text-4xl sm:text-6xl font-black leading-none">
                 {credits.balance}
               </span>
               <span className="text-lg sm:text-2xl font-semibold text-brand-100">
-                créditos
+                ARS
               </span>
             </div>
             {credits.monthly_allowance > 0 && (
               <p className="text-brand-100 text-xs sm:text-sm mt-3">
-                🎁 Recibirás {credits.monthly_allowance} crédito(s) cada mes
+                🎁 Recibís {credits.monthly_allowance} ARS cada mes
               </p>
             )}
           </div>
@@ -115,7 +115,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
       <section className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100">
         <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
           <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 text-brand-600" />
-          Comprar Créditos
+          Cargar saldo
         </h3>
 
         {/* Grid de paquetes */}
@@ -143,7 +143,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
                   {qty}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-500 mb-2">
-                  {qty === 1 ? 'crédito' : 'créditos'}
+                  {qty === 1 ? 'destacado' : 'destacados'}
                 </div>
                 <div className="text-lg sm:text-2xl font-bold text-gray-800">
                   ${price.toLocaleString('es-AR')}
@@ -158,7 +158,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
           className="w-full py-3 sm:py-4 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
         >
           <ShoppingCart className="w-5 h-5" />
-          Comprar Créditos
+          Cargar saldo
         </button>
       </section>
 
@@ -172,7 +172,7 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
         </h3>
         
         <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-          ¿Tenés un cupón de descuento o promoción? Canjealo acá para obtener créditos gratis.
+          ¿Tenés un cupón de descuento o promoción? Canjealo acá para sumar saldo a tu cuenta.
         </p>
 
         <button
@@ -230,10 +230,10 @@ export const UserCreditsPanel: React.FC<Props> = ({ userId, onOpenBuyCredits }) 
 
                 <div className="text-right flex-shrink-0">
                   <p className={`font-bold ${tx.amount > 0 ? 'text-brand-600' : 'text-red-600'}`}>
-                    {tx.amount > 0 ? '+' : ''}{tx.amount}
+                    {tx.amount > 0 ? '+' : ''}{tx.amount} ARS
                   </p>
                   <p className="text-xs text-gray-500">
-                    Saldo: {tx.balance_after}
+                    Saldo: {tx.balance_after} ARS
                   </p>
                 </div>
               </div>
