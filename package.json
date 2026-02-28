@@ -30,6 +30,7 @@
     "db:push:prod": "node scripts/db-push.mjs prod",
     "db:clone-config": "node scripts/db-clone-config.mjs",
     "db:purge-demo": "node scripts/db-purge-demo.mjs",
+    "db:seed-demo": "node scripts/db-seed-demo.mjs",
     "db:set-superadmin": "node scripts/db-set-superadmin.mjs",
     "publish:prod": "node scripts/publish-prod.mjs"
   },
