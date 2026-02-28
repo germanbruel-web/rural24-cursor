@@ -43,9 +43,12 @@ const nextConfig = {
   },
 
   async headers() {
-    // En producción: usar FRONTEND_URL del env; en dev: localhost:5173
-    const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
-    
+    // FRONTEND_URL puede ser una lista separada por comas para soportar
+    // múltiples orígenes (staging + prod). El header CORS dinámico
+    // por origen se maneja en middleware.ts; aquí va el primero como fallback.
+    const frontendUrls = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map(s => s.trim());
+    const primaryOrigin = frontendUrls[0];
+
     return [
       // ===========================================
       // CORS HEADERS (API Routes)
@@ -54,7 +57,7 @@ const nextConfig = {
         source: '/api/:path*',
         headers: [
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: allowedOrigin },
+          { key: 'Access-Control-Allow-Origin', value: primaryOrigin },
           { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,DELETE,OPTIONS,PATCH' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-Requested-With' },
         ],

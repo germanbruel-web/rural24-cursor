@@ -22,6 +22,8 @@ services:
         sync: false
       - key: CRON_SECRET
         generateValue: true
+      - key: FRONTEND_URL
+        sync: false  # Set in env group 'staging' → URL del frontend staging
     envGroup: staging
     healthCheckPath: /api/health
 
@@ -30,14 +32,14 @@ services:
     runtime: static
     region: oregon
     plan: free
-    buildCommand: cd frontend && npm install --include=dev && npm run build
+    buildCommand: cd frontend && npm install --include=dev && npm run build:staging
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_SUPABASE_URL
         sync: false  # Set in env group 'staging'
       - key: VITE_SUPABASE_KEY
         sync: false
-      - key: VITE_BACKEND_URL
+      - key: VITE_API_URL
         value: https://rural24.onrender.com
     envGroup: staging
 
@@ -60,6 +62,8 @@ services:
         sync: false
       - key: CRON_SECRET
         generateValue: true
+      - key: FRONTEND_URL
+        sync: false  # Set in env group 'production' → URL del frontend prod
     envGroup: production
     healthCheckPath: /api/health
 
@@ -75,8 +79,8 @@ services:
         sync: false  # Set in env group 'production'
       - key: VITE_SUPABASE_KEY
         sync: false
-      - key: VITE_BACKEND_URL
-        value: https://rural24-oo01.onrender.com
+      - key: VITE_API_URL
+        value: https://prod-backend-vs0o.onrender.com
     envGroup: production
 
 # ============================================================================
@@ -88,7 +92,7 @@ services:
 #     schedule: "0 * * * *"
 #     buildCommand: echo "Cron job preparado"
 #     startCommand: >
-#       curl -X POST https://rural24-oo01.onrender.com/api/featured-ads/cron
+#       curl -X POST https://prod-backend-vs0o.onrender.com/api/featured-ads/cron
 #       -H "X-Cron-Secret: ${CRON_SECRET}"
 #       -H "Content-Type: application/json"
 #       --connect-timeout 60 --max-time 120 --retry 2 --retry-delay 10

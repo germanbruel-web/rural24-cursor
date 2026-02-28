@@ -110,13 +110,15 @@ export async function middleware(request: NextRequest) {
   
   if (request.method === 'OPTIONS') {
     const origin = request.headers.get('origin');
-    const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
-    
-    if (origin === allowedOrigin) {
+    const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+      .split(',')
+      .map(s => s.trim());
+
+    if (origin && allowedOrigins.includes(origin)) {
       return new NextResponse(null, {
         status: 204,
         headers: {
-          'Access-Control-Allow-Origin': allowedOrigin,
+          'Access-Control-Allow-Origin': origin,
           'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS,PATCH',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
           'Access-Control-Allow-Credentials': 'true',
