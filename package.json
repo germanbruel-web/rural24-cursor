@@ -29,6 +29,7 @@
     "db:push:dev": "node scripts/db-push.mjs dev",
     "db:push:prod": "node scripts/db-push.mjs prod",
     "db:clone-config": "node scripts/db-clone-config.mjs",
+    "db:purge-demo": "node scripts/db-purge-demo.mjs",
     "publish:prod": "node scripts/publish-prod.mjs"
   },
   "devDependencies": {
