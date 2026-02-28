@@ -61,6 +61,12 @@ for (const { url, label } of targets) {
 
   const userId = auth.rows[0].id;
 
+  // Confirmar email en auth.users si no está confirmado
+  await c.query(
+    `UPDATE auth.users SET email_confirmed_at = now() WHERE id = $1 AND email_confirmed_at IS NULL`,
+    [userId]
+  );
+
   // Upsert en public.users con role superadmin
   const res = await c.query(`
     INSERT INTO public.users (id, email, role, full_name, updated_at)
