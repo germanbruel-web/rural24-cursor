@@ -3,6 +3,10 @@
  * Rural24 SEO-First Architecture
  */
 
+// Forzar renderizado dinámico para evitar error de pre-render en Next.js 15.5+
+// con App Router: '<Html> should not be imported outside of pages/_document'
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
 import { SSRHeader, SSRFooter } from './(seo)/utils/ssr-components';
 
