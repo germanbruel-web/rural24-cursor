@@ -17,8 +17,7 @@ import {
   User, MapPin, Calendar, Edit, Save, X,
   CheckCircle, Coins, ShoppingCart, Gift, Clock,
   Loader2, Shield, Send, AlertCircle, Globe,
-  EyeOff, CreditCard, Tag, ChevronDown, ChevronUp, Plus,
-  FileText,
+  EyeOff, CreditCard, Tag, Plus, FileText,
 } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import { PROVINCES, LOCALITIES_BY_PROVINCE } from '../../constants/locations';
@@ -26,10 +25,8 @@ import { hasPremiumFeatures as checkPremium } from '../../constants/plans';
 import { AvatarUpload } from '../common/AvatarUpload';
 import { sendVerificationCode, verifyCode } from '../../services/phoneVerificationService';
 import { updateProfile, uploadAvatar, deleteAvatar } from '../../services/profileService';
-import { getUserCredits, getCreditTransactions } from '../../services/creditsService';
+import { getUserCredits, getCreditTransactions, getCreditsConfig, purchaseCredits, validateCoupon, redeemCoupon } from '../../services/creditsService';
 import { supabase } from '../../services/supabaseClient';
-import BuyCreditsModal from '../modals/BuyCreditsModal';
-import RedeemCouponModal from '../modals/RedeemCouponModal';
 import { AccountSecurityPanel } from './AccountSecurityPanel';
 
 // ============================================================================
@@ -175,9 +172,19 @@ export const ProfilePanel: React.FC = () => {
   const [credits, setCredits] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [creditsLoading, setCreditsLoading] = useState(true);
-  const [showTransactions, setShowTransactions] = useState(false);
-  const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
-  const [showRedeemCouponModal, setShowRedeemCouponModal] = useState(false);
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [creditsConfig, setCreditsConfig] = useState<any>(null);
+  const [selectedQty, setSelectedQty] = useState(3);
+  const [purchasing, setPurchasing] = useState(false);
+  const [purchaseSuccess, setPurchaseSuccess] = useState(false);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponValidating, setCouponValidating] = useState(false);
+  const [couponValidated, setCouponValidated] = useState(false);
+  const [couponInfo, setCouponInfo] = useState<{ credits: number; description: string } | null>(null);
+  const [couponRedeeming, setCouponRedeeming] = useState(false);
+  const [couponSuccess, setCouponSuccess] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   // ── Privacy (Hero) ────────────────────────────────────────────────────────
   const [privacyMode, setPrivacyMode] = useState<'public' | 'private'>(
@@ -259,12 +266,15 @@ export const ProfilePanel: React.FC = () => {
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) { setCreditsLoading(false); return; }
-      const [creditsData, transData] = await Promise.all([
+      setAuthUserId(authUser.id);
+      const [creditsData, transData, configData] = await Promise.all([
         getUserCredits(authUser.id),
         getCreditTransactions(authUser.id, 5),
+        getCreditsConfig(),
       ]);
       setCredits(creditsData);
       setTransactions(transData);
+      setCreditsConfig(configData);
     } catch (err) {
       console.error('Error loading credits:', err);
     } finally {
@@ -412,6 +422,75 @@ export const ProfilePanel: React.FC = () => {
       }
     } catch { notify.error('Error de conexión'); }
     finally { setVerificationLoading(false); }
+  };
+
+  // ── Purchase credits inline ────────────────────────────────────────────────
+  const handlePurchase = async () => {
+    if (!authUserId) return;
+    setPurchasing(true);
+    setPurchaseError(null);
+    try {
+      const mockPaymentId = `MP_${Date.now()}`;
+      const result = await purchaseCredits(authUserId, selectedQty, mockPaymentId);
+      if (!result.success) {
+        setPurchaseError(result.error || 'Error al procesar el pago');
+      } else {
+        setPurchaseSuccess(true);
+        await loadCreditsData();
+        setTimeout(() => setPurchaseSuccess(false), 4000);
+      }
+    } catch {
+      setPurchaseError('Error al procesar el pago');
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  // ── Coupon inline ──────────────────────────────────────────────────────────
+  const handleValidateCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponValidating(true);
+    setCouponError(null);
+    try {
+      const result = await validateCoupon(couponCode.trim());
+      if (result.valid) {
+        setCouponValidated(true);
+        setCouponInfo({ credits: result.credits!, description: result.description || '' });
+      } else {
+        setCouponError(result.error || 'Cupón inválido o expirado');
+      }
+    } catch {
+      setCouponError('Error al validar el cupón');
+    } finally {
+      setCouponValidating(false);
+    }
+  };
+
+  const handleRedeemCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponRedeeming(true);
+    setCouponError(null);
+    try {
+      const result = await redeemCoupon(couponCode.trim());
+      if (result.success) {
+        setCouponSuccess(true);
+        await loadCreditsData();
+      } else {
+        setCouponError(result.error || 'Error al canjear el cupón');
+      }
+    } catch {
+      setCouponError('Error al canjear el cupón');
+    } finally {
+      setCouponRedeeming(false);
+    }
+  };
+
+  const resetCoupon = () => {
+    setCouponCode('');
+    setCouponValidated(false);
+    setCouponInfo(null);
+    setCouponSuccess(false);
+    setCouponError(null);
   };
 
   // ============================================================================
@@ -834,74 +913,125 @@ export const ProfilePanel: React.FC = () => {
             ════════════════════════════════════ */}
         <div className="space-y-4 lg:sticky lg:top-4">
 
-          {/* ── SALDO DISPONIBLE — Verde Limón flat ── */}
-          <div className="bg-brand-400 rounded-xl p-5">
+          {/* ── SALDO DISPONIBLE ── */}
+          <div className="bg-brand-50 border border-brand-200 rounded-xl p-5">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-brand-950/60 text-[10px] font-semibold uppercase tracking-wider">
+              <p className="text-brand-700 text-[10px] font-semibold uppercase tracking-wider">
                 Saldo Disponible
               </p>
-              <Coins className="w-4 h-4 text-brand-950/40" />
+              <Coins className="w-4 h-4 text-brand-500" />
             </div>
 
             {creditsLoading ? (
-              <Loader2 className="w-6 h-6 text-brand-950/50 animate-spin my-3" />
+              <Loader2 className="w-6 h-6 text-brand-500 animate-spin my-3" />
             ) : (
               <>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-5xl font-black text-brand-950 leading-none">
+                  <span className="text-5xl font-black text-brand-800 leading-none">
                     {credits?.balance ?? 0}
                   </span>
-                  <span className="text-sm font-semibold text-brand-950/70">créditos</span>
+                  <span className="text-sm font-semibold text-brand-600">créditos</span>
                 </div>
-                <p className="mt-1 text-brand-950/50 text-[11px]">
+                <p className="mt-1 text-brand-600/70 text-[11px]">
                   Usá tu saldo para destacar avisos
                 </p>
               </>
             )}
 
-            {/* Acción comprar */}
-            <button
-              onClick={() => setShowBuyCreditsModal(true)}
-              className="mt-4 w-full py-2.5 bg-brand-950 hover:bg-brand-900 text-brand-100 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              <ShoppingCart className="w-4 h-4" /> Comprar créditos
-            </button>
-
-            {/* Ver movimientos toggle */}
+            {/* Movimientos — siempre visible */}
             {transactions.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-brand-500/40">
-                <button
-                  onClick={() => setShowTransactions(v => !v)}
-                  className="w-full flex items-center justify-between text-brand-950/70 hover:text-brand-950 text-xs font-medium transition-colors"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5" /> Ver movimientos
-                  </span>
-                  {showTransactions
-                    ? <ChevronUp className="w-3.5 h-3.5" />
-                    : <ChevronDown className="w-3.5 h-3.5" />}
-                </button>
-                {showTransactions && (
-                  <div className="mt-2 space-y-1.5">
-                    {transactions.slice(0, 5).map(tx => (
-                      <div
-                        key={tx.id}
-                        className="flex items-center justify-between bg-brand-950/10 rounded-lg px-3 py-1.5"
-                      >
-                        <div className="min-w-0 flex-1 mr-2">
-                          <p className="text-brand-950 text-xs truncate">{tx.description}</p>
-                          <p className="text-brand-950/50 text-[10px]">
-                            {new Date(tx.created_at).toLocaleDateString('es-AR', { month: 'short', day: 'numeric' })}
-                          </p>
-                        </div>
-                        <span className={`text-xs font-bold ${tx.amount > 0 ? 'text-brand-900' : 'text-red-700'}`}>
-                          {tx.amount > 0 ? '+' : ''}{tx.amount}
-                        </span>
+              <div className="mt-4 pt-3 border-t border-brand-200">
+                <p className="text-brand-700 text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                  <Clock className="w-3 h-3" /> Últimos movimientos
+                </p>
+                <div className="space-y-1.5">
+                  {transactions.slice(0, 5).map(tx => (
+                    <div
+                      key={tx.id}
+                      className="flex items-center justify-between bg-brand-100 rounded-lg px-3 py-1.5"
+                    >
+                      <div className="min-w-0 flex-1 mr-2">
+                        <p className="text-brand-900 text-xs truncate">{tx.description}</p>
+                        <p className="text-brand-600/60 text-[10px]">
+                          {new Date(tx.created_at).toLocaleDateString('es-AR', { month: 'short', day: 'numeric' })}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <span className={`text-xs font-bold ${tx.amount > 0 ? 'text-brand-700' : 'text-red-600'}`}>
+                        {tx.amount > 0 ? '+' : ''}{tx.amount}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
+            )}
+          </div>
+
+          {/* ── CARGAR CRÉDITOS inline ── */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2 mb-4">
+              <ShoppingCart className="w-4 h-4 text-brand-600" />
+              Cargar Créditos
+            </h3>
+
+            {purchaseSuccess ? (
+              <div className="flex flex-col items-center gap-2 py-4 text-center">
+                <CheckCircle className="w-8 h-8 text-brand-600" />
+                <p className="text-sm font-semibold text-brand-700">¡Créditos acreditados!</p>
+                <p className="text-xs text-gray-500">Tu saldo fue actualizado</p>
+              </div>
+            ) : (
+              <>
+                {/* Selector de cantidad */}
+                <div className="grid grid-cols-4 gap-1.5 mb-4">
+                  {[1, 2, 3, 4].map(qty => (
+                    <button
+                      key={qty}
+                      onClick={() => setSelectedQty(qty)}
+                      className={`relative py-3 rounded-lg text-sm font-bold border-2 transition-all ${
+                        selectedQty === qty
+                          ? 'border-brand-500 bg-brand-50 text-brand-700'
+                          : 'border-gray-200 bg-white text-gray-600 hover:border-brand-300'
+                      }`}
+                    >
+                      {qty}
+                      {qty === 3 && (
+                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1 py-0.5 bg-brand-500 text-white text-[9px] font-bold rounded-full leading-none whitespace-nowrap">
+                          MEJOR
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Total */}
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <span className="text-xs text-gray-500">Total</span>
+                  <span className="text-base font-bold text-gray-900">
+                    {creditsConfig
+                      ? `$${(creditsConfig.credit_base_price * selectedQty).toLocaleString('es-AR')} ARS`
+                      : <Loader2 className="w-3 h-3 animate-spin inline" />
+                    }
+                  </span>
+                </div>
+
+                {purchaseError && (
+                  <p className="text-xs text-red-600 flex items-center gap-1 mb-2">
+                    <AlertCircle className="w-3.5 h-3.5" /> {purchaseError}
+                  </p>
+                )}
+
+                <button
+                  onClick={handlePurchase}
+                  disabled={purchasing || !creditsConfig}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 px-4 text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: '#009EE3' }}
+                  onMouseEnter={(e) => { if (!purchasing) e.currentTarget.style.backgroundColor = '#0087C3'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#009EE3'; }}
+                >
+                  {purchasing && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Pagar con <strong>MercadoPago</strong>
+                </button>
+              </>
             )}
           </div>
 
@@ -927,52 +1057,95 @@ export const ProfilePanel: React.FC = () => {
               </div>
             </div>
 
-            <button className="w-full border-2 border-dashed border-gray-200 rounded-xl py-2.5 text-xs text-gray-400 hover:border-brand-400 hover:text-brand-600 transition-colors flex items-center justify-center gap-1.5 mb-3">
+            <button className="w-full border-2 border-dashed border-gray-200 rounded-xl py-2.5 text-xs text-gray-400 hover:border-brand-400 hover:text-brand-600 transition-colors flex items-center justify-center gap-1.5">
               <Plus className="w-3.5 h-3.5" /> Agregar tarjeta
             </button>
-
-            <div className="pt-3 border-t border-gray-100">
-              <button className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 px-4 text-sm font-semibold text-white transition-colors"
-                style={{ backgroundColor: '#009EE3' }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0087C3')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#009EE3')}
-              >
-                Pagar con <strong>MercadoPago</strong>
-              </button>
-            </div>
           </div>
 
-          {/* ── CUPÓN ── */}
+          {/* ── CUPÓN inline ── */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2 mb-3">
-              <Tag className="w-4 h-4 text-brand-600" />
+              <Gift className="w-4 h-4 text-brand-600" />
               Canjear Cupón
             </h3>
-            <p className="text-xs text-gray-500 mb-3">
-              Ingresá un código de cupón para acreditar saldo en tu cuenta.
-            </p>
-            <button
-              onClick={() => setShowRedeemCouponModal(true)}
-              className="w-full py-2.5 border border-brand-600 text-brand-600 hover:bg-brand-50 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              <Gift className="w-4 h-4" /> Tengo un cupón
-            </button>
+
+            {couponSuccess ? (
+              <div className="flex flex-col items-center gap-2 py-3 text-center">
+                <CheckCircle className="w-8 h-8 text-brand-600" />
+                <p className="text-sm font-semibold text-brand-700">
+                  ¡+{couponInfo?.credits} créditos acreditados!
+                </p>
+                <button onClick={resetCoupon} className="text-xs text-brand-600 hover:underline mt-1">
+                  Usar otro cupón
+                </button>
+              </div>
+            ) : couponValidated && couponInfo ? (
+              <div className="space-y-3">
+                <div className="bg-brand-50 border border-brand-200 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-brand-700 flex items-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5" /> Cupón válido
+                  </p>
+                  <p className="text-sm font-bold text-brand-800 mt-0.5">+{couponInfo.credits} créditos</p>
+                  {couponInfo.description && (
+                    <p className="text-[11px] text-brand-600 mt-0.5">{couponInfo.description}</p>
+                  )}
+                </div>
+                {couponError && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> {couponError}
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleRedeemCoupon}
+                    disabled={couponRedeeming}
+                    className="flex-1 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    {couponRedeeming && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    Canjear
+                  </button>
+                  <button
+                    onClick={resetCoupon}
+                    className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => {
+                    setCouponCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+                    setCouponError(null);
+                  }}
+                  placeholder="Ej: RURAL2026"
+                  maxLength={20}
+                  className="w-full px-3 py-2.5 text-sm font-mono tracking-wider border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
+                />
+                {couponError && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> {couponError}
+                  </p>
+                )}
+                <button
+                  onClick={handleValidateCoupon}
+                  disabled={couponValidating || !couponCode.trim()}
+                  className="w-full py-2.5 border border-brand-600 text-brand-600 hover:bg-brand-50 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {couponValidating
+                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Validando...</>
+                    : <><Tag className="w-3.5 h-3.5" /> Validar cupón</>
+                  }
+                </button>
+              </div>
+            )}
           </div>
 
         </div>
       </div>
-
-      {/* Modales */}
-      <BuyCreditsModal
-        isOpen={showBuyCreditsModal}
-        onClose={() => setShowBuyCreditsModal(false)}
-        onSuccess={() => { setShowBuyCreditsModal(false); loadCreditsData(); }}
-      />
-      <RedeemCouponModal
-        isOpen={showRedeemCouponModal}
-        onClose={() => setShowRedeemCouponModal(false)}
-        onSuccess={() => { setShowRedeemCouponModal(false); loadCreditsData(); }}
-      />
     </div>
   );
 };
