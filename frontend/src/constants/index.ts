@@ -9,3 +9,4 @@ export { ALL_CATEGORIES, CATEGORIES, SUBCATEGORIES, ALL_SUBCATEGORIES } from './
 export type { Category } from './categories';
 export { DEFAULT_PLACEHOLDER_IMAGE, LOCAL_PLACEHOLDER_IMAGE } from './defaultImages';
 export * from './texts';
+export { PREMIUM_PLANS, hasPremiumFeatures } from './plans';

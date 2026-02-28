@@ -24,10 +24,7 @@ import {
   getActiveDeletionRequest,
 } from '../../services/accountService';
 import { updateProfile } from '../../services/profileService';
-
-// ─── Tipos locales ─────────────────────────────────────────────────────────
-
-const PREMIUM_PLANS = ['premium', 'profesional', 'avanzado', 'business', 'enterprise'];
+import { hasPremiumFeatures as checkPremium } from '../../constants/plans';
 
 // ─── Subcomponente: sección colapsable ─────────────────────────────────────
 
@@ -127,11 +124,11 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
 export const AccountSecurityPanel: React.FC = () => {
   const { profile, refreshProfile } = useAuth();
 
-  const isSuperAdmin = profile?.role === 'superadmin';
-  const planName = (profile as any)?.plan_name?.toLowerCase() || '';
-  const isEmpresa = profile?.user_type === 'empresa';
-  const hasPremiumPlan = PREMIUM_PLANS.some(p => planName.includes(p));
-  const hasPremiumFeatures = isEmpresa || hasPremiumPlan || isSuperAdmin;
+  const hasPremiumFeatures = checkPremium({
+    user_type: profile?.user_type,
+    role: profile?.role,
+    plan_name: profile?.plan_name,
+  });
 
   // ── 1. Privacidad ──────────────────────────────────────────────────────
 
