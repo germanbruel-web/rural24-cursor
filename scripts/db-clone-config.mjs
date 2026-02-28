@@ -57,7 +57,7 @@ const DEV_REF = devRefMatch?.[1];
 const PROD_REF = prodRefMatch?.[1];
 
 // Tablas de configuración a clonar (sin datos de usuarios ni avisos)
-const TABLES = ['site_settings', 'global_settings'];
+const TABLES = ['site_settings', 'global_config', 'banners', 'banners_clean'];
 
 // Columnas de auditoría que referencian auth.users → nullear al clonar
 // (los IDs de usuario DEV no existen en PROD)
