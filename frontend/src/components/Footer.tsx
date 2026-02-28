@@ -69,7 +69,7 @@ const AccordionSection: React.FC<{
 
 export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
   const { config, isLoading } = useFooterConfig();
-  const footerLogo = useSiteSetting('footer_logo', '/images/logos/logo.svg');
+  const footerLogo = useSiteSetting('footer_logo', '/images/logos/rural24-dark.webp');
   
   // Obtener categorías dinámicas si column3.source === 'dynamic'
   const { categories } = useFooterCategories(config.column3.limit);
@@ -103,7 +103,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
               src={footerLogo}
               alt="RURAL24" 
               className="h-10 w-auto mx-auto"
-              onError={(e) => { e.currentTarget.src = '/images/logos/logo.png'; }}
+              onError={(e) => { e.currentTarget.src = '/images/logos/rural24-dark.webp'; }}
             />
             <p className="text-xs text-gray-400 mt-2">{column1.slogan}</p>
           </div>
@@ -244,7 +244,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
                   src={footerLogo}
                   alt="RURAL24" 
                   className="h-12 w-auto"
-                  onError={(e) => { e.currentTarget.src = '/images/logos/logo.png'; }}
+                  onError={(e) => { e.currentTarget.src = '/images/logos/rural24-dark.webp'; }}
                 />
                 <p className="text-sm text-gray-400 mt-2">{column1.slogan}</p>
               </div>
