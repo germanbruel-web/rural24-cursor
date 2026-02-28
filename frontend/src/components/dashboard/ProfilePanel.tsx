@@ -1,45 +1,43 @@
 /**
  * ProfilePanel.tsx — Vista unificada Mi Cuenta
  * Design System RURAL24
- * 
+ *
  * Layout 2 columnas (desktop):
  *  ┌──────────────────────┬──────────────────────┐
- *  │  DATOS PERSONALES    │  MI PLAN + CRÉDITOS  │
- *  │  (avatar, form,      │  (plan card, balance,│
- *  │   contacto, ubic.)   │   paquetes, historial│
+ *  │  DATOS PERSONALES    │  CRÉDITOS            │
+ *  │  (avatar, form,      │  (saldo, movimientos)│
+ *  │   contacto, ubic.)   │                      │
+ *  │                      │  SEGURIDAD Y CUENTA  │
+ *  │                      │  (privacidad, pass,  │
+ *  │                      │   email, baja)       │
  *  └──────────────────────┴──────────────────────┘
- * 
- * Mobile: stack vertical (datos personales → plan + créditos)
- * 
- * Cambios vs versión anterior:
- * - Eliminado upsell "¿Querés destacar tu perfil profesional?"
- * - Integrada suscripción + créditos (antes en SubscriptionPanel separado)
- * - Layout 2 columnas compacto
- * - Sin tabs — info siempre visible
+ *
+ * Mobile: stack vertical Datos → Créditos → Seguridad
  */
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  User, Mail, Phone, MapPin, Calendar, Edit, Save, X,
-  CheckCircle, Briefcase, Info, Zap, Coins, ShoppingCart, 
-  Gift, Clock, Sparkles, TrendingUp, Loader2, Shield, Send, AlertCircle
+import {
+  User, Phone, MapPin, Calendar, Edit, Save, X,
+  CheckCircle, Briefcase, Coins, ShoppingCart,
+  Gift, Clock, Loader2, Shield, Send, AlertCircle
 } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import { PROVINCES, LOCALITIES_BY_PROVINCE } from '../../constants/locations';
 import { AvatarUpload } from '../common/AvatarUpload';
 import { sendVerificationCode, verifyCode } from '../../services/phoneVerificationService';
-import { 
+import {
   updateProfile, uploadAvatar, deleteAvatar
 } from '../../services/profileService';
 import {
-  getUserCredits, getCreditsConfig, getCreditTransactions
+  getUserCredits, getCreditTransactions
 } from '../../services/creditsService';
 import { supabase } from '../../services/supabaseClient';
 import BuyCreditsModal from '../modals/BuyCreditsModal';
 import RedeemCouponModal from '../modals/RedeemCouponModal';
 import { Button } from '../atoms/Button';
 import { Badge } from '../atoms/Badge';
+import { AccountSecurityPanel } from './AccountSecurityPanel';
 
 // ============================================================================
 // TIPOS
@@ -73,7 +71,6 @@ export const ProfilePanel: React.FC = () => {
   
   // Credits state
   const [credits, setCredits] = useState<any>(null);
-  const [creditsConfig, setCreditsConfig] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [creditsLoading, setCreditsLoading] = useState(true);
   const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
@@ -163,14 +160,12 @@ export const ProfilePanel: React.FC = () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) { setCreditsLoading(false); return; }
 
-      const [creditsData, configData, transData] = await Promise.all([
+      const [creditsData, transData] = await Promise.all([
         getUserCredits(authUser.id),
-        getCreditsConfig(),
         getCreditTransactions(authUser.id, 5)
       ]);
 
       setCredits(creditsData);
-      setCreditsConfig(configData);
       setTransactions(transData);
     } catch (err) {
       console.error('Error loading credits:', err);
@@ -320,7 +315,7 @@ export const ProfilePanel: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Mi Cuenta</h1>
-          <p className="text-sm text-gray-500">Gestioná tu perfil y suscripción</p>
+          <p className="text-sm text-gray-500">Datos personales, seguridad y créditos</p>
         </div>
         {!isEditing ? (
           <button
@@ -682,46 +677,9 @@ export const ProfilePanel: React.FC = () => {
         </div>
 
         {/* ═══════════════════════════════════════════
-            COLUMNA DERECHA: PLAN + CRÉDITOS (2/5)
+            COLUMNA DERECHA: CRÉDITOS + SEGURIDAD
             ═══════════════════════════════════════════ */}
         <div className="space-y-4">
-          
-          {/* Mi Plan */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-gray-900">Plan Starter</h3>
-                  <Badge variant="success" size="sm">Activo</Badge>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-4 gap-2 text-center">
-              {[
-                { label: 'Avisos', value: '∞' },
-                { label: 'Mensajes', value: '∞' },
-                { label: 'Categorías', value: '∞' },
-                { label: 'Soporte', value: '24/7' }
-              ].map((item, idx) => (
-                <div key={idx} className="flex flex-col items-center">
-                  <CheckCircle className="w-3.5 h-3.5 text-brand-600 mb-0.5" />
-                  <p className="text-lg font-bold text-gray-900 leading-tight">{item.value}</p>
-                  <p className="text-[10px] text-gray-500">{item.label}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
-              <Info className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-              <p className="text-[11px] text-gray-700">
-                <strong>Lanzamiento:</strong> Acceso gratuito para todos
-              </p>
-            </div>
-          </div>
 
           {/* Balance de Créditos */}
           <div className="rounded-lg overflow-hidden bg-gradient-to-br from-cyan-500 to-blue-600 p-4 sm:p-5">
@@ -768,42 +726,6 @@ export const ProfilePanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Paquetes */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-brand-600" />
-              Paquetes
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {creditsConfig && [1, 2, 3, 4].map(qty => {
-                const price = creditsConfig.credit_base_price * qty;
-                const isPopular = qty === 3;
-                return (
-                  <div
-                    key={qty}
-                    className={`cursor-pointer transition-all hover:scale-105 text-center p-3 rounded-lg border-2 ${
-                      isPopular
-                        ? 'border-brand-600 bg-brand-50'
-                        : 'border-gray-200 hover:border-brand-300'
-                    }`}
-                    onClick={() => setShowBuyCreditsModal(true)}
-                  >
-                    {isPopular && (
-                      <Badge variant="success" size="sm" className="mb-1 w-full justify-center text-[10px]">
-                        Popular
-                      </Badge>
-                    )}
-                    <div className="text-xl font-black text-brand-600">{qty}</div>
-                    <div className="text-[10px] text-gray-500">{qty === 1 ? 'crédito' : 'créditos'}</div>
-                    <div className="text-xs font-bold text-gray-900 mt-0.5">
-                      ${price.toLocaleString('es-AR')}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Últimos Movimientos */}
           {transactions.length > 0 && (
             <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5">
@@ -832,25 +754,8 @@ export const ProfilePanel: React.FC = () => {
             </div>
           )}
 
-          {/* Equivalencias */}
-          <div className="px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start gap-2">
-              <TrendingUp className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="text-[11px] text-gray-700 space-y-0.5">
-                <p className="font-semibold text-blue-900">Equivalencias:</p>
-                {[
-                  { credits: 1, days: 7 },
-                  { credits: 2, days: 15 },
-                  { credits: 3, days: 30 },
-                  { credits: 4, days: 60 }
-                ].map(({ credits: c, days }) => (
-                  <p key={c}>
-                    <span className="font-medium">{c} {c === 1 ? 'crédito' : 'créditos'}</span> = {days} días
-                  </p>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* Seguridad y Cuenta */}
+          <AccountSecurityPanel />
         </div>
       </div>
 
