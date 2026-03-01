@@ -102,6 +102,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
           src={optimizedImageUrl}
           alt={product.title}
           loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover"
           onError={() => setImageError(true)}
         />

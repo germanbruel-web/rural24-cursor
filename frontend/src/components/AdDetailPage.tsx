@@ -460,6 +460,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                       src={getImageVariant(images[currentImageIndex]?.url || images[currentImageIndex], 'original')}
                       alt={ad.title}
                       className="w-full h-full object-cover"
+                      decoding="async"
                       onLoad={() => {
                         console.log('✅ Imagen principal cargada correctamente:', images[currentImageIndex]);
                       }}
@@ -495,6 +496,8 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                             src={getImageVariant(img?.url || img, 'thumb')}
                             alt={`${ad.title} ${idx + 1}`}
                             className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                             onError={(e) => {
                               console.error('❌ Error cargando miniatura:', img);
                               const target = e.currentTarget;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { BannerClean } from '@/types';
 import { getHeroVIPBanners, incrementBannerImpression, incrementBannerClick } from '@/services/bannersCleanService';
+import { optimizeCloudinaryUrl } from '@/utils/imageOptimizer';
 
 interface HeroVIPBannerProps {
   currentCategory?: string;  // 'all' | 'inmuebles' | 'vehiculos' | 'maquinarias' | 'insumos' | 'empleos'
@@ -60,27 +61,31 @@ export default function HeroVIPBanner({ currentCategory = 'all' }: HeroVIPBanner
   }
 
   return (
-    <div 
+    <div
       onClick={handleClick}
       className={`w-full overflow-hidden rounded-lg ${banner.link_url ? 'cursor-pointer' : ''}`}
     >
-      {/* Banner Desktop */}
+      {/* Banner Desktop — altura fija para evitar CLS */}
       {banner.desktop_image_url && (
         <img
-          src={banner.desktop_image_url}
+          src={optimizeCloudinaryUrl(banner.desktop_image_url, { width: 1100, height: 200, quality: 'auto', format: 'auto' })}
           alt={banner.title}
-          className="hidden md:block w-full h-auto object-cover"
-          style={{ maxHeight: '200px' }}
+          className="hidden md:block w-full object-cover"
+          width={1100}
+          height={200}
+          decoding="async"
         />
       )}
 
-      {/* Banner Mobile */}
+      {/* Banner Mobile — altura fija para evitar CLS */}
       {banner.mobile_image_url && (
         <img
-          src={banner.mobile_image_url}
+          src={optimizeCloudinaryUrl(banner.mobile_image_url, { width: 600, height: 100, quality: 'auto', format: 'auto' })}
           alt={banner.title}
-          className="md:hidden w-full h-auto object-cover"
-          style={{ maxHeight: '100px' }}
+          className="md:hidden w-full object-cover"
+          width={600}
+          height={100}
+          decoding="async"
         />
       )}
     </div>

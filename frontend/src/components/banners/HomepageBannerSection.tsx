@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { getHomepageBanners } from '../../services/bannersService';
+import { optimizeCloudinaryUrl } from '../../utils/imageOptimizer';
 import type { Banner } from '../../../types';
 
 interface Props {
@@ -60,9 +61,12 @@ export const HomepageBannerSection: React.FC<Props> = ({ category }) => {
         className="block w-full h-full"
       >
         <img
-          src={currentBanner.image_url}
+          src={optimizeCloudinaryUrl(currentBanner.image_url, { width: 1100, height: 200, quality: 'auto', format: 'auto' })}
           alt={currentBanner.title}
           className="w-full h-full object-cover"
+          decoding="async"
+          width={1100}
+          height={200}
         />
       </a>
 
