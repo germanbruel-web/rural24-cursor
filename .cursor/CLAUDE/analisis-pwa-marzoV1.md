@@ -126,6 +126,124 @@ frontend/public/images/AppImages/
 
 ---
 
+### Sprint 2.5 — PWA hardening + Admin Inspector (2026-03-01)
+**Estado: ✅ COMPLETADO**
+
+#### Fixes críticos — Vite + Service Worker
+
+| Problema | Fix | Archivo |
+|---|---|---|
+| `server.headers: immutable` aplicado a todos los JS → React duplicate instance con SW activo | Eliminado el bloque `headers` del server | `frontend/vite.config.ts` |
+| Falta `resolve.dedupe` → dos instancias de React con `lazy()` + VitePWA dev | Agregado `dedupe: ['react', 'react-dom', 'react/jsx-runtime']` | `frontend/vite.config.ts` |
+| Síntoma: `Cannot read properties of null (reading 'useState')` en HeroCmsPanel | Fix combinado arriba | — |
+
+**Procedimiento de recuperación si reaparece:**
+```
+1. rm -rf frontend/node_modules/.vite
+2. DevTools → Application → Storage → Clear site data
+3. Application → Service Workers → Unregister
+4. npm run dev (frontend)
+5. Ctrl+Shift+R (hard refresh)
+```
+
+#### iOS — apple-touch-icon completo
+
+Antes: solo 1 tag con 180px. Ahora 4 tamaños en `frontend/index.html`:
+```html
+<link rel="apple-touch-icon" sizes="180x180" href="/images/AppImages/ios/180.png" />
+<link rel="apple-touch-icon" sizes="167x167" href="/images/AppImages/ios/167.png" />
+<link rel="apple-touch-icon" sizes="152x152" href="/images/AppImages/ios/152.png" />
+<link rel="apple-touch-icon" sizes="120x120" href="/images/AppImages/ios/120.png" />
+```
+> iOS ignora el manifest.json — lee SOLO los `<link>` del HTML.
+
+#### PWA Screenshots — estado actual y mejora pendiente
+
+| | Actual | Recomendado |
+|---|---|---|
+| Archivo | `preview-image.webp` (1.9 KB) | Screenshots reales |
+| Wide | 401×301 px | **1280×720** mínimo |
+| Narrow | 401×301 px (mismo archivo) | **390×844** (portrait) |
+| form_factor wide | ✅ configurado | — |
+| form_factor narrow | ⚠️ usa mismo archivo | Archivo separado |
+
+**Para actualizar screenshots** (`vite.config.ts` → bloque `screenshots`):
+```javascript
+screenshots: [
+  {
+    src: '/screenshot-desktop.webp',  // 1280×720, ~150-300KB
+    type: 'image/webp',
+    sizes: '1280x720',
+    form_factor: 'wide',
+    label: 'RURAL24 — Clasificados Agropecuarios',
+  },
+  {
+    src: '/screenshot-mobile.webp',   // 390×844, ~80-150KB
+    type: 'image/webp',
+    sizes: '390x844',
+    form_factor: 'narrow',
+    label: 'RURAL24 — Clasificados Agropecuarios',
+  },
+],
+```
+Poner los archivos en `frontend/public/` y commitear.
+
+#### PWA Inspector — Backend Dashboard
+
+Nuevo módulo en el backend admin para verificar assets estáticos sin acceso al filesystem:
+
+```
+backend/app/api/admin/cms/public-assets/route.ts
+  GET /api/admin/cms/public-assets[?category=logos|icons|hero|pwa-android|pwa-ios|pwa-win]
+  → Lee frontend/public/ via fs (Node.js), auth Bearer token (superadmin)
+  → Devuelve: { categories: [{ id, label, files: [{ name, path, size, ext }] }], total }
+
+backend/app/api/admin/cms/asset/route.ts
+  GET /api/admin/cms/asset?path=images/AppImages/android/512.png&token=XXX
+  → Proxy seguro: auth + validación path traversal + Content-Type correcto
+  → Cache-Control: private, max-age=300
+
+backend/app/admin/dashboard/cms/page.tsx
+  UI: tabs por plataforma, grid miniaturas, modal detalle (ruta, tamaño, formato)
+  Acceso desde: Dashboard → card "PWA Inspector"
+```
+
+**Propósito:** verificar visualmente antes de cada deploy que los íconos PWA están completos y correctos. NO permite subir/reemplazar (los íconos PWA son estáticos, cambiarlos requiere deploy).
+
+#### URLs Render
+
+| Ambiente | Frontend (PWA) |
+|---|---|
+| Staging | `rural24-1.onrender.com` |
+| Producción | `prod-frontend-uxzm.onrender.com` |
+
+#### Checklist install PWA — por plataforma
+
+**Chrome Desktop:**
+```
+1. Abrir https://[frontend-url]/
+2. Buscar ⊕ en barra de direcciones (o menú → "Instalar RURAL24")
+3. DevTools → Application → Manifest → verificar íconos y screenshots
+4. DevTools → Application → Service Workers → "activated and running"
+```
+
+**Chrome Android:**
+```
+1. Abrir en Chrome mobile
+2. Aparece banner "Agregar a pantalla de inicio" (si no, menú ⋮ → Instalar app)
+3. Verificar ícono 192px en launcher
+```
+
+**iOS Safari (iPhone/iPad):**
+```
+1. Abrir en Safari
+2. Share (cuadrado con flecha) → "Agregar a pantalla de inicio"
+3. Verifica título "Rural24" e ícono 180px
+4. Al abrir: status bar verde (#138A2C), sin barra de Safari
+```
+
+---
+
 ### Sprint 3 — Performance avanzada (1 semana)
 
 - [ ] ISR en Next.js BFF para `/`, `/avisos/[slug]`, `/categorias/[cat]`
