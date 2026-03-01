@@ -22,6 +22,7 @@ import {
 // HOOKS & CONTEXTS (Agrupados por barrel)
 // ============================================================
 import { useProducts, useCategoryPrefetch, useRealtimeCategories, OfflineBanner } from "./src/hooks";
+import { PWAInstallBanner } from "./src/components/PWAInstallBanner";
 import { useAuth, CategoryProvider, ToastProvider } from "./src/contexts";
 import { useProfileNudge } from './src/hooks/useProfileNudge';
 
@@ -106,6 +107,7 @@ const App: React.FC = () => {
       <ToastProvider>
         <CategoryProvider>
           <OfflineBanner />
+          <PWAInstallBanner />
           <AppContent />
         </CategoryProvider>
       </ToastProvider>
