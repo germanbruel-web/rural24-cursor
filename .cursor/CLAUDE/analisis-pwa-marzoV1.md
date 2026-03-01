@@ -61,7 +61,7 @@ blur placeholder → lazy load → srcSet responsivo → aspect-ratio via contai
 ---
 
 ### Sprint 1 — Quick wins imágenes (1-2 días)
-**Estado: EN CURSO**
+**Estado: ✅ COMPLETADO (2026-03-01)**
 
 | Tarea | Archivo | Impacto | Estado |
 |---|---|---|---|
@@ -79,25 +79,50 @@ blur placeholder → lazy load → srcSet responsivo → aspect-ratio via contai
 ---
 
 ### Sprint 2 — PWA base (3-5 días)
+**Estado: ✅ COMPLETADO (2026-03-01)**
 
-- [ ] `vite-plugin-pwa` + Workbox (App Shell + cache Cloudinary + API NetworkFirst)
-- [ ] `manifest.json` completo (icons 192/512, theme_color, display standalone, start_url)
-- [ ] JWT expiry a 7 días en Supabase Dashboard (Auth → JWT expiry: 604800)
-- [ ] Supabase Realtime selectivo (solo activo cuando pestaña visible)
-- [ ] TanStack Query con staleTime diferenciado por criticidad
+| Tarea | Estado |
+|---|---|
+| `vite-plugin-pwa` + Workbox (App Shell + cache Cloudinary + API NetworkFirst) | ✅ |
+| `manifest.json` completo vía VitePWA (auto-inyectado en build) | ✅ |
+| Icons PNG reales en `frontend/public/images/AppImages/android/` (48→512px) | ✅ |
+| `apple-touch-icon` → `/images/AppImages/ios/180.png` | ✅ |
+| Meta tags PWA + SEO/OG en `index.html` | ✅ |
+| `id: '/'` en manifest (requerido para identificar la PWA) | ✅ |
+| `purpose: 'any'` y `purpose: 'maskable'` en entradas separadas | ✅ |
+| `screenshots` con `preview-image.webp` (Richer Install UI en desktop) | ✅ |
+| JWT expiry a 7 días en Supabase Dashboard | ⏸ Requiere plan pago (Supabase free no permite) |
+| Supabase Realtime selectivo | ⬜ Sprint 3 |
+| TanStack Query con staleTime diferenciado | ⬜ Sin TanStack Query en el proyecto — no aplica |
 
-**Configuración Supabase Dashboard requerida:**
+**Configuración Supabase Dashboard (pendiente, plan pago):**
 ```
 Auth → JWT expiry: 604800 (7 días)
 Auth → Refresh token reuse interval: 10s
 Auth → Refresh token rotation: ON
 ```
+> Mientras tanto: `autoRefreshToken: true` ya configurado en el cliente Supabase cubre el uso normal.
 
-**Workbox runtime caching:**
+**Workbox runtime caching implementado:**
 ```
-res.cloudinary.com  → CacheFirst  (30 días)
-/api/*              → NetworkFirst (5s timeout)
+res.cloudinary.com  → CacheFirst  (30 días, max 100 entries)
+/api/*              → NetworkFirst (5s timeout, 5min cache)
+*.supabase.co       → NetworkFirst (5s timeout, 5min cache)
+fonts.googleapis.com → StaleWhileRevalidate
+fonts.gstatic.com   → CacheFirst  (1 año)
 ```
+
+**Assets PWA:**
+```
+frontend/public/images/AppImages/
+  android/  ← 6 PNGs usados en manifest (48, 72, 96, 144, 192, 512px)
+  ios/      ← 26 PNGs (16px → 1024px)
+  windows11/ ← tiles, splash, store logo
+```
+
+**Notas de limpieza:**
+- `frontend/public/public/` — carpeta duplicada eliminada (era artefacto de una copia manual incorrecta)
+- `frontend/dev-dist/` — agregada a `.gitignore` (archivos generados por VitePWA en modo dev, no van a repo)
 
 ---
 
