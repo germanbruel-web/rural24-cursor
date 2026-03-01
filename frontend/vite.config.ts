@@ -1,6 +1,7 @@
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
   // Cargar variables de entorno
@@ -65,7 +66,93 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    plugins: [react()],
+    plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      devOptions: { enabled: true },
+      includeAssets: ['images/**/*.{png,webp,svg}'],
+      manifest: {
+        name: 'RURAL24 — Clasificados Agropecuarios',
+        short_name: 'Rural24',
+        description: 'Comprá y vendé ganado, maquinaria, insumos e inmuebles rurales en Argentina.',
+        theme_color: '#138A2C',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
+        scope: '/',
+        orientation: 'portrait',
+        icons: [
+          {
+            src: '/images/logos/rural24-dark.webp',
+            sizes: '192x192',
+            type: 'image/webp',
+          },
+          {
+            src: '/images/logos/rural24-dark.webp',
+            sizes: '512x512',
+            type: 'image/webp',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,webp,svg,woff2}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/\/api\//],
+        runtimeCaching: [
+          {
+            // Cloudinary — CacheFirst 30 días
+            urlPattern: /res\.cloudinary\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'cloudinary-images',
+              expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // BFF Next.js API — NetworkFirst con 5s timeout
+            urlPattern: /\/api\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Supabase REST/Auth — NetworkFirst
+            urlPattern: /\.supabase\.co/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-cache',
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Google Fonts CSS — StaleWhileRevalidate
+            urlPattern: /fonts\.googleapis\.com/,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'google-fonts-stylesheets' },
+          },
+          {
+            // Google Fonts archivos — CacheFirst 1 año
+            urlPattern: /fonts\.gstatic\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxAgeSeconds: 365 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
+      },
+    }),
+  ],
     optimizeDeps: {
       // Excluir TensorFlow.js y NSFWJS del prebundle (binarios nativos)
       exclude: ['@tensorflow/tfjs', 'nsfwjs'],
