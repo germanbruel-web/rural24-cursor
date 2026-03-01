@@ -309,6 +309,39 @@ export default function AdminDashboardPage() {
               Ver Galería
             </button>
           </div>
+
+          {/* Card: CMS Assets */}
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '1rem',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#333' }}>
+              🔍 PWA Inspector
+            </h2>
+            <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+              Verificar íconos y assets estáticos del frontend (Android, iOS, Windows)
+            </p>
+            <button
+              onClick={() => {
+                const tok = sessionStorage.getItem('admin-token');
+                window.location.href = `/admin/dashboard/cms${tok ? `?token=${tok}` : ''}`;
+              }}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: 'linear-gradient(135deg, #138A2C 0%, #0e6622 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                width: '100%',
+                fontWeight: 500,
+              }}
+            >
+              Ver Assets
+            </button>
+          </div>
         </div>
       </main>
     </div>

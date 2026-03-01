@@ -9,7 +9,14 @@
 
     <!-- PWA -->
     <meta name="theme-color" content="#138A2C" />
-    <link rel="apple-touch-icon" href="/images/AppImages/ios/180.png" />
+
+    <!-- iOS — apple-touch-icon por tamaño de pantalla -->
+    <!-- iOS lee estos tags del HTML, NO el manifest.json -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/AppImages/ios/180.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/images/AppImages/ios/167.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/AppImages/ios/152.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/images/AppImages/ios/120.png" />
+
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Rural24" />

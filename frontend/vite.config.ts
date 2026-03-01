@@ -17,10 +17,9 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       host: '0.0.0.0',
       strictPort: true, // FORZAR puerto 5173 - falla si está ocupado
-      headers: {
-        // Cache para assets estáticos (logos, imágenes)
-        'Cache-Control': 'public, max-age=31536000, immutable',
-      },
+      // ⚠️ NO poner Cache-Control global aquí — en dev cachea JS modules
+      // y rompe React con "duplicate instance" al regenerar chunks.
+      // El caching de assets estáticos va en producción (build/rollupOptions).
       
       // ⚡ OPTIMIZACIÓN: File watching inteligente
       watch: {
@@ -241,6 +240,8 @@ export default defineConfig(({ mode }) => {
       global: 'globalThis',
     },
     resolve: {
+      // Forzar una sola instancia de React — evita "duplicate React" con lazy() + SW
+      dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
       alias: {
         '@': path.resolve(__dirname, './src'),
         buffer: 'buffer/',
