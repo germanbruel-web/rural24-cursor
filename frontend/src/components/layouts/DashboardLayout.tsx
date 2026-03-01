@@ -99,7 +99,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const renderMenuItem = (item: MenuItem) => {
     if (item.divider) {
       return (
-        <div key={item.id} className="pt-4 pb-1 px-4">
+        <div key={item.id} className="pt-3 pb-1 px-4">
           <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
             {item.label}
           </span>
@@ -116,7 +116,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           item.onClick();
           setMobileMenuOpen(false);
         }}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group ${
           isActive
             ? 'bg-brand-600 text-white shadow-md'
             : 'text-gray-700 hover:bg-gray-100'
@@ -151,26 +151,28 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           }`}
         >
         {/* Logo / Brand */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
-          {!sidebarCollapsed && (
-            <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
-              <img 
-                src={headerLogo} 
-                alt="RURAL24" 
-                className="h-8 w-auto"
-              />
-            </button>
-          )}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            {sidebarCollapsed ? (
+        <div className={`h-16 flex items-center border-b border-gray-200 ${sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+          {sidebarCollapsed ? (
+            <button
+              onClick={() => setSidebarCollapsed(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Expandir panel"
+            >
               <ChevronRight className="w-5 h-5 text-gray-600" />
-            ) : (
-              <ChevronLeft className="w-5 h-5 text-gray-600" />
-            )}
-          </button>
+            </button>
+          ) : (
+            <>
+              <button onClick={() => onNavigate('home')} className="flex items-center">
+                <img src={headerLogo} alt="RURAL24" className="h-8 w-auto" />
+              </button>
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-gray-600" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* User Info */}
@@ -237,17 +239,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
         {/* Sidebar */}
         <aside
-          className={`absolute top-0 left-0 h-full w-64 bg-white transform transition-transform duration-300 ${
+          className={`absolute top-0 left-0 h-full w-64 bg-white flex flex-col transform transition-transform duration-300 ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
           {/* Header */}
-          <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
-            <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg flex items-center justify-center text-white font-bold">
-                C
-              </div>
-              <span className="font-bold text-gray-900">Clasify</span>
+          <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200 shrink-0">
+            <button onClick={() => onNavigate('home')} className="flex items-center">
+              <img src={headerLogo} alt="RURAL24" className="h-7 w-auto" />
             </button>
             <button
               onClick={() => setMobileMenuOpen(false)}
@@ -258,41 +257,39 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
 
           {/* User Info */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex-1">
-              <div className="font-medium text-gray-900 truncate text-sm mb-2">
-                {profile?.full_name || 'Usuario'}
-              </div>
-              <div className="flex gap-1">
-                <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                  profile?.role === 'superadmin'
-                    ? 'bg-brand-100 text-brand-700'
-                    : profile?.role === 'revendedor'
-                    ? 'bg-blue-100 text-blue-800'
-                    : profile?.user_type === 'empresa'
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {profile?.role === 'superadmin' ? 'SuperAdmin' : 
-                   profile?.role === 'revendedor' ? 'Revendedor' : 
-                   profile?.plan_name || 'Free'}
+          <div className="px-4 py-3 border-b border-gray-200 shrink-0">
+            <div className="font-medium text-gray-900 truncate text-sm mb-1.5">
+              {profile?.full_name || 'Usuario'}
+            </div>
+            <div className="flex gap-1 flex-wrap">
+              <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${
+                profile?.role === 'superadmin'
+                  ? 'bg-brand-100 text-brand-700'
+                  : profile?.role === 'revendedor'
+                  ? 'bg-blue-100 text-blue-800'
+                  : profile?.user_type === 'empresa'
+                  ? 'bg-amber-100 text-amber-800'
+                  : 'bg-gray-100 text-gray-800'
+              }`}>
+                {profile?.role === 'superadmin' ? 'SuperAdmin' :
+                 profile?.role === 'revendedor' ? 'Revendedor' :
+                 profile?.plan_name || 'Free'}
+              </span>
+              {profile?.user_type === 'empresa' && profile?.role !== 'superadmin' && profile?.role !== 'revendedor' && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold">
+                  Empresa
                 </span>
-                {profile?.user_type === 'empresa' && profile?.role !== 'superadmin' && profile?.role !== 'revendedor' && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-semibold">
-                    Empresa
-                  </span>
-                )}
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          {/* Navigation — flex-1 + overflow-y-auto = scrollable dentro del aside */}
+          <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
             {menuItems.map(renderMenuItem)}
           </nav>
 
           {/* Logout */}
-          <div className="p-3 border-t border-gray-200">
+          <div className="p-2 border-t border-gray-200 shrink-0">
             <button
               onClick={async () => {
                 setMobileMenuOpen(false);
@@ -300,10 +297,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 navigateTo('/');
                 setTimeout(() => window.location.reload(), 100);
               }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
             >
               <LogOut className="w-5 h-5" />
-              <span className="font-medium">Salir</span>
+              <span className="font-medium text-sm">Salir</span>
             </button>
           </div>
         </aside>
@@ -319,11 +316,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             >
               <Menu className="w-6 h-6 text-gray-600" />
             </button>
-            <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg flex items-center justify-center text-white font-bold">
-                R
-              </div>
-              <span className="font-bold text-gray-900">RURAL24</span>
+            <button onClick={() => onNavigate('home')} className="flex items-center">
+              <img src={headerLogo} alt="RURAL24" className="h-8 w-auto" />
             </button>
             <div className="w-10" /> {/* Spacer for centering */}
           </header>

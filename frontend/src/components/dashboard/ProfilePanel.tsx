@@ -18,7 +18,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   User, MapPin, Edit, Save, X,
-  CheckCircle, Gift, Clock,
+  CheckCircle, Gift, Clock, ChevronDown,
   Loader2, Shield, Send, AlertCircle, Globe,
   EyeOff, Tag, FileText, Banknote, TrendingDown, TrendingUp, Calendar,
 } from 'lucide-react';
@@ -117,7 +117,7 @@ const Field: React.FC<FieldProps> = ({
   label, value, onChange, isEditing, placeholder, type = 'text', disabled, hint, optional,
 }) => (
   <div>
-    <label className="block text-xs font-medium text-gray-500 mb-1">
+    <label className="block text-sm font-medium text-gray-500 mb-1">
       {label}
       {optional && <span className="text-gray-400 font-normal ml-1">(opcional)</span>}
     </label>
@@ -132,7 +132,7 @@ const Field: React.FC<FieldProps> = ({
     ) : (
       <div className={`px-3 py-2 text-sm rounded-lg ${disabled ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 text-gray-900'}`}>
         {value || <span className="text-gray-400">Sin especificar</span>}
-        {hint && <span className="text-[10px] text-gray-400 ml-1">({hint})</span>}
+        {hint && <span className="text-xs text-gray-500 ml-1">({hint})</span>}
       </div>
     )}
   </div>
@@ -202,7 +202,11 @@ export const ProfilePanel: React.FC = () => {
   const [privacyMode, setPrivacyMode]   = useState<'public' | 'private'>(
     (profile?.privacy_mode as 'public' | 'private') ?? 'public'
   );
-  const [privacySaving, setPrivacySaving] = useState(false);
+  const [privacySaving,    setPrivacySaving]    = useState(false);
+  const [privacyDeniedMsg, setPrivacyDeniedMsg] = useState(false);
+
+  // ── Wallet accordion ──────────────────────────────────────────────────────
+  const [showMovimientos, setShowMovimientos] = useState(false);
 
   // ── Editing states ────────────────────────────────────────────────────────
   const [editingPersonal, setEditingPersonal] = useState(false);
@@ -319,7 +323,8 @@ export const ProfilePanel: React.FC = () => {
   // ── Privacy ───────────────────────────────────────────────────────────────
   const handlePrivacyToggle = async () => {
     if (!hasPremiumFeatures) {
-      notify.error('Disponible en planes Premium y cuentas Empresa');
+      setPrivacyDeniedMsg(true);
+      setTimeout(() => setPrivacyDeniedMsg(false), 4000);
       return;
     }
     const next: 'public' | 'private' = privacyMode === 'public' ? 'private' : 'public';
@@ -529,69 +534,76 @@ export const ProfilePanel: React.FC = () => {
       {/* ══════════════════════════════════════════════════════════
           SALDO PARA PUBLICIDAD — full-width
           ══════════════════════════════════════════════════════════ */}
-      <div className="bg-brand-50 border border-brand-200 rounded-xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-brand-200/60">
-          <div className="flex items-center gap-2">
-            <Banknote className="w-4 h-4 text-brand-600" />
-            <h3 className="text-sm font-bold text-brand-800 uppercase tracking-wide">
-              Saldo para Publicidad
-            </h3>
-          </div>
-          <span className="text-[10px] text-brand-600 font-medium bg-brand-100 px-2 py-0.5 rounded-full">
-            ARS Virtual
-          </span>
+      <div className="border border-nature-canopy/50 rounded-xl overflow-hidden bg-white">
+        {/* Header — evergreen */}
+        <div className="flex items-center gap-2 px-5 py-3 bg-nature-evergreen">
+          <Banknote className="w-4 h-4 text-nature-harvest" />
+          <h3 className="text-sm font-bold text-white uppercase tracking-wide">
+            Saldo para Publicidad
+          </h3>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-brand-200/60">
+        <div className="grid md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-gray-200">
 
           {/* ── Balance + Movimientos ── */}
           <div className="p-5">
             {walletLoading ? (
-              <Loader2 className="w-6 h-6 text-brand-500 animate-spin my-2" />
+              <Loader2 className="w-6 h-6 text-nature-evergreen animate-spin my-2" />
             ) : (
               <>
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-4xl font-black text-brand-800 leading-none">
+                  <span className="text-4xl font-black text-nature-harvest leading-none">
                     {formatARS(walletBalance)}
                   </span>
-                  <span className="text-sm font-semibold text-brand-600">ARS</span>
+                  <span className="text-sm font-semibold text-nature-compost">ARS</span>
                 </div>
-                <p className="text-brand-600/80 text-xs">
+                <p className="text-gray-600 text-xs">
                   Usá tu saldo para destacar avisos
                 </p>
               </>
             )}
 
-            {/* Movimientos */}
+            {/* Movimientos — accordion */}
             {walletTxs.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-brand-200/60">
-                <p className="text-brand-700 text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                  <Clock className="w-3 h-3" /> Últimos movimientos
-                </p>
-                <div className="space-y-1.5">
-                  {walletTxs.map(tx => (
-                    <div
-                      key={tx.id}
-                      className="flex items-center gap-2 bg-white/70 rounded-lg px-3 py-1.5"
-                    >
-                      {txIcon(tx)}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-brand-900 text-xs truncate">{tx.description}</p>
-                        <p className="text-brand-600/60 text-[10px]">
-                          {new Date(tx.created_at).toLocaleDateString('es-AR', { month: 'short', day: 'numeric' })}
-                        </p>
+              <div className="mt-4 pt-3 border-t border-brand-200/50">
+                <button
+                  type="button"
+                  onClick={() => setShowMovimientos(v => !v)}
+                  className="w-full flex items-center gap-1.5 text-nature-evergreen text-xs font-semibold uppercase tracking-wider hover:text-nature-canopy transition-colors"
+                >
+                  <Clock className="w-3 h-3" />
+                  Últimos movimientos
+                  <span className="ml-auto text-xs normal-case font-normal text-gray-500">
+                    {walletTxs.length} registros
+                  </span>
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${showMovimientos ? 'rotate-180' : ''}`} />
+                </button>
+                {showMovimientos && (
+                  <div className="mt-2 space-y-1.5">
+                    {walletTxs.map(tx => (
+                      <div
+                        key={tx.id}
+                        className="flex items-center gap-2 bg-nature-air rounded-lg px-3 py-1.5"
+                      >
+                        {txIcon(tx)}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-800 text-xs truncate">{tx.description}</p>
+                          <p className="text-gray-500 text-xs">
+                            {new Date(tx.created_at).toLocaleDateString('es-AR', { month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                        <span className={`text-xs font-bold shrink-0 ${tx.tx_type === 'credit' ? 'text-nature-canopy' : 'text-red-600'}`}>
+                          {tx.tx_type === 'credit' ? '+' : '-'}{formatARS(tx.amount)}
+                        </span>
                       </div>
-                      <span className={`text-xs font-bold shrink-0 ${tx.tx_type === 'credit' ? 'text-emerald-700' : 'text-red-600'}`}>
-                        {tx.tx_type === 'credit' ? '+' : '-'}{formatARS(tx.amount)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {!walletLoading && walletTxs.length === 0 && (
-              <p className="mt-3 text-[11px] text-brand-500/70">
+              <p className="mt-3 text-xs text-gray-500">
                 Sin movimientos aún. Canjea un cupón para empezar.
               </p>
             )}
@@ -599,32 +611,32 @@ export const ProfilePanel: React.FC = () => {
 
           {/* ── Cupón ── */}
           <div className="p-5">
-            <p className="text-sm font-bold text-brand-800 flex items-center gap-2 mb-3">
-              <Gift className="w-4 h-4 text-brand-600" /> Canjear cupón
+            <p className="text-sm font-bold text-nature-compost flex items-center gap-2 mb-3">
+              <Gift className="w-4 h-4 text-nature-harvest" /> Canjear cupón
             </p>
 
             {couponSuccess ? (
               <div className="flex flex-col items-center gap-2 py-3 text-center">
-                <CheckCircle className="w-8 h-8 text-brand-600" />
-                <p className="text-sm font-semibold text-brand-700">
+                <CheckCircle className="w-8 h-8 text-nature-canopy" />
+                <p className="text-sm font-semibold text-nature-evergreen">
                   ¡{formatARS(couponInfo?.arsAmount ?? 0)} ARS acreditados!
                 </p>
-                <p className="text-[11px] text-brand-600/70">Tu saldo fue actualizado</p>
-                <button onClick={resetCoupon} className="text-xs text-brand-600 hover:underline mt-1">
+                <p className="text-xs text-gray-500">Tu saldo fue actualizado</p>
+                <button onClick={resetCoupon} className="text-xs text-nature-evergreen hover:underline mt-1">
                   Usar otro cupón
                 </button>
               </div>
             ) : couponValidated && couponInfo ? (
               <div className="space-y-3">
-                <div className="bg-white border border-brand-200 rounded-lg p-3">
-                  <p className="text-xs font-semibold text-brand-700 flex items-center gap-1.5">
+                <div className="bg-nature-air border border-nature-canopy/50 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-nature-evergreen flex items-center gap-1.5">
                     <CheckCircle className="w-3.5 h-3.5" /> Cupón válido
                   </p>
-                  <p className="text-base font-black text-brand-800 mt-0.5">
+                  <p className="text-base font-black text-nature-harvest mt-0.5">
                     +{formatARS(couponInfo.arsAmount)} ARS
                   </p>
                   {couponInfo.description && (
-                    <p className="text-[11px] text-brand-600 mt-0.5">{couponInfo.description}</p>
+                    <p className="text-xs text-gray-600 mt-0.5">{couponInfo.description}</p>
                   )}
                 </div>
                 {couponError && (
@@ -636,7 +648,7 @@ export const ProfilePanel: React.FC = () => {
                   <button
                     onClick={handleRedeemCoupon}
                     disabled={couponRedeeming}
-                    className="flex-1 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    className="flex-1 py-2 bg-nature-evergreen hover:bg-nature-canopy text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
                     {couponRedeeming && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     Canjear
@@ -660,7 +672,7 @@ export const ProfilePanel: React.FC = () => {
                   }}
                   placeholder="Ej: RURAL2026"
                   maxLength={20}
-                  className="w-full px-3 py-2.5 text-sm font-mono tracking-wider border border-brand-200 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent bg-white"
+                  className="w-full px-3 py-2.5 text-sm font-mono tracking-wider border border-brand-200 rounded-lg focus:ring-2 focus:ring-nature-canopy/30 focus:border-nature-canopy bg-white"
                 />
                 {couponError && (
                   <p className="text-xs text-red-600 flex items-center gap-1">
@@ -670,7 +682,7 @@ export const ProfilePanel: React.FC = () => {
                 <button
                   onClick={handleValidateCoupon}
                   disabled={couponValidating || !couponCode.trim()}
-                  className="w-full py-2.5 border border-brand-600 text-brand-700 hover:bg-brand-100 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-2.5 border border-nature-evergreen text-nature-evergreen hover:bg-nature-air text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {couponValidating
                     ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Validando...</>
@@ -712,7 +724,7 @@ export const ProfilePanel: React.FC = () => {
                     || profile?.email?.split('@')[0]
                     || 'Usuario'}
                 </h2>
-                <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold
+                <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-bold
                   ${isSuperAdmin
                     ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
                     : 'bg-brand-100 text-brand-700'
@@ -734,35 +746,42 @@ export const ProfilePanel: React.FC = () => {
             </div>
 
             {/* Privacy switch */}
-            <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                  {privacyMode === 'public'
-                    ? <><Globe className="w-3.5 h-3.5 text-brand-600" /> Perfil público</>
-                    : <><EyeOff className="w-3.5 h-3.5 text-gray-500" /> Perfil privado</>
-                  }
-                </p>
-                <p className="text-[11px] text-gray-400 mt-0.5">
-                  {privacyMode === 'public'
-                    ? 'Tu contacto es visible para todos'
-                    : 'Tu teléfono y email están ocultos'}
-                </p>
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                    {privacyMode === 'public'
+                      ? <><Globe className="w-3.5 h-3.5 text-brand-600" /> Perfil público</>
+                      : <><EyeOff className="w-3.5 h-3.5 text-gray-500" /> Perfil privado</>
+                    }
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {privacyMode === 'public'
+                      ? 'Tu contacto es visible para todos'
+                      : 'Tu teléfono y email están ocultos'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handlePrivacyToggle}
+                  disabled={privacySaving}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none cursor-pointer
+                    ${!hasPremiumFeatures ? 'opacity-40' : ''}
+                    ${privacyMode === 'private' ? 'bg-brand-600' : 'bg-gray-300'}`}
+                >
+                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform
+                    ${privacyMode === 'private' ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                  {privacySaving && (
+                    <Loader2 className="absolute -right-5 w-3.5 h-3.5 text-brand-600 animate-spin" />
+                  )}
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handlePrivacyToggle}
-                disabled={privacySaving || !hasPremiumFeatures}
-                title={!hasPremiumFeatures ? 'Disponible en planes Premium y Empresa' : undefined}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none
-                  ${!hasPremiumFeatures ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
-                  ${privacyMode === 'private' ? 'bg-brand-600' : 'bg-gray-300'}`}
-              >
-                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform
-                  ${privacyMode === 'private' ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                {privacySaving && (
-                  <Loader2 className="absolute -right-5 w-3.5 h-3.5 text-brand-600 animate-spin" />
-                )}
-              </button>
+              {privacyDeniedMsg && (
+                <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-start gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  El perfil privado está disponible para planes <strong>Premium</strong>, <strong>Revendedor</strong> y cuentas <strong>Empresa</strong>.
+                </p>
+              )}
             </div>
           </div>
 
@@ -805,10 +824,10 @@ export const ProfilePanel: React.FC = () => {
 
               {/* Celular con verificación */}
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 flex items-center gap-1">
+                <label className="text-sm font-medium text-gray-500 mb-1 flex items-center gap-1">
                   Celular <span className="text-red-400">*</span>
                   {isMobileVerified && (
-                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-brand-100 text-brand-700 text-[10px] font-semibold rounded-full ml-1">
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-brand-100 text-brand-700 text-xs font-semibold rounded-full ml-1">
                       <CheckCircle className="w-3 h-3" /> Verificado
                     </span>
                   )}
@@ -871,7 +890,7 @@ export const ProfilePanel: React.FC = () => {
                   </div>
                 )}
                 {!isMobileVerified && !editingPersonal && mobileInput && (
-                  <p className="mt-1 text-[10px] text-amber-600 flex items-center gap-1">
+                  <p className="mt-1 text-xs text-amber-600 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" /> Celular no verificado. Editá para verificarlo.
                   </p>
                 )}
@@ -888,7 +907,7 @@ export const ProfilePanel: React.FC = () => {
 
               {/* Tipo de cuenta */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-2">Tipo de cuenta</label>
+                <label className="block text-sm font-medium text-gray-500 mb-2">Tipo de cuenta</label>
                 {editingPersonal ? (
                   <div className="flex gap-4">
                     {(['particular', 'empresa'] as const).map((type) => (
@@ -948,7 +967,7 @@ export const ProfilePanel: React.FC = () => {
               />
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Localidad</label>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Localidad</label>
                   {editingLocation ? (
                     <select
                       value={locationForm.location}
@@ -968,7 +987,7 @@ export const ProfilePanel: React.FC = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Provincia</label>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Provincia</label>
                   {editingLocation ? (
                     <select
                       value={locationForm.province}
@@ -1010,7 +1029,7 @@ export const ProfilePanel: React.FC = () => {
             icon={<FileText className="w-4 h-4" />}
             title="Datos de Facturación"
             badge={
-              <span className="ml-1 px-1.5 py-0.5 bg-gray-100 text-gray-400 text-[10px] rounded font-normal">
+              <span className="ml-1 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-xs rounded font-normal">
                 opcional
               </span>
             }

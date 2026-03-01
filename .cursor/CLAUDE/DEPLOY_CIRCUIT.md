@@ -39,6 +39,13 @@ npm run db:push:dev   # solo si hay nuevas migraciones SQL
 
 Render detecta el push y deploya automáticamente. Las migraciones se aplican manualmente desde VSCode.
 
+
+# Hacer un único commit ppara guardarse la descripción del cambio en el mensaje de commit, por ejemplo:
+git commit -m "mensajel"
+
+# Subir a main guarda mensaje y archivos a github, y activa deploy automático a staging:
+git push origin main
+
 ## Publicar Producción
 
 ```bash

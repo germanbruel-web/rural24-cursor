@@ -1,6 +1,6 @@
 /**
  * CouponsAdminPanel - CRUD completo de cupones
- * 
+ *
  * Funcionalidades:
  * - Listar cupones con filtros (activos/expirados/todos)
  * - Crear nuevo cupón
@@ -10,7 +10,7 @@
  * - Ver canjes (redemptions)
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Plus,
   Search,
@@ -23,15 +23,16 @@ import {
   X,
   Gift,
   Users,
-  Calendar,
-  CreditCard,
+  DollarSign,
   ChevronLeft,
   ChevronRight,
   Eye,
+  ShieldCheck,
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
 import { useAuth } from '../../contexts';
+import { formatARS } from '../../services/walletService';
 
 // ============================================================
 // TYPES
@@ -44,6 +45,8 @@ interface Coupon {
   title: string;
   description: string | null;
   credits_amount: number;
+  ars_amount: number | null;
+  allowed_roles: string[];
   max_redemptions: number;
   current_redemptions: number;
   expires_at: string;
@@ -60,7 +63,8 @@ interface CouponForm {
   name: string;
   title: string;
   description: string;
-  credits_amount: number;
+  ars_amount: number;
+  allowed_roles: string[];
   max_redemptions: number;
   expires_at: string;
   is_active: boolean;
@@ -82,16 +86,54 @@ interface Redemption {
 
 const RECORDS_PER_PAGE = 10;
 
+const ROLE_OPTIONS = [
+  { value: 'all',        label: 'Todos',       color: 'bg-gray-100 text-gray-700 border-gray-300' },
+  { value: 'free',       label: 'Free',        color: 'bg-slate-100 text-slate-700 border-slate-300' },
+  { value: 'premium',    label: 'Premium',     color: 'bg-amber-100 text-amber-700 border-amber-300' },
+  { value: 'revendedor', label: 'Revendedor',  color: 'bg-blue-100 text-blue-700 border-blue-300' },
+  { value: 'superadmin', label: 'Superadmin',  color: 'bg-purple-100 text-purple-700 border-purple-300' },
+];
+
 const EMPTY_FORM: CouponForm = {
   code: '',
   name: '',
   title: '',
   description: '',
-  credits_amount: 1,
+  ars_amount: 2500,
+  allowed_roles: ['all'],
   max_redemptions: 100,
   expires_at: '',
   is_active: true,
 };
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function getRoleChips(roles: string[]) {
+  if (!roles || roles.length === 0 || roles.includes('all')) {
+    return (
+      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+        Todos
+      </span>
+    );
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {roles.map(r => {
+        const opt = ROLE_OPTIONS.find(o => o.value === r);
+        return (
+          <span
+            key={r}
+            className={`px-2 py-0.5 text-xs font-medium rounded-full border ${opt?.color ?? 'bg-gray-100 text-gray-600 border-gray-200'}`}
+          >
+            {opt?.label ?? r}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
 
 // ============================================================
 // COMPONENT
@@ -128,7 +170,7 @@ export default function CouponsAdminPanel() {
     setLoading(true);
     try {
       const now = new Date().toISOString();
-      
+
       // Count
       let countQuery = supabase
         .from('coupons')
@@ -193,7 +235,6 @@ export default function CouponsAdminPanel() {
 
   const openCreateModal = () => {
     setEditingCoupon(null);
-    // Default: expira en 30 días
     const defaultExpiry = new Date();
     defaultExpiry.setDate(defaultExpiry.getDate() + 30);
     setForm({
@@ -210,7 +251,8 @@ export default function CouponsAdminPanel() {
       name: coupon.name,
       title: coupon.title,
       description: coupon.description || '',
-      credits_amount: coupon.credits_amount,
+      ars_amount: coupon.ars_amount ?? coupon.credits_amount * 1000,
+      allowed_roles: coupon.allowed_roles?.length ? coupon.allowed_roles : ['all'],
       max_redemptions: coupon.max_redemptions,
       expires_at: coupon.expires_at ? new Date(coupon.expires_at).toISOString().slice(0, 16) : '',
       is_active: coupon.is_active,
@@ -218,21 +260,32 @@ export default function CouponsAdminPanel() {
     setShowModal(true);
   };
 
+  const toggleRole = (role: string) => {
+    setForm(f => {
+      if (role === 'all') {
+        return { ...f, allowed_roles: ['all'] };
+      }
+      const without = f.allowed_roles.filter(r => r !== 'all' && r !== role);
+      const next = f.allowed_roles.includes(role) ? without : [...without, role];
+      return { ...f, allowed_roles: next.length > 0 ? next : ['all'] };
+    });
+  };
+
   const handleSave = async () => {
     if (!form.code.trim()) {
-      notify.warning('Ingresa un código');
+      notify.warning('Ingresá un código');
       return;
     }
     if (!form.name.trim()) {
-      notify.warning('Ingresa un nombre');
+      notify.warning('Ingresá un nombre');
       return;
     }
     if (!form.expires_at) {
-      notify.warning('Selecciona fecha de expiración');
+      notify.warning('Seleccioná fecha de expiración');
       return;
     }
-    if (form.credits_amount < 1) {
-      notify.warning('Los créditos deben ser al menos 1');
+    if (form.ars_amount < 1) {
+      notify.warning('El importe ARS debe ser al menos $1');
       return;
     }
 
@@ -243,7 +296,8 @@ export default function CouponsAdminPanel() {
         name: form.name.trim(),
         title: form.title.trim() || form.name.trim(),
         description: form.description.trim() || null,
-        credits_amount: form.credits_amount,
+        ars_amount: form.ars_amount,
+        allowed_roles: form.allowed_roles.length > 0 ? form.allowed_roles : ['all'],
         max_redemptions: form.max_redemptions,
         expires_at: new Date(form.expires_at).toISOString(),
         is_active: form.is_active,
@@ -253,7 +307,6 @@ export default function CouponsAdminPanel() {
       };
 
       if (editingCoupon) {
-        // UPDATE
         const { error } = await supabase
           .from('coupons')
           .update(payload)
@@ -261,13 +314,9 @@ export default function CouponsAdminPanel() {
         if (error) throw error;
         notify.success('Cupón actualizado');
       } else {
-        // CREATE
         const { error } = await supabase
           .from('coupons')
-          .insert({
-            ...payload,
-            created_by: profile?.id || '',
-          });
+          .insert({ ...payload, created_by: profile?.id || '' });
         if (error) {
           if (error.code === '23505') {
             notify.error('Ya existe un cupón con ese código');
@@ -362,7 +411,6 @@ export default function CouponsAdminPanel() {
 
       if (error) throw error;
 
-      // Resolver emails de usuarios
       const userIds = [...new Set((data || []).map(r => r.user_id))];
       let usersMap: Record<string, { name: string; email: string }> = {};
 
@@ -434,7 +482,7 @@ export default function CouponsAdminPanel() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Gestión de Cupones</h1>
             <p className="text-sm text-gray-500 mt-1">
-              Crear, editar y gestionar cupones de créditos
+              Crear, editar y gestionar cupones de saldo ARS
             </p>
           </div>
           <button
@@ -475,11 +523,13 @@ export default function CouponsAdminPanel() {
           </div>
           <div className="bg-white rounded-lg border p-3">
             <div className="flex items-center gap-2 text-amber-600 mb-1">
-              <CreditCard className="w-4 h-4" />
-              <span className="text-xs font-medium">Créditos Otorgados</span>
+              <DollarSign className="w-4 h-4" />
+              <span className="text-xs font-medium">ARS Otorgados</span>
             </div>
             <p className="text-xl font-bold text-amber-700">
-              {coupons.reduce((sum, c) => sum + (c.current_redemptions * c.credits_amount), 0)}
+              {formatARS(
+                coupons.reduce((sum, c) => sum + c.current_redemptions * (c.ars_amount ?? 0), 0)
+              )}
             </p>
           </div>
         </div>
@@ -487,7 +537,6 @@ export default function CouponsAdminPanel() {
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm border p-4 mb-4">
           <div className="flex flex-wrap items-center gap-3">
-            {/* Filter tabs */}
             <div className="flex bg-gray-100 rounded-lg p-0.5">
               {([
                 ['all', 'Todos'],
@@ -509,7 +558,6 @@ export default function CouponsAdminPanel() {
               ))}
             </div>
 
-            {/* Search */}
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -538,7 +586,8 @@ export default function CouponsAdminPanel() {
                 <tr>
                   <th className="px-4 py-3 font-medium text-gray-600">CÓDIGO</th>
                   <th className="px-4 py-3 font-medium text-gray-600">NOMBRE</th>
-                  <th className="px-4 py-3 font-medium text-gray-600 w-24">CRÉDITOS</th>
+                  <th className="px-4 py-3 font-medium text-gray-600 w-32">ARS</th>
+                  <th className="px-4 py-3 font-medium text-gray-600 w-36">ROL</th>
                   <th className="px-4 py-3 font-medium text-gray-600 w-28">CANJES</th>
                   <th className="px-4 py-3 font-medium text-gray-600 w-28">EXPIRA</th>
                   <th className="px-4 py-3 font-medium text-gray-600 w-24">ESTADO</th>
@@ -548,14 +597,14 @@ export default function CouponsAdminPanel() {
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
                       <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
                       Cargando...
                     </td>
                   </tr>
                 ) : coupons.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
                       <Gift className="w-10 h-10 mx-auto mb-3 text-gray-300" />
                       No se encontraron cupones
                     </td>
@@ -587,9 +636,19 @@ export default function CouponsAdminPanel() {
                         )}
                       </td>
 
-                      {/* Créditos */}
-                      <td className="px-4 py-3 text-center">
-                        <span className="font-bold text-brand-600">{coupon.credits_amount}</span>
+                      {/* ARS */}
+                      <td className="px-4 py-3">
+                        <span className="font-bold text-brand-600">
+                          {coupon.ars_amount != null
+                            ? formatARS(coupon.ars_amount)
+                            : <span className="text-gray-400 text-xs">—</span>
+                          }
+                        </span>
+                      </td>
+
+                      {/* ROL */}
+                      <td className="px-4 py-3">
+                        {getRoleChips(coupon.allowed_roles ?? ['all'])}
                       </td>
 
                       {/* Canjes */}
@@ -689,7 +748,7 @@ export default function CouponsAdminPanel() {
       </div>
 
       {/* ============================================================ */}
-      {/* MODAL: Crear / Editar Cupón */}
+      {/* MODAL: Crear / Editar Cupón                                   */}
       {/* ============================================================ */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -731,13 +790,13 @@ export default function CouponsAdminPanel() {
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="Ej: Bienvenida Febrero 2026"
+                  placeholder="Ej: Bienvenida Marzo 2026"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
                   maxLength={100}
                 />
               </div>
 
-              {/* Título (para mostrar al usuario) */}
+              {/* Título */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Título
@@ -746,7 +805,7 @@ export default function CouponsAdminPanel() {
                   type="text"
                   value={form.title}
                   onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
-                  placeholder="Ej: Créditos de bienvenida"
+                  placeholder="Ej: Saldo de bienvenida"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
                   maxLength={150}
                 />
@@ -766,21 +825,24 @@ export default function CouponsAdminPanel() {
                 />
               </div>
 
-              {/* Créditos + Max Canjes */}
+              {/* Importe ARS + Máx. canjes */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Créditos <span className="text-red-500">*</span>
+                    Importe ARS <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={1000}
-                    value={form.credits_amount}
-                    onChange={(e) => setForm(f => ({ ...f, credits_amount: parseInt(e.target.value) || 1 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Créditos por canje</p>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+                    <input
+                      type="number"
+                      min={1}
+                      step={100}
+                      value={form.ars_amount}
+                      onChange={(e) => setForm(f => ({ ...f, ars_amount: parseInt(e.target.value) || 1 }))}
+                      className="w-full pl-6 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">ARS a acreditar por canje</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -796,6 +858,36 @@ export default function CouponsAdminPanel() {
                   />
                   <p className="text-xs text-gray-400 mt-1">Total de canjes permitidos</p>
                 </div>
+              </div>
+
+              {/* Roles */}
+              <div>
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+                  <ShieldCheck className="w-4 h-4 text-gray-500" />
+                  Rol autorizado
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {ROLE_OPTIONS.map(opt => {
+                    const isSelected = form.allowed_roles.includes(opt.value);
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => toggleRole(opt.value)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                          isSelected
+                            ? `${opt.color} ring-2 ring-offset-1 ring-current`
+                            : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-400 mt-1.5">
+                  "Todos" permite que cualquier usuario canjee. Seleccioná roles específicos para restringir.
+                </p>
               </div>
 
               {/* Fecha Expiración */}
@@ -854,7 +946,7 @@ export default function CouponsAdminPanel() {
       )}
 
       {/* ============================================================ */}
-      {/* MODAL: Ver Canjes */}
+      {/* MODAL: Ver Canjes                                             */}
       {/* ============================================================ */}
       {showRedemptions && redemptionCoupon && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -867,6 +959,11 @@ export default function CouponsAdminPanel() {
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {redemptionCoupon.current_redemptions} de {redemptionCoupon.max_redemptions} canjes usados
+                  {redemptionCoupon.ars_amount != null && (
+                    <span className="ml-2 font-medium text-brand-600">
+                      · {formatARS(redemptionCoupon.ars_amount)} por canje
+                    </span>
+                  )}
                 </p>
               </div>
               <button onClick={() => setShowRedemptions(false)} className="p-1 hover:bg-gray-100 rounded">
@@ -894,7 +991,9 @@ export default function CouponsAdminPanel() {
                         <p className="text-xs text-gray-500">{r.user_email}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-brand-600">+{r.credits_granted} créditos</p>
+                        <p className="text-sm font-bold text-brand-600">
+                          +{formatARS(redemptionCoupon.ars_amount ?? 0)} ARS
+                        </p>
                         <p className="text-xs text-gray-400">
                           {new Date(r.redeemed_at).toLocaleString('es-AR')}
                         </p>
