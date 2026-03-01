@@ -96,8 +96,14 @@ export default defineConfig(({ mode }) => {
           {
             src: '/preview-image.webp',
             type: 'image/webp',
-            sizes: '1920x1080',
+            sizes: '401x301',
             form_factor: 'wide',
+            label: 'RURAL24 — Clasificados Agropecuarios',
+          },
+          {
+            src: '/preview-image.webp',
+            type: 'image/webp',
+            sizes: '401x301',
             label: 'RURAL24 — Clasificados Agropecuarios',
           },
         ],
