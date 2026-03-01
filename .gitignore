@@ -50,3 +50,6 @@ debug-*.log
 
 # Supabase DB credentials (local only)
 .env.db.local
+
+# Vite PWA dev artifacts (generados en runtime)
+frontend/dev-dist/
