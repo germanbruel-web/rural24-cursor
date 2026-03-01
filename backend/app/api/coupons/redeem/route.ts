@@ -1,15 +1,15 @@
 /**
  * POST /api/coupons/redeem
- * Canjear un cupón de créditos/membresía
- * ========================================
- * 
+ * Canjear cupón → acredita ARS en user_wallets.virtual_balance
+ * ============================================================
+ *
  * - Requiere autenticación (Bearer token)
  * - userId se extrae del JWT (NO del body)
  * - Invoca RPC `redeem_coupon` con service_role key
  * - Transacción atómica en DB (SECURITY DEFINER)
- * 
- * Body: { code: string }
- * Response: { success, credits_granted, new_balance, message } | { error }
+ *
+ * Body:     { code: string }
+ * Response: { success, ars_credited, new_balance, message } | { error }
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -76,11 +76,10 @@ export async function POST(request: NextRequest) {
 
       // 4. Respuesta exitosa
       return NextResponse.json({
-        success: true,
-        credits_granted: result.credits_granted || 0,
-        membership_granted: result.membership_granted || false,
-        new_balance: result.new_balance || 0,
-        message: result.message || '¡Cupón canjeado exitosamente!',
+        success:      true,
+        ars_credited: result.ars_credited ?? 0,
+        new_balance:  result.new_balance  ?? 0,
+        message:      result.message || '¡Cupón canjeado exitosamente!',
       });
     } catch (err) {
       console.error('[coupons/redeem] Unexpected error:', err);

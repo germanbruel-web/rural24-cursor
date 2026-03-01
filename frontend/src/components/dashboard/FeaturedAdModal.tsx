@@ -1,21 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertCircle,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
+  Info,
   Loader2,
-  Ticket,
   X,
   Zap,
 } from 'lucide-react';
 import {
   createUserFeaturedAd,
   getFeaturedSettings,
-  getUserCredits,
   type FeaturedPlacement,
 } from '../../services/userFeaturedService';
-import { redeemCoupon } from '../../services/creditsService';
+import {
+  getWalletBalance,
+  formatARS,
+} from '../../services/walletService';
+import { supabase } from '../../services/supabaseClient';
 
 interface FeaturedAdModalProps {
   isOpen: boolean;
@@ -31,76 +32,86 @@ interface FeaturedAdModalProps {
   onSuccess?: () => void;
 }
 
-const PLACEMENT_OPTIONS: { value: FeaturedPlacement; label: string; description: string; defaultCost: number }[] = [
-  { value: 'homepage', label: 'PREMIUM',   description: 'Inicio + resultados + detalle del aviso', defaultCost: 6 },
-  { value: 'results',  label: 'ESTÁNDAR',  description: 'Resultados + detalle del aviso',          defaultCost: 2 },
-  { value: 'detail',   label: 'BÁSICO',    description: 'Solo en el detalle del aviso',             defaultCost: 1 },
+const PLACEMENT_OPTIONS: {
+  value: FeaturedPlacement;
+  label: string;
+  tag: string;
+  description: string;
+  coverage: string[];
+}[] = [
+  {
+    value:       'homepage',
+    label:       'PREMIUM',
+    tag:         'Más visible',
+    description: 'Inicio + resultados + detalle del aviso',
+    coverage:    ['Página de inicio', 'Resultados de búsqueda', 'Detalle del aviso'],
+  },
+  {
+    value:       'results',
+    label:       'ESTÁNDAR',
+    tag:         '',
+    description: 'Resultados + detalle del aviso',
+    coverage:    ['Resultados de búsqueda', 'Detalle del aviso'],
+  },
+  {
+    value:       'detail',
+    label:       'BÁSICO',
+    tag:         '',
+    description: 'Solo en el detalle del aviso',
+    coverage:    ['Detalle del aviso'],
+  },
 ];
 
 export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: FeaturedAdModalProps) {
   const [selectedPlacement, setSelectedPlacement] = useState<FeaturedPlacement | null>(null);
-  const [costs, setCosts] = useState<Record<FeaturedPlacement, number>>({ homepage: 6, results: 2, detail: 1 });
-  const [durationDays, setDurationDays] = useState<number>(15);
-  const [balance, setBalance] = useState<number>(0);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successText, setSuccessText] = useState<string | null>(null);
-  const [couponCode, setCouponCode] = useState('');
-  const [couponLoading, setCouponLoading] = useState(false);
-  const [couponOpen, setCouponOpen] = useState(false);
+  const [slotPrice,         setSlotPrice]         = useState<number>(2500);
+  const [durationDays,      setDurationDays]       = useState<number>(15);
+  const [balance,           setBalance]            = useState<number>(0);
+  const [loading,           setLoading]            = useState(false);
+  const [submitting,        setSubmitting]         = useState(false);
+  const [error,             setError]              = useState<string | null>(null);
+  const [successText,       setSuccessText]        = useState<string | null>(null);
 
-  const hasCategoryData = Boolean(ad.category_id && ad.subcategory_id);
-  const totalCost = selectedPlacement ? costs[selectedPlacement] : 0;
-  const balanceAfter = balance - totalCost;
-  const hasEnoughBalance = selectedPlacement ? balance >= costs[selectedPlacement] : false;
+  const hasCategoryData  = Boolean(ad.category_id && ad.subcategory_id);
+  const hasEnoughBalance = balance >= slotPrice;
+  const balanceAfter     = balance - slotPrice;
 
   useEffect(() => {
     if (!isOpen) return;
     setSelectedPlacement(null);
     setError(null);
     setSuccessText(null);
-    setCouponCode('');
-    setCouponOpen(false);
     void boot();
   }, [isOpen]);
 
   const boot = async () => {
     setLoading(true);
     try {
-      const [creditsResp, settings] = await Promise.all([
-        getUserCredits(),
+      // Obtener user_id del auth
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+
+      const [walletData, settings, priceRow] = await Promise.all([
+        authUser ? getWalletBalance(authUser.id) : Promise.resolve(null),
         getFeaturedSettings(),
+        // Leer precio del slot desde global_config
+        supabase
+          .from('global_config')
+          .select('value')
+          .eq('key', 'featured_slot_price_ars')
+          .single()
+          .then(r => r.data),
       ]);
-      setBalance(creditsResp.data?.credits_available ?? 0);
+
+      setBalance(walletData?.virtual_balance ?? 0);
       setDurationDays(settings.durationDays || 15);
-      setCosts({ homepage: 6, results: 2, detail: 1 });
+
+      const price = priceRow?.value ? Number(priceRow.value) : 2500;
+      setSlotPrice(isNaN(price) ? 2500 : price);
     } catch {
       setError('No se pudo cargar la configuración');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) {
-      setError('Ingresá un código de cupón');
-      return;
-    }
-    setCouponLoading(true);
-    setError(null);
-    setSuccessText(null);
-    const result = await redeemCoupon(couponCode.trim());
-    if (result.success) {
-      const creditsResp = await getUserCredits();
-      setBalance(creditsResp.data?.credits_available ?? balance);
-      setCouponCode('');
-      setCouponOpen(false);
-      setSuccessText('Cupón aplicado. Tu saldo fue actualizado.');
-    } else {
-      setError(result.error || 'No se pudo canjear el cupón');
-    }
-    setCouponLoading(false);
   };
 
   const handleConfirm = async () => {
@@ -113,21 +124,30 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
       return;
     }
     if (!hasEnoughBalance) {
-      setError('Saldo insuficiente para esta selección');
+      setError('Saldo insuficiente');
       return;
     }
+
     setSubmitting(true);
     setError(null);
     setSuccessText(null);
+
     const today = new Date().toISOString().split('T')[0];
     const { data, error: createError } = await createUserFeaturedAd(ad.id, selectedPlacement, today);
+
     if (createError || !data?.success) {
       setError(data?.message || createError?.message || 'No se pudo activar el destacado');
       setSubmitting(false);
       return;
     }
-    const creditsResp = await getUserCredits();
-    setBalance(creditsResp.data?.credits_available ?? balance);
+
+    // Recargar saldo desde wallet
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (authUser) {
+      const updatedWallet = await getWalletBalance(authUser.id);
+      setBalance(updatedWallet?.virtual_balance ?? balance - slotPrice);
+    }
+
     setSubmitting(false);
     setSuccessText('¡Aviso destacado correctamente!');
     onSuccess?.();
@@ -168,7 +188,20 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
           ) : (
             <div className="flex items-center justify-between bg-brand-50 border border-brand-100 rounded-xl px-4 py-3">
               <span className="text-sm font-medium text-brand-800">Saldo disponible</span>
-              <span className="text-lg font-bold text-brand-700">{balance} ARS</span>
+              <span className={`text-lg font-bold ${hasEnoughBalance ? 'text-brand-700' : 'text-red-600'}`}>
+                {formatARS(balance)} ARS
+              </span>
+            </div>
+          )}
+
+          {/* Alerta saldo insuficiente */}
+          {!loading && !hasEnoughBalance && (
+            <div className="flex items-start gap-2 p-3 bg-amber-50 text-amber-700 text-sm rounded-xl border border-amber-200">
+              <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>
+                Saldo insuficiente. Necesitás {formatARS(slotPrice)} ARS.{' '}
+                <span className="font-medium">Canjea un cupón desde Mi Cuenta para cargar saldo.</span>
+              </span>
             </div>
           )}
 
@@ -182,11 +215,15 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
 
           {/* Opciones de placement */}
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-700">¿Dónde querés que aparezca?</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-gray-700">¿Dónde querés que aparezca?</p>
+              <span className="text-xs text-gray-400 font-medium">
+                {formatARS(slotPrice)} ARS · {durationDays} días
+              </span>
+            </div>
             {PLACEMENT_OPTIONS.map((option) => {
-              const cost = costs[option.value];
-              const selected = selectedPlacement === option.value;
-              const canAfford = balance >= cost;
+              const selected  = selectedPlacement === option.value;
+              const canAfford = hasEnoughBalance;
               return (
                 <button
                   key={option.value}
@@ -212,53 +249,22 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
                       <span className={`text-sm font-bold ${selected ? 'text-brand-700' : 'text-gray-800'}`}>
                         {option.label}
                       </span>
+                      {option.tag && (
+                        <span className="px-1.5 py-0.5 bg-brand-100 text-brand-700 text-[10px] font-bold rounded-full leading-none">
+                          {option.tag}
+                        </span>
+                      )}
                     </div>
                     <span className={`text-sm font-bold tabular-nums ${selected ? 'text-brand-700' : 'text-gray-500'}`}>
-                      {cost} ARS
+                      {formatARS(slotPrice)}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1 ml-6.5 pl-0.5">
-                    {option.description} · {durationDays} días
+                  <p className="text-xs text-gray-500 mt-1 ml-6">
+                    {option.description}
                   </p>
                 </button>
               );
             })}
-          </div>
-
-          {/* Cupón — colapsado por defecto */}
-          <div className="border border-gray-200 rounded-xl overflow-hidden">
-            <button
-              onClick={() => setCouponOpen((v) => !v)}
-              className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <Ticket className="w-4 h-4" />
-                ¿Tenés un cupón?
-              </span>
-              {couponOpen
-                ? <ChevronUp className="w-4 h-4" />
-                : <ChevronDown className="w-4 h-4" />}
-            </button>
-            {couponOpen && (
-              <div className="px-4 pb-4 pt-1 border-t border-gray-100">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    placeholder="CÓDIGO"
-                  />
-                  <button
-                    onClick={handleApplyCoupon}
-                    disabled={couponLoading}
-                    className="px-4 py-2 text-sm font-semibold border border-brand-700 text-brand-700 rounded-lg hover:bg-brand-50 transition-colors disabled:opacity-50"
-                  >
-                    {couponLoading ? 'Aplicando...' : 'Aplicar'}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Feedback */}
@@ -281,16 +287,17 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               <div className="space-y-1.5 text-sm">
                 <div className="flex items-center justify-between text-gray-600">
                   <span>Costo</span>
-                  <span className="font-semibold">{totalCost} ARS</span>
+                  <span className="font-semibold">{formatARS(slotPrice)} ARS</span>
                 </div>
                 <div className="flex items-center justify-between text-gray-600">
                   <span>Saldo después</span>
                   <span className={`font-semibold ${balanceAfter < 0 ? 'text-red-600' : 'text-brand-700'}`}>
-                    {balanceAfter} ARS
+                    {formatARS(balanceAfter)} ARS
                   </span>
                 </div>
               </div>
             )}
+
             <button
               onClick={handleConfirm}
               disabled={submitting || !selectedPlacement || !hasEnoughBalance || !hasCategoryData}
@@ -304,7 +311,9 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               ) : (
                 <span className="inline-flex items-center justify-center gap-2">
                   <Zap className="w-4 h-4" />
-                  {selectedPlacement ? `Destacar por ${durationDays} días` : 'Elegí una opción'}
+                  {selectedPlacement
+                    ? `Usar ${formatARS(slotPrice)} ARS · Destacar ${durationDays} días`
+                    : 'Elegí una opción'}
                 </span>
               )}
             </button>
