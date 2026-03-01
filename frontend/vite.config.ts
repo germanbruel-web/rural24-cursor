@@ -92,20 +92,21 @@ export default defineConfig(({ mode }) => {
         ],
         id: '/',
         screenshots: [
-          {
-            src: '/preview-image.webp',
-            type: 'image/webp',
-            sizes: '401x301',
-            form_factor: 'wide',
-            label: 'RURAL24 — Clasificados Agropecuarios',
-          },
-          {
-            src: '/preview-image.webp',
-            type: 'image/webp',
-            sizes: '401x301',
-            label: 'RURAL24 — Clasificados Agropecuarios',
-          },
-        ],
+  {
+    src: '/screenshot-desktop.webp',
+    type: 'image/webp',
+    sizes: '1280x720',
+    form_factor: 'wide',
+    label: 'RURAL24 — Clasificados Agropecuarios',
+  },
+  {
+    src: '/screenshot-mobile.webp',
+    type: 'image/webp',
+    sizes: '390x844',
+    form_factor: 'narrow',
+    label: 'RURAL24 — Clasificados Agropecuarios',
+  },
+],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,webp,svg,woff2}'],
