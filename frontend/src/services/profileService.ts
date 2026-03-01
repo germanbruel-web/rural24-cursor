@@ -29,7 +29,19 @@ export interface ProfileData {
   
   // Privacidad (empresa o particular premium)
   privacy_mode?: 'public' | 'private';
-  
+
+  // Ubicación física
+  domicilio?: string;
+  codigo_postal?: string;
+
+  // Facturación (cuit ya existía en la tabla)
+  cuit?: string;
+  billing_same_address?: boolean;
+  billing_address?: string;
+  billing_localidad?: string;
+  billing_provincia?: string;
+  billing_codigo_postal?: string;
+
   // Métricas (solo lectura)
   profile_views?: number;
   profile_contacts_received?: number;
@@ -111,8 +123,13 @@ export async function updateProfile(updates: Partial<ProfileData>): Promise<{ er
     // Campos permitidos para actualizar
     const allowedFields = [
       'full_name', 'phone', 'mobile', 'province', 'location',
-      'company_name', 'company_cuit', 'avatar_url', 'company_description', 
-      'services', 'privacy_mode'
+      'company_name', 'company_cuit', 'avatar_url', 'company_description',
+      'services', 'privacy_mode',
+      // Ubicación física
+      'domicilio', 'codigo_postal',
+      // Facturación
+      'cuit', 'billing_same_address', 'billing_address',
+      'billing_localidad', 'billing_provincia', 'billing_codigo_postal',
     ];
 
     const sanitizedUpdates: Record<string, any> = {};

@@ -223,19 +223,21 @@ export const ProfilePanel: React.FC = () => {
   });
 
   const [locationForm, setLocationForm] = useState({
-    domicilio:     '',        // TODO: migration pendiente
+    domicilio:     (profile as any)?.domicilio || '',
     province:      profile?.province || '',
-    location:      profile?.location || '',  // = localidad
-    codigo_postal: '',        // TODO: migration pendiente
+    location:      profile?.location || '',
+    codigo_postal: (profile as any)?.codigo_postal || '',
   });
 
-  const [billingSameAddress, setBillingSameAddress] = useState(true);
+  const [billingSameAddress, setBillingSameAddress] = useState(
+    (profile as any)?.billing_same_address !== false
+  );
   const [billingForm, setBillingForm] = useState({
-    cuit_cuil:     '',        // TODO: migration pendiente
-    domicilio:     '',
-    localidad:     '',
-    provincia:     '',
-    codigo_postal: '',
+    cuit_cuil:     (profile as any)?.cuit || '',
+    domicilio:     (profile as any)?.billing_address || '',
+    localidad:     (profile as any)?.billing_localidad || '',
+    provincia:     (profile as any)?.billing_provincia || '',
+    codigo_postal: (profile as any)?.billing_codigo_postal || '',
   });
 
   // Mobile verification
@@ -261,9 +263,19 @@ export const ProfilePanel: React.FC = () => {
     });
     setLocationForm(f => ({
       ...f,
-      province: profile.province || '',
-      location: profile.location || '',
+      domicilio:     (profile as any).domicilio || '',
+      province:      profile.province || '',
+      location:      profile.location || '',
+      codigo_postal: (profile as any).codigo_postal || '',
     }));
+    setBillingSameAddress((profile as any).billing_same_address !== false);
+    setBillingForm({
+      cuit_cuil:     (profile as any).cuit || '',
+      domicilio:     (profile as any).billing_address || '',
+      localidad:     (profile as any).billing_localidad || '',
+      provincia:     (profile as any).billing_provincia || '',
+      codigo_postal: (profile as any).billing_codigo_postal || '',
+    });
     setMobileInput(profile.mobile || '');
     if (profile.mobile_verified) setVerificationStep('verified');
     if (profile.privacy_mode)    setPrivacyMode(profile.privacy_mode as 'public' | 'private');
@@ -361,9 +373,10 @@ export const ProfilePanel: React.FC = () => {
     setSaving('location');
     try {
       const { error } = await updateProfile({
-        province: locationForm.province,
-        location: locationForm.location,
-        // domicilio, codigo_postal: pending DB migration
+        province:      locationForm.province,
+        location:      locationForm.location,
+        domicilio:     locationForm.domicilio,
+        codigo_postal: locationForm.codigo_postal,
       });
       if (error) { notify.error('Error: ' + error.message); return; }
       await updateAuthProfile({ province: locationForm.province, location: locationForm.location });
@@ -377,22 +390,43 @@ export const ProfilePanel: React.FC = () => {
     setEditingLocation(false);
     setLocationForm(f => ({
       ...f,
-      province: profile?.province || '',
-      location: profile?.location || '',
+      domicilio:     (profile as any)?.domicilio || '',
+      province:      profile?.province || '',
+      location:      profile?.location || '',
+      codigo_postal: (profile as any)?.codigo_postal || '',
     }));
   };
 
-  // ── Save: Facturación (UI ready, pending migration) ───────────────────────
+  // ── Save: Facturación ─────────────────────────────────────────────────────
   const handleSaveBilling = async () => {
     setSaving('billing');
-    // TODO: awaiting DB migration for billing fields (cuit_cuil, billing_*)
-    await new Promise(r => setTimeout(r, 400));
-    notify.success('Guardado');
-    setEditingBilling(false);
-    setSaving(null);
+    try {
+      const { error } = await updateProfile({
+        cuit:                  billingForm.cuit_cuil,
+        billing_same_address:  billingSameAddress,
+        billing_address:       billingSameAddress ? undefined : billingForm.domicilio,
+        billing_localidad:     billingSameAddress ? undefined : billingForm.localidad,
+        billing_provincia:     billingSameAddress ? undefined : billingForm.provincia,
+        billing_codigo_postal: billingSameAddress ? undefined : billingForm.codigo_postal,
+      });
+      if (error) { notify.error('Error: ' + error.message); return; }
+      notify.success('Datos de facturación actualizados');
+      setEditingBilling(false);
+    } catch { notify.error('Error al guardar'); }
+    finally { setSaving(null); }
   };
 
-  const handleCancelBilling = () => setEditingBilling(false);
+  const handleCancelBilling = () => {
+    setEditingBilling(false);
+    setBillingSameAddress((profile as any)?.billing_same_address !== false);
+    setBillingForm({
+      cuit_cuil:     (profile as any)?.cuit || '',
+      domicilio:     (profile as any)?.billing_address || '',
+      localidad:     (profile as any)?.billing_localidad || '',
+      provincia:     (profile as any)?.billing_provincia || '',
+      codigo_postal: (profile as any)?.billing_codigo_postal || '',
+    });
+  };
 
   // ── Mobile verification ───────────────────────────────────────────────────
   const handleSendVerificationCode = async () => {

@@ -98,7 +98,9 @@ export interface CreateFeaturedResult {
 // ============================================================================
 
 /**
- * Obtener créditos del usuario actual
+ * Obtener saldo publicitario del usuario actual.
+ * Lee user_wallets.virtual_balance (ARS).
+ * Mantiene la forma de retorno { data.credits_available } para backward compat.
  */
 export async function getUserCredits(): Promise<{ data: UserFeaturedCredits | null; error: Error | null }> {
   try {
@@ -108,37 +110,27 @@ export async function getUserCredits(): Promise<{ data: UserFeaturedCredits | nu
     }
 
     const { data, error } = await supabase
-      .from('user_featured_credits')
-      .select('id, user_id, credits_total, credits_used, created_at, updated_at')
+      .from('user_wallets')
+      .select('user_id, virtual_balance, updated_at')
       .eq('user_id', user.id)
       .single();
 
-    if (error) {
-      // Si no existe, devolver créditos en 0
-      if (error.code === 'PGRST116') {
-        return {
-          data: {
-            id: '',
-            user_id: user.id,
-            balance: 0,
-            credits_available: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          error: null
-        };
-      }
+    const arsBalance = data?.virtual_balance ?? 0;
+
+    if (error && error.code !== 'PGRST116') {
       return { data: null, error };
     }
 
-    const available = (data.credits_total ?? 0) - (data.credits_used ?? 0);
     return {
       data: {
-        ...data,
-        balance: available,
-        credits_available: available,
+        id:               user.id,
+        user_id:          user.id,
+        balance:          arsBalance,
+        credits_available: arsBalance,
+        created_at:       new Date().toISOString(),
+        updated_at:       data?.updated_at ?? new Date().toISOString(),
       },
-      error: null
+      error: null,
     };
   } catch (error) {
     return { data: null, error: error as Error };
