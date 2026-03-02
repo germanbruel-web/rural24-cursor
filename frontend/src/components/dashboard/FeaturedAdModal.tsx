@@ -2,19 +2,21 @@ import { useEffect, useState } from 'react';
 import {
   AlertCircle,
   CheckCircle2,
+  Clock,
   Info,
   Loader2,
+  Star,
   X,
   Zap,
 } from 'lucide-react';
 import {
-  createUserFeaturedAd,
-  getFeaturedSettings,
-  type FeaturedPlacement,
-} from '../../services/userFeaturedService';
-import {
   getWalletBalance,
+  getTierConfig,
+  getFeaturedSlotAvailability,
+  activateFeaturedByTier,
   formatARS,
+  type TierOption,
+  type SlotAvailability,
 } from '../../services/walletService';
 import { supabase } from '../../services/supabaseClient';
 
@@ -32,81 +34,58 @@ interface FeaturedAdModalProps {
   onSuccess?: () => void;
 }
 
-const PLACEMENT_OPTIONS: {
-  value: FeaturedPlacement;
-  label: string;
-  tag: string;
-  description: string;
-  coverage: string[];
-}[] = [
-  {
-    value:       'homepage',
-    label:       'PREMIUM',
-    tag:         'Más visible',
-    description: 'Inicio + resultados + detalle del aviso',
-    coverage:    ['Página de inicio', 'Resultados de búsqueda', 'Detalle del aviso'],
-  },
-  {
-    value:       'results',
-    label:       'ESTÁNDAR',
-    tag:         '',
-    description: 'Resultados + detalle del aviso',
-    coverage:    ['Resultados de búsqueda', 'Detalle del aviso'],
-  },
-  {
-    value:       'detail',
-    label:       'BÁSICO',
-    tag:         '',
-    description: 'Solo en el detalle del aviso',
-    coverage:    ['Detalle del aviso'],
-  },
-];
+const TIER_ICONS: Record<string, React.ReactNode> = {
+  alta:  <Zap  className="w-4 h-4 flex-shrink-0" />,
+  media: <Star className="w-4 h-4 flex-shrink-0" />,
+  baja:  <div className="w-4 h-4 rounded-full border-2 border-current flex-shrink-0" />,
+};
+
+const PLACEMENT_LABELS: Record<string, string> = {
+  homepage: 'Homepage',
+  results:  'Resultados',
+  detail:   'Detalle',
+};
 
 export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: FeaturedAdModalProps) {
-  const [selectedPlacement, setSelectedPlacement] = useState<FeaturedPlacement | null>(null);
-  const [slotPrice,         setSlotPrice]         = useState<number>(2500);
-  const [durationDays,      setDurationDays]       = useState<number>(15);
-  const [balance,           setBalance]            = useState<number>(0);
-  const [loading,           setLoading]            = useState(false);
-  const [submitting,        setSubmitting]         = useState(false);
-  const [error,             setError]              = useState<string | null>(null);
-  const [successText,       setSuccessText]        = useState<string | null>(null);
+  const [tiers,      setTiers]      = useState<TierOption[]>([]);
+  const [balance,    setBalance]    = useState<number>(0);
+  const [loading,    setLoading]    = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
+  const [success,    setSuccess]    = useState(false);
+
+  const [selectedTier,  setSelectedTier]  = useState<TierOption | null>(null);
+  const [periods,       setPeriods]       = useState<1 | 2>(1);
+  const [availability,  setAvailability]  = useState<SlotAvailability | null>(null);
+  const [availLoading,  setAvailLoading]  = useState(false);
 
   const hasCategoryData  = Boolean(ad.category_id && ad.subcategory_id);
-  const hasEnoughBalance = balance >= slotPrice;
-  const balanceAfter     = balance - slotPrice;
+  const totalCost        = selectedTier ? selectedTier.price_ars * periods : 0;
+  const balanceAfter     = balance - totalCost;
+  const hasEnoughBalance = balance >= totalCost;
+  const canPurchase      = availability?.can_purchase !== false;
+  const durationDays     = periods * 15;
 
   useEffect(() => {
     if (!isOpen) return;
-    setSelectedPlacement(null);
+    setSelectedTier(null);
+    setPeriods(1);
+    setAvailability(null);
     setError(null);
-    setSuccessText(null);
+    setSuccess(false);
     void boot();
   }, [isOpen]);
 
   const boot = async () => {
     setLoading(true);
     try {
-      // Obtener user_id del auth
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-
-      const [walletData, settings, priceRow] = await Promise.all([
-        authUser ? getWalletBalance(authUser.id) : Promise.resolve(null),
-        getFeaturedSettings(),
-        // Leer precio del slot desde global_config
-        supabase
-          .from('global_config')
-          .select('value')
-          .eq('key', 'featured_slot_price_ars')
-          .single()
-          .then(r => r.data),
+      const { data: { user } } = await supabase.auth.getUser();
+      const [tiersData, walletData] = await Promise.all([
+        getTierConfig(),
+        user ? getWalletBalance(user.id) : Promise.resolve(null),
       ]);
-
+      setTiers(tiersData);
       setBalance(walletData?.virtual_balance ?? 0);
-      setDurationDays(settings.durationDays || 15);
-
-      const price = priceRow?.value ? Number(priceRow.value) : 2500;
-      setSlotPrice(isNaN(price) ? 2500 : price);
     } catch {
       setError('No se pudo cargar la configuración');
     } finally {
@@ -114,44 +93,40 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
     }
   };
 
+  const handleTierSelect = async (tier: TierOption) => {
+    setSelectedTier(tier);
+    setError(null);
+    setAvailability(null);
+    if (!hasCategoryData || !ad.id) return;
+    setAvailLoading(true);
+    try {
+      const avail = await getFeaturedSlotAvailability(ad.id, tier.tier);
+      setAvailability(avail);
+    } finally {
+      setAvailLoading(false);
+    }
+  };
+
   const handleConfirm = async () => {
-    if (!selectedPlacement) {
-      setError('Elegí dónde querés que aparezca el aviso');
-      return;
-    }
-    if (!hasCategoryData) {
-      setError('El aviso debe tener categoría y subcategoría para destacarse');
-      return;
-    }
-    if (!hasEnoughBalance) {
-      setError('Saldo insuficiente');
-      return;
-    }
+    if (!selectedTier)    { setError('Elegí un nivel de visibilidad'); return; }
+    if (!hasCategoryData) { setError('El aviso necesita categoría y subcategoría'); return; }
+    if (!hasEnoughBalance){ setError('Saldo insuficiente'); return; }
 
     setSubmitting(true);
     setError(null);
-    setSuccessText(null);
 
-    const today = new Date().toISOString().split('T')[0];
-    const { data, error: createError } = await createUserFeaturedAd(ad.id, selectedPlacement, today);
+    const result = await activateFeaturedByTier(ad.id, selectedTier.tier, periods);
 
-    if (createError || !data?.success) {
-      setError(data?.message || createError?.message || 'No se pudo activar el destacado');
+    if (!result.success) {
+      setError(result.error ?? 'No se pudo activar el destacado');
       setSubmitting(false);
       return;
     }
 
-    // Recargar saldo desde wallet
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (authUser) {
-      const updatedWallet = await getWalletBalance(authUser.id);
-      setBalance(updatedWallet?.virtual_balance ?? balance - slotPrice);
-    }
-
+    setSuccess(true);
     setSubmitting(false);
-    setSuccessText('¡Aviso destacado correctamente!');
     onSuccess?.();
-    onClose();
+    setTimeout(() => onClose(), 1800);
   };
 
   if (!isOpen) return null;
@@ -169,38 +144,23 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               <p className="text-sm text-white/80 truncate">{ad.title}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0 ml-3"
-          >
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0 ml-3">
             <X className="w-5 h-5 text-white" />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
 
-          {/* Saldo disponible */}
+          {/* Saldo */}
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-gray-500 py-1">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Cargando saldo...
+              <Loader2 className="w-4 h-4 animate-spin" /> Cargando...
             </div>
           ) : (
             <div className="flex items-center justify-between bg-brand-50 border border-brand-100 rounded-xl px-4 py-3">
               <span className="text-sm font-medium text-brand-800">Saldo disponible</span>
-              <span className={`text-lg font-bold ${hasEnoughBalance ? 'text-brand-700' : 'text-red-600'}`}>
+              <span className={`text-lg font-bold ${balance > 0 ? 'text-brand-700' : 'text-red-600'}`}>
                 {formatARS(balance)} ARS
-              </span>
-            </div>
-          )}
-
-          {/* Alerta saldo insuficiente */}
-          {!loading && !hasEnoughBalance && (
-            <div className="flex items-start gap-2 p-3 bg-amber-50 text-amber-700 text-sm rounded-xl border border-amber-200">
-              <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>
-                Saldo insuficiente. Necesitás {formatARS(slotPrice)} ARS.{' '}
-                <span className="font-medium">Canjea un cupón desde Mi Cuenta para cargar saldo.</span>
               </span>
             </div>
           )}
@@ -209,112 +169,164 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
           {!hasCategoryData && (
             <div className="flex items-start gap-2 p-3 bg-red-50 text-red-700 text-sm rounded-xl border border-red-100">
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              El aviso necesita categoría y subcategoría para poder destacarse.
+              El aviso necesita categoría y subcategoría para destacarse.
             </div>
           )}
 
-          {/* Opciones de placement */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-gray-700">¿Dónde querés que aparezca?</p>
-              <span className="text-xs text-gray-400 font-medium">
-                {formatARS(slotPrice)} ARS · {durationDays} días
+          {/* Tiers */}
+          {!loading && (
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700">Elegí tu nivel de visibilidad</p>
+              {tiers.map((tier) => {
+                const isSelected = selectedTier?.tier === tier.tier;
+                const affordable = balance >= tier.price_ars;
+                return (
+                  <button
+                    key={tier.tier}
+                    onClick={() => handleTierSelect(tier)}
+                    disabled={!affordable}
+                    className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
+                      isSelected
+                        ? 'border-brand-600 bg-brand-50'
+                        : affordable
+                        ? 'border-gray-200 hover:border-brand-300 hover:bg-gray-50'
+                        : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className={isSelected ? 'text-brand-600' : 'text-gray-400'}>
+                          {TIER_ICONS[tier.tier]}
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-bold ${isSelected ? 'text-brand-700' : 'text-gray-800'}`}>
+                              {tier.label}
+                            </span>
+                            {tier.tier === 'alta' && (
+                              <span className="px-1.5 py-0.5 bg-brand-100 text-brand-700 text-[10px] font-bold rounded-full leading-none">
+                                Más visible
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {tier.placements.map(p => PLACEMENT_LABELS[p] ?? p).join(' · ')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className={`text-sm font-bold tabular-nums ${isSelected ? 'text-brand-700' : 'text-gray-500'}`}>
+                          {formatARS(tier.price_ars)}
+                        </p>
+                        <p className="text-xs text-gray-400">ARS · 15 días</p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Selector de períodos */}
+          {selectedTier && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Períodos:</span>
+              <div className="flex gap-2">
+                {([1, 2] as const).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setPeriods(p)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold border-2 transition-all ${
+                      periods === p
+                        ? 'border-brand-600 bg-brand-600 text-white'
+                        : 'border-gray-200 text-gray-600 hover:border-brand-300'
+                    }`}
+                  >
+                    {p === 1 ? '15 días' : '30 días'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Disponibilidad */}
+          {selectedTier && availLoading && (
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Loader2 className="w-3 h-3 animate-spin" /> Verificando disponibilidad...
+            </div>
+          )}
+          {selectedTier && !availLoading && availability && (
+            <div className={`flex items-start gap-2 p-3 rounded-xl border text-sm ${
+              availability.available_now
+                ? 'bg-green-50 border-green-200 text-green-700'
+                : 'bg-amber-50 border-amber-200 text-amber-700'
+            }`}>
+              {availability.available_now ? (
+                <><CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>Slot disponible — se activa en los próximos minutos.</span></>
+              ) : (
+                <><Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>Sin slot libre ahora. Tu aviso entra en cola y se activa en ~{availability.next_available_days ?? 1} día(s).</span></>
+              )}
+            </div>
+          )}
+
+          {/* Saldo insuficiente */}
+          {selectedTier && !hasEnoughBalance && (
+            <div className="flex items-start gap-2 p-3 bg-amber-50 text-amber-700 text-sm rounded-xl border border-amber-200">
+              <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>
+                Saldo insuficiente. Necesitás {formatARS(totalCost)} ARS.{' '}
+                <span className="font-medium">Canjear un cupón desde Mi Cuenta.</span>
               </span>
             </div>
-            {PLACEMENT_OPTIONS.map((option) => {
-              const selected  = selectedPlacement === option.value;
-              const canAfford = hasEnoughBalance;
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => { setSelectedPlacement(option.value); setError(null); }}
-                  disabled={!canAfford}
-                  className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
-                    selected
-                      ? 'border-brand-600 bg-brand-50'
-                      : canAfford
-                      ? 'border-gray-200 hover:border-brand-300 hover:bg-gray-50'
-                      : 'border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                          selected ? 'border-brand-600 bg-brand-600' : 'border-gray-300 bg-white'
-                        }`}
-                      >
-                        {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                      </div>
-                      <span className={`text-sm font-bold ${selected ? 'text-brand-700' : 'text-gray-800'}`}>
-                        {option.label}
-                      </span>
-                      {option.tag && (
-                        <span className="px-1.5 py-0.5 bg-brand-100 text-brand-700 text-[10px] font-bold rounded-full leading-none">
-                          {option.tag}
-                        </span>
-                      )}
-                    </div>
-                    <span className={`text-sm font-bold tabular-nums ${selected ? 'text-brand-700' : 'text-gray-500'}`}>
-                      {formatARS(slotPrice)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1 ml-6">
-                    {option.description}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
+          )}
 
           {/* Feedback */}
           {error && (
             <div className="flex items-start gap-2 text-sm bg-red-50 text-red-700 border border-red-200 rounded-xl p-3">
-              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              {error}
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" /> {error}
             </div>
           )}
-          {successText && (
+          {success && (
             <div className="flex items-center gap-2 text-sm bg-green-50 text-green-700 border border-green-200 rounded-xl p-3">
-              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-              {successText}
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> ¡Aviso destacado correctamente!
             </div>
           )}
 
           {/* Resumen + CTA */}
           <div className="pt-2 border-t border-gray-100 space-y-3">
-            {selectedPlacement && (
+            {selectedTier && (
               <div className="space-y-1.5 text-sm">
                 <div className="flex items-center justify-between text-gray-600">
-                  <span>Costo</span>
-                  <span className="font-semibold">{formatARS(slotPrice)} ARS</span>
+                  <span>{selectedTier.label} × {periods} período{periods > 1 ? 's' : ''} ({durationDays} días)</span>
+                  <span className="font-semibold">{formatARS(totalCost)} ARS</span>
                 </div>
-                <div className="flex items-center justify-between text-gray-600">
-                  <span>Saldo después</span>
-                  <span className={`font-semibold ${balanceAfter < 0 ? 'text-red-600' : 'text-brand-700'}`}>
-                    {formatARS(balanceAfter)} ARS
-                  </span>
-                </div>
+                {hasEnoughBalance && (
+                  <div className="flex items-center justify-between text-gray-600">
+                    <span>Saldo después</span>
+                    <span className="font-semibold text-brand-700">{formatARS(balanceAfter)} ARS</span>
+                  </div>
+                )}
               </div>
             )}
 
             <button
               onClick={handleConfirm}
-              disabled={submitting || !selectedPlacement || !hasEnoughBalance || !hasCategoryData}
+              disabled={submitting || !selectedTier || !hasEnoughBalance || !hasCategoryData || !canPurchase}
               className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 py-3 rounded-xl font-semibold transition-colors"
             >
               {submitting ? (
                 <span className="inline-flex items-center justify-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Activando...
+                  <Loader2 className="w-4 h-4 animate-spin" /> Activando...
                 </span>
-              ) : (
+              ) : selectedTier ? (
                 <span className="inline-flex items-center justify-center gap-2">
                   <Zap className="w-4 h-4" />
-                  {selectedPlacement
-                    ? `Usar ${formatARS(slotPrice)} ARS · Destacar ${durationDays} días`
-                    : 'Elegí una opción'}
+                  Destacar {durationDays} días por {formatARS(totalCost)} ARS
                 </span>
+              ) : (
+                'Elegí un nivel de visibilidad'
               )}
             </button>
           </div>

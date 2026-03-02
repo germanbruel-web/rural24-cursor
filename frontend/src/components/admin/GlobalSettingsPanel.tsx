@@ -9,13 +9,16 @@ import {
   Settings, Save, RefreshCw, AlertCircle, CheckCircle, Info, CreditCard, Sliders,
   Star, Mail, BarChart3, Image, Megaphone, HelpCircle
 } from 'lucide-react';
-import { 
-  getAllSettings, 
-  setSetting, 
+import {
+  getAllSettings,
+  setSetting,
   createSetting,
-  type GlobalSetting 
+  type GlobalSetting
 } from '../../services/v2/globalSettingsService';
+import { supabase } from '../../services/supabaseClient';
 import PlansAdmin from './PlansAdmin';
+
+interface TierPrice { tier: string; label: string; price_ars: number; placements: string[]; description: string; }
 
 // Tabs disponibles
 type TabType = 'settings' | 'plans';
@@ -130,6 +133,39 @@ export default function GlobalSettingsPanel() {
   const [saveStatus, setSaveStatus] = useState<{ key: string; success: boolean } | null>(null);
   const [expandedHelp, setExpandedHelp] = useState<string | null>(null);
 
+  // Tier prices state
+  const [tierPrices, setTierPrices]       = useState<TierPrice[]>([]);
+  const [tierSaving, setTierSaving]       = useState(false);
+  const [tierSaveOk, setTierSaveOk]       = useState(false);
+  const [tierEditPrices, setTierEditPrices] = useState<Record<string, string>>({});
+
+  const loadTierConfig = async () => {
+    const { data } = await supabase.from('global_config').select('value').eq('key', 'tier_config').single();
+    if (!data) return;
+    try {
+      const parsed: TierPrice[] = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+      setTierPrices(parsed);
+      const prices: Record<string, string> = {};
+      parsed.forEach(t => { prices[t.tier] = String(t.price_ars); });
+      setTierEditPrices(prices);
+    } catch { /* ignore */ }
+  };
+
+  const saveTierPrices = async () => {
+    setTierSaving(true);
+    const updated = tierPrices.map(t => ({
+      ...t,
+      price_ars: Number(tierEditPrices[t.tier] ?? t.price_ars),
+    }));
+    await supabase.from('global_config')
+      .update({ value: JSON.stringify(updated), updated_at: new Date().toISOString() })
+      .eq('key', 'tier_config');
+    setTierPrices(updated);
+    setTierSaving(false);
+    setTierSaveOk(true);
+    setTimeout(() => setTierSaveOk(false), 3000);
+  };
+
   // Cargar settings
   const loadSettings = async () => {
     setLoading(true);
@@ -155,6 +191,7 @@ export default function GlobalSettingsPanel() {
 
   useEffect(() => {
     loadSettings();
+    loadTierConfig();
   }, []);
 
   // Formatear valor para input
@@ -460,6 +497,70 @@ export default function GlobalSettingsPanel() {
               );
             })}
           </div>
+
+          {/* Tier Prices Section */}
+          {tierPrices.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-200 bg-gradient-to-r from-yellow-50 to-white">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-yellow-100 text-yellow-600">
+                    <Star className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="font-semibold text-gray-900">Precios por Nivel de Destacado</h2>
+                    <p className="text-sm text-gray-500">Precio en ARS por período de 15 días · Se aplica de inmediato sin deploy</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="divide-y divide-gray-100">
+                {tierPrices.map(tier => (
+                  <div key={tier.tier} className="p-5 hover:bg-gray-50 transition-colors">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                      <div className="flex-1">
+                        <span className="font-medium text-gray-900 uppercase text-sm tracking-wide">{tier.label}</span>
+                        <p className="text-sm text-gray-500 mt-0.5">{tier.description}</p>
+                        <p className="text-xs text-gray-400 mt-1 font-mono">
+                          {tier.placements.join(' · ')}
+                        </p>
+                      </div>
+                      <div className="lg:w-52 flex-shrink-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-600">$</span>
+                          <input
+                            type="number"
+                            value={tierEditPrices[tier.tier] ?? tier.price_ars}
+                            onChange={e => setTierEditPrices(prev => ({ ...prev, [tier.tier]: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-600"
+                            min={0}
+                            step={100}
+                          />
+                          <span className="text-xs text-gray-400 whitespace-nowrap">ARS</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="px-5 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+                {tierSaveOk && (
+                  <span className="flex items-center gap-1 text-sm text-brand-600">
+                    <CheckCircle className="w-4 h-4" />
+                    Precios guardados
+                  </span>
+                )}
+                <button
+                  onClick={saveTierPrices}
+                  disabled={tierSaving}
+                  className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-60 transition-colors"
+                >
+                  {tierSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Guardar precios
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Stats */}
           <div className="text-center text-sm text-gray-500 py-4">

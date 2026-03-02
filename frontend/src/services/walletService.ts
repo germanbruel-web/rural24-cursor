@@ -47,6 +47,24 @@ export interface FeaturedDuration {
   label: string;
 }
 
+export interface TierOption {
+  tier: 'alta' | 'media' | 'baja';
+  label: string;
+  price_ars: number;
+  placements: string[];
+  description: string;
+}
+
+export interface SlotAvailability {
+  available_now: boolean;
+  active_count: number;
+  max_slots: number;
+  next_available_days: number | null;
+  existing_periods: number;
+  can_purchase: boolean;
+  error?: string;
+}
+
 // ============================================================
 // WALLET BALANCE
 // ============================================================
@@ -274,6 +292,92 @@ export async function getFeaturedDurations(): Promise<FeaturedDuration[]> {
     return Array.isArray(parsed) ? parsed : fallback;
   } catch {
     return fallback;
+  }
+}
+
+/**
+ * Leer configuración de tiers desde global_config.
+ * Retorna ALTA/MEDIA/BAJA con precios, placements y descripciones.
+ */
+export async function getTierConfig(): Promise<TierOption[]> {
+  const fallback: TierOption[] = [
+    { tier: 'alta',  label: 'ALTA',  price_ars: 7500, placements: ['homepage', 'results', 'detail'], description: 'Máxima visibilidad — Homepage, Resultados y Detalle' },
+    { tier: 'media', label: 'MEDIA', price_ars: 5000, placements: ['homepage', 'results'],           description: 'Alta visibilidad — Homepage y Resultados' },
+    { tier: 'baja',  label: 'BAJA',  price_ars: 2500, placements: ['detail'],                       description: 'Visibilidad en Detalle' },
+  ];
+
+  try {
+    const { data, error } = await supabase
+      .from('global_config')
+      .select('value')
+      .eq('key', 'tier_config')
+      .single();
+
+    if (error || !data) return fallback;
+    const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Consultar disponibilidad de slots para un aviso y tier.
+ * Invoca RPC get_featured_slot_availability(p_ad_id, p_tier).
+ */
+export async function getFeaturedSlotAvailability(
+  adId: string,
+  tier: string
+): Promise<SlotAvailability> {
+  const fallback: SlotAvailability = {
+    available_now: true, active_count: 0, max_slots: 20,
+    next_available_days: null, existing_periods: 0, can_purchase: true,
+  };
+
+  try {
+    const { data, error } = await supabase.rpc('get_featured_slot_availability', {
+      p_ad_id: adId,
+      p_tier:  tier,
+    });
+
+    if (error || !data) return fallback;
+    return data as SlotAvailability;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Activar destacado por tier usando saldo ARS.
+ * Invoca RPC activate_featured_by_tier (Sprint 3A).
+ */
+export async function activateFeaturedByTier(
+  adId: string,
+  tier: string,
+  periods: 1 | 2
+): Promise<{ success: boolean; newBalance?: number; expiresAt?: string; error?: string }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Debés estar autenticado' };
+
+    const { data, error } = await supabase.rpc('activate_featured_by_tier', {
+      p_user_id: user.id,
+      p_ad_id:   adId,
+      p_tier:    tier,
+      p_periods: periods,
+    });
+
+    if (error) return { success: false, error: error.message };
+    if (!data?.success) return { success: false, error: data?.error ?? 'Error al activar destacado' };
+
+    return {
+      success:    true,
+      newBalance: data.new_balance,
+      expiresAt:  data.expires_at_p1,
+    };
+  } catch (err) {
+    console.error('Error en activateFeaturedByTier:', err);
+    return { success: false, error: 'Error inesperado' };
   }
 }
 
