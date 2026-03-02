@@ -1,4 +1,3 @@
-import React from 'react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 /**
@@ -43,7 +42,7 @@ export function PWAInstallBanner() {
       >
         {/* Ícono de la app */}
         <img
-          src="/images/AppImages/android/android-launchericon-192-192.png"
+          src="/images/Apprural/web/icon-192.png"
           alt="Rural24"
           style={{
             width: 48,
