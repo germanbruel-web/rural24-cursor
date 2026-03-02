@@ -158,7 +158,7 @@ export default function GlobalSettingsPanel() {
       price_ars: Number(tierEditPrices[t.tier] ?? t.price_ars),
     }));
     await supabase.from('global_config')
-      .update({ value: JSON.stringify(updated), updated_at: new Date().toISOString() })
+      .update({ value: JSON.stringify(updated) })
       .eq('key', 'tier_config');
     setTierPrices(updated);
     setTierSaving(false);
