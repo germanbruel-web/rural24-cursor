@@ -31,15 +31,19 @@ export const SearchSEO: React.FC<SearchSEOProps> = ({
   resultCount,
 }) => {
   const [popularQueries, setPopularQueries] = useState<SearchSuggestion[]>([]);
+  const loadedRef = React.useRef(false);
 
   useEffect(() => {
-    // Cargar sugerencias populares desde API o usar las props
     if (suggestions.length > 0) {
       setPopularQueries(suggestions);
-    } else {
+      return;
+    }
+    // Solo cargar una vez — evita loop infinito cuando suggestions=[] cambia referencia cada render
+    if (!loadedRef.current) {
+      loadedRef.current = true;
       loadPopularQueries();
     }
-  }, [suggestions]);
+  }, []);
 
   const loadPopularQueries = async () => {
     try {
