@@ -165,7 +165,7 @@ BEGIN
     PERFORM cron.schedule(
       'rural24-activate-featured',
       '*/15 * * * *',
-      $$
+      $sql$
         UPDATE public.featured_ads
         SET
           status       = 'active',
@@ -174,7 +174,7 @@ BEGIN
           updated_at   = NOW()
         WHERE status = 'pending'
           AND scheduled_start <= CURRENT_DATE;
-      $$
+      $sql$
     );
 
     -- Expirar: active → expired cuando pasa expires_at
@@ -184,13 +184,13 @@ BEGIN
     PERFORM cron.schedule(
       'rural24-expire-featured',
       '*/15 * * * *',
-      $$
+      $sql$
         UPDATE public.featured_ads
         SET status     = 'expired',
             updated_at = NOW()
         WHERE status = 'active'
           AND expires_at <= NOW();
-      $$
+      $sql$
     );
 
     RAISE NOTICE 'pg_cron: jobs rural24-activate-featured y rural24-expire-featured registrados.';
