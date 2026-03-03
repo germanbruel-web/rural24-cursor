@@ -44,13 +44,17 @@ if (!env || !['dev', 'prod'].includes(env)) {
 }
 
 const envVars = loadEnvFile(path.join(root, '.env.db.local'));
-const dbUrl = env === 'prod' ? envVars.PROD_DB_URL : envVars.DEV_DB_URL;
+const rawUrl = env === 'prod' ? envVars.PROD_DB_URL : envVars.DEV_DB_URL;
 
-if (!dbUrl) {
+if (!rawUrl) {
   console.error(`❌ Falta ${env === 'prod' ? 'PROD' : 'DEV'}_DB_URL en .env.db.local`);
   console.error('   Copiá .env.db.example → .env.db.local y completá las URLs.');
   process.exit(1);
 }
+
+// Supabase CLI no soporta PgBouncer (port 6543) para db push/migration repair.
+// Convertir automáticamente a direct connection (port 5432).
+const dbUrl = rawUrl.replace(/:6543\//, ':5432/');
 
 const label = env === 'prod' ? '🔴 PROD' : '🟡 DEV';
 console.log(`\n${label} — Aplicando migraciones en Supabase ${env.toUpperCase()}...`);
