@@ -3,6 +3,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  CreditCard,
   Info,
   Loader2,
   Star,
@@ -14,6 +15,7 @@ import {
   getTierConfig,
   getFeaturedSlotAvailability,
   activateFeaturedByTier,
+  createMPPreference,
   formatARS,
   type TierOption,
   type SlotAvailability,
@@ -58,6 +60,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
   const [periods,       setPeriods]       = useState<1 | 2>(1);
   const [availability,  setAvailability]  = useState<SlotAvailability | null>(null);
   const [availLoading,  setAvailLoading]  = useState(false);
+  const [mpLoading,     setMpLoading]     = useState(false);
 
   const hasCategoryData  = Boolean(ad.category_id && ad.subcategory_id);
   const totalCost        = selectedTier ? selectedTier.price_ars * periods : 0;
@@ -104,6 +107,41 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
       setAvailability(avail);
     } finally {
       setAvailLoading(false);
+    }
+  };
+
+  const handleMercadoPago = async () => {
+    if (!selectedTier || !hasCategoryData) return;
+    setMpLoading(true);
+    setError(null);
+
+    const result = await createMPPreference(ad.id, selectedTier.tier, periods);
+
+    if ('error' in result) {
+      setError(result.error);
+      setMpLoading(false);
+      return;
+    }
+
+    sessionStorage.setItem('mp_payment_id', result.payment_id);
+
+    const isMobileDevice = window.innerWidth < 768;
+
+    if (isMobileDevice) {
+      // Mobile: redirect directo (App.tsx detecta el callback al volver)
+      window.location.href = result.init_point;
+    } else {
+      // Desktop: popup centrado — App.tsx recibe el resultado via postMessage
+      const W = 800, H = 650;
+      const left = Math.round((window.screen.width  - W) / 2);
+      const top  = Math.round((window.screen.height - H) / 2);
+      window.open(
+        result.init_point,
+        'mp_checkout',
+        `width=${W},height=${H},left=${left},top=${top},resizable=yes,scrollbars=yes`
+      );
+      // Cerrar el modal: App.tsx muestra PaymentResultPage cuando llegue el postMessage
+      onClose();
     }
   };
 
@@ -271,14 +309,29 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
             </div>
           )}
 
-          {/* Saldo insuficiente */}
+          {/* Saldo insuficiente → opción MercadoPago */}
           {selectedTier && !hasEnoughBalance && (
-            <div className="flex items-start gap-2 p-3 bg-amber-50 text-amber-700 text-sm rounded-xl border border-amber-200">
-              <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>
-                Saldo insuficiente. Necesitás {formatARS(totalCost)} ARS.{' '}
-                <span className="font-medium">Canjear un cupón desde Mi Cuenta.</span>
-              </span>
+            <div className="space-y-2">
+              <div className="flex items-start gap-2 p-3 bg-amber-50 text-amber-700 text-sm rounded-xl border border-amber-200">
+                <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>
+                  Saldo insuficiente para este nivel. Podés pagar con MercadoPago o canjear un cupón desde Mi Cuenta.
+                </span>
+              </div>
+              <button
+                onClick={handleMercadoPago}
+                disabled={mpLoading || !hasCategoryData}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#009EE3] hover:bg-[#007EB8] disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 rounded-xl font-semibold text-sm transition-colors"
+              >
+                {mpLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CreditCard className="w-4 h-4" />
+                )}
+                {mpLoading
+                  ? 'Redirigiendo a MercadoPago...'
+                  : `Pagar ${formatARS(totalCost)} con MercadoPago`}
+              </button>
             </div>
           )}
 

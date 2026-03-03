@@ -2,25 +2,24 @@
  * ProfilePanel.tsx — Mi Cuenta
  *
  * Layout desktop:
- *  ┌───────────────────────────────────────────────────────┐
- *  │  SALDO PARA PUBLICIDAD (full-width)                   │
- *  │  [$X.XXX ARS + movimientos] | [Canjear cupón]         │
- *  └───────────────────────────────────────────────────────┘
  *  ┌──────────────────────────┬──────────────────────────┐
  *  │  COLUMNA 1               │  COLUMNA 2               │
  *  │  Hero (avatar+rol+priv.) │  Datos de Facturación    │
  *  │  Datos Personales        │  Seguridad y Cuenta      │
  *  │  Ubicación               │                          │
  *  └──────────────────────────┴──────────────────────────┘
+ *
+ * Nota Sprint 3E (#NoSaldo): se eliminó la sección "Saldo para Publicidad".
+ * Los cupones se canjean directamente en el checkout del modal de Destacados.
  */
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   User, MapPin, Edit, Save, X,
-  CheckCircle, Gift, Clock, ChevronDown,
+  CheckCircle,
   Loader2, Shield, Send, AlertCircle, Globe,
-  EyeOff, Tag, FileText, Banknote, TrendingDown, TrendingUp, Calendar,
+  EyeOff, FileText, Calendar,
 } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import { PROVINCES, LOCALITIES_BY_PROVINCE } from '../../constants/locations';
@@ -28,15 +27,6 @@ import { hasPremiumFeatures as checkPremium } from '../../constants/plans';
 import { AvatarUpload } from '../common/AvatarUpload';
 import { sendVerificationCode, verifyCode } from '../../services/phoneVerificationService';
 import { updateProfile, uploadAvatar, deleteAvatar } from '../../services/profileService';
-import {
-  getWalletBalance,
-  getWalletTransactions,
-  validateCoupon,
-  redeemCoupon,
-  formatARS,
-  type WalletTransaction,
-} from '../../services/walletService';
-import { supabase } from '../../services/supabaseClient';
 import { AccountSecurityPanel } from './AccountSecurityPanel';
 
 // ============================================================================
@@ -158,12 +148,6 @@ function getSingleRole(opts: {
   return opts.user_type === 'empresa' ? 'Empresa' : 'Particular';
 }
 
-function txIcon(tx: WalletTransaction) {
-  return tx.tx_type === 'credit'
-    ? <TrendingUp className="w-3 h-3 text-emerald-600 shrink-0" />
-    : <TrendingDown className="w-3 h-3 text-red-500 shrink-0" />;
-}
-
 // ============================================================================
 // COMPONENTE PRINCIPAL
 // ============================================================================
@@ -184,29 +168,12 @@ export const ProfilePanel: React.FC = () => {
     user_type: profile?.user_type,
   });
 
-  // ── Wallet ─────────────────────────────────────────────────────────────────
-  const [walletBalance, setWalletBalance]       = useState<number>(0);
-  const [walletTxs, setWalletTxs]               = useState<WalletTransaction[]>([]);
-  const [walletLoading, setWalletLoading]       = useState(true);
-
-  // ── Cupón ──────────────────────────────────────────────────────────────────
-  const [couponCode, setCouponCode]             = useState('');
-  const [couponValidating, setCouponValidating] = useState(false);
-  const [couponValidated, setCouponValidated]   = useState(false);
-  const [couponInfo, setCouponInfo]             = useState<{ arsAmount: number; description: string } | null>(null);
-  const [couponRedeeming, setCouponRedeeming]   = useState(false);
-  const [couponSuccess, setCouponSuccess]       = useState(false);
-  const [couponError, setCouponError]           = useState<string | null>(null);
-
   // ── Privacy (Hero) ────────────────────────────────────────────────────────
   const [privacyMode, setPrivacyMode]   = useState<'public' | 'private'>(
     (profile?.privacy_mode as 'public' | 'private') ?? 'public'
   );
   const [privacySaving,    setPrivacySaving]    = useState(false);
   const [privacyDeniedMsg, setPrivacyDeniedMsg] = useState(false);
-
-  // ── Wallet accordion ──────────────────────────────────────────────────────
-  const [showMovimientos, setShowMovimientos] = useState(false);
 
   // ── Editing states ────────────────────────────────────────────────────────
   const [editingPersonal, setEditingPersonal] = useState(false);
@@ -284,29 +251,6 @@ export const ProfilePanel: React.FC = () => {
     if (profile.mobile_verified) setVerificationStep('verified');
     if (profile.privacy_mode)    setPrivacyMode(profile.privacy_mode as 'public' | 'private');
   }, [profile]);
-
-  // ── Wallet ────────────────────────────────────────────────────────────────
-  useEffect(() => { loadWalletData(); }, []);
-
-  const loadWalletData = async () => {
-    setWalletLoading(true);
-    try {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) { setWalletLoading(false); return; }
-
-      const [wallet, txs] = await Promise.all([
-        getWalletBalance(authUser.id),
-        getWalletTransactions(authUser.id, 5),
-      ]);
-
-      setWalletBalance(wallet?.virtual_balance ?? 0);
-      setWalletTxs(txs);
-    } catch (err) {
-      console.error('Error cargando wallet:', err);
-    } finally {
-      setWalletLoading(false);
-    }
-  };
 
   // ── Avatar ────────────────────────────────────────────────────────────────
   const handleAvatarUpload = async (file: File) => {
@@ -471,53 +415,6 @@ export const ProfilePanel: React.FC = () => {
     finally { setVerificationLoading(false); }
   };
 
-  // ── Cupón ──────────────────────────────────────────────────────────────────
-  const handleValidateCoupon = async () => {
-    if (!couponCode.trim()) return;
-    setCouponValidating(true);
-    setCouponError(null);
-    try {
-      const result = await validateCoupon(couponCode.trim());
-      if (result.valid) {
-        setCouponValidated(true);
-        setCouponInfo({ arsAmount: result.arsAmount!, description: result.description || '' });
-      } else {
-        setCouponError(result.error || 'Cupón inválido o expirado');
-      }
-    } catch {
-      setCouponError('Error al validar el cupón');
-    } finally {
-      setCouponValidating(false);
-    }
-  };
-
-  const handleRedeemCoupon = async () => {
-    if (!couponCode.trim()) return;
-    setCouponRedeeming(true);
-    setCouponError(null);
-    try {
-      const result = await redeemCoupon(couponCode.trim());
-      if (result.success) {
-        setCouponSuccess(true);
-        await loadWalletData();
-      } else {
-        setCouponError(result.error || 'Error al canjear el cupón');
-      }
-    } catch {
-      setCouponError('Error al canjear el cupón');
-    } finally {
-      setCouponRedeeming(false);
-    }
-  };
-
-  const resetCoupon = () => {
-    setCouponCode('');
-    setCouponValidated(false);
-    setCouponInfo(null);
-    setCouponSuccess(false);
-    setCouponError(null);
-  };
-
   // ============================================================================
   // RENDER
   // ============================================================================
@@ -529,171 +426,6 @@ export const ProfilePanel: React.FC = () => {
       <div>
         <h1 className="text-xl font-bold text-gray-900">Mi Cuenta</h1>
         <p className="text-sm text-gray-500">Gestioná tu perfil, contacto y seguridad</p>
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════
-          SALDO PARA PUBLICIDAD — full-width
-          ══════════════════════════════════════════════════════════ */}
-      <div className="border border-nature-canopy/50 rounded-xl overflow-hidden bg-white">
-        {/* Header — evergreen */}
-        <div className="flex items-center gap-2 px-5 py-3 bg-nature-evergreen">
-          <Banknote className="w-4 h-4 text-nature-harvest" />
-          <h3 className="text-sm font-bold text-white uppercase tracking-wide">
-            Saldo para Publicidad
-          </h3>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-gray-200">
-
-          {/* ── Balance + Movimientos ── */}
-          <div className="p-5">
-            {walletLoading ? (
-              <Loader2 className="w-6 h-6 text-nature-evergreen animate-spin my-2" />
-            ) : (
-              <>
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-4xl font-black text-nature-harvest leading-none">
-                    {formatARS(walletBalance)}
-                  </span>
-                  <span className="text-sm font-semibold text-nature-compost">ARS</span>
-                </div>
-                <p className="text-gray-600 text-xs">
-                  Usá tu saldo para destacar avisos
-                </p>
-              </>
-            )}
-
-            {/* Movimientos — accordion */}
-            {walletTxs.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-brand-200/50">
-                <button
-                  type="button"
-                  onClick={() => setShowMovimientos(v => !v)}
-                  className="w-full flex items-center gap-1.5 text-nature-evergreen text-xs font-semibold uppercase tracking-wider hover:text-nature-canopy transition-colors"
-                >
-                  <Clock className="w-3 h-3" />
-                  Últimos movimientos
-                  <span className="ml-auto text-xs normal-case font-normal text-gray-500">
-                    {walletTxs.length} registros
-                  </span>
-                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${showMovimientos ? 'rotate-180' : ''}`} />
-                </button>
-                {showMovimientos && (
-                  <div className="mt-2 space-y-1.5">
-                    {walletTxs.map(tx => (
-                      <div
-                        key={tx.id}
-                        className="flex items-center gap-2 bg-nature-air rounded-lg px-3 py-1.5"
-                      >
-                        {txIcon(tx)}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-gray-800 text-xs truncate">{tx.description}</p>
-                          <p className="text-gray-500 text-xs">
-                            {new Date(tx.created_at).toLocaleDateString('es-AR', { month: 'short', day: 'numeric' })}
-                          </p>
-                        </div>
-                        <span className={`text-xs font-bold shrink-0 ${tx.tx_type === 'credit' ? 'text-nature-canopy' : 'text-red-600'}`}>
-                          {tx.tx_type === 'credit' ? '+' : '-'}{formatARS(tx.amount)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!walletLoading && walletTxs.length === 0 && (
-              <p className="mt-3 text-xs text-gray-500">
-                Sin movimientos aún. Canjea un cupón para empezar.
-              </p>
-            )}
-          </div>
-
-          {/* ── Cupón ── */}
-          <div className="p-5">
-            <p className="text-sm font-bold text-nature-compost flex items-center gap-2 mb-3">
-              <Gift className="w-4 h-4 text-nature-harvest" /> Canjear cupón
-            </p>
-
-            {couponSuccess ? (
-              <div className="flex flex-col items-center gap-2 py-3 text-center">
-                <CheckCircle className="w-8 h-8 text-nature-canopy" />
-                <p className="text-sm font-semibold text-nature-evergreen">
-                  ¡{formatARS(couponInfo?.arsAmount ?? 0)} ARS acreditados!
-                </p>
-                <p className="text-xs text-gray-500">Tu saldo fue actualizado</p>
-                <button onClick={resetCoupon} className="text-xs text-nature-evergreen hover:underline mt-1">
-                  Usar otro cupón
-                </button>
-              </div>
-            ) : couponValidated && couponInfo ? (
-              <div className="space-y-3">
-                <div className="bg-nature-air border border-nature-canopy/50 rounded-lg p-3">
-                  <p className="text-xs font-semibold text-nature-evergreen flex items-center gap-1.5">
-                    <CheckCircle className="w-3.5 h-3.5" /> Cupón válido
-                  </p>
-                  <p className="text-base font-black text-nature-harvest mt-0.5">
-                    +{formatARS(couponInfo.arsAmount)} ARS
-                  </p>
-                  {couponInfo.description && (
-                    <p className="text-xs text-gray-600 mt-0.5">{couponInfo.description}</p>
-                  )}
-                </div>
-                {couponError && (
-                  <p className="text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5" /> {couponError}
-                  </p>
-                )}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleRedeemCoupon}
-                    disabled={couponRedeeming}
-                    className="flex-1 py-2 bg-nature-evergreen hover:bg-nature-canopy text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
-                  >
-                    {couponRedeeming && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    Canjear
-                  </button>
-                  <button
-                    onClick={resetCoupon}
-                    className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={couponCode}
-                  onChange={(e) => {
-                    setCouponCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
-                    setCouponError(null);
-                  }}
-                  placeholder="Ej: RURAL2026"
-                  maxLength={20}
-                  className="w-full px-3 py-2.5 text-sm font-mono tracking-wider border border-brand-200 rounded-lg focus:ring-2 focus:ring-nature-canopy/30 focus:border-nature-canopy bg-white"
-                />
-                {couponError && (
-                  <p className="text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5" /> {couponError}
-                  </p>
-                )}
-                <button
-                  onClick={handleValidateCoupon}
-                  disabled={couponValidating || !couponCode.trim()}
-                  className="w-full py-2.5 border border-nature-evergreen text-nature-evergreen hover:bg-nature-air text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {couponValidating
-                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Validando...</>
-                    : <><Tag className="w-3.5 h-3.5" /> Validar cupón</>
-                  }
-                </button>
-              </div>
-            )}
-          </div>
-
-        </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════════

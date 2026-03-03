@@ -5,7 +5,7 @@ import {
   getUserAdLimit,
 } from '../../services/adsService';
 import type { Ad } from '../../../types';
-import { Edit, Trash2, Eye, Plus, Package, X, Zap, Calendar, Star, MapPin } from 'lucide-react';
+import { Edit, Trash2, Eye, Plus, Package, X, Zap, Calendar, Star } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import { useAuth } from '../../contexts/AuthContext';
 import { DEFAULT_PLACEHOLDER_IMAGE } from '../../constants/defaultImages';
@@ -13,10 +13,9 @@ import { isSuperAdmin as checkIsSuperAdmin } from '../../utils/rolePermissions';
 import { supabase } from '../../services/supabaseClient';
 import { QuickEditAdModal } from './QuickEditAdModal';
 import BulkVisibilityModal from './BulkVisibilityModal';
-import { FeaturedAdModal } from '../dashboard';
 import SuperAdminFeaturedPanel from './SuperAdminFeaturedPanel';
 
-import { getUserCredits, cancelActiveFeaturedAd } from '../../services/userFeaturedService';
+import { cancelActiveFeaturedAd } from '../../services/userFeaturedService';
 import { navigateTo } from '../../hooks/useNavigate';
 
 /**
@@ -45,9 +44,16 @@ interface Category {
 interface FeaturedInfo {
   featured_id: string;
   placement: string;
+  tier?: string;
   status: string;
   expires_at?: string;
 }
+
+const TIER_CHIPS: Array<{ tier: 'baja' | 'media' | 'alta'; label: string; icon?: React.ReactNode }> = [
+  { tier: 'baja',  label: 'BAJA' },
+  { tier: 'media', label: 'MEDIA', icon: <Star className="w-3 h-3" /> },
+  { tier: 'alta',  label: 'ALTA',  icon: <Zap className="w-3 h-3" /> },
+];
 
 export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   const { profile } = useAuth();
@@ -58,14 +64,9 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   const [selectedAdForView, setSelectedAdForView] = useState<Ad | null>(null);
   const [selectedAdForEdit, setSelectedAdForEdit] = useState<Ad | null>(null);
   const [selectedAdForDelete, setSelectedAdForDelete] = useState<Ad | null>(null);
-  const [selectedAdForFeatured, setSelectedAdForFeatured] = useState<Ad | null>(null);
   const [showBulkVisibility, setShowBulkVisibility] = useState(false);
   const [featuredMap, setFeaturedMap] = useState<Record<string, FeaturedInfo[]>>({});
-  
-  
-  // CrÃ©ditos del usuario
-  const [userCredits, setUserCredits] = useState<number>(0);
-  
+
   // Cancel featured
   const [cancelFeaturedTarget, setCancelFeaturedTarget] = useState<{ adTitle: string; featured: FeaturedInfo } | null>(null);
   const [cancellingFeatured, setCancellingFeatured] = useState(false);
@@ -80,7 +81,6 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   useEffect(() => {
     loadData();
     loadCategories();
-    loadUserCredits();
   }, [profile]);
 
   const loadCategories = async () => {
@@ -94,15 +94,6 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
       setCategories(data || []);
     } catch (error) {
       console.error('Error loading categories:', error);
-    }
-  };
-
-  const loadUserCredits = async () => {
-    try {
-      const { data } = await getUserCredits();
-      setUserCredits(data?.credits_available ?? 0);
-    } catch (error) {
-      console.error('Error loading user credits:', error);
     }
   };
 
@@ -135,7 +126,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
 
       const { data, error } = await supabase
         .from('featured_ads')
-        .select('id, ad_id, placement, status, expires_at')
+        .select('id, ad_id, placement, tier, status, expires_at')
         .in('ad_id', adIds)
         .in('status', ['active', 'pending']);
 
@@ -151,6 +142,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           nextMap[item.ad_id].push({
             featured_id: item.id,
             placement: item.placement,
+            tier: item.tier || undefined,
             status: item.status,
             expires_at: item.expires_at || undefined,
           });
@@ -182,6 +174,19 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     }
   };
 
+  /** Navega a FeaturedCheckoutPage con el aviso y tier pre-seleccionado */
+  const handleStartCheckout = (ad: Ad, tier: 'alta' | 'media' | 'baja') => {
+    sessionStorage.setItem('featured_checkout_data', JSON.stringify({
+      ad_id: ad.id,
+      title: ad.title,
+      category_id: ad.category_id || '',
+      subcategory_id: ad.subcategory_id || '',
+      images: ad.images || [],
+      preselected_tier: tier,
+    }));
+    window.location.hash = '#/featured-checkout';
+  };
+
   const confirmCancelFeatured = async () => {
     if (!cancelFeaturedTarget) return;
     setCancellingFeatured(true);
@@ -196,7 +201,6 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         notify.success('Destacado cancelado correctamente');
         setCancelFeaturedTarget(null);
         loadData();
-        loadUserCredits();
       } else {
         notify.error(result.error?.message || 'Error al cancelar destacado');
       }
@@ -434,7 +438,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         ))}
       </div>
 
-      {/* Cards de avisos â€” Mobile-first responsive grid */}
+      {/* Cards de avisos â€" Mobile-first responsive grid */}
       {filteredAds.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
           <div className="text-gray-400 mb-4">
@@ -468,10 +472,10 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
             return (
               <div
                 key={ad.id}
-                className="bg-white rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md hover:border-brand-600/40 transition-all overflow-hidden flex flex-col"
+                className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col"
               >
-                {/* Thumbnail + Status Badge */}
-                <div className="relative w-full aspect-[16/9] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                {/* - ZONA IMAGEN - */}
+                <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                   <img
                     src={thumbnail}
                     alt={ad.title}
@@ -479,140 +483,178 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                     className="w-full h-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_PLACEHOLDER_IMAGE; }}
                   />
-                  {/* Status badge */}
-                  <span className={`absolute top-2 left-2 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold shadow-sm ${
+
+                  {/* Status pill con glow — top left */}
+                  <span className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${
                     ad.status === 'active'
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-yellow-400 text-yellow-900'
+                      ? 'bg-emerald-500 text-white shadow-[0_0_10px_rgba(52,211,153,0.75)]'
+                      : 'bg-amber-400 text-amber-900'
                   }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${ad.status === 'active' ? 'bg-white/80' : 'bg-amber-700'}`} />
                     {ad.status === 'active' ? 'Activo' : 'Pausado'}
                   </span>
-                  {/* Featured badges */}
+
+                  {/* Featured badges — top right (dorado/negro/gris) */}
                   {isAdFeatured && (
-                    <div className="absolute top-2 right-2 flex gap-1">
-                      {adFeatureds.map((feat) => (
-                        <span key={feat.featured_id} className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#169834] text-white shadow-sm">
-                          {getPlacementShort(feat.placement)}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {/* Views overlay */}
-                  <div className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-medium text-white bg-black/50 backdrop-blur-sm rounded flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    {ad.views_count || 0}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-4 flex flex-col flex-1 gap-2">
-                  {/* Title */}
-                  <h3 className="font-bold text-gray-900 text-sm leading-tight line-clamp-2 min-h-[2.5rem]">
-                    {ad.title}
-                  </h3>
-
-                  {/* Description intro */}
-                  {ad.description && (
-                    <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                      {ad.description}
-                    </p>
-                  )}
-
-                  {/* Price + Category */}
-                  <div className="flex items-center justify-between mt-auto pt-2">
-                    <div className="inline-block bg-gradient-to-r from-brand-50 to-emerald-50 border-l-4 border-brand-600 rounded-lg px-2.5 py-1">
-                      <p className="font-black text-brand-600 text-sm">
-                        {ad.currency} {ad.price?.toLocaleString() || '0'}
-                      </p>
-                    </div>
-                    <span className="text-[11px] text-gray-500 truncate max-w-[120px]">
-                      {ad.category}
-                    </span>
-                  </div>
-
-                  {/* Featured status / Expiration info */}
-                  {isAdFeatured && (
-                    <div className="bg-brand-50 border border-brand-200 rounded-lg p-2.5 mt-1">
+                    <div className="absolute top-2.5 right-2.5 flex flex-col gap-1 items-end">
                       {adFeatureds.map((feat) => {
-                        const remaining = getRemainingDays(feat.expires_at);
+                        const t = feat.tier || (feat.placement === 'homepage' ? 'alta' : feat.placement === 'results' ? 'media' : 'baja');
+                        const badgeCls = t === 'alta'
+                          ? 'bg-amber-400/95 text-amber-900'
+                          : t === 'media'
+                          ? 'bg-gray-900/90 text-white'
+                          : 'bg-gray-500/80 text-white';
+                        const badgeLabel = t === 'alta' ? 'ALTO' : t === 'media' ? 'MEDIA' : 'BAJA';
                         return (
-                          <div key={feat.featured_id} className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5">
-                              <Star className="w-3.5 h-3.5 text-[#169834]" />
-                              <span className="text-xs font-bold text-[#169834]">
-                                {getPlacementShort(feat.placement)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              {feat.status === 'active' ? (
-                                <span className="text-xs text-gray-600 flex items-center gap-1">
-                                  <Calendar className="w-3 h-3" />
-                                  {remaining > 0 ? `Vence: ${formatExpiryDate(feat.expires_at)}` : 'Vence: hoy'}
-                                </span>
-                              ) : (
-                                <span className="text-xs text-yellow-600 font-medium">Pendiente</span>
-                              )}
-                              {isSuperAdmin && (
-                                <button
-                                  onClick={() => setCancelFeaturedTarget({ adTitle: ad.title, featured: feat })}
-                                  className="p-0.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                  title="Cancelar destacado"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
+                          <span key={feat.featured_id}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold backdrop-blur-sm ${badgeCls} ${feat.status === 'pending' ? 'opacity-60' : ''}`}
+                          >
+                            {badgeLabel}{feat.status === 'pending' ? '…' : ''}
+                          </span>
                         );
                       })}
                     </div>
                   )}
                 </div>
 
-                {/* Footer â€” Actions */}
-                <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-between bg-gray-50/50">
-                  {/* CRUD actions */}
+                {/* - ZONA CONTENIDO DEL AVISO - */}
+                <div className="px-3.5 pt-3 pb-2 flex flex-col gap-1.5 flex-1">
+                  <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2">
+                    {ad.title}
+                  </h3>
+                  {ad.description && (
+                    <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">
+                      {ad.description}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between pt-1 mt-auto">
+                    <span className="font-black text-brand-600 text-sm">
+                      {ad.currency} {ad.price?.toLocaleString() || '0'}
+                    </span>
+                    <span className="text-[11px] text-gray-400 truncate max-w-[110px]">
+                      {ad.category}
+                    </span>
+                  </div>
+                </div>
+
+                {/* - ZONA PUBLICIDAD / VISIBILIDAD - */}
+                {canUseFeaturedFlow && (
+                  <div className="px-3.5 pb-3">
+                    {/* Featured activos: info por tier */}
+                    {isAdFeatured && (
+                      <div className="mb-2 space-y-1">
+                        {adFeatureds.map((feat) => {
+                          const t = feat.tier || (feat.placement === 'homepage' ? 'alta' : feat.placement === 'results' ? 'media' : 'baja');
+                          const accentCls = t === 'alta' ? 'text-amber-600' : t === 'media' ? 'text-gray-700' : 'text-gray-500';
+                          const icon = t === 'alta' ? '⚡' : t === 'media' ? '●' : '○';
+                          return (
+                            <div key={feat.featured_id} className="flex items-center justify-between text-xs">
+                              <span className={`font-bold ${accentCls}`}>
+                                {icon} {t === 'alta' ? 'ALTO' : t === 'media' ? 'MEDIA' : 'BAJA'}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                {feat.status === 'active' ? (
+                                  <span className="text-gray-400 flex items-center gap-0.5">
+                                    <Calendar className="w-3 h-3" />
+                                    {formatExpiryDate(feat.expires_at)}
+                                  </span>
+                                ) : (
+                                  <span className="text-amber-500 font-medium">En cola</span>
+                                )}
+                                {isSuperAdmin && (
+                                  <button
+                                    onClick={() => setCancelFeaturedTarget({ adTitle: ad.title, featured: feat })}
+                                    className="p-0.5 text-red-300 hover:text-red-500 rounded"
+                                    title="Cancelar destacado"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Tier chips */}
+                    {ad.status === 'active' && (
+                      <div className="flex items-center gap-1.5">
+                        {!isAdFeatured && (
+                          <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">
+                            Destacar:
+                          </span>
+                        )}
+                        {TIER_CHIPS.map(({ tier, label }) => {
+                          const alreadyFeatured = adFeatureds.some(
+                            f => f.tier === tier || (!f.tier && tier === 'alta' && f.placement === 'homepage')
+                          );
+                          const activeCls = tier === 'alta'
+                            ? 'bg-amber-400 hover:bg-amber-500 text-amber-900'
+                            : tier === 'media'
+                            ? 'bg-gray-800 hover:bg-gray-700 text-white'
+                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700';
+                          const doneCls = tier === 'alta'
+                            ? 'bg-amber-100 text-amber-400'
+                            : tier === 'media'
+                            ? 'bg-gray-200 text-gray-400'
+                            : 'bg-gray-100 text-gray-400';
+                          return (
+                            <button
+                              key={tier}
+                              onClick={() => !alreadyFeatured && handleStartCheckout(ad, tier)}
+                              disabled={alreadyFeatured}
+                              title={alreadyFeatured ? `Ya activo en ${label}` : `Destacar como ${label}`}
+                              className={`inline-flex items-center px-2.5 py-1 text-[10px] font-bold rounded-full transition-colors shadow-sm ${
+                                alreadyFeatured ? `${doneCls} cursor-default` : `${activeCls} cursor-pointer`
+                              }`}
+                            >
+                              {tier === 'alta' ? '⚡ ' : tier === 'media' ? '● ' : '○ '}{label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* - SUBFOOTER: CRUD + MÉTRICAS - */}
+                <div className="border-t border-gray-100 px-3.5 py-2.5 flex items-center justify-between bg-gray-50/70">
+                  {/* CRUD */}
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setSelectedAdForEdit(ad)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                      title="Modificar"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                      title="Modificar aviso"
                     >
                       <Edit className="w-3.5 h-3.5" />
                       Modificar
                     </button>
                     <button
                       onClick={() => setSelectedAdForDelete(ad)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
-                      title="Eliminar"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-500 bg-white border border-red-100 rounded-lg hover:bg-red-50 hover:border-red-200 transition-colors"
+                      title="Eliminar aviso"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       Eliminar
                     </button>
                   </div>
 
-                  {/* Featured CTA */}
-                  {ad.status === 'active' && (
-                    isAdFeatured ? (
-                      adFeatureds.length < 3 ? (
-                        <button
-                          onClick={() => setSelectedAdForFeatured(ad)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 rounded-lg transition-colors shadow-sm"
-                        >
-                          <Zap className="w-3.5 h-3.5" />
-                          RENOVAR
-                        </button>
-                      ) : null
-                    ) : canUseFeaturedFlow ? (
-                      <button
-                        onClick={() => setSelectedAdForFeatured(ad)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 rounded-lg transition-all shadow-sm"
-                      >
-                        <Star className="w-3.5 h-3.5" />
-                        DESTACAR
-                      </button>
-                    ) : null
-                  )}
+                  {/* Métricas + estado */}
+                  <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                    <span className="inline-flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                      {ad.views_count || 0}
+                    </span>
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-semibold ${
+                      ad.status === 'active'
+                        ? 'bg-emerald-50 text-emerald-600'
+                        : 'bg-amber-50 text-amber-600'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${ad.status === 'active' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                      {ad.status === 'active' ? 'Activo' : 'Pausado'}
+                    </span>
+                  </div>
                 </div>
               </div>
             );
@@ -726,38 +768,13 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         />
       )}
 
-      {/* Modal Destacar Aviso */}
-      {selectedAdForFeatured && (
-        <FeaturedAdModal
-          isOpen={true}
-          onClose={() => setSelectedAdForFeatured(null)}
-          ad={{
-            id: selectedAdForFeatured.id,
-            title: selectedAdForFeatured.title,
-            category_id: selectedAdForFeatured.category_id || '',
-            subcategory_id: selectedAdForFeatured.subcategory_id || '',
-            category_name: selectedAdForFeatured.category_name || selectedAdForFeatured.category,
-            images: selectedAdForFeatured.images
-          }}
-          onSuccess={() => {
-            setSelectedAdForFeatured(null);
-            notify.success('Â¡Aviso destacado exitosamente!');
-            loadData();
-            loadUserCredits();
-          }}
-        />
-      )}
-
       {isSuperAdmin && showBulkVisibility && (
         <BulkVisibilityModal
           isOpen={showBulkVisibility}
           onClose={() => setShowBulkVisibility(false)}
           ads={ads}
           featuredMap={featuredMap}
-          onApplied={() => {
-            loadData();
-            loadUserCredits();
-          }}
+          onApplied={() => { loadData(); }}
         />
       )}
 

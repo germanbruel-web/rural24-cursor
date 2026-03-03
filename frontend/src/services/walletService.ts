@@ -382,6 +382,55 @@ export async function activateFeaturedByTier(
 }
 
 // ============================================================
+// MERCADOPAGO — CHECKOUT DIRECTO
+// ============================================================
+
+export interface MPPreferenceResult {
+  preference_id: string;
+  init_point:    string;
+  payment_id:    string;
+}
+
+/**
+ * Crea una preferencia de pago en MercadoPago para destacar un aviso.
+ * Checkout directo — no usa wallet virtual. Pago real por el aviso.
+ *
+ * En caso de éxito, redirigir a result.init_point.
+ */
+export async function createMPPreference(
+  adId:    string,
+  tier:    string,
+  periods: 1 | 2
+): Promise<MPPreferenceResult | { error: string }> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      return { error: 'Debés estar autenticado para pagar' };
+    }
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const res = await fetch(`${apiUrl}/api/payments/mercadopago/preference`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ ad_id: adId, tier, periods }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return { error: data.error ?? 'Error al crear la preferencia de pago' };
+    }
+
+    return data as MPPreferenceResult;
+  } catch (err) {
+    console.error('Error en createMPPreference:', err);
+    return { error: 'Error de conexión al crear preferencia' };
+  }
+}
+
+// ============================================================
 // HELPERS
 // ============================================================
 

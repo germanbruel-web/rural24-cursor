@@ -42,6 +42,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
           SUPABASE_SERVICE_ROLE_KEY: placeholder
           FRONTEND_URL: https://rural24.com
+          MERCADOPAGO_ACCESS_TOKEN: placeholder
+          BACKEND_PUBLIC_URL: https://api.rural24.com
         run: npm run build
 
       # Frontend checks  

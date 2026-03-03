@@ -86,6 +86,8 @@ const TestDynamicForm = import.meta.env.DEV ? lazy(() => import("./src/pages/Tes
 const APITestPage = import.meta.env.DEV ? lazy(() => import("./src/pages/APITest")) : null;
 const DiagnosticsPage = import.meta.env.DEV ? lazy(() => import("./src/pages/DiagnosticsPage").then(m => ({ default: m.DiagnosticsPage }))) : null;
 const DesignSystemShowcaseSimple = lazy(() => import("./src/components/DesignSystemShowcaseSimple").then(m => ({ default: m.DesignSystemShowcaseSimple })));
+const PaymentResultPage = lazy(() => import("./src/pages/PaymentResultPage"));
+const FeaturedCheckoutPage = lazy(() => import("./src/pages/FeaturedCheckoutPage"));
 
 // ============================================================
 // LOADING FALLBACK COMPONENT
@@ -96,7 +98,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config';
+export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'reseller-points' | 'payment-result' | 'featured-checkout';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -156,6 +158,8 @@ const AppContent: React.FC = () => {
     if (hash === '#/deleted-ads') return 'deleted-ads';
     if (hash === '#/dashboard/sitemap-seo') return 'sitemap-seo';
     if (hash === '#/hero-cms') return 'hero-cms';
+    if (hash === '#/payment-result') return 'payment-result';
+    if (hash === '#/featured-checkout') return 'featured-checkout';
     if (hash === '#/profile') return 'profile';
     if (hash === '#/subscription') return 'profile'; // Subscription integrada en profile
     
@@ -207,7 +211,9 @@ const AppContent: React.FC = () => {
       'api-test': '#/api-test',
       'pricing': '#/pricing',
       'design-system': '#/design-system',
-      'home': '#/'
+      'home': '#/',
+      'payment-result': '#/payment-result',
+      'featured-checkout': '#/featured-checkout',
     };
     
     // Solo actualizar hash si la página tiene uno asignado y no estamos ya en ese hash
@@ -346,6 +352,12 @@ const AppContent: React.FC = () => {
       else if (hash === '#/payments-admin') {
         navigateToPage('payments-admin');
       }
+      else if (hash === '#/payment-result') {
+        navigateToPage('payment-result');
+      }
+      else if (hash === '#/featured-checkout') {
+        navigateToPage('featured-checkout');
+      }
       else if (hash === '#/profile') {
         navigateToPage('profile');
       }
@@ -438,6 +450,41 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     getSettingNumber('homepage_featured_ads_limit', 12).then(setHomepageFeaturedLimit);
   }, []);
+
+  // Detectar retorno desde MercadoPago Checkout Pro (mobile redirect o popup en mismo tab)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mpCallback = params.get('mp_callback');
+    if (!mpCallback) return;
+
+    // Limpiar params de la URL sin recargar la página
+    window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+    sessionStorage.removeItem('mp_payment_id');
+
+    // Si estamos dentro de un popup de checkout Desktop → notificar al padre y cerrar
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage({ type: 'mp_callback', status: mpCallback }, window.location.origin);
+      window.close();
+      return;
+    }
+
+    // Flujo mobile (redirect directo) → navegar a página de resultado
+    sessionStorage.setItem('mp_result', mpCallback);
+    navigateToPage('payment-result');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Recibir resultado desde el popup de checkout Desktop
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.type !== 'mp_callback') return;
+      sessionStorage.removeItem('mp_payment_id');
+      sessionStorage.setItem('mp_result', e.data.status);
+      navigateToPage('payment-result');
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [navigateToPage]);
 
   // Función para scroll al top
   const scrollToTop = () => {
@@ -771,6 +818,23 @@ const AppContent: React.FC = () => {
       return null;
     }
     return <Suspense fallback={<LoadingFallback />}><APITestPage /></Suspense>;
+  }
+
+  // Página de resultado de pago MercadoPago
+  if (currentPage === 'payment-result') {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <PaymentResultPage />
+      </Suspense>
+    );
+  }
+
+  if (currentPage === 'featured-checkout') {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <FeaturedCheckoutPage />
+      </Suspense>
+    );
   }
 
   // Página de diagnósticos de imágenes (solo dev)
