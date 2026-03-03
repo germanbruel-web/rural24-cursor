@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { Settings, Wrench, CheckCircle, Sparkles, Info, ChevronRight } from 'lucide-react';
-import type { DynamicAttribute } from '../../services/catalogService';
+import type { DynamicAttribute } from '../services/catalogService';
 
 interface AdDetailDynamicProps {
   attributes: Record<string, any>; // JSONB del aviso

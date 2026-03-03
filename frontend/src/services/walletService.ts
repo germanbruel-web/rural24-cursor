@@ -393,14 +393,13 @@ export interface MPPreferenceResult {
 
 /**
  * Crea una preferencia de pago en MercadoPago para destacar un aviso.
- * Checkout directo — no usa wallet virtual. Pago real por el aviso.
- *
- * En caso de éxito, redirigir a result.init_point.
+ * Acepta coupon_code opcional — el backend aplica el descuento si es válido.
  */
 export async function createMPPreference(
-  adId:    string,
-  tier:    string,
-  periods: 1 | 2
+  adId:        string,
+  tier:        string,
+  periods:     1 | 2,
+  couponCode?: string
 ): Promise<MPPreferenceResult | { error: string }> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
@@ -415,7 +414,12 @@ export async function createMPPreference(
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ ad_id: adId, tier, periods }),
+      body: JSON.stringify({
+        ad_id:       adId,
+        tier,
+        periods,
+        ...(couponCode ? { coupon_code: couponCode } : {}),
+      }),
     });
 
     const data = await res.json();
@@ -427,6 +431,87 @@ export async function createMPPreference(
   } catch (err) {
     console.error('Error en createMPPreference:', err);
     return { error: 'Error de conexión al crear preferencia' };
+  }
+}
+
+// ============================================================
+// SPRINT 3E — COUPON VALIDATION FOR CHECKOUT
+// ============================================================
+
+export interface CouponCheckoutValidation {
+  valid:             boolean;
+  discount_type?:    'full' | 'percentage';
+  discount_percent?: number;
+  effective_price?:  number;
+  coupon_name?:      string;
+  error?:            string;
+}
+
+/**
+ * Valida un cupón para el tier indicado. Lectura pura — NO redime el cupón.
+ * Llama a POST /api/coupons/validate-for-checkout
+ */
+export async function validateCouponForCheckout(
+  code:      string,
+  tier:      string,
+  basePrice: number
+): Promise<CouponCheckoutValidation> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      return { valid: false, error: 'Debés estar autenticado' };
+    }
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const res = await fetch(`${apiUrl}/api/coupons/validate-for-checkout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ code: code.toUpperCase().trim(), tier, base_price: basePrice }),
+    });
+
+    const data = await res.json();
+    return data as CouponCheckoutValidation;
+  } catch (err) {
+    console.error('Error en validateCouponForCheckout:', err);
+    return { valid: false, error: 'Error de conexión al validar cupón' };
+  }
+}
+
+/**
+ * Activa un destacado usando un cupón (discount_type='full' o gratuito).
+ * Llama directamente a la RPC activate_featured_with_coupon via service_role.
+ * SOLO para cupones con discount_type='full' (precio efectivo = 0).
+ */
+export async function activateFeaturedWithCoupon(
+  adId:       string,
+  tier:       string,
+  couponCode: string
+): Promise<{ success: boolean; featured_id?: string; error?: string }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'No autenticado' };
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const { data: { session } } = await supabase.auth.getSession();
+
+    const res = await fetch(`${apiUrl}/api/coupons/activate-with-coupon`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${session?.access_token}`,
+      },
+      body: JSON.stringify({ ad_id: adId, tier, coupon_code: couponCode }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) return { success: false, error: data.error ?? 'Error al activar' };
+    return data;
+  } catch (err) {
+    console.error('Error en activateFeaturedWithCoupon:', err);
+    return { success: false, error: 'Error de conexión' };
   }
 }
 

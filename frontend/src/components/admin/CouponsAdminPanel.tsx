@@ -46,6 +46,9 @@ interface Coupon {
   description: string | null;
   credits_amount: number;
   ars_amount: number | null;
+  featured_tier: string | null;
+  discount_type: 'full' | 'percentage' | null;
+  discount_percent: number | null;
   allowed_roles: string[];
   max_redemptions: number;
   current_redemptions: number;
@@ -63,7 +66,9 @@ interface CouponForm {
   name: string;
   title: string;
   description: string;
-  ars_amount: number;
+  featured_tier: string;
+  discount_type: 'full' | 'percentage';
+  discount_percent: number;
   allowed_roles: string[];
   max_redemptions: number;
   expires_at: string;
@@ -74,7 +79,6 @@ interface Redemption {
   id: string;
   coupon_id: string;
   user_id: string;
-  credits_granted: number;
   redeemed_at: string;
   user_email?: string;
   user_name?: string;
@@ -94,12 +98,21 @@ const ROLE_OPTIONS = [
   { value: 'superadmin', label: 'Superadmin',  color: 'bg-purple-100 text-purple-700 border-purple-300' },
 ];
 
+const TIER_OPTIONS = [
+  { value: '',      label: 'Cualquier tier' },
+  { value: 'alta',  label: 'ALTA'  },
+  { value: 'media', label: 'MEDIA' },
+  { value: 'baja',  label: 'BAJA'  },
+];
+
 const EMPTY_FORM: CouponForm = {
   code: '',
   name: '',
   title: '',
   description: '',
-  ars_amount: 2500,
+  featured_tier: '',
+  discount_type: 'percentage',
+  discount_percent: 50,
   allowed_roles: ['all'],
   max_redemptions: 100,
   expires_at: '',
@@ -251,7 +264,9 @@ export default function CouponsAdminPanel() {
       name: coupon.name,
       title: coupon.title,
       description: coupon.description || '',
-      ars_amount: coupon.ars_amount ?? coupon.credits_amount * 1000,
+      featured_tier: coupon.featured_tier ?? '',
+      discount_type: coupon.discount_type ?? 'percentage',
+      discount_percent: coupon.discount_percent ?? 50,
       allowed_roles: coupon.allowed_roles?.length ? coupon.allowed_roles : ['all'],
       max_redemptions: coupon.max_redemptions,
       expires_at: coupon.expires_at ? new Date(coupon.expires_at).toISOString().slice(0, 16) : '',
@@ -284,8 +299,8 @@ export default function CouponsAdminPanel() {
       notify.warning('Seleccioná fecha de expiración');
       return;
     }
-    if (form.ars_amount < 1) {
-      notify.warning('El importe ARS debe ser al menos $1');
+    if (form.discount_type === 'percentage' && (form.discount_percent < 1 || form.discount_percent > 100)) {
+      notify.warning('El descuento debe ser entre 1% y 100%');
       return;
     }
 
@@ -296,12 +311,14 @@ export default function CouponsAdminPanel() {
         name: form.name.trim(),
         title: form.title.trim() || form.name.trim(),
         description: form.description.trim() || null,
-        ars_amount: form.ars_amount,
+        featured_tier: form.featured_tier || null,
+        discount_type: form.discount_type,
+        discount_percent: form.discount_type === 'percentage' ? form.discount_percent : null,
         allowed_roles: form.allowed_roles.length > 0 ? form.allowed_roles : ['all'],
         max_redemptions: form.max_redemptions,
         expires_at: new Date(form.expires_at).toISOString(),
         is_active: form.is_active,
-        gives_credits: true,
+        gives_credits: false,
         gives_membership: false,
         updated_at: new Date().toISOString(),
       };
@@ -524,12 +541,10 @@ export default function CouponsAdminPanel() {
           <div className="bg-white rounded-lg border p-3">
             <div className="flex items-center gap-2 text-amber-600 mb-1">
               <DollarSign className="w-4 h-4" />
-              <span className="text-xs font-medium">ARS Otorgados</span>
+              <span className="text-xs font-medium">Descuentos 100%</span>
             </div>
             <p className="text-xl font-bold text-amber-700">
-              {formatARS(
-                coupons.reduce((sum, c) => sum + c.current_redemptions * (c.ars_amount ?? 0), 0)
-              )}
+              {coupons.filter(c => c.discount_type === 'full').length}
             </p>
           </div>
         </div>
@@ -586,7 +601,8 @@ export default function CouponsAdminPanel() {
                 <tr>
                   <th className="px-4 py-3 font-medium text-gray-600">CÓDIGO</th>
                   <th className="px-4 py-3 font-medium text-gray-600">NOMBRE</th>
-                  <th className="px-4 py-3 font-medium text-gray-600 w-32">ARS</th>
+                  <th className="px-4 py-3 font-medium text-gray-600 w-24">TIER</th>
+                  <th className="px-4 py-3 font-medium text-gray-600 w-28">DESCUENTO</th>
                   <th className="px-4 py-3 font-medium text-gray-600 w-36">ROL</th>
                   <th className="px-4 py-3 font-medium text-gray-600 w-28">CANJES</th>
                   <th className="px-4 py-3 font-medium text-gray-600 w-28">EXPIRA</th>
@@ -636,14 +652,36 @@ export default function CouponsAdminPanel() {
                         )}
                       </td>
 
-                      {/* ARS */}
+                      {/* Tier */}
                       <td className="px-4 py-3">
-                        <span className="font-bold text-brand-600">
-                          {coupon.ars_amount != null
-                            ? formatARS(coupon.ars_amount)
-                            : <span className="text-gray-400 text-xs">—</span>
-                          }
-                        </span>
+                        {coupon.featured_tier ? (
+                          <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                            coupon.featured_tier === 'alta'
+                              ? 'bg-amber-100 text-amber-700'
+                              : coupon.featured_tier === 'media'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {coupon.featured_tier.toUpperCase()}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">Cualquier</span>
+                        )}
+                      </td>
+
+                      {/* Descuento */}
+                      <td className="px-4 py-3">
+                        {coupon.discount_type === 'full' ? (
+                          <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-green-100 text-green-700">
+                            Gratis
+                          </span>
+                        ) : coupon.discount_percent != null ? (
+                          <span className="font-bold text-brand-600 text-sm">
+                            {coupon.discount_percent}% OFF
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">—</span>
+                        )}
                       </td>
 
                       {/* ROL */}
@@ -825,26 +863,70 @@ export default function CouponsAdminPanel() {
                 />
               </div>
 
-              {/* Importe ARS + Máx. canjes */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Importe ARS <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
-                    <input
-                      type="number"
-                      min={1}
-                      step={100}
-                      value={form.ars_amount}
-                      onChange={(e) => setForm(f => ({ ...f, ars_amount: parseInt(e.target.value) || 1 }))}
-                      className="w-full pl-6 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">ARS a acreditar por canje</p>
+              {/* Tier */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nivel de destacado
+                </label>
+                <select
+                  value={form.featured_tier}
+                  onChange={(e) => setForm(f => ({ ...f, featured_tier: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600 bg-white"
+                >
+                  {TIER_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">Dejar en "Cualquier tier" para aplicar a todos los niveles</p>
+              </div>
+
+              {/* Tipo de descuento */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo de descuento <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-3">
+                  {([
+                    { value: 'percentage', label: 'Descuento %' },
+                    { value: 'full',       label: 'Gratis (100%)' },
+                  ] as const).map(opt => (
+                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="discount_type"
+                        value={opt.value}
+                        checked={form.discount_type === opt.value}
+                        onChange={() => setForm(f => ({ ...f, discount_type: opt.value }))}
+                        className="accent-brand-600"
+                      />
+                      <span className="text-sm text-gray-700">{opt.label}</span>
+                    </label>
+                  ))}
                 </div>
-                <div>
+              </div>
+
+              {/* Discount percent + Max canjes */}
+              <div className="grid grid-cols-2 gap-3">
+                {form.discount_type === 'percentage' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Descuento % <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={form.discount_percent}
+                        onChange={(e) => setForm(f => ({ ...f, discount_percent: parseInt(e.target.value) || 1 }))}
+                        className="w-full pr-8 pl-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">1-100%</p>
+                  </div>
+                )}
+                <div className={form.discount_type === 'percentage' ? '' : 'col-span-2'}>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Máx. canjes
                   </label>
@@ -959,11 +1041,12 @@ export default function CouponsAdminPanel() {
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {redemptionCoupon.current_redemptions} de {redemptionCoupon.max_redemptions} canjes usados
-                  {redemptionCoupon.ars_amount != null && (
-                    <span className="ml-2 font-medium text-brand-600">
-                      · {formatARS(redemptionCoupon.ars_amount)} por canje
-                    </span>
-                  )}
+                  <span className="ml-2 font-medium text-brand-600">
+                    · {redemptionCoupon.discount_type === 'full'
+                        ? 'Gratis'
+                        : `${redemptionCoupon.discount_percent ?? '?'}% OFF`}
+                    {redemptionCoupon.featured_tier && ` · ${redemptionCoupon.featured_tier.toUpperCase()}`}
+                  </span>
                 </p>
               </div>
               <button onClick={() => setShowRedemptions(false)} className="p-1 hover:bg-gray-100 rounded">
@@ -992,7 +1075,9 @@ export default function CouponsAdminPanel() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-brand-600">
-                          +{formatARS(redemptionCoupon.ars_amount ?? 0)} ARS
+                          {redemptionCoupon.discount_type === 'full'
+                            ? 'Gratis'
+                            : `${redemptionCoupon.discount_percent ?? '?'}% OFF`}
                         </p>
                         <p className="text-xs text-gray-400">
                           {new Date(r.redeemed_at).toLocaleString('es-AR')}

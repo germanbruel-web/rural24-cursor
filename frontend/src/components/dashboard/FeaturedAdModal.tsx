@@ -4,23 +4,19 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
-  Info,
   Loader2,
   Star,
   X,
   Zap,
 } from 'lucide-react';
 import {
-  getWalletBalance,
   getTierConfig,
   getFeaturedSlotAvailability,
-  activateFeaturedByTier,
   createMPPreference,
   formatARS,
   type TierOption,
   type SlotAvailability,
 } from '../../services/walletService';
-import { supabase } from '../../services/supabaseClient';
 
 interface FeaturedAdModalProps {
   isOpen: boolean;
@@ -48,11 +44,9 @@ const PLACEMENT_LABELS: Record<string, string> = {
   detail:   'Detalle',
 };
 
-export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: FeaturedAdModalProps) {
+export default function FeaturedAdModal({ isOpen, onClose, ad }: FeaturedAdModalProps) {
   const [tiers,      setTiers]      = useState<TierOption[]>([]);
-  const [balance,    setBalance]    = useState<number>(0);
   const [loading,    setLoading]    = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [error,      setError]      = useState<string | null>(null);
   const [success,    setSuccess]    = useState(false);
 
@@ -62,12 +56,10 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
   const [availLoading,  setAvailLoading]  = useState(false);
   const [mpLoading,     setMpLoading]     = useState(false);
 
-  const hasCategoryData  = Boolean(ad.category_id && ad.subcategory_id);
-  const totalCost        = selectedTier ? selectedTier.price_ars * periods : 0;
-  const balanceAfter     = balance - totalCost;
-  const hasEnoughBalance = balance >= totalCost;
-  const canPurchase      = availability?.can_purchase !== false;
-  const durationDays     = periods * 15;
+  const hasCategoryData = Boolean(ad.category_id && ad.subcategory_id);
+  const totalCost       = selectedTier ? selectedTier.price_ars * periods : 0;
+  const canPurchase     = availability?.can_purchase !== false;
+  const durationDays    = periods * 15;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -82,13 +74,8 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
   const boot = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const [tiersData, walletData] = await Promise.all([
-        getTierConfig(),
-        user ? getWalletBalance(user.id) : Promise.resolve(null),
-      ]);
+      const tiersData = await getTierConfig();
       setTiers(tiersData);
-      setBalance(walletData?.virtual_balance ?? 0);
     } catch {
       setError('No se pudo cargar la configuración');
     } finally {
@@ -145,27 +132,6 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
     }
   };
 
-  const handleConfirm = async () => {
-    if (!selectedTier)    { setError('Elegí un nivel de visibilidad'); return; }
-    if (!hasCategoryData) { setError('El aviso necesita categoría y subcategoría'); return; }
-    if (!hasEnoughBalance){ setError('Saldo insuficiente'); return; }
-
-    setSubmitting(true);
-    setError(null);
-
-    const result = await activateFeaturedByTier(ad.id, selectedTier.tier, periods);
-
-    if (!result.success) {
-      setError(result.error ?? 'No se pudo activar el destacado');
-      setSubmitting(false);
-      return;
-    }
-
-    setSuccess(true);
-    setSubmitting(false);
-    onSuccess?.();
-    setTimeout(() => onClose(), 1800);
-  };
 
   if (!isOpen) return null;
 
@@ -189,17 +155,10 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
 
         <div className="p-5 space-y-4">
 
-          {/* Saldo */}
-          {loading ? (
+          {/* Loading */}
+          {loading && (
             <div className="flex items-center gap-2 text-sm text-gray-500 py-1">
               <Loader2 className="w-4 h-4 animate-spin" /> Cargando...
-            </div>
-          ) : (
-            <div className="flex items-center justify-between bg-brand-50 border border-brand-100 rounded-xl px-4 py-3">
-              <span className="text-sm font-medium text-brand-800">Saldo disponible</span>
-              <span className={`text-lg font-bold ${balance > 0 ? 'text-brand-700' : 'text-red-600'}`}>
-                {formatARS(balance)} ARS
-              </span>
             </div>
           )}
 
@@ -217,19 +176,16 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
               <p className="text-sm font-semibold text-gray-700">Elegí tu nivel de visibilidad</p>
               {tiers.map((tier) => {
                 const isSelected = selectedTier?.tier === tier.tier;
-                const affordable = balance >= tier.price_ars;
                 return (
                   <button
                     key={tier.tier}
                     onClick={() => handleTierSelect(tier)}
-                    disabled={!affordable}
+                    disabled={!hasCategoryData}
                     className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
                       isSelected
                         ? 'border-brand-600 bg-brand-50'
-                        : affordable
-                        ? 'border-gray-200 hover:border-brand-300 hover:bg-gray-50'
-                        : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
-                    }`}
+                        : 'border-gray-200 hover:border-brand-300 hover:bg-gray-50'
+                    } ${!hasCategoryData ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
@@ -309,33 +265,7 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
             </div>
           )}
 
-          {/* Saldo insuficiente → opción MercadoPago */}
-          {selectedTier && !hasEnoughBalance && (
-            <div className="space-y-2">
-              <div className="flex items-start gap-2 p-3 bg-amber-50 text-amber-700 text-sm rounded-xl border border-amber-200">
-                <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>
-                  Saldo insuficiente para este nivel. Podés pagar con MercadoPago o canjear un cupón desde Mi Cuenta.
-                </span>
-              </div>
-              <button
-                onClick={handleMercadoPago}
-                disabled={mpLoading || !hasCategoryData}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#009EE3] hover:bg-[#007EB8] disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 rounded-xl font-semibold text-sm transition-colors"
-              >
-                {mpLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CreditCard className="w-4 h-4" />
-                )}
-                {mpLoading
-                  ? 'Redirigiendo a MercadoPago...'
-                  : `Pagar ${formatARS(totalCost)} con MercadoPago`}
-              </button>
-            </div>
-          )}
-
-          {/* Feedback */}
+          {/* Error */}
           {error && (
             <div className="flex items-start gap-2 text-sm bg-red-50 text-red-700 border border-red-200 rounded-xl p-3">
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" /> {error}
@@ -347,37 +277,24 @@ export default function FeaturedAdModal({ isOpen, onClose, ad, onSuccess }: Feat
             </div>
           )}
 
-          {/* Resumen + CTA */}
+          {/* Resumen + CTA MercadoPago */}
           <div className="pt-2 border-t border-gray-100 space-y-3">
             {selectedTier && (
-              <div className="space-y-1.5 text-sm">
-                <div className="flex items-center justify-between text-gray-600">
-                  <span>{selectedTier.label} × {periods} período{periods > 1 ? 's' : ''} ({durationDays} días)</span>
-                  <span className="font-semibold">{formatARS(totalCost)} ARS</span>
-                </div>
-                {hasEnoughBalance && (
-                  <div className="flex items-center justify-between text-gray-600">
-                    <span>Saldo después</span>
-                    <span className="font-semibold text-brand-700">{formatARS(balanceAfter)} ARS</span>
-                  </div>
-                )}
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <span>{selectedTier.label} × {periods} período{periods > 1 ? 's' : ''} ({durationDays} días)</span>
+                <span className="font-semibold">{formatARS(totalCost)} ARS</span>
               </div>
             )}
 
             <button
-              onClick={handleConfirm}
-              disabled={submitting || !selectedTier || !hasEnoughBalance || !hasCategoryData || !canPurchase}
-              className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 py-3 rounded-xl font-semibold transition-colors"
+              onClick={handleMercadoPago}
+              disabled={mpLoading || !selectedTier || !hasCategoryData || !canPurchase}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#009EE3] hover:bg-[#007EB8] disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 rounded-xl font-semibold transition-colors"
             >
-              {submitting ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" /> Activando...
-                </span>
+              {mpLoading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Redirigiendo a MercadoPago...</>
               ) : selectedTier ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Zap className="w-4 h-4" />
-                  Destacar {durationDays} días por {formatARS(totalCost)} ARS
-                </span>
+                <><CreditCard className="w-4 h-4" /> Pagar {formatARS(totalCost)} con MercadoPago</>
               ) : (
                 'Elegí un nivel de visibilidad'
               )}

@@ -57,7 +57,6 @@ import TipsCard from '../molecules/TipsCard/TipsCard';
 import { AutoSaveIndicator } from '../molecules/AutoSaveIndicator';
 import { DynamicFormLoader } from '../forms/DynamicFormLoader';
 import { AutofillButton } from '../forms/AutofillButton';
-import type { ContentContext } from '../../utils/contentGenerator';
 
 // ====================================================================
 // DESIGN SYSTEM RURAL24 - Estilos consistentes de formularios

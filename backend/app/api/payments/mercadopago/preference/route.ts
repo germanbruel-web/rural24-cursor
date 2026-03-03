@@ -22,9 +22,10 @@ import { z } from 'zod';
 // ============================================================
 
 const PreferenceSchema = z.object({
-  ad_id:   z.string().uuid('ad_id debe ser un UUID válido'),
-  tier:    z.enum(['alta', 'media', 'baja']),
-  periods: z.union([z.literal(1), z.literal(2)]),
+  ad_id:       z.string().uuid('ad_id debe ser un UUID válido'),
+  tier:        z.enum(['alta', 'media', 'baja']),
+  periods:     z.union([z.literal(1), z.literal(2)]),
+  coupon_code: z.string().min(1).max(50).optional(),
 });
 
 // ============================================================
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { ad_id, tier, periods } = parsed.data;
+      const { ad_id, tier, periods, coupon_code } = parsed.data;
       const supabase = getSupabaseClient();
 
       // 2. Leer precio del tier desde global_config
@@ -83,7 +84,27 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const totalAmount = pricePerPeriod * periods;
+      const baseAmount = pricePerPeriod * periods;
+
+      // 2b. Si hay cupón, validarlo y aplicar descuento
+      let totalAmount   = baseAmount;
+      let couponApplied = false;
+
+      if (coupon_code) {
+        const { data: couponData } = await supabase.rpc('validate_coupon_for_checkout', {
+          p_code:       coupon_code.toUpperCase().trim(),
+          p_tier:       tier,
+          p_base_price: baseAmount,
+        });
+
+        const couponResult = typeof couponData === 'string' ? JSON.parse(couponData) : couponData;
+
+        if (couponResult?.valid) {
+          totalAmount   = couponResult.effective_price as number;
+          couponApplied = true;
+        }
+        // Si el cupón no es válido, continuamos con precio completo (sin bloquear)
+      }
 
       // 3. Verificar que el aviso existe y pertenece al usuario
       const { data: ad, error: adError } = await supabase
@@ -128,7 +149,10 @@ export async function POST(request: NextRequest) {
             ad_id,
             tier,
             periods,
-            ad_title: ad.title,
+            ad_title:     ad.title,
+            coupon_code:  coupon_code ?? null,
+            coupon_applied: couponApplied,
+            base_amount:  baseAmount,
           },
         })
         .select('id')
@@ -197,7 +221,10 @@ export async function POST(request: NextRequest) {
             ad_id,
             tier,
             periods,
-            ad_title:        ad.title,
+            ad_title:         ad.title,
+            coupon_code:      coupon_code ?? null,
+            coupon_applied:   couponApplied,
+            base_amount:      baseAmount,
             mp_preference_id: preference.id,
           },
         })

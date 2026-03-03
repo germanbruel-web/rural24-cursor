@@ -110,9 +110,11 @@ export async function POST(request: NextRequest) {
 
     // 7. Extraer datos del aviso desde metadata del payment
     const metadata = payment.metadata as {
-      ad_id: string;
-      tier: string;
-      periods: number;
+      ad_id:           string;
+      tier:            string;
+      periods:         number;
+      coupon_code?:    string | null;
+      coupon_applied?: boolean;
     };
 
     if (!metadata?.ad_id || !metadata?.tier || !metadata?.periods) {
@@ -120,22 +122,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    // 8. Activar el featured_ad via RPC (idempotente internamente)
-    const { data: rpcResult, error: rpcError } = await supabase.rpc('activate_featured_paid', {
-      p_user_id:    payment.user_id,
-      p_ad_id:      metadata.ad_id,
-      p_tier:       metadata.tier,
-      p_periods:    metadata.periods,
-      p_payment_id: internalPaymentId,
-    });
+    // 8. Activar el featured_ad via RPC
+    //    Con cupón → activate_featured_with_coupon (registra redemption + audit)
+    //    Sin cupón → activate_featured_paid (flujo standard)
+    let rpcResult: unknown;
+    let rpcError:  { message: string } | null;
+
+    if (metadata.coupon_code && metadata.coupon_applied) {
+      ({ data: rpcResult, error: rpcError } = await supabase.rpc('activate_featured_with_coupon', {
+        p_user_id:     payment.user_id,
+        p_ad_id:       metadata.ad_id,
+        p_tier:        metadata.tier,
+        p_coupon_code: metadata.coupon_code,
+        p_payment_id:  internalPaymentId,
+      }));
+    } else {
+      ({ data: rpcResult, error: rpcError } = await supabase.rpc('activate_featured_paid', {
+        p_user_id:    payment.user_id,
+        p_ad_id:      metadata.ad_id,
+        p_tier:       metadata.tier,
+        p_periods:    metadata.periods,
+        p_payment_id: internalPaymentId,
+      }));
+    }
 
     if (rpcError) {
-      console.error('[mp/webhook] RPC activate_featured_paid error:', rpcError.message);
+      console.error('[mp/webhook] RPC error:', rpcError.message);
       // No marcar como failed — MP reintentará y el RPC es idempotente
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    const result = typeof rpcResult === 'string' ? JSON.parse(rpcResult) : rpcResult;
+    const result = typeof rpcResult === 'string' ? JSON.parse(rpcResult) : rpcResult as Record<string, unknown>;
 
     if (!result?.success) {
       console.error('[mp/webhook] RPC retornó error:', result?.error);

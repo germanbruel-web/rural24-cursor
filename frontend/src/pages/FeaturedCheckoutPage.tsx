@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
   ArrowLeft,
@@ -8,19 +8,21 @@ import {
   CreditCard,
   Loader2,
   Star,
+  Tag,
+  X,
   Zap,
 } from 'lucide-react';
 import {
-  getWalletBalance,
   getTierConfig,
   getFeaturedSlotAvailability,
-  activateFeaturedByTier,
   createMPPreference,
+  validateCouponForCheckout,
+  activateFeaturedWithCoupon,
   formatARS,
   type TierOption,
   type SlotAvailability,
+  type CouponCheckoutValidation,
 } from '../services/walletService';
-import { supabase } from '../services/supabaseClient';
 
 // ============================================================
 // TYPES
@@ -41,7 +43,6 @@ interface CheckoutData {
 
 const TIER_DESIGN: Record<string, {
   gradient: string;
-  headerText: string;
   icon: React.ReactNode;
   badge?: string;
   description: string;
@@ -49,21 +50,18 @@ const TIER_DESIGN: Record<string, {
 }> = {
   baja: {
     gradient: 'from-slate-500 to-slate-600',
-    headerText: 'text-white',
     icon: <div className="w-8 h-8 rounded-full border-2 border-white/80" />,
     description: 'Tu aviso aparece destacado en la página de detalle de aviso.',
     placements: 'Detalle de aviso',
   },
   media: {
     gradient: 'from-blue-500 to-blue-600',
-    headerText: 'text-white',
     icon: <Star className="w-8 h-8" />,
     description: 'Tu aviso aparece en la homepage y en los resultados de búsqueda.',
     placements: 'Homepage · Resultados',
   },
   alta: {
     gradient: 'from-brand-600 to-brand-700',
-    headerText: 'text-white',
     icon: <Zap className="w-8 h-8" />,
     badge: 'Más visible',
     description: 'Máxima exposición: homepage, resultados de búsqueda y detalle de aviso.',
@@ -79,17 +77,22 @@ const TIER_ORDER: Array<'baja' | 'media' | 'alta'> = ['baja', 'media', 'alta'];
 
 export default function FeaturedCheckoutPage() {
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
-  const [tiers, setTiers]           = useState<TierOption[]>([]);
-  const [balance, setBalance]       = useState<number>(0);
-  const [loading, setLoading]       = useState(true);
-  const [selectedTier, setSelectedTier]   = useState<TierOption | null>(null);
-  const [periods, setPeriods]             = useState<1 | 2>(1);
-  const [availability, setAvailability]   = useState<SlotAvailability | null>(null);
-  const [availLoading, setAvailLoading]   = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [mpLoading, setMpLoading]   = useState(false);
-  const [error, setError]           = useState<string | null>(null);
-  const [success, setSuccess]       = useState(false);
+  const [tiers, setTiers]               = useState<TierOption[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [selectedTier, setSelectedTier] = useState<TierOption | null>(null);
+  const [periods, setPeriods]           = useState<1 | 2>(1);
+  const [availability, setAvailability] = useState<SlotAvailability | null>(null);
+  const [availLoading, setAvailLoading] = useState(false);
+  const [submitting, setSubmitting]     = useState(false);
+  const [mpLoading, setMpLoading]       = useState(false);
+  const [error, setError]               = useState<string | null>(null);
+  const [success, setSuccess]           = useState(false);
+
+  // Coupon state
+  const [couponInput, setCouponInput]         = useState('');
+  const [couponLoading, setCouponLoading]     = useState(false);
+  const [couponResult, setCouponResult]       = useState<CouponCheckoutValidation | null>(null);
+  const couponDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ──────────────────────────────────────────────
   // Init: parse sessionStorage
@@ -112,13 +115,8 @@ export default function FeaturedCheckoutPage() {
   const boot = async (data: CheckoutData) => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const [tiersData, walletData] = await Promise.all([
-        getTierConfig(),
-        user ? getWalletBalance(user.id) : Promise.resolve(null),
-      ]);
+      const tiersData = await getTierConfig();
       setTiers(tiersData);
-      setBalance(walletData?.virtual_balance ?? 0);
 
       // Pre-select tier if provided
       if (data.preselected_tier) {
@@ -150,30 +148,80 @@ export default function FeaturedCheckoutPage() {
     setSelectedTier(tier);
     setAvailability(null);
     setError(null);
+    // Re-validate coupon for new tier if one is already entered
+    if (couponInput.trim().length >= 2 && tier) {
+      void validateCoupon(couponInput, tier.tier, tier.price_ars * periods);
+    } else {
+      setCouponResult(null);
+    }
     if (checkoutData) void loadAvailability(checkoutData, tier);
+  };
+
+  // ──────────────────────────────────────────────
+  // Coupon handlers
+  // ──────────────────────────────────────────────
+  const validateCoupon = async (code: string, tier: string, basePrice: number) => {
+    if (!code.trim() || code.trim().length < 2) {
+      setCouponResult(null);
+      return;
+    }
+    setCouponLoading(true);
+    setCouponResult(null);
+    try {
+      const result = await validateCouponForCheckout(code.trim(), tier, basePrice);
+      setCouponResult(result);
+    } catch {
+      setCouponResult({ valid: false, error: 'Error al validar el cupón' });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleCouponChange = (value: string) => {
+    setCouponInput(value);
+    setCouponResult(null);
+    if (couponDebounceRef.current) clearTimeout(couponDebounceRef.current);
+    if (!value.trim() || !selectedTier) return;
+    couponDebounceRef.current = setTimeout(() => {
+      void validateCoupon(value, selectedTier.tier, selectedTier.price_ars * periods);
+    }, 600);
+  };
+
+  const clearCoupon = () => {
+    setCouponInput('');
+    setCouponResult(null);
+    if (couponDebounceRef.current) clearTimeout(couponDebounceRef.current);
   };
 
   // ──────────────────────────────────────────────
   // Derived state
   // ──────────────────────────────────────────────
   const hasCategoryData = Boolean(checkoutData?.category_id && checkoutData?.subcategory_id);
-  const totalCost       = selectedTier ? selectedTier.price_ars * periods : 0;
-  const balanceAfter    = balance - totalCost;
-  const hasEnoughBalance = balance >= totalCost;
-  const canPurchase     = availability?.can_purchase !== false;
+  const basePrice       = selectedTier ? selectedTier.price_ars * periods : 0;
+  const effectivePrice  = couponResult?.valid && couponResult.effective_price !== undefined
+    ? couponResult.effective_price * periods  // effective_price is per period from RPC
+    : basePrice;
   const durationDays    = periods * 15;
+  const canPurchase     = availability?.can_purchase !== false;
+  const isFreeActivation = couponResult?.valid && couponResult.discount_type === 'full';
+  const hasPartialDiscount = couponResult?.valid && couponResult.discount_type === 'percentage';
 
   // ──────────────────────────────────────────────
   // Handlers
   // ──────────────────────────────────────────────
-  const handleConfirm = async () => {
-    if (!selectedTier || !checkoutData) return;
+
+  // Free coupon activation (discount_type='full') — no MP
+  const handleFreeActivation = async () => {
+    if (!selectedTier || !checkoutData || !couponResult?.valid) return;
     if (!hasCategoryData) { setError('El aviso necesita categoría y subcategoría'); return; }
-    if (!hasEnoughBalance) { setError('Saldo insuficiente'); return; }
 
     setSubmitting(true);
     setError(null);
-    const result = await activateFeaturedByTier(checkoutData.ad_id, selectedTier.tier, periods);
+    const result = await activateFeaturedWithCoupon(
+      checkoutData.ad_id,
+      selectedTier.tier,
+      couponInput.trim(),
+    );
     if (!result.success) {
       setError(result.error ?? 'No se pudo activar el destacado');
       setSubmitting(false);
@@ -185,12 +233,14 @@ export default function FeaturedCheckoutPage() {
     setTimeout(() => { window.location.hash = '#/my-ads'; }, 2000);
   };
 
+  // MP payment (with or without partial coupon)
   const handleMercadoPago = async () => {
     if (!selectedTier || !checkoutData) return;
     setMpLoading(true);
     setError(null);
 
-    const result = await createMPPreference(checkoutData.ad_id, selectedTier.tier, periods);
+    const couponCode = couponResult?.valid ? couponInput.trim() : undefined;
+    const result = await createMPPreference(checkoutData.ad_id, selectedTier.tier, periods, couponCode);
     if ('error' in result) {
       setError(result.error);
       setMpLoading(false);
@@ -262,14 +312,6 @@ export default function FeaturedCheckoutPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
 
-        {/* Saldo */}
-        <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
-          <span className="text-sm font-medium text-gray-700">Saldo disponible</span>
-          <span className={`text-lg font-bold ${balance > 0 ? 'text-brand-700' : 'text-red-600'}`}>
-            {formatARS(balance)} ARS
-          </span>
-        </div>
-
         {/* Alerta sin categoría */}
         {!hasCategoryData && (
           <div className="flex items-start gap-2 p-4 bg-red-50 text-red-700 text-sm rounded-xl border border-red-200">
@@ -287,7 +329,6 @@ export default function FeaturedCheckoutPage() {
               if (!tier) return null;
               const design = TIER_DESIGN[tierKey];
               const isSelected = selectedTier?.tier === tierKey;
-              const affordable = balance >= tier.price_ars;
 
               return (
                 <button
@@ -317,13 +358,10 @@ export default function FeaturedCheckoutPage() {
                     <p className="text-xs text-gray-600 leading-relaxed">{design.description}</p>
 
                     <div className="mt-auto pt-2 border-t border-gray-100">
-                      <p className={`text-lg font-black tabular-nums ${affordable ? 'text-gray-900' : 'text-gray-400'}`}>
+                      <p className="text-lg font-black tabular-nums text-gray-900">
                         {formatARS(tier.price_ars)}
                       </p>
                       <p className="text-xs text-gray-400">ARS · 15 días</p>
-                      {!affordable && (
-                        <p className="text-[11px] text-amber-600 mt-1 font-medium">Saldo insuficiente</p>
-                      )}
                     </div>
                   </div>
 
@@ -339,16 +377,24 @@ export default function FeaturedCheckoutPage() {
           </div>
         </div>
 
-        {/* Period selector */}
+        {/* Period selector + coupon + checkout */}
         {selectedTier && (
           <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm space-y-4">
+
+            {/* Duration toggle */}
             <div className="flex items-center gap-3">
               <span className="text-sm font-semibold text-gray-700">Duración:</span>
               <div className="flex gap-2">
                 {([1, 2] as const).map((p) => (
                   <button
                     key={p}
-                    onClick={() => setPeriods(p)}
+                    onClick={() => {
+                      setPeriods(p);
+                      // Re-validate coupon with new periods
+                      if (couponInput.trim() && selectedTier) {
+                        void validateCoupon(couponInput, selectedTier.tier, selectedTier.price_ars * p);
+                      }
+                    }}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all ${
                       periods === p
                         ? 'border-brand-600 bg-brand-600 text-white'
@@ -361,7 +407,7 @@ export default function FeaturedCheckoutPage() {
               </div>
             </div>
 
-            {/* Availability */}
+            {/* Slot availability */}
             {availLoading && (
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <Loader2 className="w-3 h-3 animate-spin" /> Verificando disponibilidad...
@@ -383,39 +429,77 @@ export default function FeaturedCheckoutPage() {
               </div>
             )}
 
-            {/* Summary */}
-            <div className="border-t border-gray-100 pt-3 space-y-1.5 text-sm">
-              <div className="flex items-center justify-between text-gray-600">
-                <span>{selectedTier.label} × {periods} período{periods > 1 ? 's' : ''} ({durationDays} días)</span>
-                <span className="font-semibold">{formatARS(totalCost)} ARS</span>
+            {/* Coupon input */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                <Tag className="w-4 h-4" /> Cupón de descuento (opcional)
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={couponInput}
+                  onChange={(e) => handleCouponChange(e.target.value.toUpperCase())}
+                  placeholder="Ej: RURAL50"
+                  maxLength={50}
+                  className={`w-full px-4 py-2.5 pr-10 rounded-xl border text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 transition-colors ${
+                    couponResult?.valid
+                      ? 'border-green-400 bg-green-50 focus:ring-green-300'
+                      : couponResult && !couponResult.valid
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200'
+                        : 'border-gray-200 focus:ring-brand-200'
+                  }`}
+                />
+                {couponLoading && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+                )}
+                {!couponLoading && couponInput && (
+                  <button
+                    onClick={clearCoupon}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
-              {hasEnoughBalance && (
-                <div className="flex items-center justify-between text-gray-600">
-                  <span>Saldo después</span>
-                  <span className="font-semibold text-brand-700">{formatARS(balanceAfter)} ARS</span>
+
+              {/* Coupon feedback */}
+              {couponResult?.valid && (
+                <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                  <span>
+                    {couponResult.coupon_name ?? couponInput.toUpperCase()}
+                    {couponResult.discount_type === 'full'
+                      ? ' — ¡Gratis!'
+                      : ` — ${couponResult.discount_percent}% OFF → ${formatARS(couponResult.effective_price ?? 0)} ARS/período`}
+                  </span>
                 </div>
+              )}
+              {couponResult && !couponResult.valid && couponResult.error && (
+                <p className="text-xs text-red-600 pl-1">{couponResult.error}</p>
               )}
             </div>
 
-            {/* Insufficient balance warning + MP */}
-            {!hasEnoughBalance && (
-              <div className="space-y-2">
-                <div className="flex items-start gap-2 p-3 bg-amber-50 text-amber-700 text-sm rounded-xl border border-amber-200">
-                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>
-                    Saldo insuficiente. Podés pagar con MercadoPago o canjear un cupón desde Mi Cuenta.
-                  </span>
+            {/* Price summary */}
+            <div className="border-t border-gray-100 pt-3 space-y-1.5 text-sm">
+              {hasPartialDiscount && couponResult && (
+                <div className="flex items-center justify-between text-gray-400">
+                  <span>Precio base ({durationDays} días)</span>
+                  <span className="line-through">{formatARS(basePrice)} ARS</span>
                 </div>
-                <button
-                  onClick={handleMercadoPago}
-                  disabled={mpLoading || !hasCategoryData}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#009EE3] hover:bg-[#007EB8] disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 rounded-xl font-semibold text-sm transition-colors"
-                >
-                  {mpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                  {mpLoading ? 'Redirigiendo a MercadoPago...' : `Pagar ${formatARS(totalCost)} con MercadoPago`}
-                </button>
+              )}
+              <div className="flex items-center justify-between font-semibold text-gray-800">
+                <span>
+                  {isFreeActivation
+                    ? 'Total con cupón'
+                    : hasPartialDiscount
+                      ? `Total con ${couponResult?.discount_percent}% OFF`
+                      : `${selectedTier.label} × ${periods} período${periods > 1 ? 's' : ''} (${durationDays} días)`}
+                </span>
+                <span className={isFreeActivation ? 'text-green-600 font-black' : 'text-gray-900'}>
+                  {isFreeActivation ? 'GRATIS' : `${formatARS(effectivePrice)} ARS`}
+                </span>
               </div>
-            )}
+            </div>
 
             {/* Error */}
             {error && (
@@ -424,19 +508,41 @@ export default function FeaturedCheckoutPage() {
               </div>
             )}
 
-            {/* Primary CTA */}
-            <button
-              onClick={handleConfirm}
-              disabled={submitting || !hasEnoughBalance || !hasCategoryData || !canPurchase}
-              className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 py-3.5 rounded-xl font-semibold transition-colors"
-            >
-              {submitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Activando...</>
-              ) : (
-                <><Calendar className="w-4 h-4" />
-                Destacar {durationDays} días por {formatARS(totalCost)} ARS</>
-              )}
-            </button>
+            {/* CTA */}
+            {isFreeActivation ? (
+              /* Free activation via coupon */
+              <button
+                onClick={handleFreeActivation}
+                disabled={submitting || !hasCategoryData || !canPurchase}
+                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 py-3.5 rounded-xl font-semibold transition-colors"
+              >
+                {submitting ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Activando...</>
+                ) : (
+                  <><CheckCircle2 className="w-4 h-4" />
+                  Activar gratis {durationDays} días con cupón</>
+                )}
+              </button>
+            ) : (
+              /* MP payment (with or without partial coupon) */
+              <button
+                onClick={handleMercadoPago}
+                disabled={mpLoading || !hasCategoryData || !canPurchase}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-[#009EE3] hover:bg-[#007EB8] disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 rounded-xl font-semibold transition-colors"
+              >
+                {mpLoading ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Redirigiendo a MercadoPago...</>
+                ) : (
+                  <><CreditCard className="w-4 h-4" />
+                  Pagar {formatARS(effectivePrice)} ARS con MercadoPago</>
+                )}
+              </button>
+            )}
+
+            <p className="text-center text-xs text-gray-400 flex items-center justify-center gap-1">
+              <Calendar className="w-3 h-3" />
+              {durationDays} días de visibilidad destacada
+            </p>
           </div>
         )}
 

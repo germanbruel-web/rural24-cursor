@@ -21,10 +21,18 @@
     "jsx": "react-jsx",
     "paths": {
       "@/*": [
-        "./*"
+        "./src/*"
       ]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "src/examples",
+    "src/design-system",
+    "**/*.stories.tsx",
+    "src/components/dashboard/SubscriptionPanel_OLD.tsx",
+    "src/components/ProductList.tsx"
+  ]
 }

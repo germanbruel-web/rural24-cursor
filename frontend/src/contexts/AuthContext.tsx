@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import type { User, Session } from '@supabase/supabase-js';
-import type { UserRole } from '../types';
+import type { UserRole } from '../types/v2';
 import { useDevMode } from './DevModeContext';
 
 interface UserProfile {
