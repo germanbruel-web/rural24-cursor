@@ -70,7 +70,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
           .select('id, name, display_name, slug')
           .eq('is_active', true)
           .order('sort_order');
-        categories.push(...(catsData || []));
+        categories.push(...(catsData || []) as any[]);
       }
 
       // 2. Para cada categoría, cargar subcategorías + destacados unificados
@@ -182,7 +182,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
                   <div className="h-6 sm:h-8 w-32 sm:w-48 bg-gray-200 rounded-lg animate-pulse" />
                 </div>
                 {/* Banner skeleton - full width mobile, 650px desktop */}
-                <div className="w-full lg:w-[650px] lg:ml-auto h-16 sm:h-20 bg-gray-200 animate-pulse rounded" />
+                <div className="w-full lg:w-[650px] lg:ml-auto h-20 sm:h-24 lg:h-28 bg-gray-200 animate-pulse rounded-lg" />
               </header>
               
               {/* Skeleton Grid - Mobile First: 2 → 3 → 4 → 5 columnas */}

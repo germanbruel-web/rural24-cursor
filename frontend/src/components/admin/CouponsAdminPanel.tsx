@@ -789,239 +789,273 @@ export default function CouponsAdminPanel() {
       {/* MODAL: Crear / Editar Cupón                                   */}
       {/* ============================================================ */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h3 className="text-lg font-bold text-gray-900">
-                {editingCoupon ? 'Editar Cupón' : 'Nuevo Cupón'}
-              </h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
+
+            {/* Header con color brand */}
+            <div className="flex items-center justify-between px-6 py-4 bg-brand-700 rounded-t-2xl flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                  <Gift className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-white">
+                  {editingCoupon ? 'Editar Cupón' : 'Nuevo Cupón'}
+                </h3>
+              </div>
+              <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-white" />
               </button>
             </div>
 
-            {/* Form */}
-            <div className="px-6 py-4 space-y-4">
-              {/* Código */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.code}
-                  onChange={(e) => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
-                  placeholder="Ej: WELCOME2026"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600 font-mono uppercase"
-                  maxLength={50}
-                />
-                <p className="text-xs text-gray-400 mt-1">Código único que usarán los usuarios para canjear</p>
-              </div>
+            {/* Form — 2 columnas, sin scroll */}
+            <div className="px-6 py-5 flex-1 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-x-5 gap-y-4">
 
-              {/* Nombre */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="Ej: Bienvenida Marzo 2026"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
-                  maxLength={100}
-                />
-              </div>
-
-              {/* Título */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Título
-                </label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
-                  placeholder="Ej: Saldo de bienvenida"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
-                  maxLength={150}
-                />
-              </div>
-
-              {/* Descripción */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descripción
-                </label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder="Descripción opcional del cupón"
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600 resize-none"
-                />
-              </div>
-
-              {/* Tier */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nivel de destacado
-                </label>
-                <select
-                  value={form.featured_tier}
-                  onChange={(e) => setForm(f => ({ ...f, featured_tier: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600 bg-white"
-                >
-                  {TIER_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-400 mt-1">Dejar en "Cualquier tier" para aplicar a todos los niveles</p>
-              </div>
-
-              {/* Tipo de descuento */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de descuento <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-3">
-                  {([
-                    { value: 'percentage', label: 'Descuento %' },
-                    { value: 'full',       label: 'Gratis (100%)' },
-                  ] as const).map(opt => (
-                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="discount_type"
-                        value={opt.value}
-                        checked={form.discount_type === opt.value}
-                        onChange={() => setForm(f => ({ ...f, discount_type: opt.value }))}
-                        className="accent-brand-600"
-                      />
-                      <span className="text-sm text-gray-700">{opt.label}</span>
-                    </label>
-                  ))}
+                {/* COL 1: Código */}
+                <div>
+                  <label className="block text-xs font-semibold text-brand-800 uppercase tracking-wide mb-1">
+                    Código <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.code}
+                    onChange={(e) => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                    placeholder="Ej: RURAL50"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-mono uppercase bg-brand-50"
+                    maxLength={50}
+                  />
+                  <p className="text-xs text-gray-400 mt-0.5">Código que ingresan los usuarios</p>
                 </div>
-              </div>
 
-              {/* Discount percent + Max canjes */}
-              <div className="grid grid-cols-2 gap-3">
-                {form.discount_type === 'percentage' && (
+                {/* COL 2: Nivel de destacado */}
+                <div>
+                  <label className="block text-xs font-semibold text-brand-800 uppercase tracking-wide mb-1">
+                    Nivel de destacado
+                  </label>
+                  <div className="flex gap-2">
+                    {TIER_OPTIONS.map(opt => {
+                      const isSelected = form.featured_tier === opt.value;
+                      const tierCls = opt.value === 'alta'
+                        ? 'border-secondary-400 bg-secondary-50 text-secondary-700'
+                        : opt.value === 'media'
+                          ? 'border-blue-400 bg-blue-50 text-blue-700'
+                          : opt.value === 'baja'
+                            ? 'border-slate-400 bg-slate-50 text-slate-600'
+                            : 'border-brand-300 bg-brand-50 text-brand-700';
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, featured_tier: opt.value }))}
+                          className={`flex-1 py-1.5 text-xs font-bold rounded-lg border-2 transition-all ${
+                            isSelected
+                              ? `${tierCls} shadow-sm`
+                              : 'border-gray-200 text-gray-400 hover:border-gray-300'
+                          }`}
+                        >
+                          {opt.value === '' ? 'Todos' : opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">"Todos" aplica a cualquier nivel</p>
+                </div>
+
+                {/* COL 1: Nombre */}
+                <div>
+                  <label className="block text-xs font-semibold text-brand-800 uppercase tracking-wide mb-1">
+                    Nombre interno <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="Ej: Bienvenida Marzo 2026"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                    maxLength={100}
+                  />
+                </div>
+
+                {/* COL 2: Tipo de descuento */}
+                <div>
+                  <label className="block text-xs font-semibold text-brand-800 uppercase tracking-wide mb-1">
+                    Tipo de descuento <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, discount_type: 'percentage' }))}
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg border-2 transition-all ${
+                        form.discount_type === 'percentage'
+                          ? 'border-secondary-400 bg-secondary-50 text-secondary-700 shadow-sm'
+                          : 'border-gray-200 text-gray-400 hover:border-gray-300'
+                      }`}
+                    >
+                      Descuento %
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, discount_type: 'full' }))}
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg border-2 transition-all ${
+                        form.discount_type === 'full'
+                          ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm'
+                          : 'border-gray-200 text-gray-400 hover:border-gray-300'
+                      }`}
+                    >
+                      Gratis 100%
+                    </button>
+                  </div>
+                </div>
+
+                {/* COL 1: Título */}
+                <div>
+                  <label className="block text-xs font-semibold text-brand-800 uppercase tracking-wide mb-1">
+                    Título visible
+                  </label>
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
+                    placeholder="Ej: Destacado de bienvenida"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                    maxLength={150}
+                  />
+                </div>
+
+                {/* COL 2: Descuento % y Máx canjes */}
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Descuento % <span className="text-red-500">*</span>
+                    <label className="block text-xs font-semibold text-brand-800 uppercase tracking-wide mb-1">
+                      {form.discount_type === 'percentage' ? <>Descuento % <span className="text-red-500">*</span></> : 'Descuento %'}
                     </label>
                     <div className="relative">
                       <input
                         type="number"
                         min={1}
                         max={100}
-                        value={form.discount_percent}
+                        value={form.discount_type === 'full' ? 100 : form.discount_percent}
+                        disabled={form.discount_type === 'full'}
                         onChange={(e) => setForm(f => ({ ...f, discount_percent: parseInt(e.target.value) || 1 }))}
-                        className="w-full pr-8 pl-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
+                        className={`w-full pr-7 pl-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${
+                          form.discount_type === 'full' ? 'bg-brand-50 border-brand-200 text-brand-600 font-bold' : 'border-gray-200'
+                        }`}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">1-100%</p>
                   </div>
-                )}
-                <div className={form.discount_type === 'percentage' ? '' : 'col-span-2'}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Máx. canjes
+                  <div>
+                    <label className="block text-xs font-semibold text-brand-800 uppercase tracking-wide mb-1">
+                      Máx. canjes
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={100000}
+                      value={form.max_redemptions}
+                      onChange={(e) => setForm(f => ({ ...f, max_redemptions: parseInt(e.target.value) || 1 }))}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                    />
+                  </div>
+                </div>
+
+                {/* FILA COMPLETA: Descripción */}
+                <div className="col-span-2">
+                  <label className="block text-xs font-semibold text-brand-800 uppercase tracking-wide mb-1">
+                    Descripción
+                  </label>
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
+                    placeholder="Descripción opcional del cupón"
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none"
+                  />
+                </div>
+
+                {/* FILA COMPLETA: Roles */}
+                <div className="col-span-2">
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-brand-800 uppercase tracking-wide mb-2">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Rol autorizado
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {ROLE_OPTIONS.map(opt => {
+                      const isSelected = form.allowed_roles.includes(opt.value);
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => toggleRole(opt.value)}
+                          className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                            isSelected
+                              ? `${opt.color} ring-2 ring-offset-1 ring-current`
+                              : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* COL 1: Fecha Expiración */}
+                <div>
+                  <label className="block text-xs font-semibold text-brand-800 uppercase tracking-wide mb-1">
+                    Expira <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
-                    min={1}
-                    max={100000}
-                    value={form.max_redemptions}
-                    onChange={(e) => setForm(f => ({ ...f, max_redemptions: parseInt(e.target.value) || 1 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
+                    type="datetime-local"
+                    value={form.expires_at}
+                    onChange={(e) => setForm(f => ({ ...f, expires_at: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Total de canjes permitidos</p>
                 </div>
-              </div>
 
-              {/* Roles */}
-              <div>
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-                  <ShieldCheck className="w-4 h-4 text-gray-500" />
-                  Rol autorizado
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {ROLE_OPTIONS.map(opt => {
-                    const isSelected = form.allowed_roles.includes(opt.value);
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => toggleRole(opt.value)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
-                          isSelected
-                            ? `${opt.color} ring-2 ring-offset-1 ring-current`
-                            : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    );
-                  })}
+                {/* COL 2: Toggle activo */}
+                <div className="flex items-end pb-0.5">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        form.is_active ? 'bg-brand-600' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        form.is_active ? 'translate-x-6' : 'translate-x-1'
+                      }`} />
+                    </button>
+                    <span className={`text-sm font-semibold ${form.is_active ? 'text-brand-700' : 'text-gray-400'}`}>
+                      {form.is_active ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-1.5">
-                  "Todos" permite que cualquier usuario canjee. Seleccioná roles específicos para restringir.
-                </p>
-              </div>
 
-              {/* Fecha Expiración */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Expira <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  value={form.expires_at}
-                  onChange={(e) => setForm(f => ({ ...f, expires_at: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-brand-600"
-                />
-              </div>
-
-              {/* Activo */}
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    form.is_active ? 'bg-brand-600' : 'bg-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      form.is_active ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-                <span className="text-sm text-gray-700">
-                  {form.is_active ? 'Activo' : 'Inactivo'}
-                </span>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t bg-gray-50">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="px-4 py-2 text-sm bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 text-white font-medium rounded-lg flex items-center gap-2 transition-colors"
-              >
-                {saving && <RefreshCw className="w-4 h-4 animate-spin" />}
-                {editingCoupon ? 'Guardar cambios' : 'Crear cupón'}
-              </button>
+            <div className="flex items-center justify-between px-6 py-4 border-t border-brand-100 bg-brand-50 rounded-b-2xl flex-shrink-0">
+              <p className="text-xs text-brand-700/60">
+                {editingCoupon ? `Editando: ${editingCoupon.code}` : 'Los campos con * son obligatorios'}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 text-sm text-gray-600 hover:bg-white hover:shadow-sm rounded-lg transition-all border border-gray-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-5 py-2 text-sm bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 text-white font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+                >
+                  {saving && <RefreshCw className="w-4 h-4 animate-spin" />}
+                  {editingCoupon ? 'Guardar cambios' : 'Crear cupón'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
