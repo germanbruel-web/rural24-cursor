@@ -30,6 +30,7 @@ import {
   Sparkles,
   Loader,
 } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getCategories, getSubcategories, getCategoryTypes } from '../../services/v2/formsService';
 import type { Category, Subcategory, CategoryType } from '../../types/v2';
@@ -132,8 +133,12 @@ export default function PublicarAviso() {
   // Step 1: Categorías
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [categoryTypes, setCategoryTypes] = useState<CategoryType[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
+  const [selectedCategoryType, setSelectedCategoryType] = useState<string>('');
+  const [selectedPageType, setSelectedPageType] = useState<'particular' | 'empresa'>('particular');
+  const [expandedSubcategory, setExpandedSubcategory] = useState<string>('');
 
   // Step 2: Atributos dinámicos
   const [attributeValues, setAttributeValues] = useState<Record<string, any>>({});
@@ -374,6 +379,8 @@ export default function PublicarAviso() {
     // Step 1 - validar UUIDs del draft
     setSelectedCategory(UUID_REGEX.test(draft.selectedCategory) ? draft.selectedCategory : '');
     setSelectedSubcategory(UUID_REGEX.test(draft.selectedSubcategory) ? draft.selectedSubcategory : '');
+    setSelectedCategoryType(UUID_REGEX.test(draft.selectedCategoryType) ? draft.selectedCategoryType : '');
+    setSelectedPageType((draft.selectedPageType as 'particular' | 'empresa') || 'particular');
     
     // Step 2
     setAttributeValues(draft.attributeValues);
@@ -412,6 +419,8 @@ export default function PublicarAviso() {
       lastModified: Date.now(),
       selectedCategory,
       selectedSubcategory,
+      selectedCategoryType,
+      selectedPageType,
       attributeValues,
       province,
       locality,
@@ -430,6 +439,8 @@ export default function PublicarAviso() {
     currentStep,
     selectedCategory,
     selectedSubcategory,
+    selectedCategoryType,
+    selectedPageType,
     attributeValues,
     province,
     locality,
@@ -542,8 +553,18 @@ export default function PublicarAviso() {
     } else {
       setSubcategories([]);
       setSelectedSubcategory('');
+      setExpandedSubcategory('');
+      setCategoryTypes([]);
     }
   }, [selectedCategory]);
+
+  useEffect(() => {
+    if (expandedSubcategory) {
+      getCategoryTypes(expandedSubcategory).then(setCategoryTypes);
+    } else {
+      setCategoryTypes([]);
+    }
+  }, [expandedSubcategory]);
 
   // ====================================================================
   // DATA LOADING
@@ -803,6 +824,8 @@ export default function PublicarAviso() {
       const adData = {
         category_id: selectedCategory,
         subcategory_id: selectedSubcategory,
+        category_type_id: selectedCategoryType || null,
+        ad_type: selectedPageType === 'empresa' ? 'company' : 'particular',
         title: title.trim(),
         description: description.trim(),
         price: priceNegotiable ? null : (price ? parseInt(price) : null),  // ✅ Sin decimales
@@ -871,6 +894,8 @@ export default function PublicarAviso() {
           user_id: profile.id,
           category_id: selectedCategory,
           subcategory_id: selectedSubcategory,
+          category_type_id: selectedCategoryType || null,
+          ad_type: selectedPageType === 'empresa' ? 'company' : 'particular',
           title: title.trim(),
           description: description.trim(),
           price: priceNegotiable ? null : (price ? parseInt(price) : null),  // ✅ Sin decimales
@@ -1106,10 +1131,16 @@ export default function PublicarAviso() {
                                   setExpandedCategory('');
                                   setSelectedCategory('');
                                   setSelectedSubcategory('');
+                                  setSelectedCategoryType('');
+                                  setSelectedPageType('particular');
+                                  setExpandedSubcategory('');
                                 } else {
                                   setExpandedCategory(cat.id);
                                   setSelectedCategory(cat.id);
                                   setSelectedSubcategory('');
+                                  setSelectedCategoryType('');
+                                  setSelectedPageType('particular');
+                                  setExpandedSubcategory('');
                                 }
                               }}
                               className={`w-full p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all text-left ${
@@ -1140,37 +1171,73 @@ export default function PublicarAviso() {
 
                             {/* Subcategorías (accordion) */}
                             {isExpanded && subcategories.length > 0 && (
-                              <div className="space-y-2 sm:space-y-3 animate-fadeIn pl-2 sm:pl-0">
-                                <p className="text-sm sm:text-lg font-bold text-brand-600 mb-2 sm:mb-3">
+                              <div className="space-y-2 animate-fadeIn pl-2 sm:pl-0">
+                                <p className="text-sm sm:text-base font-bold text-brand-600 mb-2">
                                   Elegí una subcategoría:
                                 </p>
-                                <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3">
-                                  {subcategories.map((sub) => (
-                                    <button
-                                      key={sub.id}
-                                      onClick={() => {
-                                        setSelectedSubcategory(sub.id);
-                                        // Auto-avanzar al step 2 con scroll suave
-                                        setTimeout(() => {
-                                          setCurrentStep(2);
-                                          // DynamicFormLoader maneja la apertura de grupos automáticamente
-                                          // Scroll suave al contenido
-                                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                                        }, 300);
-                                      }}
-                                      className="p-3 sm:p-5 rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-all text-left group"
-                                    >
-                                      <p className="text-sm sm:text-lg font-bold text-gray-900 group-hover:text-brand-600">
-                                        {sub.display_name}
-                                      </p>
-                                      {/* Descripción oculta en mobile */}
-                                      {sub.description && (
-                                        <p className="hidden sm:block text-sm sm:text-base text-gray-600 mt-1">
-                                          {sub.description}
-                                        </p>
-                                      )}
-                                    </button>
-                                  ))}
+                                <div className="space-y-2">
+                                  {subcategories.map((sub) => {
+                                    const isSubExpanded = expandedSubcategory === sub.id;
+                                    return (
+                                      <div key={sub.id}>
+                                        {/* Subcategoría — click para expandir tipos */}
+                                        <button
+                                          onClick={() => {
+                                            setExpandedSubcategory(isSubExpanded ? '' : sub.id);
+                                            setSelectedSubcategory('');
+                                            setSelectedCategoryType('');
+                                          }}
+                                          className={`w-full p-3 rounded-lg border-2 transition-all text-left flex items-center justify-between ${
+                                            isSubExpanded
+                                              ? 'border-brand-500 bg-brand-50'
+                                              : 'border-gray-200 hover:border-brand-400 hover:bg-brand-50'
+                                          }`}
+                                        >
+                                          <span className="text-sm sm:text-base font-semibold text-gray-900">
+                                            {sub.display_name}
+                                          </span>
+                                          <ChevronRight className={`w-4 h-4 text-brand-600 flex-shrink-0 transition-transform ${isSubExpanded ? 'rotate-90' : ''}`} />
+                                        </button>
+
+                                        {/* Tipos de la subcategoría (3er nivel) */}
+                                        {isSubExpanded && (
+                                          <div className="mt-2 ml-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                            {categoryTypes.length === 0 ? (
+                                              <p className="col-span-full text-xs text-gray-400 py-2">Cargando tipos...</p>
+                                            ) : (
+                                              categoryTypes.map((type) => (
+                                                <button
+                                                  key={type.id}
+                                                  onClick={() => {
+                                                    setSelectedSubcategory(sub.id);
+                                                    setSelectedCategoryType(type.id);
+                                                    setSelectedPageType(type.page_type || 'particular');
+                                                    setTimeout(() => {
+                                                      setCurrentStep(2);
+                                                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                    }, 300);
+                                                  }}
+                                                  className="p-2 sm:p-3 rounded-lg border-2 border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-all text-left group"
+                                                >
+                                                  <div className="flex items-center gap-1.5 mb-0.5">
+                                                    {type.page_type === 'empresa' && (
+                                                      <Building2 className="w-3 h-3 text-brand-600 flex-shrink-0" />
+                                                    )}
+                                                    <p className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-brand-600 leading-tight">
+                                                      {type.display_name}
+                                                    </p>
+                                                  </div>
+                                                  {type.page_type === 'empresa' && (
+                                                    <span className="text-[10px] text-brand-600 font-medium">Empresa</span>
+                                                  )}
+                                                </button>
+                                              ))
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             )}
@@ -1187,22 +1254,34 @@ export default function PublicarAviso() {
                 {/* Breadcrumb integrado en el formulario - Mobile First */}
                 {selectedCategory && selectedSubcategory && (
                   <div className="flex items-center justify-between bg-gradient-to-r from-brand-50 to-emerald-50 border border-brand-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3">
-                    <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+                    <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-wrap">
                       <Tag className="w-4 h-4 text-brand-600 flex-shrink-0" />
                       <span className="text-xs sm:text-sm font-medium text-brand-600 truncate">
                         {categories.find(c => c.id === selectedCategory)?.display_name}
                       </span>
                       <ChevronRight className="w-3 h-3 text-brand-600 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm font-bold text-brand-700 truncate">
+                      <span className="text-xs sm:text-sm font-medium text-brand-600 truncate">
                         {subcategories.find(s => s.id === selectedSubcategory)?.display_name}
                       </span>
+                      {selectedCategoryType && categoryTypes.find(t => t.id === selectedCategoryType) && (
+                        <>
+                          <ChevronRight className="w-3 h-3 text-brand-600 flex-shrink-0" />
+                          <span className="text-xs sm:text-sm font-bold text-brand-700 truncate flex items-center gap-1">
+                            {selectedPageType === 'empresa' && <Building2 className="w-3 h-3" />}
+                            {categoryTypes.find(t => t.id === selectedCategoryType)?.display_name}
+                          </span>
+                        </>
+                      )}
                     </div>
                     <button
                       onClick={() => {
                         setCurrentStep(1);
                         setSelectedCategory('');
                         setSelectedSubcategory('');
+                        setSelectedCategoryType('');
+                        setSelectedPageType('particular');
                         setExpandedCategory('');
+                        setExpandedSubcategory('');
                       }}
                       className="text-xs text-brand-600 hover:text-brand-700 font-semibold hover:underline flex-shrink-0 ml-2"
                     >

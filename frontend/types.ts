@@ -30,6 +30,8 @@ export interface Product {
   attributes?: Record<string, any>; // JSONB de atributos dinámicos
   brand?: string; // Marca (campo fijo legacy)
   model?: string; // Modelo (campo fijo legacy)
+  ad_type?: 'particular' | 'company'; // Tipo de aviso (Sprint 3G)
+  business_profile_id?: string; // FK a business_profiles (Sprint 3G)
   // Información del vendedor (para productos de usuarios)
   user_id?: string;
   seller?: {
@@ -240,7 +242,9 @@ export interface BannerClean {
   placement: BannerPlacement;
   category: string;  // 'all', 'inmuebles', 'vehiculos', 'maquinarias', 'insumos', 'empleos'
   client_name: string;
+  link_name?: string;    // Texto del link de navegación (si vacío, usa client_name)
   link_url?: string;
+  link_target?: '_self' | '_blank';  // Destino del link (default: '_self')
   desktop_image_url?: string;  // 1100x200 (solo hero_vip)
   mobile_image_url?: string;   // 480x100 (solo hero_vip)
   carousel_image_url?: string; // 650x100 (solo category_carousel)
@@ -257,7 +261,9 @@ export interface CreateBannerCleanInput {
   placement: BannerPlacement;
   category: string;
   client_name: string;
+  link_name?: string;
   link_url?: string;
+  link_target?: '_self' | '_blank';
   desktop_image_url?: string;
   mobile_image_url?: string;
   carousel_image_url?: string;
@@ -271,7 +277,9 @@ export interface UpdateBannerCleanInput {
   category?: string;
   client_name?: string;
   title?: string;
+  link_name?: string;
   link_url?: string;
+  link_target?: '_self' | '_blank';
   desktop_image_url?: string;
   mobile_image_url?: string;
   carousel_image_url?: string;

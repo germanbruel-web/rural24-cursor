@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import { ALL_CATEGORIES } from '../constants/categories';
 import { PROVINCES } from '../constants/locations';
-import type { SearchFilters, Product, Banner } from '../../types';
+import type { SearchFilters, Product, Banner, BannerClean } from '../../types';
 import { useProducts } from '../hooks/useProducts';
 import { getHeroVIPBanners } from '../services/bannersCleanService';
 import { getCategoryIcons, type CategoryIcon } from '../services/categoriesService';
@@ -55,11 +55,11 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
   const [selectedQueryIndex, setSelectedQueryIndex] = useState(-1);
   const [selectedLocationIndex, setSelectedLocationIndex] = useState(-1);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
-  const [categoryBanners, setCategoryBanners] = useState<Record<string, Banner[]>>({});
+  const [categoryBanners, setCategoryBanners] = useState<Record<string, BannerClean[]>>({});
   const { categories: contextCategories } = useCategories();
   const [categoryIcons, setCategoryIcons] = useState<CategoryIcon[]>([]);
-  const [allBanners, setAllBanners] = useState<Banner[]>([]);
-  const [defaultBanner, setDefaultBanner] = useState<Banner | null>(null);
+  const [allBanners, setAllBanners] = useState<BannerClean[]>([]);
+  const [defaultBanner, setDefaultBanner] = useState<BannerClean | null>(null);
   const { products } = useProducts();
 
   // Mapear categorías del context al formato local
@@ -84,22 +84,22 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
     if (categoryBanners[category] && categoryBanners[category].length > 0) {
       const banner = categoryBanners[category][0];
       if (onBannerChange) {
-        onBannerChange(banner);
+        onBannerChange(banner as unknown as Banner);
       }
       return;
     }
 
     try {
-      const banners = await getHeroVIPBanners(category) as unknown as Banner[];
+      const banners = await getHeroVIPBanners(category);
       setCategoryBanners(prev => ({ ...prev, [category]: banners }));
-      
+
       if (onBannerChange) {
         if (banners.length > 0) {
-          onBannerChange(banners[0]);
+          onBannerChange(banners[0] as unknown as Banner);
         } else {
           // Si no hay banner para esta categoría, mantener el default
           if (defaultBanner) {
-            onBannerChange(defaultBanner);
+            onBannerChange(defaultBanner as unknown as Banner);
           }
         }
       }
@@ -107,7 +107,7 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
       console.error('Error cargando banner:', error);
       // En error, mantener el banner default
       if (onBannerChange && defaultBanner) {
-        onBannerChange(defaultBanner);
+        onBannerChange(defaultBanner as unknown as Banner);
       }
     }
   };
@@ -129,20 +129,19 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
   useEffect(() => {
     const loadInitialBanner = async () => {
       try {
-        const banners = await getHeroVIPBanners(undefined) as unknown as Banner[];
-        
+        const banners = await getHeroVIPBanners(undefined);
+
         if (banners.length > 0) {
           setAllBanners(banners);
-          
+
           // Seleccionar uno random como default
           const randomIndex = Math.floor(Math.random() * banners.length);
           const randomBanner = banners[randomIndex];
-          
+
           setDefaultBanner(randomBanner);
-          
+
           if (onBannerChange) {
-            import.meta.env.DEV && console.log('🎲 Banner random inicial:', randomBanner.title);
-            onBannerChange(randomBanner);
+            onBannerChange(randomBanner as unknown as Banner);
           }
         }
       } catch (error) {
@@ -412,46 +411,29 @@ export const HeroCategoryButtons: React.FC<HeroCategoryButtonsProps> = ({
             })}
           </div>
 
-          {/* ========== DESKTOP: Grid cuadrado con hover ========== */}
-          <div className="hidden md:grid grid-cols-5 gap-3">
-            {categories.map((cat) => {
-              const slug = cat.slug || cat.name.toLowerCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-              
-              const categoryName = cat.display_name || cat.name;
-              const iconFromDB = categoryIcons.find(icon => 
-                icon.name.toLowerCase() === categoryName.toLowerCase() ||
-                icon.name.toLowerCase().includes(categoryName.toLowerCase().split(' ')[0])
-              );
-              
-              const iconUrl = iconFromDB?.url_light 
-                || (cat.icon ? `/images/icons/${cat.icon}` : null)
-                || CATEGORY_ICON_MAP[slug] 
-                || '/images/icons/icon-1.png';
-              
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => handleCategoryClick(slug)}
-                  onMouseEnter={() => handleCategoryHover(categoryName)}
-                  className="rounded-[8px] p-3 transition-all duration-300 hover:scale-105 shadow-lg flex flex-col items-center gap-2 aspect-square justify-center relative overflow-hidden group bg-black hover:bg-brand-600 border-2 border-black hover:border-brand-600 cursor-pointer"
-                >
-                  {/* Efecto de brillo en hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
-                  
-                  <img 
-                    src={iconUrl} 
-                    alt={categoryName}
-                    className="w-12 h-12 object-contain relative z-10"
-                  />
-                  <span className="text-white text-sm font-bold text-center relative z-10 drop-shadow-lg">
-                    {categoryName}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {/* ========== DESKTOP: Links de navegación desde banners Hero VIP ========== */}
+          {allBanners.length > 0 && (
+            <div className="hidden md:flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-3">
+              {allBanners.slice(0, 7).map((banner) => {
+                const label = banner.link_name || banner.client_name;
+                const href = banner.link_url || '#';
+                const target = banner.link_target || '_self';
+                const isExternal = target === '_blank';
+                return (
+                  <a
+                    key={banner.id}
+                    href={href}
+                    target={target}
+                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                    onMouseEnter={() => onBannerChange?.(banner as unknown as Banner)}
+                    className="text-sm font-semibold text-white/80 hover:text-brand-400 transition-colors duration-200 whitespace-nowrap"
+                  >
+                    {label}
+                  </a>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
     </div>

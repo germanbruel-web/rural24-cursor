@@ -114,8 +114,8 @@ export function CompanyProfilePage() {
   // RENDER
   // ============================================================================
 
-  const whatsappLink = profile.contact_whatsapp
-    ? `https://wa.me/${profile.contact_whatsapp.replace(/\D/g, '')}?text=Hola, vi su empresa en Rural24 y me gustaría consultar por sus servicios.`
+  const whatsappLink = profile.whatsapp
+    ? `https://wa.me/${profile.whatsapp.replace(/\D/g, '')}?text=Hola, vi su empresa en Rural24 y me gustaría consultar por sus servicios.`
     : null;
 
   return (
@@ -124,10 +124,10 @@ export function CompanyProfilePage() {
       {/* BANNER */}
       {/* ================================================================== */}
       <div className="relative h-48 md:h-64 bg-gradient-to-r from-brand-600 to-brand-600">
-        {profile.banner_url && (
-          <img 
-            src={profile.banner_url} 
-            alt="Banner" 
+        {profile.cover_url && (
+          <img
+            src={profile.cover_url}
+            alt="Banner"
             className="absolute inset-0 w-full h-full object-cover"
           />
         )}
@@ -190,24 +190,14 @@ export function CompanyProfilePage() {
                 </div>
               </div>
 
-              {profile.description && (
-                <p className="text-gray-600 mt-4 line-clamp-3">
-                  {profile.description}
-                </p>
+              {profile.tagline && (
+                <p className="text-brand-600 font-medium mt-1">{profile.tagline}</p>
               )}
 
-              {/* Servicios */}
-              {profile.services_offered && profile.services_offered.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {profile.services_offered.map((service, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 bg-brand-50 text-brand-600 rounded-full text-sm"
-                    >
-                      {service}
-                    </span>
-                  ))}
-                </div>
+              {profile.description && (
+                <p className="text-gray-600 mt-3 line-clamp-3">
+                  {profile.description}
+                </p>
               )}
             </div>
           </div>
@@ -216,7 +206,7 @@ export function CompanyProfilePage() {
           {/* BOTONES DE CONTACTO */}
           {/* ============================================================ */}
           <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-gray-100">
-            {profile.allow_whatsapp && whatsappLink && (
+            {whatsappLink && (
               <a
                 href={whatsappLink}
                 target="_blank"
@@ -228,29 +218,9 @@ export function CompanyProfilePage() {
               </a>
             )}
 
-            {profile.contact_phone && (
+            {profile.website && (
               <a
-                href={`tel:${profile.contact_phone}`}
-                className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                <Phone className="w-5 h-5" />
-                Llamar
-              </a>
-            )}
-
-            {profile.contact_email && profile.allow_contact_form && (
-              <a
-                href={`mailto:${profile.contact_email}`}
-                className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                <Mail className="w-5 h-5" />
-                Email
-              </a>
-            )}
-
-            {profile.website_url && (
-              <a
-                href={profile.website_url}
+                href={profile.website}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
@@ -260,9 +230,9 @@ export function CompanyProfilePage() {
               </a>
             )}
 
-            {profile.facebook_url && (
+            {profile.social_networks?.facebook && (
               <a
-                href={profile.facebook_url}
+                href={profile.social_networks.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-3 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 transition-colors"
@@ -271,9 +241,9 @@ export function CompanyProfilePage() {
               </a>
             )}
 
-            {profile.instagram_url && (
+            {profile.social_networks?.instagram && (
               <a
-                href={profile.instagram_url}
+                href={profile.social_networks.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-3 bg-pink-100 text-pink-600 rounded-xl hover:bg-pink-200 transition-colors"
@@ -344,43 +314,17 @@ export function CompanyProfilePage() {
       <div className="max-w-5xl mx-auto px-4 pb-12">
         <div className="grid md:grid-cols-2 gap-6">
           {/* Ubicación */}
-          {(profile.city || profile.province || profile.address) && (
+          {(profile.city || profile.province) && (
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-brand-600" />
                 Ubicación
               </h3>
-              <div className="space-y-2 text-gray-600">
-                {profile.address && <p>{profile.address}</p>}
-                <p>{[profile.city, profile.province].filter(Boolean).join(', ')}</p>
-              </div>
+              <p className="text-gray-600">
+                {[profile.city, profile.province].filter(Boolean).join(', ')}
+              </p>
             </div>
           )}
-
-          {/* Contacto */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Phone className="w-5 h-5 text-brand-600" />
-              Contacto
-            </h3>
-            <div className="space-y-3">
-              <p className="text-gray-900 font-medium">
-                {profile.contact_first_name} {profile.contact_last_name}
-              </p>
-              {profile.contact_phone && (
-                <p className="text-gray-600 flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
-                  {profile.contact_phone}
-                </p>
-              )}
-              {profile.contact_email && (
-                <p className="text-gray-600 flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
-                  {profile.contact_email}
-                </p>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>

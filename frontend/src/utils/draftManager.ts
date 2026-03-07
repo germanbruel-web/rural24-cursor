@@ -13,6 +13,8 @@ export interface DraftState {
   // Step 1
   selectedCategory: string;
   selectedSubcategory: string;
+  selectedCategoryType: string;
+  selectedPageType: string;
   
   // Step 2
   attributeValues: Record<string, any>;

@@ -31,6 +31,8 @@ interface QuickEditAdModalProps {
   adId: string;
   onClose: () => void;
   onSuccess: () => void;
+  /** 'modal' = overlay centrado (default) | 'drawer' = sin wrapper, se renderiza dentro del panel lateral */
+  mode?: 'modal' | 'drawer';
 }
 
 interface Category {
@@ -77,6 +79,7 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
   adId,
   onClose,
   onSuccess,
+  mode = 'modal',
 }) => {
   const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -294,6 +297,16 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
   const getSubcategoryName = () => subcategories.find(s => s.id === subcategoryId)?.display_name || '';
 
   if (loading) {
+    if (mode === 'drawer') {
+      return (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader className="w-8 h-8 animate-spin text-primary-600 mx-auto" />
+            <p className="mt-3 text-sm text-gray-600">Cargando datos...</p>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
         <div className="bg-white rounded-xl p-6 text-center">
@@ -311,8 +324,8 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
   const hasChanges = modifiedFields.size > 0;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-[1400px] my-4">
+    <div className={mode === 'modal' ? 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto' : 'contents'}>
+      <div className={mode === 'drawer' ? 'h-full flex flex-col bg-white' : 'bg-white rounded-xl shadow-2xl w-full max-w-[1400px] my-4'}>
         {/* Header - Compacto */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200">
           <div className="flex items-center gap-2">
@@ -359,8 +372,8 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
           </div>
         </div>
 
-        {/* Body - 3 columnas Mobile First */}
-        <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[75vh] overflow-y-auto">
+        {/* Body - 1 col en drawer, hasta 3 col en modal */}
+        <div className={`p-3 sm:p-4 grid grid-cols-1 gap-4 overflow-y-auto ${mode === 'drawer' ? 'flex-1' : 'md:grid-cols-2 lg:grid-cols-3 max-h-[75vh]'}`}>
           
           {/* Columna 1: Info Básica + Categoría */}
           <div className="space-y-3">

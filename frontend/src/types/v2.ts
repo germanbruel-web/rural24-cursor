@@ -43,6 +43,7 @@ export interface CategoryType {
   description?: string;
   sort_order: number;
   is_active: boolean;
+  page_type?: 'particular' | 'empresa';
   metadata?: Record<string, any>;
   created_at: string;
 }

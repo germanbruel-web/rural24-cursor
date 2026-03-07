@@ -98,6 +98,72 @@ export const getSubcategories = async (categoryId: string) => {
   return data || [];
 };
 
+// =====================================================
+// TIPOS DE CATEGORÍA (sub-subcategorías — 3er nivel)
+// =====================================================
+
+export const getCategoryTypes = async (subcategoryId: string) => {
+  const { data, error } = await supabase
+    .from('category_types')
+    .select('*')
+    .eq('subcategory_id', subcategoryId)
+    .order('sort_order');
+
+  if (error) {
+    console.error('❌ Error cargando tipos de categoría:', error);
+    throw error;
+  }
+  return data || [];
+};
+
+export const createCategoryType = async (categoryType: {
+  category_id: string;
+  subcategory_id: string;
+  name: string;
+  display_name: string;
+  description?: string;
+  slug?: string;
+  sort_order?: number;
+  is_active?: boolean;
+}) => {
+  const { data, error } = await supabase
+    .from('category_types')
+    .insert(categoryType)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const updateCategoryType = async (id: string, updates: Partial<{
+  display_name: string;
+  name: string;
+  description: string;
+  slug: string;
+  sort_order: number;
+  is_active: boolean;
+}>) => {
+  const { data, error } = await supabase
+    .from('category_types')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const deleteCategoryType = async (id: string) => {
+  const { error } = await supabase
+    .from('category_types')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+};
+
 // MARCAS POR SUBCATEGORÍA
 export const getBrandsBySubcategory = async (subcategoryId: string) => {
   const cacheKey = cacheKeys.brands(subcategoryId);

@@ -43,40 +43,26 @@ interface CompanyProfileFormProps {
 
 interface FormData {
   company_name: string;
+  tagline: string;
   description: string;
-  contact_first_name: string;
-  contact_last_name: string;
-  contact_phone: string;
-  contact_whatsapp: string;
-  contact_email: string;
-  allow_whatsapp: boolean;
-  allow_contact_form: boolean;
-  province: string;
-  city: string;
-  address: string;
-  services_offered: string;
-  website_url: string;
+  whatsapp: string;
+  website: string;
   facebook_url: string;
   instagram_url: string;
+  province: string;
+  city: string;
 }
 
 const INITIAL_FORM: FormData = {
   company_name: '',
+  tagline: '',
   description: '',
-  contact_first_name: '',
-  contact_last_name: '',
-  contact_phone: '',
-  contact_whatsapp: '',
-  contact_email: '',
-  allow_whatsapp: true,
-  allow_contact_form: true,
-  province: '',
-  city: '',
-  address: '',
-  services_offered: '',
-  website_url: '',
+  whatsapp: '',
+  website: '',
   facebook_url: '',
   instagram_url: '',
+  province: '',
+  city: '',
 };
 
 // ============================================================================
@@ -159,24 +145,17 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
         if (profile) {
           setExistingProfile(profile);
           setLogoUrl(profile.logo_url);
-          setBannerUrl(profile.banner_url);
+          setBannerUrl(profile.cover_url);
           setFormData({
             company_name: profile.company_name,
+            tagline: profile.tagline || '',
             description: profile.description || '',
-            contact_first_name: profile.contact_first_name,
-            contact_last_name: profile.contact_last_name,
-            contact_phone: profile.contact_phone || '',
-            contact_whatsapp: profile.contact_whatsapp || '',
-            contact_email: profile.contact_email || '',
-            allow_whatsapp: profile.allow_whatsapp,
-            allow_contact_form: profile.allow_contact_form,
+            whatsapp: profile.whatsapp || '',
+            website: profile.website || '',
+            facebook_url: profile.social_networks?.facebook || '',
+            instagram_url: profile.social_networks?.instagram || '',
             province: profile.province || '',
             city: profile.city || '',
-            address: profile.address || '',
-            services_offered: profile.services_offered?.join(', ') || '',
-            website_url: profile.website_url || '',
-            facebook_url: profile.facebook_url || '',
-            instagram_url: profile.instagram_url || '',
           });
         }
       } catch (error) {
@@ -238,15 +217,9 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
 
   function validate(): boolean {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.company_name.trim()) {
       newErrors.company_name = 'El nombre de la empresa es obligatorio';
-    }
-    if (!formData.contact_first_name.trim()) {
-      newErrors.contact_first_name = 'El nombre es obligatorio';
-    }
-    if (!formData.contact_last_name.trim()) {
-      newErrors.contact_last_name = 'El apellido es obligatorio';
     }
 
     setErrors(newErrors);
@@ -268,23 +241,16 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
     try {
       const profileData: CreateCompanyProfileData = {
         company_name: formData.company_name,
-        contact_first_name: formData.contact_first_name,
-        contact_last_name: formData.contact_last_name,
-        contact_phone: formData.contact_phone || undefined,
-        contact_whatsapp: formData.contact_whatsapp || undefined,
-        contact_email: formData.contact_email || undefined,
-        allow_whatsapp: formData.allow_whatsapp,
-        allow_contact_form: formData.allow_contact_form,
+        tagline: formData.tagline || undefined,
         description: formData.description || undefined,
+        whatsapp: formData.whatsapp || undefined,
+        website: formData.website || undefined,
+        social_networks: {
+          facebook: formData.facebook_url || undefined,
+          instagram: formData.instagram_url || undefined,
+        },
         province: formData.province || undefined,
         city: formData.city || undefined,
-        address: formData.address || undefined,
-        services_offered: formData.services_offered 
-          ? formData.services_offered.split(',').map(s => s.trim()).filter(Boolean)
-          : [],
-        website_url: formData.website_url || undefined,
-        facebook_url: formData.facebook_url || undefined,
-        instagram_url: formData.instagram_url || undefined,
       };
 
       let profile: CompanyProfile;
@@ -293,16 +259,15 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
         profile = await updateCompanyProfile({
           ...profileData,
           logo_url: logoUrl || undefined,
-          banner_url: bannerUrl || undefined,
+          cover_url: bannerUrl || undefined,
         });
         setSuccessMessage('Perfil actualizado correctamente');
       } else {
         profile = await createCompanyProfile(profileData);
-        
-        // Subir imágenes después de crear
+
         if (logoUrl) await updateCompanyLogo(logoUrl);
         if (bannerUrl) await updateCompanyBanner(bannerUrl);
-        
+
         setExistingProfile(profile);
         setSuccessMessage('Perfil de empresa creado correctamente');
       }
@@ -437,6 +402,20 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
+              Eslogan / Tagline
+            </label>
+            <input
+              type="text"
+              name="tagline"
+              value={formData.tagline}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
+              placeholder="Ej: Especialistas en ganadería de precisión"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Descripción
             </label>
             <textarea
@@ -449,86 +428,19 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
             />
           </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Servicios que ofrece
-            </label>
-            <input
-              type="text"
-              name="services_offered"
-              value={formData.services_offered}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
-              placeholder="Ej: Fumigación, Siembra, Cosecha (separados por coma)"
-            />
-            <p className="text-xs text-gray-500 mt-1">Separa los servicios con comas</p>
-          </div>
         </div>
       </section>
 
       {/* ================================================================== */}
-      {/* DATOS DE CONTACTO */}
+      {/* CONTACTO */}
       {/* ================================================================== */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <User className="w-5 h-5 text-brand-600" />
-          Persona de Contacto
+          <MessageCircle className="w-5 h-5 text-brand-600" />
+          Contacto
         </h3>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre *
-            </label>
-            <input
-              type="text"
-              name="contact_first_name"
-              value={formData.contact_first_name}
-              onChange={handleInputChange}
-              className={`w-full px-4 py-2.5 rounded-xl border ${
-                errors.contact_first_name ? 'border-red-300' : 'border-gray-200'
-              } focus:ring-2 focus:ring-brand-600 focus:border-transparent`}
-              placeholder="Juan"
-            />
-            {errors.contact_first_name && (
-              <p className="text-red-500 text-sm mt-1">{errors.contact_first_name}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Apellido *
-            </label>
-            <input
-              type="text"
-              name="contact_last_name"
-              value={formData.contact_last_name}
-              onChange={handleInputChange}
-              className={`w-full px-4 py-2.5 rounded-xl border ${
-                errors.contact_last_name ? 'border-red-300' : 'border-gray-200'
-              } focus:ring-2 focus:ring-brand-600 focus:border-transparent`}
-              placeholder="Pérez"
-            />
-            {errors.contact_last_name && (
-              <p className="text-red-500 text-sm mt-1">{errors.contact_last_name}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              <Phone className="w-4 h-4 inline mr-1" />
-              Teléfono
-            </label>
-            <input
-              type="tel"
-              name="contact_phone"
-              value={formData.contact_phone}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
-              placeholder="+54 9 11 1234-5678"
-            />
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <MessageCircle className="w-4 h-4 inline mr-1" />
@@ -536,61 +448,13 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
             </label>
             <input
               type="tel"
-              name="contact_whatsapp"
-              value={formData.contact_whatsapp}
+              name="whatsapp"
+              value={formData.whatsapp}
               onChange={handleInputChange}
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="+54 9 11 1234-5678"
             />
           </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              <Mail className="w-4 h-4 inline mr-1" />
-              Email de Contacto
-            </label>
-            <input
-              type="email"
-              name="contact_email"
-              value={formData.contact_email}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
-              placeholder="contacto@empresa.com"
-            />
-          </div>
-        </div>
-
-        {/* Preferencias de contacto */}
-        <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-          <p className="text-sm font-medium text-gray-700">Canales de contacto habilitados:</p>
-          
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              name="allow_whatsapp"
-              checked={formData.allow_whatsapp}
-              onChange={handleInputChange}
-              className="w-5 h-5 rounded text-brand-600 focus:ring-brand-600"
-            />
-            <MessageCircle className={`w-5 h-5 ${formData.allow_whatsapp ? 'text-brand-600' : 'text-gray-400'}`} />
-            <span className={formData.allow_whatsapp ? 'text-gray-900' : 'text-gray-500'}>
-              Permitir contacto por WhatsApp
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              name="allow_contact_form"
-              checked={formData.allow_contact_form}
-              onChange={handleInputChange}
-              className="w-5 h-5 rounded text-brand-600 focus:ring-brand-600"
-            />
-            <FileText className={`w-5 h-5 ${formData.allow_contact_form ? 'text-brand-600' : 'text-gray-400'}`} />
-            <span className={formData.allow_contact_form ? 'text-gray-900' : 'text-gray-500'}>
-              Permitir formulario de contacto
-            </span>
-          </label>
         </div>
       </section>
 
@@ -634,20 +498,6 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
               placeholder="Ej: Rosario"
             />
           </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Dirección (opcional)
-            </label>
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
-              placeholder="Ej: Av. San Martín 1234"
-            />
-          </div>
         </div>
       </section>
 
@@ -668,8 +518,8 @@ export function CompanyProfileForm({ onSuccess, onCancel }: CompanyProfileFormPr
             </label>
             <input
               type="url"
-              name="website_url"
-              value={formData.website_url}
+              name="website"
+              value={formData.website}
               onChange={handleInputChange}
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-600 focus:border-transparent"
               placeholder="https://www.miempresa.com"

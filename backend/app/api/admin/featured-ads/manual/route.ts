@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   try {
     // 2. Parsear body
     const body = await request.json();
-    const { ad_id, placement, scheduled_start, duration_days, reason } = body;
+    const { ad_id, placement, tier, scheduled_start, duration_days, reason } = body;
 
     // 3. Validar campos requeridos
     if (!ad_id || !placement || !scheduled_start || !duration_days) {
@@ -146,13 +146,20 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date(startDate);
     expiresAt.setDate(expiresAt.getDate() + duration_days);
 
+    // Derivar tier si no viene explícito (compatibilidad backward)
+    const resolvedTier = tier || (
+      placement === 'homepage' ? 'alta' :
+      placement === 'results'  ? 'media' : 'baja'
+    );
+
     // 10. Insertar featured ad
     const { data: featured, error: insertError } = await supabase
       .from('featured_ads')
       .insert({
         ad_id,
-        user_id: ad.user_id,
+        user_id: ad.user_id ?? admin.id, // fallback para avisos demo sin user_id
         placement,
+        tier: resolvedTier,
         category_id: ad.category_id,
         scheduled_start: startDate.toISOString().split('T')[0],
         actual_start: isImmediate ? now.toISOString() : null,

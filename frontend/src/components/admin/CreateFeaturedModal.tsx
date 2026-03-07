@@ -1,443 +1,380 @@
 /**
  * CreateFeaturedModal.tsx
- * Modal para que SuperAdmin destaque avisos sin consumir créditos
- * 
- * Features:
- * 1. Buscar avisos por título o ID
- * 2. Seleccionar tier (ALTO/MEDIO/BÁSICO)
- * 3. Seleccionar fecha de inicio
- * 4. Preview antes de confirmar
- * 5. Badge "SuperAdmin - Sin cargo"
+ * SuperAdmin — Destacar un aviso individual con sistema de TIERS.
+ * Usa manualActivateFeatured (misma ruta que BulkVisibilityModal)
+ * para evitar ambigüedad en RPC create_featured_ad.
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   X,
   Search,
-  Calendar,
-  Home,
-  SearchIcon,
-  AlertCircle,
-  CheckCircle,
   Loader2,
   Shield,
-  FileText,
+  Zap,
   Star,
+  TrendingDown,
+  CheckCircle,
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
-import type { FeaturedPlacement } from '../../services/userFeaturedService';
+import { manualActivateFeatured } from '../../services/adminFeaturedService';
 
-interface Ad {
+type Tier = 'alta' | 'media' | 'baja';
+
+const TIER_OPTIONS: Array<{
+  value: Tier;
+  label: string;
+  description: string;
+  placements: string[];
+  icon: React.ReactNode;
+  border: string;
+  badge: string;
+}> = [
+  {
+    value: 'alta',
+    label: 'ALTA',
+    description: 'Homepage · Resultados · Detalle',
+    placements: ['homepage', 'results', 'detail'],
+    icon: <Zap className="w-4 h-4" />,
+    border: 'border-amber-400 bg-amber-50',
+    badge: 'bg-amber-500 text-white',
+  },
+  {
+    value: 'media',
+    label: 'MEDIA',
+    description: 'Homepage · Resultados',
+    placements: ['homepage', 'results'],
+    icon: <Star className="w-4 h-4" />,
+    border: 'border-blue-400 bg-blue-50',
+    badge: 'bg-blue-500 text-white',
+  },
+  {
+    value: 'baja',
+    label: 'BAJA',
+    description: 'Solo Detalle del aviso',
+    placements: ['detail'],
+    icon: <TrendingDown className="w-4 h-4" />,
+    border: 'border-gray-300 bg-gray-50',
+    badge: 'bg-gray-500 text-white',
+  },
+];
+
+interface SearchAd {
   id: string;
   title: string;
   price: number | null;
   currency: string;
   category_name: string;
-  subcategory_name?: string;
-  user_name: string;
-  image_url?: string;
+}
+
+interface PreSelectedAd {
+  id: string;
+  title: string;
+  price?: number | null;
+  currency?: string;
+  category_name?: string;
+  [key: string]: any;
 }
 
 interface CreateFeaturedModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  preSelectedAd?: Ad;
+  preSelectedAd?: PreSelectedAd;
 }
 
-export default function CreateFeaturedModal({ isOpen, onClose, onSuccess, preSelectedAd }: CreateFeaturedModalProps) {
-  const [step, setStep] = useState<'search' | 'configure' | 'preview'>(preSelectedAd ? 'configure' : 'search');
+export default function CreateFeaturedModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  preSelectedAd,
+}: CreateFeaturedModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Ad[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchAd[]>([]);
   const [searching, setSearching] = useState(false);
-  const [selectedAd, setSelectedAd] = useState<Ad | null>(preSelectedAd ?? null);
-
-  // Configuración
-  const [placement, setPlacement] = useState<FeaturedPlacement>('homepage');
+  const [selectedAd, setSelectedAd] = useState<SearchAd | null>(null);
+  const [selectedTier, setSelectedTier] = useState<Tier | null>(null);
   const [scheduledStart, setScheduledStart] = useState(
     new Date().toISOString().split('T')[0]
   );
+  const [durationDays, setDurationDays] = useState(15);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [creating, setCreating] = useState(false);
-
-  // Reset al abrir/cerrar
+  // Preselected ad (desde AllAdsTab al tocar estrellita)
   useEffect(() => {
     if (isOpen) {
-      setStep(preSelectedAd ? 'configure' : 'search');
       setSearchQuery('');
       setSearchResults([]);
-      setSelectedAd(preSelectedAd ?? null);
-      setPlacement('homepage');
+      setSelectedTier(null);
       setScheduledStart(new Date().toISOString().split('T')[0]);
+      setDurationDays(15);
+      setSubmitting(false);
+      if (preSelectedAd) {
+        setSelectedAd({
+          id: preSelectedAd.id,
+          title: preSelectedAd.title,
+          price: preSelectedAd.price ?? null,
+          currency: preSelectedAd.currency ?? 'ARS',
+          category_name: preSelectedAd.category_name ?? '',
+        });
+      } else {
+        setSelectedAd(null);
+      }
     }
   }, [isOpen, preSelectedAd]);
 
-  // Buscar avisos
   const handleSearch = async () => {
-    const queryText = searchQuery.trim();
-    if (!queryText) {
-      notify.warning('Ingresá un término de búsqueda');
-      return;
-    }
-
+    const q = searchQuery.trim();
+    if (!q) return;
     setSearching(true);
     try {
-      // Evitar id.eq cuando el texto no es UUID válido
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       let query = supabase
         .from('ads')
-        .select('id, title, price, currency, category_id, subcategory_id, user_id')
+        .select('id, title, price, currency')
         .eq('status', 'active')
         .limit(10);
 
-      if (uuidRegex.test(queryText)) {
-        query = query.eq('id', queryText);
+      if (uuidRegex.test(q)) {
+        query = query.eq('id', q);
       } else {
-        query = query.ilike('title', `%${queryText}%`);
+        query = query.ilike('title', `%${q}%`);
       }
 
       const { data, error } = await query;
       if (error) throw error;
 
-      const formatted = (data || []).map((ad: any) => ({
-        id: ad.id,
-        title: ad.title,
-        price: ad.price,
-        currency: ad.currency || '$',
-        category_name: 'Ver detalles',
-        subcategory_name: undefined,
-        user_name: 'Usuario',
-      }));
-
-      setSearchResults(formatted);
-
-      if (formatted.length === 0) {
-        notify.info('No se encontraron avisos activos');
-      }
-    } catch (error) {
-      console.error('Error searching ads:', error);
+      setSearchResults(
+        (data || []).map((a: any) => ({
+          id: a.id,
+          title: a.title,
+          price: a.price,
+          currency: a.currency || 'ARS',
+          category_name: '',
+        }))
+      );
+    } catch {
       notify.error('Error al buscar avisos');
     } finally {
       setSearching(false);
     }
   };
 
-  // Seleccionar aviso
-  const handleSelectAd = (ad: Ad) => {
-    setSelectedAd(ad);
-    setStep('configure');
-  };
-
-  // Crear featured ad
   const handleCreate = async () => {
-    if (!selectedAd) return;
+    if (!selectedAd || !selectedTier) return;
+    const tierOption = TIER_OPTIONS.find((t) => t.value === selectedTier)!;
 
-    setCreating(true);
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('No autenticado');
+    setSubmitting(true);
+    let ok = 0;
+    let fail = 0;
 
-      const { data, error } = await supabase.rpc('create_featured_ad', {
-        p_ad_id: selectedAd.id,
-        p_user_id: user.user.id,
-        p_placement: placement,
-        p_scheduled_start: scheduledStart,
+    for (const placement of tierOption.placements) {
+      const result = await manualActivateFeatured({
+        ad_id: selectedAd.id,
+        placement: placement as any,
+        tier: selectedTier,
+        scheduled_start: scheduledStart,
+        duration_days: durationDays,
+        reason: `SuperAdmin — tier ${selectedTier.toUpperCase()}`,
       });
+      if (result.success) ok++;
+      else fail++;
+    }
 
-      if (error) throw error;
+    setSubmitting(false);
 
-      const result = data?.[0];
-      if (!result?.success) {
-        throw new Error(result?.message || 'Error al crear destacado');
-      }
-
-      notify.success(result.message || 'Aviso destacado exitosamente');
+    if (ok > 0) {
+      notify.success(`Aviso destacado en ${ok} placement${ok > 1 ? 's' : ''} ✓`);
       onSuccess();
-    } catch (error: any) {
-      console.error('Error creating featured ad:', error);
-      notify.error(error.message || 'Error al destacar aviso');
-    } finally {
-      setCreating(false);
+    } else {
+      notify.error('No se pudo destacar el aviso');
     }
   };
 
   if (!isOpen) return null;
 
+  const tierOption = TIER_OPTIONS.find((t) => t.value === selectedTier);
+  const canConfirm = !!selectedAd && !!selectedTier;
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-emerald-50">
+        <div className="px-5 py-4 border-b flex items-center justify-between bg-gray-900">
           <div className="flex items-center gap-3">
-            <Shield className="w-6 h-6 text-emerald-600" />
+            <Shield className="w-5 h-5 text-emerald-400" />
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                Destacar Nuevo Aviso
-              </h2>
-              <p className="text-sm text-emerald-600 font-medium">
-                SuperAdmin - Sin consumir créditos
-              </p>
+              <h2 className="text-base font-bold text-white">Destacar Aviso</h2>
+              <p className="text-xs text-gray-400">SuperAdmin · Sin cargo al usuario</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-700 text-gray-300">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Steps indicator */}
-        <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
-          <div className="flex items-center justify-center gap-2 text-sm">
-            <span className={`${step === 'search' ? 'text-emerald-600 font-medium' : 'text-gray-400'}`}>
-              1. Buscar Aviso
-            </span>
-            <span className="text-gray-300">→</span>
-            <span className={`${step === 'configure' ? 'text-emerald-600 font-medium' : 'text-gray-400'}`}>
-              2. Configurar
-            </span>
-            <span className="text-gray-300">→</span>
-            <span className={`${step === 'preview' ? 'text-emerald-600 font-medium' : 'text-gray-400'}`}>
-              3. Confirmar
-            </span>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {step === 'search' && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    placeholder="Buscar por título o ID del aviso..."
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    autoFocus
-                  />
-                </div>
-                <button
-                  onClick={handleSearch}
-                  disabled={searching || !searchQuery.trim()}
-                  className="px-6 py-3 bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                >
-                  {searching ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Buscando...
-                    </>
-                  ) : (
-                    <>
-                      <SearchIcon className="w-5 h-5" />
-                      Buscar
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Resultados */}
-              {searchResults.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-600 font-medium">
-                    {searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''} encontrado{searchResults.length !== 1 ? 's' : ''}:
-                  </p>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                    {searchResults.map((ad) => (
-                      <button
-                        key={ad.id}
-                        onClick={() => handleSelectAd(ad)}
-                        className="w-full p-4 border border-gray-200 rounded-lg hover:border-emerald-500 hover:bg-emerald-50 transition-colors text-left"
-                      >
-                        <h3 className="font-medium text-gray-900 mb-1">{ad.title}</h3>
-                        <p className="text-xs text-gray-500 mb-1 font-mono">{ad.id}</p>
-                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                          <span>{ad.price ? `${ad.currency} ${ad.price.toLocaleString()}` : 'Sin precio'}</span>
-                          <span>•</span>
-                          <span>{ad.category_name}</span>
-                          <span>•</span>
-                          <span>{ad.user_name}</span>
-                        </div>
-                      </button>
-                    ))}
+        <div className="p-5 space-y-5">
+          {/* Búsqueda (solo si no hay preseleccionado) */}
+          {!preSelectedAd && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Aviso a destacar
+              </label>
+              {selectedAd ? (
+                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                  <div>
+                    <p className="font-medium text-gray-900 text-sm">{selectedAd.title}</p>
+                    <p className="text-xs text-gray-500">{selectedAd.currency} {selectedAd.price?.toLocaleString() ?? '—'}</p>
                   </div>
+                  <button
+                    onClick={() => { setSelectedAd(null); setSearchResults([]); }}
+                    className="text-xs text-gray-400 hover:text-gray-700 underline"
+                  >
+                    Cambiar
+                  </button>
                 </div>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        placeholder="Título o ID del aviso..."
+                        className="w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        autoFocus
+                      />
+                    </div>
+                    <button
+                      onClick={handleSearch}
+                      disabled={searching || !searchQuery.trim()}
+                      className="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:bg-gray-200 text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-1"
+                    >
+                      {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                      Buscar
+                    </button>
+                  </div>
+                  {searchResults.length > 0 && (
+                    <div className="mt-2 border rounded-xl overflow-hidden divide-y max-h-48 overflow-y-auto">
+                      {searchResults.map((ad) => (
+                        <button
+                          key={ad.id}
+                          onClick={() => setSelectedAd(ad)}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors"
+                        >
+                          <p className="text-sm font-medium text-gray-900 truncate">{ad.title}</p>
+                          <p className="text-xs text-gray-400 font-mono">{ad.id}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
 
-          {step === 'configure' && selectedAd && (
-            <div className="space-y-6">
-              {/* Aviso seleccionado */}
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-xs text-gray-500 uppercase font-medium mb-2">Aviso seleccionado</p>
-                <h3 className="font-medium text-gray-900">{selectedAd.title}</h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  {selectedAd.category_name} {selectedAd.subcategory_name && `→ ${selectedAd.subcategory_name}`}
-                </p>
-              </div>
-
-              {/* Placement — 3 tiers */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Nivel de Destacado
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    onClick={() => setPlacement('homepage')}
-                    className={`p-4 border-2 rounded-lg transition-all ${placement === 'homepage' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}
-                  >
-                    <Home className={`w-6 h-6 mx-auto mb-2 ${placement === 'homepage' ? 'text-emerald-600' : 'text-gray-400'}`} />
-                    <p className={`font-bold text-sm ${placement === 'homepage' ? 'text-emerald-900' : 'text-gray-700'}`}>ALTO</p>
-                    <p className="text-[10px] text-gray-500 mt-1">Inicio + Resultados + Detalle</p>
-                  </button>
-                  <button
-                    onClick={() => setPlacement('results')}
-                    className={`p-4 border-2 rounded-lg transition-all ${placement === 'results' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}
-                  >
-                    <SearchIcon className={`w-6 h-6 mx-auto mb-2 ${placement === 'results' ? 'text-emerald-600' : 'text-gray-400'}`} />
-                    <p className={`font-bold text-sm ${placement === 'results' ? 'text-emerald-900' : 'text-gray-700'}`}>MEDIO</p>
-                    <p className="text-[10px] text-gray-500 mt-1">Resultados + Detalle</p>
-                  </button>
-                  <button
-                    onClick={() => setPlacement('detail')}
-                    className={`p-4 border-2 rounded-lg transition-all ${placement === 'detail' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}
-                  >
-                    <FileText className={`w-6 h-6 mx-auto mb-2 ${placement === 'detail' ? 'text-emerald-600' : 'text-gray-400'}`} />
-                    <p className={`font-bold text-sm ${placement === 'detail' ? 'text-emerald-900' : 'text-gray-700'}`}>BÁSICO</p>
-                    <p className="text-[10px] text-gray-500 mt-1">Solo en detalle</p>
-                  </button>
-                </div>
-              </div>
-
-              {/* Fecha de inicio */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha de inicio
-                </label>
-                <input
-                  type="date"
-                  value={scheduledStart}
-                  onChange={(e) => setScheduledStart(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  Duración: 15 días (según configuración global)
-                </p>
-              </div>
-
-              {/* Badge informativo */}
-              <div className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <Shield className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-emerald-900">SuperAdmin - Sin cargo</p>
-                  <p className="text-emerald-700 mt-1">
-                    Este destacado NO consumirá créditos del usuario ni afectará la facturación.
-                  </p>
-                </div>
-              </div>
+          {/* Aviso preseleccionado */}
+          {preSelectedAd && selectedAd && (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+              <p className="text-xs text-gray-400 uppercase font-medium mb-0.5">Aviso</p>
+              <p className="font-semibold text-gray-900 text-sm">{selectedAd.title}</p>
+              {selectedAd.price && (
+                <p className="text-xs text-gray-500">{selectedAd.currency} {selectedAd.price.toLocaleString()}</p>
+              )}
             </div>
           )}
 
-          {step === 'preview' && selectedAd && (
-            <div className="space-y-6">
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center">
-                <CheckCircle className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  Confirmar Destacado
-                </h3>
-                <p className="text-gray-600">
-                  Estás por destacar este aviso como SuperAdmin
-                </p>
-              </div>
+          {/* Selector de Tier */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nivel de visibilidad</label>
+            <div className="grid grid-cols-3 gap-2">
+              {TIER_OPTIONS.map((option) => {
+                const selected = selectedTier === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => setSelectedTier(option.value)}
+                    className={`border-2 rounded-xl p-3 text-left transition-all ${
+                      selected ? option.border : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${option.badge}`}>
+                        {option.icon}
+                        {option.label}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 leading-tight">{option.description}</p>
+                    {selected && <CheckCircle className="w-3.5 h-3.5 text-emerald-600 mt-1.5" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-              {/* Resumen */}
-              <div className="space-y-4">
-                <div className="border-b border-gray-200 pb-3">
-                  <p className="text-xs text-gray-500 uppercase font-medium mb-1">Aviso</p>
-                  <p className="font-medium text-gray-900">{selectedAd.title}</p>
-                </div>
-                <div className="border-b border-gray-200 pb-3">
-                  <p className="text-xs text-gray-500 uppercase font-medium mb-1">Nivel</p>
-                  <p className="font-medium text-gray-900">
-                    {placement === 'homepage' ? 'Destacado ALTO (Inicio + Resultados + Detalle)' : placement === 'results' ? 'Destacado MEDIO (Resultados + Detalle)' : 'Destacado BÁSICO (Solo detalle)'}
-                  </p>
-                </div>
-                <div className="border-b border-gray-200 pb-3">
-                  <p className="text-xs text-gray-500 uppercase font-medium mb-1">Fecha de inicio</p>
-                  <p className="font-medium text-gray-900">
-                    {new Date(scheduledStart).toLocaleDateString('es-AR', { 
-                      day: '2-digit', 
-                      month: 'long', 
-                      year: 'numeric' 
-                    })}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase font-medium mb-1">Costo</p>
-                  <p className="font-medium text-emerald-600">Sin cargo (SuperAdmin)</p>
-                </div>
+          {/* Fechas */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Fecha inicio</label>
+              <input
+                type="date"
+                value={scheduledStart}
+                onChange={(e) => setScheduledStart(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full border rounded-xl px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Duración</label>
+              <div className="flex gap-2">
+                {[15, 30].map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setDurationDays(d)}
+                    className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-colors ${
+                      durationDays === d
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {d}d
+                  </button>
+                ))}
               </div>
+            </div>
+          </div>
+
+          {/* Resumen + Confirmar */}
+          {canConfirm && tierOption && (
+            <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-between text-sm">
+              <span className="text-gray-600">
+                Tier <strong>{selectedTier?.toUpperCase()}</strong> · {tierOption.placements.length} placement{tierOption.placements.length > 1 ? 's' : ''} · {durationDays} días
+              </span>
+              <span className="text-emerald-600 font-semibold">Sin cargo</span>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
-          <div>
-            {step !== 'search' && (
-              <button
-                onClick={() => {
-                  if (step === 'configure') setStep('search');
-                  if (step === 'preview') setStep('configure');
-                }}
-                className="text-gray-600 hover:text-gray-900 font-medium"
-              >
-                ← Volver
-              </button>
+        <div className="px-5 py-4 border-t bg-gray-50 flex items-center justify-end gap-3">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+            Cancelar
+          </button>
+          <button
+            onClick={handleCreate}
+            disabled={submitting || !canConfirm}
+            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-xl text-sm font-semibold transition-colors flex items-center gap-2"
+          >
+            {submitting ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Aplicando...</>
+            ) : (
+              <><CheckCircle className="w-4 h-4" /> Destacar aviso</>
             )}
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              Cancelar
-            </button>
-            {step === 'configure' && (
-              <button
-                onClick={() => setStep('preview')}
-                className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-medium transition-colors"
-              >
-                Continuar →
-              </button>
-            )}
-            {step === 'preview' && (
-              <button
-                onClick={handleCreate}
-                disabled={creating}
-                className="px-6 py-2 bg-brand-600 hover:bg-brand-500 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-              >
-                {creating ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Creando...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-5 h-5" />
-                    Destacar Aviso
-                  </>
-                )}
-              </button>
-            )}
-          </div>
+          </button>
         </div>
       </div>
     </div>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  ChevronRight, 
-  Plus, 
-  Edit, 
-  Trash2, 
+import {
+  ChevronRight,
+  Plus,
+  Edit,
+  Trash2,
   ArrowLeft,
   Box,
   Tag,
@@ -14,9 +14,10 @@ import {
   Save,
   Upload,
   Loader2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  List
 } from 'lucide-react';
-import { 
+import {
   getCategories,
   createCategory,
   updateCategory,
@@ -25,6 +26,10 @@ import {
   createSubcategory,
   updateSubcategory,
   deleteSubcategory,
+  getCategoryTypes,
+  createCategoryType,
+  updateCategoryType,
+  deleteCategoryType,
   getBrands,
   getBrandsBySubcategory,
   getModels,
@@ -38,7 +43,7 @@ import {
 import { supabase } from '../../../services/supabaseClient';
 import { uploadService } from '../../../services/uploadService';
 
-type ViewMode = 'categories' | 'subcategories' | 'brands' | 'models';
+type ViewMode = 'categories' | 'subcategories' | 'category_types' | 'brands' | 'models';
 
 interface NavigationState {
   mode: ViewMode;
@@ -46,8 +51,17 @@ interface NavigationState {
   categoryName?: string;
   subcategoryId?: string;
   subcategoryName?: string;
+  categoryTypeId?: string;
+  categoryTypeName?: string;
   brandId?: string;
   brandName?: string;
+}
+
+interface CategoryTypeFormData {
+  display_name: string;
+  description: string;
+  sort_order: number;
+  is_active: boolean;
 }
 
 interface ModelFormData {
@@ -75,6 +89,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
   const [nav, setNav] = useState<NavigationState>({ mode: 'categories' });
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [categoryTypes, setCategoryTypes] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [models, setModels] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -86,6 +101,16 @@ export const CategoriesAdminPageV2: React.FC = () => {
   const [editingBrand, setEditingBrand] = useState<any>(null);
   const [editingSubcategory, setEditingSubcategory] = useState<any>(null);
   const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editingCategoryType, setEditingCategoryType] = useState<any>(null);
+  const [categoryTypeFormData, setCategoryTypeFormData] = useState<CategoryTypeFormData>({
+    display_name: '',
+    description: '',
+    sort_order: 0,
+    is_active: true,
+  });
+  const [showBulkImportTypes, setShowBulkImportTypes] = useState(false);
+  const [bulkTypesText, setBulkTypesText] = useState('');
+  const [bulkImportingTypes, setBulkImportingTypes] = useState(false);
   const [formData, setFormData] = useState<ModelFormData>({
     name: '',
     display_name: '',
@@ -138,9 +163,14 @@ export const CategoriesAdminPageV2: React.FC = () => {
             setSubcategories(subs);
           }
           break;
+        case 'category_types':
+          if (nav.subcategoryId) {
+            const types = await getCategoryTypes(nav.subcategoryId);
+            setCategoryTypes(types);
+          }
+          break;
         case 'brands':
           if (nav.subcategoryId) {
-            // Load brands for this subcategory ONLY
             const brandsData = await getBrandsBySubcategory(nav.subcategoryId);
             setBrands(brandsData);
           }
@@ -161,31 +191,22 @@ export const CategoriesAdminPageV2: React.FC = () => {
 
   // Navigate to subcategories
   const navigateToSubcategories = (categoryId: string, categoryName: string) => {
-    setNav({
-      mode: 'subcategories',
-      categoryId,
-      categoryName
-    });
+    setNav({ mode: 'subcategories', categoryId, categoryName });
   };
 
-  // Navigate to brands
+  // Navigate to category_types (3er nivel)
+  const navigateToCategoryTypes = (subcategoryId: string, subcategoryName: string) => {
+    setNav({ ...nav, mode: 'category_types', subcategoryId, subcategoryName });
+  };
+
+  // Navigate to brands (desde subcategoría, path paralelo)
   const navigateToBrands = (subcategoryId: string, subcategoryName: string) => {
-    setNav({
-      ...nav,
-      mode: 'brands',
-      subcategoryId,
-      subcategoryName
-    });
+    setNav({ ...nav, mode: 'brands', subcategoryId, subcategoryName });
   };
 
   // Navigate to models
   const navigateToModels = (brandId: string, brandName: string) => {
-    setNav({
-      ...nav,
-      mode: 'models',
-      brandId,
-      brandName
-    });
+    setNav({ ...nav, mode: 'models', brandId, brandName });
   };
 
   // Go back
@@ -194,6 +215,8 @@ export const CategoriesAdminPageV2: React.FC = () => {
       setNav({ ...nav, mode: 'brands', brandId: undefined, brandName: undefined });
     } else if (nav.mode === 'brands') {
       setNav({ ...nav, mode: 'subcategories', subcategoryId: undefined, subcategoryName: undefined });
+    } else if (nav.mode === 'category_types') {
+      setNav({ ...nav, mode: 'subcategories', categoryTypeId: undefined, categoryTypeName: undefined });
     } else if (nav.mode === 'subcategories') {
       setNav({ mode: 'categories', categoryId: undefined, categoryName: undefined });
     }
@@ -208,6 +231,9 @@ export const CategoriesAdminPageV2: React.FC = () => {
     }
     if (nav.subcategoryName) {
       items.push(nav.subcategoryName);
+    }
+    if (nav.categoryTypeName) {
+      items.push(nav.categoryTypeName);
     }
     if (nav.brandName) {
       items.push(nav.brandName);
@@ -242,6 +268,8 @@ export const CategoriesAdminPageV2: React.FC = () => {
         return categories.filter(c => c.display_name.toLowerCase().includes(term));
       case 'subcategories':
         return subcategories.filter(s => s.display_name.toLowerCase().includes(term));
+      case 'category_types':
+        return categoryTypes.filter(t => t.display_name.toLowerCase().includes(term));
       case 'brands':
         return brands.filter(b => b.display_name.toLowerCase().includes(term));
       case 'models':
@@ -259,74 +287,39 @@ export const CategoriesAdminPageV2: React.FC = () => {
     setEditingBrand(null);
     setEditingSubcategory(null);
     setEditingCategory(null);
-    
+    setEditingCategoryType(null);
+
     if (nav.mode === 'categories') {
-      setCategoryFormData({
-        name: '',
-        display_name: '',
-        is_active: true,
-        sort_order: categories.length + 1
-      });
+      setCategoryFormData({ name: '', display_name: '', is_active: true, sort_order: categories.length + 1 });
     } else if (nav.mode === 'subcategories') {
-      setSubcategoryFormData({
-        name: '',
-        display_name: '',
-        is_active: true,
-        has_brands: false,
-        has_models: false,
-        sort_order: 0
-      });
+      setSubcategoryFormData({ name: '', display_name: '', is_active: true, has_brands: false, has_models: false, sort_order: 0 });
+    } else if (nav.mode === 'category_types') {
+      setCategoryTypeFormData({ display_name: '', description: '', sort_order: categoryTypes.length, is_active: true });
     } else if (nav.mode === 'models') {
-      setFormData({
-        name: '',
-        display_name: '',
-        is_active: true
-      });
+      setFormData({ name: '', display_name: '', is_active: true });
     } else if (nav.mode === 'brands') {
-      setBrandFormData({
-        name: '',
-        display_name: '',
-        is_active: true
-      });
+      setBrandFormData({ name: '', display_name: '', is_active: true });
     }
-    
+
     setShowModal(true);
   };
 
   const openEditModal = (item: any) => {
     if (nav.mode === 'categories') {
       setEditingCategory(item);
-      setCategoryFormData({
-        name: item.name,
-        display_name: item.display_name,
-        is_active: item.is_active,
-        sort_order: item.sort_order || 0,
-        icon: item.icon || ''
-      });
+      setCategoryFormData({ name: item.name, display_name: item.display_name, is_active: item.is_active, sort_order: item.sort_order || 0, icon: item.icon || '' });
     } else if (nav.mode === 'subcategories') {
       setEditingSubcategory(item);
-      setSubcategoryFormData({
-        name: item.name,
-        display_name: item.display_name,
-        is_active: item.is_active,
-        has_brands: item.has_brands || false,
-        has_models: item.has_models || false,
-        sort_order: item.sort_order || 0
-      });
+      setSubcategoryFormData({ name: item.name, display_name: item.display_name, is_active: item.is_active, has_brands: item.has_brands || false, has_models: item.has_models || false, sort_order: item.sort_order || 0 });
+    } else if (nav.mode === 'category_types') {
+      setEditingCategoryType(item);
+      setCategoryTypeFormData({ display_name: item.display_name, description: item.description || '', sort_order: item.sort_order || 0, is_active: item.is_active });
     } else if (nav.mode === 'models') {
       setEditingModel(item);
-      setFormData({
-        name: item.name,
-        display_name: item.display_name,
-        is_active: item.is_active
-      });
+      setFormData({ name: item.name, display_name: item.display_name, is_active: item.is_active });
     } else if (nav.mode === 'brands') {
       setEditingBrand(item);
-      setBrandFormData({
-        name: item.name,
-        display_name: item.display_name,
-        is_active: item.is_active
-      });
+      setBrandFormData({ name: item.name, display_name: item.display_name, is_active: item.is_active });
     }
     setShowModal(true);
   };
@@ -337,16 +330,10 @@ export const CategoriesAdminPageV2: React.FC = () => {
     setEditingBrand(null);
     setEditingSubcategory(null);
     setEditingCategory(null);
-    setFormData({
-      name: '',
-      display_name: '',
-      is_active: true
-    });
-    setBrandFormData({
-      name: '',
-      display_name: '',
-      is_active: true
-    });
+    setEditingCategoryType(null);
+    setFormData({ name: '', display_name: '', is_active: true });
+    setBrandFormData({ name: '', display_name: '', is_active: true });
+    setCategoryTypeFormData({ display_name: '', description: '', sort_order: 0, is_active: true });
     setSubcategoryFormData({
       name: '',
       display_name: '',
@@ -479,6 +466,47 @@ export const CategoriesAdminPageV2: React.FC = () => {
         
         closeModal();
         loadData();
+      } else if (nav.mode === 'category_types') {
+        const slug = categoryTypeFormData.display_name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .trim();
+        const name = slug;
+
+        if (editingCategoryType) {
+          await updateCategoryType(editingCategoryType.id, {
+            display_name: categoryTypeFormData.display_name,
+            name,
+            slug,
+            description: categoryTypeFormData.description || undefined,
+            sort_order: categoryTypeFormData.sort_order,
+            is_active: categoryTypeFormData.is_active,
+          });
+          alert('✅ Tipo actualizado');
+        } else {
+          if (!nav.subcategoryId || !nav.categoryId) {
+            alert('Error: Falta contexto de categoría/subcategoría');
+            return;
+          }
+          await createCategoryType({
+            category_id: nav.categoryId,
+            subcategory_id: nav.subcategoryId,
+            display_name: categoryTypeFormData.display_name,
+            name,
+            slug,
+            description: categoryTypeFormData.description || undefined,
+            sort_order: categoryTypeFormData.sort_order,
+            is_active: categoryTypeFormData.is_active,
+          });
+          alert('✅ Tipo creado');
+        }
+
+        closeModal();
+        loadData();
       } else if (nav.mode === 'models') {
         if (editingModel) {
           // Update existing model
@@ -584,26 +612,27 @@ export const CategoriesAdminPageV2: React.FC = () => {
   };
 
   const handleDelete = async (itemId: string) => {
-    const confirmMessage = nav.mode === 'subcategories'
-      ? '¿Estás seguro de que deseas eliminar esta subcategoría? Se eliminarán también todas sus marcas y modelos asociados.'
-      : nav.mode === 'models' 
-        ? '¿Estás seguro de que deseas eliminar este modelo?'
-        : '¿Estás seguro de que deseas eliminar esta marca?';
-      
-    if (!confirm(confirmMessage)) {
-      return;
-    }
-    
+    const messages: Partial<Record<ViewMode, string>> = {
+      subcategories: '¿Eliminar esta subcategoría? Se eliminarán también sus tipos asociados.',
+      category_types: '¿Eliminar este tipo de categoría?',
+      models: '¿Eliminar este modelo?',
+      brands: '¿Eliminar esta marca?',
+    };
+    if (!confirm(messages[nav.mode] || '¿Confirmar eliminación?')) return;
+
     try {
       if (nav.mode === 'subcategories') {
         await deleteSubcategory(itemId);
         alert('✅ Subcategoría eliminada');
+      } else if (nav.mode === 'category_types') {
+        await deleteCategoryType(itemId);
+        alert('✅ Tipo eliminado');
       } else if (nav.mode === 'models') {
         await deleteModel(itemId);
       } else if (nav.mode === 'brands') {
         await deleteBrand(itemId);
       }
-      loadData(); // Reload data
+      loadData();
     } catch (error) {
       console.error('Error deleting:', error);
       alert('Error al eliminar');
@@ -696,12 +725,64 @@ export const CategoriesAdminPageV2: React.FC = () => {
       setShowBulkImport(false);
       setBulkModelsText('');
       loadData();
-      
+
     } catch (error: any) {
       console.error('Error in bulk import:', error);
       alert('❌ Error en la carga masiva: ' + error.message);
     } finally {
       setBulkImporting(false);
+    }
+  };
+
+  // Bulk import para category_types
+  const handleBulkImportTypes = async () => {
+    if (!bulkTypesText.trim() || !nav.subcategoryId || !nav.categoryId) {
+      alert('⚠️ Por favor, ingresá al menos un tipo.');
+      return;
+    }
+    setBulkImportingTypes(true);
+    try {
+      const lines = bulkTypesText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      let ok = 0, fail = 0;
+      const errors: string[] = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const displayName = lines[i];
+        const slug = displayName
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .trim();
+        try {
+          await createCategoryType({
+            category_id: nav.categoryId!,
+            subcategory_id: nav.subcategoryId!,
+            display_name: displayName,
+            name: slug,
+            slug,
+            sort_order: i,
+            is_active: true,
+          });
+          ok++;
+        } catch (err: any) {
+          fail++;
+          errors.push(`"${displayName}": ${err.message}`);
+        }
+      }
+
+      let msg = `✅ Carga completada: ${ok} tipo${ok !== 1 ? 's' : ''} creado${ok !== 1 ? 's' : ''}`;
+      if (fail > 0) msg += `\n❌ ${fail} error${fail !== 1 ? 'es' : ''}: ${errors.slice(0, 5).join(', ')}`;
+      alert(msg);
+      setShowBulkImportTypes(false);
+      setBulkTypesText('');
+      loadData();
+    } catch (err: any) {
+      alert('❌ Error: ' + err.message);
+    } finally {
+      setBulkImportingTypes(false);
     }
   };
 
@@ -713,11 +794,11 @@ export const CategoriesAdminPageV2: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Categorías</h1>
           
           <div className="flex gap-3">
-            {nav.mode === 'models' && (
+            {(nav.mode === 'models' || nav.mode === 'category_types') && (
               <button
-                onClick={() => setShowBulkImport(true)}
+                onClick={() => nav.mode === 'category_types' ? setShowBulkImportTypes(true) : setShowBulkImport(true)}
                 className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg"
-                title="Carga masiva de modelos"
+                title="Carga masiva"
               >
                 <Save className="w-5 h-5" />
                 Carga Masiva
@@ -730,6 +811,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
               <Plus className="w-5 h-5" />
               {nav.mode === 'categories' && 'Nueva Categoría'}
               {nav.mode === 'subcategories' && 'Nueva Subcategoría'}
+              {nav.mode === 'category_types' && 'Nuevo Tipo'}
               {nav.mode === 'brands' && 'Nueva Marca'}
               {nav.mode === 'models' && 'Nuevo Modelo'}
             </button>
@@ -844,6 +926,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
             <div className="col-span-1 flex items-center">
               {nav.mode === 'categories' && <Box className="w-4 h-4 text-gray-500" />}
               {nav.mode === 'subcategories' && <Tag className="w-4 h-4 text-gray-500" />}
+              {nav.mode === 'category_types' && <List className="w-4 h-4 text-gray-500" />}
               {nav.mode === 'brands' && <Tag className="w-4 h-4 text-gray-500" />}
             </div>
             <div className="col-span-5">Nombre</div>
@@ -862,7 +945,9 @@ export const CategoriesAdminPageV2: React.FC = () => {
                   if (nav.mode === 'categories') {
                     navigateToSubcategories(item.id, item.display_name);
                   } else if (nav.mode === 'subcategories') {
-                    navigateToBrands(item.id, item.display_name);
+                    navigateToCategoryTypes(item.id, item.display_name);
+                  } else if (nav.mode === 'category_types') {
+                    // leaf node — no further navigation
                   } else if (nav.mode === 'brands') {
                     navigateToModels(item.id, item.display_name);
                   }
@@ -873,6 +958,7 @@ export const CategoriesAdminPageV2: React.FC = () => {
                   <div className="w-8 h-8 bg-brand-600/10 rounded flex items-center justify-center">
                     {nav.mode === 'categories' && <Box className="w-4 h-4 text-brand-600" />}
                     {nav.mode === 'subcategories' && <Tag className="w-4 h-4 text-brand-600" />}
+                    {nav.mode === 'category_types' && <List className="w-4 h-4 text-brand-600" />}
                     {nav.mode === 'brands' && <Tag className="w-4 h-4 text-brand-600" />}
                   </div>
                 </div>
@@ -926,21 +1012,29 @@ export const CategoriesAdminPageV2: React.FC = () => {
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  <button
-                    onClick={() => {
-                      if (nav.mode === 'categories') {
-                        navigateToSubcategories(item.id, item.display_name);
-                      } else if (nav.mode === 'subcategories') {
-                        navigateToBrands(item.id, item.display_name);
-                      } else if (nav.mode === 'brands') {
-                        navigateToModels(item.id, item.display_name);
-                      }
-                    }}
-                    className="p-2 text-brand-600 hover:bg-brand-600/10 rounded transition-colors"
-                    title="Ver contenido"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                  {nav.mode === 'subcategories' && item.has_brands && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigateToBrands(item.id, item.display_name); }}
+                      className="p-2 text-gray-500 hover:bg-gray-100 rounded transition-colors text-xs font-medium"
+                      title="Ver marcas"
+                    >
+                      Marcas
+                    </button>
+                  )}
+                  {nav.mode !== 'category_types' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (nav.mode === 'categories') navigateToSubcategories(item.id, item.display_name);
+                        else if (nav.mode === 'subcategories') navigateToCategoryTypes(item.id, item.display_name);
+                        else if (nav.mode === 'brands') navigateToModels(item.id, item.display_name);
+                      }}
+                      className="p-2 text-brand-600 hover:bg-brand-600/10 rounded transition-colors"
+                      title="Ver contenido"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -971,9 +1065,11 @@ export const CategoriesAdminPageV2: React.FC = () => {
                   ? (editingCategory ? 'Editar Categoría' : 'Nueva Categoría')
                   : nav.mode === 'subcategories'
                     ? (editingSubcategory ? 'Editar Subcategoría' : 'Nueva Subcategoría')
-                    : nav.mode === 'models' 
-                      ? (editingModel ? 'Editar Modelo' : 'Nuevo Modelo')
-                      : (editingBrand ? 'Editar Marca' : 'Nueva Marca')
+                    : nav.mode === 'category_types'
+                      ? (editingCategoryType ? 'Editar Tipo' : 'Nuevo Tipo')
+                      : nav.mode === 'models'
+                        ? (editingModel ? 'Editar Modelo' : 'Nuevo Modelo')
+                        : (editingBrand ? 'Editar Marca' : 'Nueva Marca')
                 }
               </h2>
               <button
@@ -996,7 +1092,8 @@ export const CategoriesAdminPageV2: React.FC = () => {
                   value={
                     nav.mode === 'categories' ? categoryFormData.display_name :
                     nav.mode === 'subcategories' ? subcategoryFormData.display_name :
-                    nav.mode === 'models' ? formData.display_name : 
+                    nav.mode === 'category_types' ? categoryTypeFormData.display_name :
+                    nav.mode === 'models' ? formData.display_name :
                     brandFormData.display_name
                   }
                   onChange={(e) => {
@@ -1004,6 +1101,8 @@ export const CategoriesAdminPageV2: React.FC = () => {
                       setCategoryFormData({ ...categoryFormData, display_name: e.target.value });
                     } else if (nav.mode === 'subcategories') {
                       setSubcategoryFormData({ ...subcategoryFormData, display_name: e.target.value });
+                    } else if (nav.mode === 'category_types') {
+                      setCategoryTypeFormData({ ...categoryTypeFormData, display_name: e.target.value });
                     } else if (nav.mode === 'models') {
                       setFormData({ ...formData, display_name: e.target.value });
                     } else {
@@ -1012,10 +1111,11 @@ export const CategoriesAdminPageV2: React.FC = () => {
                   }}
                   className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-brand-600 focus:outline-none transition-colors"
                   placeholder={
-                    nav.mode === 'categories' ? "ej: Automotores" :
-                    nav.mode === 'subcategories' ? "ej: Tractores" :
-                    nav.mode === 'models' ? "ej: TX Mega II" : 
-                    "ej: Agrometal"
+                    nav.mode === 'categories' ? "ej: Ganadería" :
+                    nav.mode === 'subcategories' ? "ej: Hacienda" :
+                    nav.mode === 'category_types' ? "ej: Toros" :
+                    nav.mode === 'models' ? "ej: TX Mega II" :
+                    "ej: John Deere"
                   }
                   required
                 />
@@ -1155,6 +1255,37 @@ export const CategoriesAdminPageV2: React.FC = () => {
                 </>
               )}
 
+              {/* Campos específicos para Tipos de Categoría */}
+              {nav.mode === 'category_types' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Descripción (opcional)
+                    </label>
+                    <input
+                      type="text"
+                      value={categoryTypeFormData.description}
+                      onChange={(e) => setCategoryTypeFormData({ ...categoryTypeFormData, description: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-brand-600 focus:outline-none transition-colors"
+                      placeholder="ej: Bovinos machos para reproducción"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Orden de visualización
+                    </label>
+                    <input
+                      type="number"
+                      value={categoryTypeFormData.sort_order}
+                      onChange={(e) => setCategoryTypeFormData({ ...categoryTypeFormData, sort_order: parseInt(e.target.value) || 0 })}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-brand-600 focus:outline-none transition-colors"
+                      placeholder="0"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Número menor aparece primero</p>
+                  </div>
+                </>
+              )}
+
               {/* Is Active */}
               <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
                 <input
@@ -1162,12 +1293,15 @@ export const CategoriesAdminPageV2: React.FC = () => {
                   id="is_active"
                   checked={
                     nav.mode === 'subcategories' ? subcategoryFormData.is_active :
-                    nav.mode === 'models' ? formData.is_active : 
+                    nav.mode === 'category_types' ? categoryTypeFormData.is_active :
+                    nav.mode === 'models' ? formData.is_active :
                     brandFormData.is_active
                   }
                   onChange={(e) => {
                     if (nav.mode === 'subcategories') {
                       setSubcategoryFormData({ ...subcategoryFormData, is_active: e.target.checked });
+                    } else if (nav.mode === 'category_types') {
+                      setCategoryTypeFormData({ ...categoryTypeFormData, is_active: e.target.checked });
                     } else if (nav.mode === 'models') {
                       setFormData({ ...formData, is_active: e.target.checked });
                     } else {
@@ -1178,7 +1312,8 @@ export const CategoriesAdminPageV2: React.FC = () => {
                 />
                 <label htmlFor="is_active" className="text-sm font-medium text-gray-700 cursor-pointer">
                   {nav.mode === 'subcategories' ? 'Subcategoría activa' :
-                   nav.mode === 'models' ? 'Modelo activo' : 
+                   nav.mode === 'category_types' ? 'Tipo activo' :
+                   nav.mode === 'models' ? 'Modelo activo' :
                    'Marca activa'}
                 </label>
               </div>
@@ -1301,6 +1436,53 @@ TX Mega II{'\n'}Agrotanque 3000{'\n'}Serie 4000{'\n'}Modelo X Plus
                       <Save className="w-4 h-4" />
                       Importar Modelos
                     </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CARGA MASIVA TIPOS */}
+      {showBulkImportTypes && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Carga Masiva de Tipos</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {nav.subcategoryName} — uno por línea
+                </p>
+              </div>
+              <button onClick={() => { setShowBulkImportTypes(false); setBulkTypesText(''); }} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <textarea
+                value={bulkTypesText}
+                onChange={(e) => setBulkTypesText(e.target.value)}
+                placeholder={"Toros\nVacas\nNovillos\nVaquillonas\nTerneros"}
+                className="w-full h-56 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none font-mono text-sm"
+                disabled={bulkImportingTypes}
+              />
+              <p className="text-xs text-gray-500">
+                {bulkTypesText.split('\n').filter(l => l.trim()).length} tipo(s) detectado(s)
+              </p>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => { setShowBulkImportTypes(false); setBulkTypesText(''); }}
+                  className="flex-1 px-4 py-3 border-2 border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                  disabled={bulkImportingTypes}>
+                  Cancelar
+                </button>
+                <button type="button" onClick={handleBulkImportTypes}
+                  disabled={bulkImportingTypes || !bulkTypesText.trim()}
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                  {bulkImportingTypes ? (
+                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Importando...</>
+                  ) : (
+                    <><Save className="w-4 h-4" />Importar Tipos</>
                   )}
                 </button>
               </div>

@@ -560,6 +560,7 @@ export function exportToCSV(ads: AdminFeaturedAd[], filename: string = 'featured
 export interface ManualActivationParams {
   ad_id: string;
   placement: FeaturedPlacement;
+  tier?: 'alta' | 'media' | 'baja';
   scheduled_start: string; // ISO date
   duration_days: number;
   reason?: string;

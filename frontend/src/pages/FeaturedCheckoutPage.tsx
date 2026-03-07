@@ -7,10 +7,8 @@ import {
   Clock,
   CreditCard,
   Loader2,
-  Star,
   Tag,
   X,
-  Zap,
 } from 'lucide-react';
 import {
   getTierConfig,
@@ -43,33 +41,27 @@ interface CheckoutData {
 
 const TIER_DESIGN: Record<string, {
   gradient: string;
-  icon: React.ReactNode;
   badge?: string;
-  description: string;
   placements: string;
 }> = {
-  baja: {
-    gradient: 'from-slate-500 to-slate-600',
-    icon: <div className="w-8 h-8 rounded-full border-2 border-white/80" />,
-    description: 'Tu aviso aparece destacado en la página de detalle de aviso.',
-    placements: 'Detalle de aviso',
-  },
-  media: {
-    gradient: 'from-blue-500 to-blue-600',
-    icon: <Star className="w-8 h-8" />,
-    description: 'Tu aviso aparece en la homepage y en los resultados de búsqueda.',
-    placements: 'Homepage · Resultados',
-  },
-  alta: {
-    gradient: 'from-brand-600 to-brand-700',
-    icon: <Zap className="w-8 h-8" />,
-    badge: 'Más visible',
-    description: 'Máxima exposición: homepage, resultados de búsqueda y detalle de aviso.',
-    placements: 'Homepage · Resultados · Detalle',
-  },
+  baja:  { gradient: 'from-brand-400 to-brand-500', placements: 'Detalle de aviso' },
+  media: { gradient: 'from-brand-500 to-brand-600', placements: 'Resultados · Detalle' },
+  alta:  { gradient: 'from-brand-600 to-brand-700', badge: 'Más visible', placements: 'Homepage · Resultados · Detalle' },
 };
 
-const TIER_ORDER: Array<'baja' | 'media' | 'alta'> = ['baja', 'media', 'alta'];
+// Cada página es una card clickeable que activa el tier correspondiente
+const PAGES = [
+  { key: 'detalle',    label: 'Detalle',    image: '/images/DDetalle.svg',    tier: 'baja'  as const },
+  { key: 'resultados', label: 'Resultados', image: '/images/DResultados.svg', tier: 'media' as const },
+  { key: 'home',       label: 'Homepage',   image: '/images/Dhome.svg',       tier: 'alta'  as const },
+] as const;
+
+// Cascading: al seleccionar un tier, estas páginas quedan "activas"
+const TIER_PAGES: Record<string, readonly string[]> = {
+  baja:  ['detalle'],
+  media: ['resultados', 'detalle'],
+  alta:  ['home', 'resultados', 'detalle'],
+};
 
 // ============================================================
 // COMPONENT
@@ -310,7 +302,7 @@ export default function FeaturedCheckoutPage() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
 
         {/* Alerta sin categoría */}
         {!hasCategoryData && (
@@ -320,65 +312,112 @@ export default function FeaturedCheckoutPage() {
           </div>
         )}
 
-        {/* Tier cards — 3 columns */}
+        {/* Page image selector */}
         <div>
           <p className="text-sm font-semibold text-gray-700 mb-3">Elegí tu nivel de visibilidad</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {TIER_ORDER.map((tierKey) => {
-              const tier = tiers.find(t => t.tier === tierKey);
+          <div className="grid grid-cols-3 gap-3 md:gap-5">
+            {PAGES.map(({ key, label, image, tier: pageTier }) => {
+              const tier = tiers.find(t => t.tier === pageTier);
               if (!tier) return null;
-              const design = TIER_DESIGN[tierKey];
-              const isSelected = selectedTier?.tier === tierKey;
+              const isIncluded = selectedTier ? (TIER_PAGES[selectedTier.tier]?.includes(key) ?? false) : false;
+              const isPrimary  = selectedTier?.tier === pageTier;
 
               return (
                 <button
-                  key={tierKey}
+                  key={key}
                   onClick={() => handleTierSelect(tier)}
                   disabled={!hasCategoryData}
-                  className={`relative flex flex-col rounded-2xl overflow-hidden border-2 transition-all text-left ${
-                    isSelected
-                      ? 'border-brand-600 shadow-lg scale-[1.02]'
-                      : 'border-gray-200 hover:border-brand-300 hover:shadow-md'
+                  className={`flex flex-col rounded-2xl overflow-hidden border-2 transition-all bg-white ${
+                    isPrimary
+                      ? 'border-brand-600 shadow-lg'
+                      : isIncluded
+                        ? 'border-brand-300 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                   } ${!hasCategoryData ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
-                  {/* Gradient header */}
-                  <div className={`bg-gradient-to-br ${design.gradient} px-4 py-5 flex flex-col items-center text-center gap-2`}>
-                    {design.badge && (
-                      <span className="absolute top-2 right-2 px-2 py-0.5 bg-white/20 text-white text-[10px] font-bold rounded-full">
-                        {design.badge}
-                      </span>
+                  {/* Header — radio indicator + estado */}
+                  <div className={`px-3 py-2 flex items-center gap-2 ${
+                    isPrimary  ? 'bg-brand-600' :
+                    isIncluded ? 'bg-brand-50'  :
+                                 'bg-gray-50'
+                  }`}>
+                    <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                      isPrimary  ? 'border-white'     :
+                      isIncluded ? 'border-brand-400' :
+                                   'border-gray-300'
+                    }`}>
+                      {isPrimary && <div className="w-2 h-2 rounded-full bg-white" />}
+                      {isIncluded && !isPrimary && <div className="w-2 h-2 rounded-full bg-brand-400" />}
+                    </div>
+                    <span className={`text-xs font-medium truncate ${
+                      isPrimary  ? 'text-white'     :
+                      isIncluded ? 'text-brand-600' :
+                                   'text-gray-400'
+                    }`}>
+                      {isPrimary ? 'Seleccionado' : isIncluded ? 'Incluido' : label}
+                    </span>
+                  </div>
+
+                  {/* Content — SVG mockup full-bleed, altura fija */}
+                  <div className={`transition-all duration-200 ${isIncluded ? '' : 'opacity-40 grayscale'}`}>
+                    <img
+                      src={image}
+                      alt={label}
+                      className="w-full h-[250px] md:h-[400px] object-cover object-top block"
+                      draggable={false}
+                    />
+                  </div>
+
+                  {/* Footer — nombre de página + checkmark */}
+                  <div className={`px-3 py-2.5 flex items-center justify-between border-t ${
+                    isPrimary  ? 'border-brand-200 bg-brand-50'    :
+                    isIncluded ? 'border-brand-100 bg-brand-50/30' :
+                                 'border-gray-100 bg-white'
+                  }`}>
+                    <span className={`text-sm font-semibold ${
+                      isPrimary  ? 'text-brand-700' :
+                      isIncluded ? 'text-brand-500' :
+                                   'text-gray-400'
+                    }`}>{label}</span>
+                    {isIncluded && (
+                      <CheckCircle2
+                        className={`w-5 h-5 flex-shrink-0 ${isPrimary ? 'text-brand-600' : 'text-brand-400'}`}
+                        strokeWidth={2}
+                      />
                     )}
-                    <span className="text-white">{design.icon}</span>
-                    <span className="text-white font-bold text-base">{tier.label}</span>
-                    <span className="text-white/80 text-xs">{design.placements}</span>
                   </div>
-
-                  {/* Body */}
-                  <div className="bg-white px-4 py-4 flex flex-col gap-3 flex-1">
-                    <p className="text-xs text-gray-600 leading-relaxed">{design.description}</p>
-
-                    <div className="mt-auto pt-2 border-t border-gray-100">
-                      <p className="text-lg font-black tabular-nums text-gray-900">
-                        {formatARS(tier.price_ars)}
-                      </p>
-                      <p className="text-xs text-gray-400">ARS · 15 días</p>
-                    </div>
-                  </div>
-
-                  {/* Selected indicator */}
-                  {isSelected && (
-                    <div className="absolute top-2 left-2 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow">
-                      <div className="w-3 h-3 bg-brand-600 rounded-full" />
-                    </div>
-                  )}
                 </button>
               );
             })}
           </div>
+
+          {/* Dynamic tier summary banner */}
+          {selectedTier && (() => {
+            const design = TIER_DESIGN[selectedTier.tier];
+            return (
+              <div className={`mt-3 flex items-center justify-between px-4 py-3 rounded-xl bg-gradient-to-r ${design.gradient}`}>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-white/70 text-[10px] font-semibold uppercase tracking-widest">Visibilidad</span>
+                  <span className="text-white font-bold text-base leading-tight">{selectedTier.label}</span>
+                  <span className="text-white/80 text-xs">{design.placements}</span>
+                </div>
+                <div className="text-right flex flex-col items-end gap-0.5">
+                  {design.badge && (
+                    <span className="px-2 py-0.5 bg-white/20 text-white text-[10px] font-bold rounded-full">
+                      {design.badge}
+                    </span>
+                  )}
+                  <span className="text-white font-black text-xl tabular-nums">{formatARS(selectedTier.price_ars)}</span>
+                  <span className="text-white/70 text-xs">ARS · 15 días</span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Period selector + coupon + checkout */}
         {selectedTier && (
+          <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm space-y-4">
 
             {/* Duration toggle */}
@@ -543,6 +582,7 @@ export default function FeaturedCheckoutPage() {
               <Calendar className="w-3 h-3" />
               {durationDays} días de visibilidad destacada
             </p>
+          </div>
           </div>
         )}
 

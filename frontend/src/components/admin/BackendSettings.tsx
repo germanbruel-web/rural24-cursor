@@ -39,9 +39,8 @@ import {
 } from '../../utils/fileValidation';
 import { useToastHelpers } from '../../contexts/ToastContext';
 import { FooterCMS } from './FooterCMS';
-import { CategoryIconsCMS } from './CategoryIconsCMS';
 
-type Section = 'header' | 'footer' | 'content' | 'general' | 'icons';
+type Section = 'header' | 'footer' | 'content' | 'general';
 
 interface SettingsBySection {
   header: SiteSetting[];
@@ -447,9 +446,9 @@ export const BackendSettings: React.FC = () => {
 
       {/* Tabs de secciones */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
-          {(['header', 'content', 'footer', 'general', 'icons'] as Section[]).map(section => {
-            const count = section === 'icons' ? 0 : settings[section as keyof SettingsBySection].length;
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+          {(['header', 'content', 'footer', 'general'] as Section[]).map(section => {
+            const count = settings[section as keyof SettingsBySection].length;
             return (
               <button
                 key={section}
@@ -464,7 +463,7 @@ export const BackendSettings: React.FC = () => {
               >
                 <div className="flex flex-col items-center gap-1">
                   <span className="text-sm uppercase tracking-wide">{section}</span>
-                  {section !== 'icons' && <span className="text-xs opacity-75">{count} items</span>}
+                  <span className="text-xs opacity-75">{count} items</span>
                 </div>
               </button>
             );
@@ -488,10 +487,8 @@ export const BackendSettings: React.FC = () => {
         </div>
       </div>
 
-      {/* Mostrar iconos, footer CMS o settings según la sección */}
-      {activeSection === 'icons' ? (
-        <CategoryIconsCMS />
-      ) : activeSection === 'footer' ? (
+      {/* Mostrar footer CMS o settings según la sección */}
+      {activeSection === 'footer' ? (
         <FooterCMS />
       ) : (
         <>

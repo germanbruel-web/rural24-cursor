@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { MapPin, Tag } from 'lucide-react';
+import { MapPin, Tag, Building2 } from 'lucide-react';
 import type { Product } from '../../../../types';
 import { Card } from '../../molecules/Card';
 import { Badge } from '../../atoms/Badge';
@@ -109,6 +109,14 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         
         {/* Gradient overlay en hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        {/* Badge EMPRESA */}
+        {(product as any).ad_type === 'company' && (
+          <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-brand-600 text-white text-[10px] font-bold rounded-full shadow">
+            <Building2 size={10} />
+            EMPRESA
+          </div>
+        )}
 
         {/* Badge contextual: Ganadería=Edad, Otros=Nuevo/Usado */}
         {(() => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, DollarSign, ArrowLeft, Phone, Mail, User, Settings, CheckCircle, Check, Star } from 'lucide-react';
+import { MapPin, Calendar, DollarSign, ArrowLeft, Phone, Mail, User, Settings, CheckCircle, Check, Star, Building2, ChevronRight } from 'lucide-react';
 import { DocumentTextIcon, InformationCircleIcon, Cog6ToothIcon, CheckBadgeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import type { Ad, SearchFilters } from '../../types';
 import { getAdById } from '../services/adsService';
@@ -45,7 +45,8 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
   const [sendingContact, setSendingContact] = useState(false);
   const [contactSuccess, setContactSuccess] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  
+  const [showDemoDisclaimer, setShowDemoDisclaimer] = useState(false);
+
   // Inicializar desde sessionStorage para mantener estado durante la sesión
   const [hasContactedSeller, setHasContactedSeller] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -735,6 +736,27 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                 </div>
               </div>
 
+              {/* Sección empresa — visible cuando ad_type=company */}
+              {(ad as any).ad_type === 'company' && (ad as any).business_profile_id && (
+                <div className="mb-4 p-4 rounded-xl border-2 border-brand-200 bg-brand-50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Building2 className="w-4 h-4 text-brand-600" />
+                    <span className="text-xs font-bold text-brand-600 uppercase tracking-wide">Aviso de Empresa</span>
+                  </div>
+                  <a
+                    href={`#/empresa/${(ad as any).business_profile_id}`}
+                    className="flex items-center justify-between w-full mt-2 px-4 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors text-sm font-semibold"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.location.hash = `/empresa/${(ad as any).business_profile_id}`;
+                    }}
+                  >
+                    Ver Perfil de Empresa
+                    <ChevronRight className="w-4 h-4" />
+                  </a>
+                </div>
+              )}
+
               {/* Info del vendedor - SIEMPRE VISIBLE */}
               <div className="mb-6 p-4 rounded-lg bg-gray-50">
                 <div className="space-y-2.5">
@@ -863,12 +885,11 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                   <button
                     id="contact-seller-btn"
                     onClick={() => {
-                      console.log('🖱️ Click en botón - Estado actual:', { 
-                        hasContactedSeller, 
-                        disabled: hasContactedSeller,
-                        user: !!user,
-                        adId: ad?.id
-                      });
+                      // Aviso demo → solo mostrar disclaimer, nunca enviar
+                      if (ad?.slug?.startsWith('demo-')) {
+                        setShowDemoDisclaimer(true);
+                        return;
+                      }
                       if (!user) {
                         // Usuario NO autenticado → Obligar a login/registro
                         setShowAuthModal(true);
@@ -1018,11 +1039,32 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
       </div>
 
       {/* Modal de autenticación */}
-      <AuthModal 
-        isOpen={showAuthModal} 
+      <AuthModal
+        isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         initialView="register"
       />
+
+      {/* Modal disclaimer para avisos DEMO */}
+      {showDemoDisclaimer && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
+            <div className="w-14 h-14 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🌾</span>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Aviso de demostración</h3>
+            <p className="text-gray-600 text-sm leading-relaxed mb-5">
+              Este aviso es de <strong>RURAL24</strong> con fines de mostrar la aplicación en esta etapa beta. Gracias por su colaboración.
+            </p>
+            <button
+              onClick={() => setShowDemoDisclaimer(false)}
+              className="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl transition-colors"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Otros avisos del vendedor */}
       {ad?.user_id && (

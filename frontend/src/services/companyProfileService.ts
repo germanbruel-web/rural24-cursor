@@ -10,59 +10,31 @@ import { supabase } from './supabaseClient';
 // TIPOS
 // ============================================================================
 
+// Mapea a la tabla business_profiles creada en Sprint 3G-B
 export interface CompanyProfile {
   id: string;
   user_id: string;
-  
-  // Datos empresa
-  company_name: string;
   slug: string;
+  company_name: string;
   logo_url: string | null;
-  banner_url: string | null;
+  cover_url: string | null;       // banner/portada
+  tagline: string | null;
   description: string | null;
-  
-  // Contacto
-  contact_first_name: string;
-  contact_last_name: string;
-  contact_phone: string | null;
-  contact_whatsapp: string | null;
-  contact_email: string | null;
-  
-  // Preferencias
-  allow_whatsapp: boolean;
-  allow_contact_form: boolean;
-  
-  // Ubicación
+  whatsapp: string | null;
+  website: string | null;
+  social_networks: {
+    facebook?: string;
+    instagram?: string;
+    [key: string]: string | undefined;
+  };
+  category_id: string | null;
   province: string | null;
   city: string | null;
-  address: string | null;
-  
-  // Servicios
-  services_offered: string[];
-  business_hours: BusinessHours | null;
-  
-  // Redes
-  website_url: string | null;
-  facebook_url: string | null;
-  instagram_url: string | null;
-  
-  // Estado
-  is_active: boolean;
   is_verified: boolean;
-  verified_at: string | null;
-  
+  is_active: boolean;
+  profile_views: number;
   created_at: string;
   updated_at: string;
-}
-
-export interface BusinessHours {
-  monday?: { open: string; close: string };
-  tuesday?: { open: string; close: string };
-  wednesday?: { open: string; close: string };
-  thursday?: { open: string; close: string };
-  friday?: { open: string; close: string };
-  saturday?: { open: string; close: string };
-  sunday?: { open: string; close: string };
 }
 
 export interface Catalog {
@@ -101,27 +73,19 @@ export interface CatalogItem {
 
 export interface CreateCompanyProfileData {
   company_name: string;
-  contact_first_name: string;
-  contact_last_name: string;
-  contact_phone?: string;
-  contact_whatsapp?: string;
-  contact_email?: string;
-  allow_whatsapp?: boolean;
-  allow_contact_form?: boolean;
+  tagline?: string;
   description?: string;
+  whatsapp?: string;
+  website?: string;
+  social_networks?: { facebook?: string; instagram?: string; [key: string]: string | undefined };
   province?: string;
   city?: string;
-  address?: string;
-  services_offered?: string[];
-  website_url?: string;
-  facebook_url?: string;
-  instagram_url?: string;
+  category_id?: string;
 }
 
 export interface UpdateCompanyProfileData extends Partial<CreateCompanyProfileData> {
   logo_url?: string;
-  banner_url?: string;
-  business_hours?: BusinessHours;
+  cover_url?: string;
 }
 
 // ============================================================================
@@ -137,7 +101,7 @@ export async function getMyCompanyProfile(): Promise<CompanyProfile | null> {
     if (!user) return null;
 
     const { data, error } = await supabase
-      .from('company_profiles')
+      .from('business_profiles')
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -155,14 +119,17 @@ export async function getMyCompanyProfile(): Promise<CompanyProfile | null> {
 }
 
 /**
- * Obtiene un perfil de empresa por slug (público)
+ * Obtiene un perfil de empresa por slug o UUID (público)
+ * Si el parámetro parece un UUID, busca por id; sino por slug.
  */
-export async function getCompanyProfileBySlug(slug: string): Promise<CompanyProfile | null> {
+export async function getCompanyProfileBySlug(slugOrId: string): Promise<CompanyProfile | null> {
   try {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
+
     const { data, error } = await supabase
-      .from('company_profiles')
+      .from('business_profiles')
       .select('*')
-      .eq('slug', slug)
+      .eq(isUuid ? 'id' : 'slug', slugOrId)
       .eq('is_active', true)
       .single();
 
@@ -173,7 +140,7 @@ export async function getCompanyProfileBySlug(slug: string): Promise<CompanyProf
 
     return data;
   } catch (error) {
-    console.error('❌ Error getting company profile by slug:', error);
+    console.error('❌ Error getting company profile by slug/id:', error);
     return null;
   }
 }
@@ -184,7 +151,7 @@ export async function getCompanyProfileBySlug(slug: string): Promise<CompanyProf
 export async function getCompanyProfileById(id: string): Promise<CompanyProfile | null> {
   try {
     const { data, error } = await supabase
-      .from('company_profiles')
+      .from('business_profiles')
       .select('*')
       .eq('id', id)
       .single();
@@ -219,26 +186,19 @@ export async function createCompanyProfile(data: CreateCompanyProfileData): Prom
   const slug = `${baseSlug}-${Date.now().toString(36)}`;
 
   const { data: profile, error } = await supabase
-    .from('company_profiles')
+    .from('business_profiles')
     .insert({
       user_id: user.id,
       slug,
       company_name: data.company_name,
-      contact_first_name: data.contact_first_name,
-      contact_last_name: data.contact_last_name,
-      contact_phone: data.contact_phone || null,
-      contact_whatsapp: data.contact_whatsapp || null,
-      contact_email: data.contact_email || user.email,
-      allow_whatsapp: data.allow_whatsapp ?? true,
-      allow_contact_form: data.allow_contact_form ?? true,
+      tagline: data.tagline || null,
       description: data.description || null,
+      whatsapp: data.whatsapp || null,
+      website: data.website || null,
+      social_networks: data.social_networks || {},
       province: data.province || null,
       city: data.city || null,
-      address: data.address || null,
-      services_offered: data.services_offered || [],
-      website_url: data.website_url || null,
-      facebook_url: data.facebook_url || null,
-      instagram_url: data.instagram_url || null,
+      category_id: data.category_id || null,
     })
     .select()
     .single();
@@ -259,7 +219,7 @@ export async function updateCompanyProfile(data: UpdateCompanyProfileData): Prom
   if (!user) throw new Error('Usuario no autenticado');
 
   const { data: profile, error } = await supabase
-    .from('company_profiles')
+    .from('business_profiles')
     .update({
       ...data,
       updated_at: new Date().toISOString(),
@@ -284,10 +244,10 @@ export async function updateCompanyLogo(logoUrl: string): Promise<CompanyProfile
 }
 
 /**
- * Actualiza el banner de la empresa
+ * Actualiza el banner/portada de la empresa
  */
-export async function updateCompanyBanner(bannerUrl: string): Promise<CompanyProfile> {
-  return updateCompanyProfile({ banner_url: bannerUrl });
+export async function updateCompanyBanner(coverUrl: string): Promise<CompanyProfile> {
+  return updateCompanyProfile({ cover_url: coverUrl });
 }
 
 // ============================================================================

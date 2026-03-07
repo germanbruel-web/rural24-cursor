@@ -407,6 +407,15 @@
   animation: slideUp 0.3s ease-out;
 }
 
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.drawer-enter {
+  animation: slideInRight 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Utility para line-clamp */
 .line-clamp-2 {
   display: -webkit-box;

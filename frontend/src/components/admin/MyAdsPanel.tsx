@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import {
   getMyAds,
-  deleteAd,
   getUserAdLimit,
 } from '../../services/adsService';
 import type { Ad } from '../../../types';
-import { Edit, Trash2, Eye, Plus, Package, X, Zap, Calendar, Star } from 'lucide-react';
+import { Edit, Trash2, Eye, Plus, Package, X, Zap, TrendingUp, Calendar, ExternalLink } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import { useAuth } from '../../contexts/AuthContext';
 import { DEFAULT_PLACEHOLDER_IMAGE } from '../../constants/defaultImages';
@@ -35,11 +34,6 @@ interface MyAdsPanelProps {
   onNavigate?: (page: string) => void;
 }
 
-interface Category {
-  id: string;
-  display_name: string;
-}
-
 /** Info de un featured activo/pendiente para un aviso */
 interface FeaturedInfo {
   featured_id: string;
@@ -49,19 +43,12 @@ interface FeaturedInfo {
   expires_at?: string;
 }
 
-const TIER_CHIPS: Array<{ tier: 'baja' | 'media' | 'alta'; label: string; icon?: React.ReactNode }> = [
-  { tier: 'baja',  label: 'BAJA' },
-  { tier: 'media', label: 'MEDIA', icon: <Star className="w-3 h-3" /> },
-  { tier: 'alta',  label: 'ALTA',  icon: <Zap className="w-3 h-3" /> },
-];
-
 export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   const { profile } = useAuth();
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [adLimit, setAdLimit] = useState({ limit: 0, current: 0 });
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedAdForView, setSelectedAdForView] = useState<Ad | null>(null);
+  const [selectedAdForViews, setSelectedAdForViews] = useState<Ad | null>(null);
   const [selectedAdForEdit, setSelectedAdForEdit] = useState<Ad | null>(null);
   const [selectedAdForDelete, setSelectedAdForDelete] = useState<Ad | null>(null);
   const [showBulkVisibility, setShowBulkVisibility] = useState(false);
@@ -80,22 +67,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   
   useEffect(() => {
     loadData();
-    loadCategories();
   }, [profile]);
-
-  const loadCategories = async () => {
-    try {
-      const { data } = await supabase
-        .from('categories')
-        .select('id, display_name')
-        .eq('is_active', true)
-        .order('display_name');
-      
-      setCategories(data || []);
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    }
-  };
 
   const loadData = async () => {
     setLoading(true);
@@ -438,18 +410,18 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         ))}
       </div>
 
-      {/* Cards de avisos â€" Mobile-first responsive grid */}
+      {/* Lista de avisos — rows horizontales */}
       {filteredAds.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
           <div className="text-gray-400 mb-4">
             <Package className="w-16 h-16 mx-auto" />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">
-            No tienes avisos {filterStatus !== 'all' ? filterStatus : ''}
+            No tenés avisos {filterStatus !== 'all' ? filterStatus + 's' : ''}
           </h3>
           <p className="text-gray-600 mb-6">
-            {filterStatus === 'all' 
-              ? 'PublicÃ¡ tu primer aviso para empezar a vender'
+            {filterStatus === 'all'
+              ? 'Publicá tu primer aviso para empezar a vender'
               : `No hay avisos con estado "${filterStatus}"`}
           </p>
           {filterStatus === 'all' && adLimit.current < adLimit.limit && (
@@ -463,19 +435,24 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+        <div className="space-y-2">
           {filteredAds.map((ad) => {
             const adFeatureds = featuredMap[ad.id] || [];
             const isAdFeatured = adFeatureds.length > 0;
             const thumbnail = ad.images?.[0] || DEFAULT_PLACEHOLDER_IMAGE;
+            const isSelected = selectedAdForEdit?.id === ad.id;
 
             return (
               <div
                 key={ad.id}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col"
+                className={`bg-white rounded-2xl border transition-all duration-150 flex gap-4 p-4 ${
+                  isSelected
+                    ? 'border-brand-400 shadow-md ring-1 ring-brand-200'
+                    : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                }`}
               >
-                {/* - ZONA IMAGEN - */}
-                <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                {/* Thumbnail */}
+                <div className="relative flex-shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-gray-100">
                   <img
                     src={thumbnail}
                     alt={ad.title}
@@ -483,177 +460,114 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                     className="w-full h-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_PLACEHOLDER_IMAGE; }}
                   />
+                  <span className={`absolute bottom-1.5 left-1.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                    ad.status === 'active' ? 'bg-emerald-400' : 'bg-amber-400'
+                  }`} />
+                </div>
 
-                  {/* Status pill con glow — top left */}
-                  <span className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                    ad.status === 'active'
-                      ? 'bg-emerald-500 text-white shadow-[0_0_10px_rgba(52,211,153,0.75)]'
-                      : 'bg-amber-400 text-amber-900'
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${ad.status === 'active' ? 'bg-white/80' : 'bg-amber-700'}`} />
-                    {ad.status === 'active' ? 'Activo' : 'Pausado'}
-                  </span>
+                {/* Contenido */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between gap-2">
+                  {/* Fila superior: título + precio */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-gray-900 text-base leading-snug line-clamp-2">
+                        {ad.title}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className="text-xs text-gray-500">{ad.category}</span>
+                        {ad.province && (
+                          <span className="text-xs text-gray-400">· {ad.province}</span>
+                        )}
+                        <span className={`text-xs font-semibold ${
+                          ad.status === 'active' ? 'text-emerald-600' : 'text-amber-600'
+                        }`}>
+                          · {ad.status === 'active' ? 'Activo' : 'Pausado'}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="font-black text-brand-600 text-base tabular-nums whitespace-nowrap flex-shrink-0">
+                      {ad.currency} {ad.price?.toLocaleString('es-AR') || 'Consultar'}
+                    </span>
+                  </div>
 
-                  {/* Featured badges — top right (dorado/negro/gris) */}
+                  {/* Featured badges */}
                   {isAdFeatured && (
-                    <div className="absolute top-2.5 right-2.5 flex flex-col gap-1 items-end">
+                    <div className="flex items-center gap-1 flex-wrap">
                       {adFeatureds.map((feat) => {
                         const t = feat.tier || (feat.placement === 'homepage' ? 'alta' : feat.placement === 'results' ? 'media' : 'baja');
                         const badgeCls = t === 'alta'
-                          ? 'bg-amber-400/95 text-amber-900'
+                          ? 'bg-amber-100 text-amber-700 border-amber-200'
                           : t === 'media'
-                          ? 'bg-gray-900/90 text-white'
-                          : 'bg-gray-500/80 text-white';
-                        const badgeLabel = t === 'alta' ? 'ALTO' : t === 'media' ? 'MEDIA' : 'BAJA';
+                          ? 'bg-blue-100 text-blue-700 border-blue-200'
+                          : 'bg-gray-100 text-gray-500 border-gray-200';
+                        const tierLabel = t === 'alta' ? 'ALTA' : t === 'media' ? 'MEDIA' : 'BAJA';
                         return (
-                          <span key={feat.featured_id}
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold backdrop-blur-sm ${badgeCls} ${feat.status === 'pending' ? 'opacity-60' : ''}`}
+                          <span
+                            key={feat.featured_id}
+                            className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-bold border ${badgeCls} ${feat.status === 'pending' ? 'opacity-60' : ''}`}
                           >
-                            {badgeLabel}{feat.status === 'pending' ? '…' : ''}
+                            <Zap className="w-3 h-3" />
+                            {tierLabel}
+                            {feat.status === 'pending'
+                              ? ' · en cola'
+                              : feat.expires_at
+                              ? ` · vence ${formatExpiryDate(feat.expires_at)}`
+                              : ''}
+                            {isSuperAdmin && feat.status !== 'pending' && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setCancelFeaturedTarget({ adTitle: ad.title, featured: feat }); }}
+                                className="ml-1 text-red-300 hover:text-red-500"
+                                title="Cancelar destacado"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
                           </span>
                         );
                       })}
                     </div>
                   )}
-                </div>
 
-                {/* - ZONA CONTENIDO DEL AVISO - */}
-                <div className="px-3.5 pt-3 pb-2 flex flex-col gap-1.5 flex-1">
-                  <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2">
-                    {ad.title}
-                  </h3>
-                  {ad.description && (
-                    <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">
-                      {ad.description}
-                    </p>
-                  )}
-                  <div className="flex items-center justify-between pt-1 mt-auto">
-                    <span className="font-black text-brand-600 text-sm">
-                      {ad.currency} {ad.price?.toLocaleString() || '0'}
-                    </span>
-                    <span className="text-[11px] text-gray-400 truncate max-w-[110px]">
-                      {ad.category}
-                    </span>
-                  </div>
-                </div>
-
-                {/* - ZONA PUBLICIDAD / VISIBILIDAD - */}
-                {canUseFeaturedFlow && (
-                  <div className="px-3.5 pb-3">
-                    {/* Featured activos: info por tier */}
-                    {isAdFeatured && (
-                      <div className="mb-2 space-y-1">
-                        {adFeatureds.map((feat) => {
-                          const t = feat.tier || (feat.placement === 'homepage' ? 'alta' : feat.placement === 'results' ? 'media' : 'baja');
-                          const accentCls = t === 'alta' ? 'text-amber-600' : t === 'media' ? 'text-gray-700' : 'text-gray-500';
-                          const icon = t === 'alta' ? '⚡' : t === 'media' ? '●' : '○';
-                          return (
-                            <div key={feat.featured_id} className="flex items-center justify-between text-xs">
-                              <span className={`font-bold ${accentCls}`}>
-                                {icon} {t === 'alta' ? 'ALTO' : t === 'media' ? 'MEDIA' : 'BAJA'}
-                              </span>
-                              <div className="flex items-center gap-1">
-                                {feat.status === 'active' ? (
-                                  <span className="text-gray-400 flex items-center gap-0.5">
-                                    <Calendar className="w-3 h-3" />
-                                    {formatExpiryDate(feat.expires_at)}
-                                  </span>
-                                ) : (
-                                  <span className="text-amber-500 font-medium">En cola</span>
-                                )}
-                                {isSuperAdmin && (
-                                  <button
-                                    onClick={() => setCancelFeaturedTarget({ adTitle: ad.title, featured: feat })}
-                                    className="p-0.5 text-red-300 hover:text-red-500 rounded"
-                                    title="Cancelar destacado"
-                                  >
-                                    <X className="w-3 h-3" />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Tier chips */}
-                    {ad.status === 'active' && (
-                      <div className="flex items-center gap-1.5">
-                        {!isAdFeatured && (
-                          <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">
-                            Destacar:
-                          </span>
-                        )}
-                        {TIER_CHIPS.map(({ tier, label }) => {
-                          const alreadyFeatured = adFeatureds.some(
-                            f => f.tier === tier || (!f.tier && tier === 'alta' && f.placement === 'homepage')
-                          );
-                          const activeCls = tier === 'alta'
-                            ? 'bg-amber-400 hover:bg-amber-500 text-amber-900'
-                            : tier === 'media'
-                            ? 'bg-gray-800 hover:bg-gray-700 text-white'
-                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700';
-                          const doneCls = tier === 'alta'
-                            ? 'bg-amber-100 text-amber-400'
-                            : tier === 'media'
-                            ? 'bg-gray-200 text-gray-400'
-                            : 'bg-gray-100 text-gray-400';
-                          return (
-                            <button
-                              key={tier}
-                              onClick={() => !alreadyFeatured && handleStartCheckout(ad, tier)}
-                              disabled={alreadyFeatured}
-                              title={alreadyFeatured ? `Ya activo en ${label}` : `Destacar como ${label}`}
-                              className={`inline-flex items-center px-2.5 py-1 text-[10px] font-bold rounded-full transition-colors shadow-sm ${
-                                alreadyFeatured ? `${doneCls} cursor-default` : `${activeCls} cursor-pointer`
-                              }`}
-                            >
-                              {tier === 'alta' ? '⚡ ' : tier === 'media' ? '● ' : '○ '}{label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* - SUBFOOTER: CRUD + MÉTRICAS - */}
-                <div className="border-t border-gray-100 px-3.5 py-2.5 flex items-center justify-between bg-gray-50/70">
-                  {/* CRUD */}
-                  <div className="flex items-center gap-1">
+                  {/* Fila de acciones */}
+                  <div className="flex items-center gap-1 flex-wrap pt-1 border-t border-gray-100">
                     <button
-                      onClick={() => setSelectedAdForEdit(ad)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                      title="Modificar aviso"
+                      onClick={() => setSelectedAdForEdit(isSelected ? null : ad)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        isSelected
+                          ? 'text-brand-600 bg-brand-50'
+                          : 'text-gray-500 hover:text-brand-600 hover:bg-brand-50'
+                      }`}
                     >
                       <Edit className="w-3.5 h-3.5" />
                       Modificar
                     </button>
+
+                    {canUseFeaturedFlow && ad.status === 'active' && !isAdFeatured && (
+                      <button
+                        onClick={() => handleStartCheckout(ad, 'alta')}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                      >
+                        <Zap className="w-3.5 h-3.5" />
+                        Destacar
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => setSelectedAdForViews(ad)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      Vistas
+                      <span className="tabular-nums">{ad.views_count || 0}</span>
+                    </button>
+
                     <button
                       onClick={() => setSelectedAdForDelete(ad)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-500 bg-white border border-red-100 rounded-lg hover:bg-red-50 hover:border-red-200 transition-colors"
+                      className="ml-auto p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       title="Eliminar aviso"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Eliminar
+                      <Trash2 className="w-4 h-4" />
                     </button>
-                  </div>
-
-                  {/* Métricas + estado */}
-                  <div className="flex items-center gap-2 text-[11px] text-gray-400">
-                    <span className="inline-flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      {ad.views_count || 0}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-semibold ${
-                      ad.status === 'active'
-                        ? 'bg-emerald-50 text-emerald-600'
-                        : 'bg-amber-50 text-amber-600'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${ad.status === 'active' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                      {ad.status === 'active' ? 'Activo' : 'Pausado'}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -662,110 +576,108 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         </div>
       )}
 
-      {/* Modal Ver Detalle */}
-      {selectedAdForView && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-gray-900">Detalle del Aviso</h3>
-              <button
-                onClick={() => setSelectedAdForView(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
+      {/* === Drawer Vistas === */}
+      {selectedAdForViews && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSelectedAdForViews(null)} />
+          <div className="drawer-enter fixed inset-y-0 right-0 z-50 w-[90vw] sm:w-1/2 max-w-lg flex flex-col bg-white shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b bg-white">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-brand-600" />
+                <h3 className="text-base font-bold text-gray-900">Estadísticas</h3>
+              </div>
+              <button onClick={() => setSelectedAdForViews(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-4 h-4" />
               </button>
             </div>
-            
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">ID</label>
-                  <p className="text-gray-900">{selectedAdForView.id}</p>
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-5">
+              {/* Titulo del aviso */}
+              <p className="text-sm font-semibold text-gray-800 leading-snug">{selectedAdForViews.title}</p>
+
+              {/* Vistas — número grande */}
+              <div className="bg-brand-50 rounded-2xl px-6 py-5 text-center">
+                <p className="text-5xl font-black tabular-nums text-brand-600">{selectedAdForViews.views_count || 0}</p>
+                <p className="text-sm text-brand-700 font-medium mt-1">visitas totales</p>
+              </div>
+
+              {/* Datos del aviso */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span className="text-xs text-gray-500 font-medium">Estado</span>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    selectedAdForViews.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {selectedAdForViews.status === 'active' ? 'Activo' : 'Pausado'}
+                  </span>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Estado</label>
-                  <p>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      selectedAdForView.status === 'active' 
-                        ? 'bg-brand-100 text-brand-700' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {selectedAdForView.status === 'active' ? 'Activo' : 'Pausado'}
-                    </span>
-                  </p>
+                <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span className="text-xs text-gray-500 font-medium">Precio</span>
+                  <span className="text-sm font-black text-brand-600">
+                    {selectedAdForViews.currency} {selectedAdForViews.price?.toLocaleString('es-AR') || 'Consultar'}
+                  </span>
+                </div>
+                {selectedAdForViews.category && (
+                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span className="text-xs text-gray-500 font-medium">Categoría</span>
+                    <span className="text-xs text-gray-700">{selectedAdForViews.category}</span>
+                  </div>
+                )}
+                {selectedAdForViews.province && (
+                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span className="text-xs text-gray-500 font-medium">Provincia</span>
+                    <span className="text-xs text-gray-700">{selectedAdForViews.province}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Publicado
+                  </span>
+                  <span className="text-xs text-gray-700">
+                    {new Date(selectedAdForViews.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </span>
                 </div>
               </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-500">TÃ­tulo</label>
-                <p className="text-gray-900 font-medium">{selectedAdForView.title}</p>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-500">DescripciÃ³n</label>
-                <p className="text-gray-900 whitespace-pre-wrap">{selectedAdForView.description}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Precio</label>
-                  <p className="font-bold text-brand-600">
-                    {selectedAdForView.currency} {selectedAdForView.price?.toLocaleString() || '0'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Provincia</label>
-                  <p className="text-gray-900">{selectedAdForView.province || 'N/A'}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">CategorÃ­a</label>
-                  <p className="text-gray-900">{selectedAdForView.category_name || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">SubcategorÃ­a</label>
-                  <p className="text-gray-900">{selectedAdForView.subcategory_name || 'N/A'}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Visitas</label>
-                  <p className="text-gray-900">{selectedAdForView.views_count || 0}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Creado</label>
-                  <p className="text-gray-900">
-                    {new Date(selectedAdForView.created_at).toLocaleDateString('es-AR')}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="border-t px-6 py-4 flex justify-end">
-              <button
-                onClick={() => setSelectedAdForView(null)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-              >
-                Cerrar
-              </button>
+
+              {/* Ver aviso público */}
+              {selectedAdForViews.slug && (
+                <a
+                  href={`#/aviso/${selectedAdForViews.slug}`}
+                  onClick={() => setSelectedAdForViews(null)}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-brand-200 text-brand-600 text-sm font-semibold hover:bg-brand-50 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Ver aviso público
+                </a>
+              )}
             </div>
           </div>
-        </div>
+        </>
       )}
 
-      {/* Modal Quick Edit */}
+      {/* Drawer lateral — Editar aviso (desktop: panel derecho; mobile: full screen) */}
       {selectedAdForEdit && (
-        <QuickEditAdModal
-          adId={selectedAdForEdit.id}
-          onClose={() => setSelectedAdForEdit(null)}
-          onSuccess={() => {
-            loadData();
-            notify.success('Aviso actualizado correctamente');
-          }}
-        />
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/40 z-40"
+            onClick={() => setSelectedAdForEdit(null)}
+          />
+          {/* Panel lateral */}
+          <div className="drawer-enter fixed inset-y-0 right-0 z-50 w-[90vw] sm:w-1/2 max-w-2xl flex flex-col shadow-2xl">
+            <QuickEditAdModal
+              adId={selectedAdForEdit.id}
+              mode="drawer"
+              onClose={() => setSelectedAdForEdit(null)}
+              onSuccess={() => {
+                loadData();
+                setSelectedAdForEdit(null);
+              }}
+            />
+          </div>
+        </>
       )}
 
       {isSuperAdmin && showBulkVisibility && (

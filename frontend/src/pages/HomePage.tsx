@@ -90,10 +90,8 @@ export const HomePage: React.FC<HomePageProps> = ({
         />
       </HeroWithCarousel>
 
-      {/* Sección Cómo Funciona - Solo desktop */}
-      <div className="hidden md:block">
-        <HowItWorksSection onRegisterClick={onShowAuthModal} />
-      </div>
+      {/* Widgets informativos: clima, precios, calendario, guías */}
+      <HowItWorksSection onRegisterClick={onShowAuthModal} />
 
       {/* 🌟 Avisos Destacados por Categoría */}
       {typeof featuredLimit === 'number' ? (
