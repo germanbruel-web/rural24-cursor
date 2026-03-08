@@ -1293,6 +1293,7 @@ export default function PublicarAviso() {
                 {/* DynamicFormLoader - Sin título redundante */}
                 <DynamicFormLoader
                   subcategoryId={selectedSubcategory}
+                  categoryId={selectedCategory || undefined}
                   categoryName={selectedCategory || ''}
                   subcategoryName={subcategories.find(s => s.id === selectedSubcategory)?.display_name || ''}
                   values={attributeValues}
