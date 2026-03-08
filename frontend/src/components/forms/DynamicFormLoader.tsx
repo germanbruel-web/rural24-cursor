@@ -6,19 +6,11 @@ import { DynamicFormV2Fields } from './DynamicFormV2Fields';
 import type { CompleteFormV2 } from '../../types/v2';
 import { WifiOff, RefreshCw, AlertTriangle } from 'lucide-react';
 
-const normalizeGroupName = (name: string): string => {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, '_');
-};
-
 interface DynamicFormLoaderProps {
   subcategoryId: string;
   categoryId?: string;
-  categoryName?: string;
-  subcategoryName?: string;
+  categoryName?: string;  // reservado para uso futuro
+  subcategoryName?: string;  // reservado para uso futuro
   values: Record<string, any>;
   onChange: (name: string, value: any) => void;
   errors?: Record<string, string>;
@@ -33,8 +25,7 @@ interface DynamicFormLoaderProps {
 export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
   subcategoryId,
   categoryId,
-  categoryName,
-  subcategoryName,
+  // categoryName y subcategoryName: aceptados por compatibilidad, no usados aún
   values,
   onChange,
   errors,
@@ -70,7 +61,6 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
       const v2Form = await getFormForContext(categoryId, subcategoryId);
 
       if (v2Form && v2Form.fields && v2Form.fields.length > 0) {
-        console.log('DynamicFormLoader: usando form_templates_v2');
         setFormV2(v2Form);
         setBackendFields([]);
         onConnectionError?.(false);
@@ -78,7 +68,6 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
       }
 
       // 2. Fallback: sistema legacy
-      console.log('DynamicFormLoader: sin template v2, usando legacy');
       const legacyFields = await getFieldsForSubcategory(subcategoryId);
       setFormV2(null);
       setBackendFields(legacyFields);

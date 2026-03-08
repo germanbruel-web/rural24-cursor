@@ -22,7 +22,7 @@ import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
 import { Button } from '../../design-system/components/Button';
 import { Input } from '../../design-system/components/Input';
-import { PROVINCES, LOCALITIES_BY_PROVINCE } from '../../constants/locations';
+import { getProvinces, getLocalitiesByProvince, type Province, type Locality } from '../../services/v2/locationsService';
 import { DynamicFormLoader } from '../forms/DynamicFormLoader';
 import { SimpleImageUploader, UploadedImage } from '../SimpleImageUploader/SimpleImageUploader';
 import { useAuth } from '../../contexts/AuthContext';
@@ -92,6 +92,11 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [filteredSubcategories, setFilteredSubcategories] = useState<Subcategory[]>([]);
 
+  // Locations
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [localities, setLocalities] = useState<Locality[]>([]);
+  const [selectedProvinceId, setSelectedProvinceId] = useState('');
+
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -121,7 +126,13 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
   useEffect(() => {
     loadCatalog();
     loadAd();
+    getProvinces().then(setProvinces).catch(() => {});
   }, [adId]);
+
+  useEffect(() => {
+    if (!selectedProvinceId) { setLocalities([]); return; }
+    getLocalitiesByProvince(selectedProvinceId).then(setLocalities).catch(() => {});
+  }, [selectedProvinceId]);
 
   // Filtrar subcategorías cuando cambia categoría
   useEffect(() => {
@@ -166,6 +177,12 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
       setCurrency(data.currency || 'ARS');
       setProvince(data.province || '');
       setLocality(data.city || data.location || '');
+      if (data.province) {
+        getProvinces().then((provs) => {
+          const found = provs.find((p) => p.name === data.province);
+          if (found) setSelectedProvinceId(found.id);
+        }).catch(() => {});
+      }
       setStatus(data.status || 'active');
       
       // Categoría y Subcategoría
@@ -472,13 +489,12 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Provincia</label>
                 <select
-                  value={province}
+                  value={selectedProvinceId}
                   onChange={(e) => {
-                    setProvince(e.target.value);
-                    if (locality) {
-                      setLocality('');
-                      trackFieldChange('location');
-                    }
+                    const prov = provinces.find((p) => p.id === e.target.value);
+                    setSelectedProvinceId(e.target.value);
+                    setProvince(prov?.name ?? '');
+                    if (locality) { setLocality(''); trackFieldChange('location'); }
                     trackFieldChange('province');
                   }}
                   className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-primary-500 ${
@@ -486,8 +502,8 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
                   }`}
                 >
                   <option value="">Seleccionar...</option>
-                  {PROVINCES.map((prov) => (
-                    <option key={prov} value={prov}>{prov}</option>
+                  {provinces.map((prov) => (
+                    <option key={prov.id} value={prov.id}>{prov.name}</option>
                   ))}
                 </select>
               </div>
@@ -499,18 +515,18 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
                     setLocality(e.target.value);
                     trackFieldChange('location');
                   }}
-                  disabled={!province}
+                  disabled={!selectedProvinceId}
                   className={`w-full px-2 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50 ${
                     modifiedFields.has('location') ? 'border-primary-500 ring-1 ring-primary-100' : 'border-gray-300'
                   }`}
                 >
                   <option value="">Seleccionar...</option>
-                  {/* Mostrar localidad actual si no está en la lista */}
-                  {locality && !LOCALITIES_BY_PROVINCE[province]?.includes(locality) && (
+                  {/* Mostrar localidad actual si no está en la lista DB */}
+                  {locality && !localities.find((l) => l.name === locality) && (
                     <option value={locality}>{locality}</option>
                   )}
-                  {LOCALITIES_BY_PROVINCE[province]?.map((loc) => (
-                    <option key={loc} value={loc}>{loc}</option>
+                  {localities.map((loc) => (
+                    <option key={loc.id} value={loc.name}>{loc.name}</option>
                   ))}
                 </select>
               </div>

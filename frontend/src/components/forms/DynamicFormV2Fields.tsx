@@ -354,16 +354,16 @@ export const DynamicFormV2Fields: React.FC<DynamicFormV2FieldsProps> = ({
 
     return (
       <>
-        {/* Campos normales: grid según field_width */}
+        {/* Campos normales: grid de 6 columnas virtuales (full=6, half=3, third=2) */}
         {nonCheckboxes.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-5">
             {nonCheckboxes.map((field) => {
               const widthCls =
                 field.field_width === 'full'
-                  ? 'md:col-span-2'
+                  ? 'md:col-span-6'
                   : field.field_width === 'third'
-                  ? '' // sin span extra en grid 2col
-                  : ''; // half = 1 col en grid 2col
+                  ? 'md:col-span-2'
+                  : 'md:col-span-3'; // half = 3/6
               return (
                 <div key={field.id} className={widthCls}>
                   <FieldRenderer
