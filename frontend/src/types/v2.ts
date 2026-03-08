@@ -159,6 +159,8 @@ export interface FormFieldV2 {
   display_order: number;
   metadata?: Record<string, any>;
   created_at: string;
+  // Vínculo a catálogo centralizado (Sprint 4A)
+  option_list_id?: string | null;
   // Opciones estáticas
   options?: Array<{
     value: string;

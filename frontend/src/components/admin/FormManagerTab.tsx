@@ -11,17 +11,16 @@ import {
   Plus,
   Copy,
   Trash2,
-  Eye,
   Search,
   FileText,
   Loader2,
   AlertCircle,
-  ChevronDown,
   X,
   Check,
-  Tag,
   Layers,
+  Settings2,
 } from 'lucide-react';
+import { FieldsEditorDrawer } from './FieldsEditorDrawer';
 import {
   getAllFormTemplates,
   getFormByName,
@@ -353,9 +352,10 @@ interface TemplateRowProps {
   onDelete: (t: FormTemplateV2) => void;
   onDuplicate: (t: FormTemplateV2) => void;
   onToggleActive: (t: FormTemplateV2) => void;
+  onEditFields: (t: FormTemplateV2) => void;
 }
 
-function TemplateRow({ template, onDelete, onDuplicate, onToggleActive }: TemplateRowProps) {
+function TemplateRow({ template, onDelete, onDuplicate, onToggleActive, onEditFields }: TemplateRowProps) {
   return (
     <tr className="hover:bg-gray-50 transition-colors group">
       <td className="px-4 py-3">
@@ -377,9 +377,14 @@ function TemplateRow({ template, onDelete, onDuplicate, onToggleActive }: Templa
         </span>
       </td>
       <td className="px-4 py-3 text-center">
-        <span className="text-sm text-gray-700 tabular-nums">
-          {(template as any).field_count ?? '—'}
-        </span>
+        <button
+          onClick={() => onEditFields(template)}
+          title="Editar campos"
+          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-sm text-brand-600 hover:bg-brand-50 font-medium transition-colors tabular-nums"
+        >
+          <Settings2 className="w-3.5 h-3.5" />
+          {(template as any).field_count ?? 0} campos
+        </button>
       </td>
       <td className="px-4 py-3 text-center">
         <span className="text-xs text-gray-500 tabular-nums">
@@ -433,6 +438,7 @@ export function FormManagerTab() {
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all');
   const [showCreate, setShowCreate] = useState(false);
   const [duplicating, setDuplicating] = useState<FormTemplateV2 | null>(null);
+  const [editingFields, setEditingFields] = useState<FormTemplateV2 | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -618,6 +624,7 @@ export function FormManagerTab() {
                     onDelete={handleDelete}
                     onDuplicate={(tmpl) => setDuplicating(tmpl)}
                     onToggleActive={handleToggleActive}
+                    onEditFields={(tmpl) => setEditingFields(tmpl)}
                   />
                 ))}
               </tbody>
@@ -639,6 +646,16 @@ export function FormManagerTab() {
           source={duplicating}
           onClose={() => setDuplicating(null)}
           onDuplicated={() => { setDuplicating(null); loadData(); }}
+        />
+      )}
+
+      {/* Fields Editor Drawer */}
+      {editingFields && (
+        <FieldsEditorDrawer
+          templateId={editingFields.id}
+          templateName={editingFields.display_name}
+          onClose={() => setEditingFields(null)}
+          onFieldsChanged={loadData}
         />
       )}
     </div>
