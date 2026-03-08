@@ -10,7 +10,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   HeroWithCarousel,
-  HeroCategoryButtons,
   FeaturedAdsSection,
   HowItWorksSection,
   BannersVipHero,
@@ -79,15 +78,10 @@ export const HomePage: React.FC<HomePageProps> = ({
       <HeroWithCarousel 
         bannerSlot={
           <div className="max-w-[1100px] mx-auto">
-            <BannersVipHero category={hoveredCategory || undefined} />
+            <BannersVipHero />
           </div>
         }
       >
-        <HeroCategoryButtons 
-          onSearch={onSearch} 
-          onCategoryHover={onCategoryHover}
-          onBannerChange={onBannerChange}
-        />
       </HeroWithCarousel>
 
       {/* Widgets informativos: clima, precios, calendario, guías */}
@@ -113,7 +107,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       ) : (
         // Loading skeleton
         <section className="py-8 sm:py-12 bg-white" aria-busy="true" aria-label="Cargando avisos destacados">
-          <div className="max-w-[1400px] mx-auto px-3 sm:px-4">
+          <div className="max-w-[1440px] mx-auto px-3 sm:px-4">
             <div className="h-12 bg-gray-200 rounded animate-pulse mb-6" />
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
               {[...Array(5)].map((_, i) => (

@@ -4,7 +4,9 @@
 // ====================================================================
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, X, GripVertical, AlertCircle, CheckCircle2, Download, Upload, Eye, LayoutGrid, Folder } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, GripVertical, AlertCircle, CheckCircle2, Download, Upload, Eye, LayoutGrid, Folder, FileText, ClipboardList } from 'lucide-react';
+import { FormManagerTab } from './FormManagerTab';
+import { OptionListsTab } from './OptionListsTab';
 import { getCategories, getSubcategories, getCategoryTypes } from '../../services/v2/formsService';
 import {
   getAttributes,
@@ -133,10 +135,34 @@ function SortableAttribute({ attr, onEdit, onDelete }: SortableAttributeProps) {
   );
 }
 
+type AdminTab = 'attributes' | 'forms' | 'lists';
+
+const TABS: { id: AdminTab; label: string; icon: React.ReactNode; description: string }[] = [
+  {
+    id: 'attributes',
+    label: 'Atributos',
+    icon: <LayoutGrid className="w-4 h-4" />,
+    description: 'Campos por subcategoría',
+  },
+  {
+    id: 'forms',
+    label: 'Formularios',
+    icon: <FileText className="w-4 h-4" />,
+    description: 'Formularios de alta',
+  },
+  {
+    id: 'lists',
+    label: 'Listas de Opciones',
+    icon: <ClipboardList className="w-4 h-4" />,
+    description: 'Catálogos reutilizables',
+  },
+];
+
 export function AttributesAdmin() {
   // ====================================================================
   // STATE
   // ====================================================================
+  const [activeTab, setActiveTab] = useState<AdminTab>('attributes');
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   // const [types, setTypes] = useState<any[]>([]); // SOFT HIDE: Campo tipo deshabilitado
@@ -605,9 +631,58 @@ export function AttributesAdmin() {
   const showForm = isCreating || editingId;
   const needsOptions = formData.field_type === 'select' || formData.field_type === 'multiselect';
 
+  // Si no es el tab de atributos, renderizar el tab correspondiente
+  if (activeTab !== 'attributes') {
+    return (
+      <div className="space-y-6">
+        {/* Tab navigation */}
+        <div className="border-b border-gray-200">
+          <nav className="flex gap-1" aria-label="Secciones de gestión">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'border-brand-600 text-brand-700 bg-brand-50/50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+        {activeTab === 'forms' && <FormManagerTab />}
+        {activeTab === 'lists' && <OptionListsTab />}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Tab navigation */}
+      <div className="border-b border-gray-200 -mt-2">
+        <nav className="flex gap-1" aria-label="Secciones de gestión">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'border-brand-600 text-brand-700 bg-brand-50/50'
+                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+              }`}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Header — Atributos */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Atributos Dinámicos</h1>
