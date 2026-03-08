@@ -32,8 +32,9 @@ import {
 } from 'lucide-react';
 import { Building2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { getCategories, getSubcategories } from '../../services/v2/formsService';
-import type { Category, Subcategory } from '../../types/v2';
+import { getCategories, getSubcategories, getFormForContext } from '../../services/v2/formsService';
+import type { Category, Subcategory, PriceConfig } from '../../types/v2';
+import { getOptionListItemsByName } from '../../services/v2/optionListsService';
 import { getProvinces, getLocalitiesByProvince, type Province, type Locality } from '../../services/v2/locationsService';
 import { supabase } from '../../services/supabaseClient';
 import { uploadService } from '../../services/uploadService';
@@ -153,8 +154,10 @@ export default function PublicarAviso() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [priceNegotiable, setPriceNegotiable] = useState(false);  // ✅ A Convenir
   const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
+  const [priceUnit, setPriceUnit] = useState('');
+  const [priceConfig, setPriceConfig] = useState<PriceConfig | null>(null);
+  const [priceUnitOptions, setPriceUnitOptions] = useState<{ value: string; label: string }[]>([]);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [suggestedDescriptions, setSuggestedDescriptions] = useState<string[]>([]);
   const [selectedTitleIndex, setSelectedTitleIndex] = useState<number | null>(null);
@@ -310,7 +313,26 @@ export default function PublicarAviso() {
   // Cargar wizard config cuando cambia la categoría seleccionada
   useEffect(() => {
     getWizardConfig(selectedCategory || null).then(setWizardSteps);
-  }, [selectedCategory]);
+
+    // Cargar price_config del template cuando cambia categoría/subcategoría
+    if (selectedSubcategory) {
+      getFormForContext(selectedCategory || undefined, selectedSubcategory)
+        .then((form) => {
+          const cfg = form?.price_config ?? null;
+          setPriceConfig(cfg);
+          setPriceUnit('');
+          if (cfg?.units_list) {
+            getOptionListItemsByName(cfg.units_list).then(setPriceUnitOptions).catch(() => setPriceUnitOptions([]));
+          } else {
+            setPriceUnitOptions([]);
+          }
+        })
+        .catch(() => { setPriceConfig(null); setPriceUnitOptions([]); });
+    } else {
+      setPriceConfig(null);
+      setPriceUnitOptions([]);
+    }
+  }, [selectedCategory, selectedSubcategory]);
 
   // Cargar localidades cuando cambia la provincia seleccionada
   useEffect(() => {
@@ -409,6 +431,7 @@ export default function PublicarAviso() {
     setDescription(draft.description);
     setPrice(draft.price);
     setCurrency(draft.currency);
+    setPriceUnit((draft as any).priceUnit || '');
   }
 
   /**
@@ -547,6 +570,7 @@ export default function PublicarAviso() {
       setDescription(ad.description || '');
       setPrice(ad.price ? String(ad.price) : '');
       setCurrency(ad.currency || 'ARS');
+      setPriceUnit((ad as any).price_unit || '');
       
       notify.success('Aviso cargado para edición');
     } catch (error: any) {
@@ -702,6 +726,10 @@ export default function PublicarAviso() {
         notify.error('Completa título y descripción');
         return;
       }
+      if (!price) {
+        notify.error('El precio es obligatorio');
+        return;
+      }
       if (title.trim().length < 10) {
         notify.error('El título debe tener al menos 10 caracteres');
         return;
@@ -819,8 +847,9 @@ export default function PublicarAviso() {
         ad_type: selectedPageType === 'empresa' ? 'company' : 'particular',
         title: title.trim(),
         description: description.trim(),
-        price: priceNegotiable ? null : (price ? parseInt(price) : null),  // ✅ Sin decimales
-        price_negotiable: priceNegotiable,  // ✅ Nuevo campo
+        price: price ? parseInt(price) : null,
+        price_unit: priceUnit || null,
+        price_negotiable: false,
         currency,
         location: locality || null,
         province,
@@ -1450,69 +1479,65 @@ export default function PublicarAviso() {
                 {/* Precio */}
                 <div className="space-y-4">
                   <label className={DS.label}>
-                    Precio
+                    Precio <span className="text-red-500">*</span>
                   </label>
 
-                  {/* Checkbox: A Convenir */}
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={priceNegotiable}
-                      onChange={(e) => {
-                        setPriceNegotiable(e.target.checked);
-                        if (e.target.checked) setPrice('');
-                      }}
-                      className={DS.checkbox}
-                    />
-                    <span className="text-base font-medium text-gray-700 group-hover:text-primary-600 transition-colors flex items-center gap-2">
-                      <DollarSign className="w-4 h-4" />
-                      A Convenir (no especificar precio)
-                    </span>
-                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Monto */}
+                    <div className={priceUnitOptions.length > 0 ? 'sm:col-span-1' : 'sm:col-span-2'}>
+                      <input
+                        type="text"
+                        value={formatPriceDisplay(price)}
+                        onChange={(e) => setPrice(cleanPrice(e.target.value))}
+                        placeholder="ej: 50000"
+                        className={DS.input}
+                      />
+                      <p className={DS.helperText}>Solo números enteros</p>
+                    </div>
 
-                  {/* Input de precio - Solo si NO es "A Convenir" */}
-                  {!priceNegotiable && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="sm:col-span-2">
-                        <input
-                          type="text"
-                          value={formatPriceDisplay(price)}
-                          onChange={(e) => setPrice(cleanPrice(e.target.value))}
-                          placeholder="50000"
-                          className={DS.input}
-                        />
-                        <p className={DS.helperText}>
-                          Solo números enteros (sin centavos)
-                        </p>
-                      </div>
+                    {/* Moneda */}
+                    <div>
+                      <select
+                        value={currency}
+                        onChange={(e) => setCurrency(e.target.value as 'ARS' | 'USD')}
+                        className={DS.input}
+                      >
+                        <option value="ARS">ARS $</option>
+                        <option value="USD">USD $</option>
+                      </select>
+                    </div>
 
+                    {/* Unidad (solo si el template tiene price_config.units_list) */}
+                    {priceUnitOptions.length > 0 && (
                       <div>
                         <select
-                          value={currency}
-                          onChange={(e) => setCurrency(e.target.value as 'ARS' | 'USD')}
+                          value={priceUnit}
+                          onChange={(e) => setPriceUnit(e.target.value)}
                           className={DS.input}
                         >
-                          <option value="ARS">ARS $</option>
-                          <option value="USD">USD $</option>
+                          <option value="">Unidad...</option>
+                          {priceUnitOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
                         </select>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
-                  {/* Preview del precio formateado */}
-                  {price && !priceNegotiable && (
+                  {/* Preview */}
+                  {price && (
                     <div className="flex items-center gap-2 p-3 bg-primary-50 border-2 border-primary-200 rounded-lg">
                       <DollarSign className="w-5 h-5 text-primary-600" />
                       <span className="text-sm text-gray-700">
-                        Se publicará como: <strong className="text-primary-700 text-lg">{formatCurrency(price, currency)}</strong>
+                        Se publicará como:{' '}
+                        <strong className="text-primary-700 text-lg">
+                          {formatCurrency(price, currency)}
+                          {priceUnit && priceUnitOptions.find(o => o.value === priceUnit)
+                            ? ` ${priceUnitOptions.find(o => o.value === priceUnit)!.label}`
+                            : ''}
+                        </strong>
                       </span>
                     </div>
-                  )}
-
-                  {priceNegotiable && (
-                    <InfoBox variant="info" size="sm">
-                      Se publicará como <strong>A Convenir</strong>
-                    </InfoBox>
                   )}
                 </div>
               </div>
@@ -1570,8 +1595,8 @@ export default function PublicarAviso() {
                     data={{
                       title,
                       description,
-                      price: priceNegotiable ? null : (price ? parseInt(price) : null),  // ✅ Sin decimales
-                      price_negotiable: priceNegotiable,  // ✅ Mostrar si es "A Convenir"
+                      price: price ? parseInt(price) : null,
+                      price_unit: priceUnit || null,
                       currency,
                       province,
                       city: locality || null,

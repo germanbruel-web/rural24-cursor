@@ -178,6 +178,7 @@ export async function getFormByName(
       form_display_name: template.display_name,
       sections: template.sections,
       fields: fieldsWithOptions,
+      price_config: template.price_config ?? undefined,
     };
   } catch (error) {
     console.error('❌ Error in getFormByName:', error);

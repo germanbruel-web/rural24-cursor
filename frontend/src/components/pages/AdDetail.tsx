@@ -325,12 +325,22 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
             )}
           </div>
 
-          {ad.price && (
+          {ad.price ? (
             <div className="text-right">
               <div className="text-sm text-gray-600">Precio</div>
               <div className="text-3xl font-bold text-brand-600">
-                ${ad.price.toLocaleString()}
+                ${ad.price.toLocaleString('es-AR')}
               </div>
+              {(ad as any).price_unit && (
+                <div className="text-sm text-gray-500 mt-0.5">
+                  por {(ad as any).price_unit.replace('-', ' ')}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-right">
+              <div className="text-sm text-gray-600">Precio</div>
+              <div className="text-xl font-semibold text-gray-500">A convenir</div>
             </div>
           )}
         </div>

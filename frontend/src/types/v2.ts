@@ -191,12 +191,18 @@ export interface FormFieldOptionV2 {
   metadata?: Record<string, any>;
 }
 
+export interface PriceConfig {
+  required: boolean;
+  units_list?: string;  // nombre de option_list. Sin valor = precio total sin selector
+}
+
 export interface CompleteFormV2 {
   form_id: string;
   form_name: string;
   form_display_name: string;
   sections: FormSection[];
   fields: FormFieldV2[];
+  price_config?: PriceConfig;
 }
 
 // ============================================================================
