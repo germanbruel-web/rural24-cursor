@@ -74,6 +74,7 @@ export async function updateFormField(
     placeholder: string | null;
     help_text: string | null;
     option_list_id: string | null;
+    data_source_config: FormFieldV2['data_source_config'] | null;
   }>
 ): Promise<void> {
   const { error } = await supabase

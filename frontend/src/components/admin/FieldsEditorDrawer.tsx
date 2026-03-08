@@ -31,6 +31,7 @@ import {
   Link2,
   ListOrdered,
   ChevronRight,
+  Eye,
 } from 'lucide-react';
 import {
   getFormFields,
@@ -43,7 +44,7 @@ import {
   addFieldOption,
   deleteFieldOption,
 } from '../../services/v2/formFieldsService';
-import { getOptionLists } from '../../services/v2/optionListsService';
+import { getOptionLists, getOptionListItemsForSelect } from '../../services/v2/optionListsService';
 import type { OptionList } from '../../services/v2/optionListsService';
 import { notify } from '../../utils/notifications';
 import type { FormFieldV2, FormFieldOptionV2 } from '../../types/v2';
@@ -51,6 +52,8 @@ import type { FormFieldV2, FormFieldOptionV2 } from '../../types/v2';
 // ─── TIPOS LOCALES ─────────────────────────────────────────────
 
 type FieldExtended = FormFieldV2 & { option_list_id?: string | null };
+type CondMode = 'fixed' | 'conditional';
+type SelectOpt = { value: string; label: string };
 
 type FieldType = FormFieldV2['field_type'];
 type FieldWidth = FormFieldV2['field_width'];
@@ -190,22 +193,79 @@ function StaticOptionsManager({ fieldId, onClose }: StaticOptionsMgrProps) {
 interface FieldEditFormProps {
   field: FieldExtended;
   optionLists: OptionList[];
+  allFields: FieldExtended[];   // otros campos del mismo template (para elegir campo padre)
   onSave: (updates: Partial<FieldExtended>) => Promise<void>;
   onCancel: () => void;
 }
 
-function FieldEditForm({ field, optionLists, onSave, onCancel }: FieldEditFormProps) {
+function FieldEditForm({ field, optionLists, allFields, onSave, onCancel }: FieldEditFormProps) {
   const [label, setLabel] = useState(field.field_label);
   const [type, setType] = useState<FieldType>(field.field_type);
   const [width, setWidth] = useState<FieldWidth>(field.field_width);
   const [required, setRequired] = useState(field.is_required);
   const [placeholder, setPlaceholder] = useState(field.placeholder ?? '');
   const [helpText, setHelpText] = useState(field.help_text ?? '');
-  const [optionListId, setOptionListId] = useState<string>(field.option_list_id ?? '');
   const [showStaticOptions, setShowStaticOptions] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // ── Opciones: modo fijo vs condicional ──────────────────────
+  const [condMode, setCondMode] = useState<CondMode>(() =>
+    field.data_source_config?.depends_on ? 'conditional' : 'fixed'
+  );
+  const [optionListId, setOptionListId] = useState<string>(field.option_list_id ?? '');
+  const [dependsOn, setDependsOn] = useState(field.data_source_config?.depends_on ?? '');
+  const [listMap, setListMap] = useState<Record<string, string>>(field.data_source_config?.list_map ?? {});
+  const [parentItems, setParentItems] = useState<SelectOpt[]>([]);
+  const [parentLoading, setParentLoading] = useState(false);
+
+  // ── Visibilidad condicional (cualquier tipo de campo) ────────
+  const [hasVisibleWhen, setHasVisibleWhen] = useState(!!field.data_source_config?.visible_when);
+  const [visibleWhenField, setVisibleWhenField] = useState(field.data_source_config?.visible_when?.field ?? '');
+  const [visibleWhenValue, setVisibleWhenValue] = useState(() => {
+    const v = field.data_source_config?.visible_when?.value;
+    return Array.isArray(v) ? v[0] : (v ?? '');
+  });
+
   const needsOptions = NEEDS_OPTIONS.includes(type);
+
+  // Campos hermanos con option_list (para elegir como padre)
+  const selectableSiblings = allFields.filter(
+    (f) => f.id !== field.id && NEEDS_OPTIONS.includes(f.field_type) && f.option_list_id
+  );
+
+  // Cargar ítems del campo padre para generar filas del list_map
+  useEffect(() => {
+    if (condMode !== 'conditional' || !dependsOn) { setParentItems([]); return; }
+    const parent = allFields.find((f) => f.field_name === dependsOn);
+    if (!parent?.option_list_id) { setParentItems([]); return; }
+    setParentLoading(true);
+    getOptionListItemsForSelect(parent.option_list_id)
+      .then(setParentItems)
+      .catch(() => setParentItems([]))
+      .finally(() => setParentLoading(false));
+  }, [condMode, dependsOn, allFields]);
+
+  // Al cambiar campo padre → resetear el listMap
+  const handleDependsOnChange = (value: string) => {
+    setDependsOn(value);
+    setListMap({});
+  };
+
+  // Construye el data_source_config final para guardar
+  const buildDataSourceConfig = () => {
+    const cfg: Record<string, any> = {};
+    if (condMode === 'conditional' && dependsOn) {
+      cfg.depends_on = dependsOn;
+      // Solo guardar entradas con lista asignada (vacío = sin lista)
+      const filteredMap: Record<string, string> = {};
+      Object.entries(listMap).forEach(([k, v]) => { if (v) filteredMap[k] = v; });
+      cfg.list_map = filteredMap;
+    }
+    if (hasVisibleWhen && visibleWhenField && visibleWhenValue) {
+      cfg.visible_when = { field: visibleWhenField, value: visibleWhenValue };
+    }
+    return Object.keys(cfg).length > 0 ? cfg : null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -219,37 +279,32 @@ function FieldEditForm({ field, optionLists, onSave, onCancel }: FieldEditFormPr
         is_required: required,
         placeholder: placeholder.trim() || null,
         help_text: helpText.trim() || null,
-        option_list_id: needsOptions && optionListId ? optionListId : null,
+        option_list_id: (needsOptions && condMode === 'fixed' && optionListId) ? optionListId : null,
+        data_source_config: buildDataSourceConfig(),
       });
     } finally {
       setSaving(false);
     }
   };
 
+  const inputCls = 'w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent';
+
   return (
     <form onSubmit={handleSubmit} className="mt-2 p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
+
       {/* Label + tipo */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Etiqueta *</label>
-          <input
-            type="text"
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
-            autoFocus
-          />
+          <input type="text" value={label} onChange={(e) => setLabel(e.target.value)}
+            className={inputCls} autoFocus />
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Tipo</label>
-          <select
-            value={type}
-            onChange={(e) => { setType(e.target.value as FieldType); setOptionListId(''); setShowStaticOptions(false); }}
-            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
-          >
-            {FIELD_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
+          <select value={type}
+            onChange={(e) => { setType(e.target.value as FieldType); setOptionListId(''); setShowStaticOptions(false); setCondMode('fixed'); }}
+            className={inputCls}>
+            {FIELD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
         </div>
       </div>
@@ -258,25 +313,15 @@ function FieldEditForm({ field, optionLists, onSave, onCancel }: FieldEditFormPr
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Ancho</label>
-          <select
-            value={width}
-            onChange={(e) => setWidth(e.target.value as FieldWidth)}
-            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
-          >
-            {FIELD_WIDTH_OPTIONS.map((w) => (
-              <option key={w.value} value={w.value}>{w.label}</option>
-            ))}
+          <select value={width} onChange={(e) => setWidth(e.target.value as FieldWidth)} className={inputCls}>
+            {FIELD_WIDTH_OPTIONS.map((w) => <option key={w.value} value={w.value}>{w.label}</option>)}
           </select>
         </div>
         <div className="flex items-end pb-1">
           <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={required}
-              onChange={(e) => setRequired(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
-            />
-            <span className="text-sm text-gray-700">Campo requerido</span>
+            <input type="checkbox" checked={required} onChange={(e) => setRequired(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600" />
+            <span className="text-sm text-gray-700">Requerido</span>
           </label>
         </div>
       </div>
@@ -285,67 +330,147 @@ function FieldEditForm({ field, optionLists, onSave, onCancel }: FieldEditFormPr
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Placeholder</label>
-          <input
-            type="text"
-            value={placeholder}
-            onChange={(e) => setPlaceholder(e.target.value)}
-            placeholder="ej: Ingresá el valor..."
-            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
-          />
+          <input type="text" value={placeholder} onChange={(e) => setPlaceholder(e.target.value)}
+            placeholder="ej: Seleccioná..." className={inputCls} />
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Texto de ayuda</label>
-          <input
-            type="text"
-            value={helpText}
-            onChange={(e) => setHelpText(e.target.value)}
-            placeholder="ej: Solo valores enteros"
-            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
-          />
+          <input type="text" value={helpText} onChange={(e) => setHelpText(e.target.value)}
+            placeholder="ej: Solo valores enteros" className={inputCls} />
         </div>
       </div>
 
-      {/* Opciones para select/autocomplete */}
+      {/* ─── OPCIONES (solo select / autocomplete) ─────────────── */}
       {needsOptions && (
-        <div className="space-y-2">
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">
-              <Link2 className="w-3 h-3 inline mr-1" /> Vincular a lista de opciones
-            </label>
-            <select
-              value={optionListId}
-              onChange={(e) => { setOptionListId(e.target.value); if (e.target.value) setShowStaticOptions(false); }}
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
-            >
-              <option value="">Sin lista vinculada (opciones manuales)</option>
-              {optionLists.map((ol) => (
-                <option key={ol.id} value={ol.id}>{ol.display_name}</option>
-              ))}
-            </select>
+        <div className="space-y-2 border-t border-gray-200 pt-3">
+          <p className="text-xs font-semibold text-gray-600">Fuente de opciones</p>
+
+          {/* Selector de modo */}
+          <div className="flex gap-3">
+            {(['fixed', 'conditional'] as CondMode[]).map((m) => (
+              <label key={m} className="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name="condMode" value={m}
+                  checked={condMode === m}
+                  onChange={() => { setCondMode(m); setOptionListId(''); setShowStaticOptions(false); }}
+                  className="text-brand-600 focus:ring-brand-600" />
+                <span className="text-xs text-gray-700">
+                  {m === 'fixed' ? 'Lista fija' : 'Depende de otro campo'}
+                </span>
+              </label>
+            ))}
           </div>
 
-          {!optionListId && (
-            <button
-              type="button"
-              onClick={() => setShowStaticOptions((v) => !v)}
-              className="flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700 font-medium"
-            >
-              <ListOrdered className="w-3.5 h-3.5" />
-              {showStaticOptions ? 'Ocultar opciones manuales' : 'Gestionar opciones manuales'}
-              <ChevronRight className={`w-3 h-3 transition-transform ${showStaticOptions ? 'rotate-90' : ''}`} />
-            </button>
+          {/* MODO FIJO */}
+          {condMode === 'fixed' && (
+            <div className="space-y-2">
+              <select value={optionListId}
+                onChange={(e) => { setOptionListId(e.target.value); if (e.target.value) setShowStaticOptions(false); }}
+                className={inputCls}>
+                <option value="">Sin lista vinculada (opciones manuales)</option>
+                {optionLists.map((ol) => <option key={ol.id} value={ol.id}>{ol.display_name}</option>)}
+              </select>
+              {!optionListId && (
+                <button type="button" onClick={() => setShowStaticOptions((v) => !v)}
+                  className="flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700 font-medium">
+                  <ListOrdered className="w-3.5 h-3.5" />
+                  {showStaticOptions ? 'Ocultar opciones manuales' : 'Gestionar opciones manuales'}
+                  <ChevronRight className={`w-3 h-3 transition-transform ${showStaticOptions ? 'rotate-90' : ''}`} />
+                </button>
+              )}
+              {showStaticOptions && !optionListId && (
+                <StaticOptionsManager fieldId={field.id} onClose={() => setShowStaticOptions(false)} />
+              )}
+            </div>
           )}
 
-          {showStaticOptions && !optionListId && (
-            <StaticOptionsManager
-              fieldId={field.id}
-              onClose={() => setShowStaticOptions(false)}
-            />
+          {/* MODO CONDICIONAL */}
+          {condMode === 'conditional' && (
+            <div className="space-y-3">
+              {/* Campo padre */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Campo padre (selector)</label>
+                {selectableSiblings.length === 0 ? (
+                  <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded p-2">
+                    No hay otros campos tipo Selector en este formulario. Agregá uno primero.
+                  </p>
+                ) : (
+                  <select value={dependsOn} onChange={(e) => handleDependsOnChange(e.target.value)} className={inputCls}>
+                    <option value="">Elegir campo padre...</option>
+                    {selectableSiblings.map((f) => (
+                      <option key={f.id} value={f.field_name}>{f.field_label} ({f.field_name})</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Mapeo de listas */}
+              {dependsOn && (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                    Lista por valor del campo padre
+                  </label>
+                  {parentLoading ? (
+                    <div className="flex items-center gap-2 py-2 text-xs text-gray-400">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Cargando opciones del campo padre...
+                    </div>
+                  ) : parentItems.length === 0 ? (
+                    <p className="text-xs text-gray-400 bg-gray-100 rounded p-2">
+                      El campo padre no tiene opciones cargadas aún.
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5 bg-white border border-gray-200 rounded-lg p-2">
+                      {parentItems.map((item) => (
+                        <div key={item.value} className="flex items-center gap-2">
+                          <span className="w-32 text-xs text-gray-700 font-medium truncate shrink-0" title={item.label}>
+                            {item.label}
+                          </span>
+                          <span className="text-gray-300 text-xs">→</span>
+                          <select
+                            value={listMap[item.value] ?? ''}
+                            onChange={(e) => setListMap((prev) => ({ ...prev, [item.value]: e.target.value }))}
+                            className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-brand-600 focus:border-transparent"
+                          >
+                            <option value="">Sin lista (vacío)</option>
+                            {optionLists.map((ol) => (
+                              <option key={ol.id} value={ol.name}>{ol.display_name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
 
-      {/* Nombre interno (readonly) */}
+      {/* ─── VISIBILIDAD CONDICIONAL (cualquier tipo) ───────────── */}
+      <div className="border-t border-gray-200 pt-3 space-y-2">
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" checked={hasVisibleWhen} onChange={(e) => setHasVisibleWhen(e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600" />
+          <span className="text-xs font-semibold text-gray-600">Mostrar solo cuando...</span>
+        </label>
+        {hasVisibleWhen && (
+          <div className="flex items-center gap-2 pl-6">
+            <select value={visibleWhenField} onChange={(e) => setVisibleWhenField(e.target.value)}
+              className="flex-1 px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent">
+              <option value="">Campo...</option>
+              {allFields.filter((f) => f.id !== field.id).map((f) => (
+                <option key={f.id} value={f.field_name}>{f.field_label} ({f.field_name})</option>
+              ))}
+            </select>
+            <span className="text-xs text-gray-400 shrink-0">=</span>
+            <input type="text" value={visibleWhenValue} onChange={(e) => setVisibleWhenValue(e.target.value)}
+              placeholder="valor exacto"
+              className="flex-1 px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent" />
+          </div>
+        )}
+      </div>
+
+      {/* Nombre interno */}
       <p className="text-xs text-gray-400">
         Nombre interno: <code className="bg-gray-200 px-1 rounded">{field.field_name}</code>
       </p>
@@ -493,6 +618,7 @@ interface FieldCardProps {
   idx: number;
   total: number;
   optionLists: OptionList[];
+  allFields: FieldExtended[];
   isEditing: boolean;
   onEdit: () => void;
   onCancelEdit: () => void;
@@ -503,7 +629,7 @@ interface FieldCardProps {
 }
 
 function FieldCard({
-  field, idx, total, optionLists, isEditing,
+  field, idx, total, optionLists, allFields, isEditing,
   onEdit, onCancelEdit, onSave, onDelete, onMoveUp, onMoveDown,
 }: FieldCardProps) {
   const linkedList = optionLists.find((ol) => ol.id === field.option_list_id);
@@ -549,9 +675,18 @@ function FieldCard({
             {field.field_width !== 'full' && (
               <span className="text-xs text-gray-400">{field.field_width === 'half' ? '½' : '⅓'}</span>
             )}
-            {linkedList && (
+            {field.data_source_config?.depends_on ? (
+              <span className="flex items-center gap-0.5 text-xs text-purple-600">
+                <Zap className="w-3 h-3" /> depende de {field.data_source_config.depends_on}
+              </span>
+            ) : linkedList ? (
               <span className="flex items-center gap-0.5 text-xs text-brand-600">
                 <Link2 className="w-3 h-3" /> {linkedList.display_name}
+              </span>
+            ) : null}
+            {field.data_source_config?.visible_when && (
+              <span className="flex items-center gap-0.5 text-xs text-amber-600">
+                <Eye className="w-3 h-3" /> si {field.data_source_config.visible_when.field}={String(field.data_source_config.visible_when.value)}
               </span>
             )}
           </div>
@@ -582,6 +717,7 @@ function FieldCard({
           <FieldEditForm
             field={field}
             optionLists={optionLists}
+            allFields={allFields}
             onSave={onSave}
             onCancel={onCancelEdit}
           />
@@ -771,6 +907,7 @@ export function FieldsEditorDrawer({
                   idx={idx}
                   total={sortedFields.length}
                   optionLists={optionLists}
+                  allFields={sortedFields}
                   isEditing={editingId === field.id}
                   onEdit={() => { setEditingId(editingId === field.id ? null : field.id); setShowAddForm(false); }}
                   onCancelEdit={() => setEditingId(null)}
