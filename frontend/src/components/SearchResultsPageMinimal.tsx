@@ -304,7 +304,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb y contador de resultados */}
       <div className="border-b bg-white">
-        <div className="max-w-[1400px] mx-auto px-4 py-4">
+        <div className="max-w-[1440px] mx-auto px-4 py-4">
           <SmartBreadcrumb
             searchQuery={!detectedMeta?.category ? urlFilters.q : undefined}
             categoryName={resolvedCategory?.name || detectedMeta?.category}
@@ -318,7 +318,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
 
       {/* Contenido principal */}
       <main className="flex-1">
-        <div className="max-w-[1400px] mx-auto px-4 py-6">
+        <div className="max-w-[1440px] mx-auto px-4 py-6">
           <div className="flex flex-col lg:flex-row gap-6">
             
             {/* Botón para abrir filtros en mobile */}

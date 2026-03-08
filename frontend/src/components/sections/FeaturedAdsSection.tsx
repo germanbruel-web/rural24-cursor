@@ -224,7 +224,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
         aria-busy="true"
         aria-label="Cargando avisos destacados"
       >
-        <div className="max-w-[1400px] mx-auto px-3 sm:px-4">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-4">
           {[1, 2].map((i) => (
             <article key={i} className="mb-6 sm:mb-8 rounded-2xl border border-gray-200 overflow-hidden">
               <div className="bg-white px-4 sm:px-6 pt-5 pb-4 border-b border-gray-100">
@@ -263,7 +263,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
       className="py-8 sm:py-10 bg-white"
       aria-label="Avisos destacados por categoría"
     >
-      <div className="max-w-[1400px] mx-auto px-3 sm:px-4">
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-4">
 
         {/* ── Bloques por categoría ─────────────────────────────────────── */}
         {categoriesData.map((catData) => {

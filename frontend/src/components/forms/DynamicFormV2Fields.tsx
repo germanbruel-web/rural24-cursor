@@ -7,9 +7,9 @@
 // BackendFormSection cuando hay template en form_templates_v2.
 // ============================================================
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { CompleteFormV2, FormFieldV2, FormSection } from '../../types/v2';
-import { getOptionListItemsForSelect } from '../../services/v2/optionListsService';
+import { getOptionListItemsForSelect, getOptionListItemsByName } from '../../services/v2/optionListsService';
 import { getFieldOptions } from '../../services/v2/formFieldsService';
 
 // ─── TIPOS ────────────────────────────────────────────────────
@@ -33,43 +33,149 @@ const labelCls = 'block text-sm font-semibold text-gray-700 mb-2';
 
 const helpCls = 'mt-1.5 text-sm text-gray-500';
 
-// ─── CAMPO SELECT (con carga lazy de opciones) ─────────────────
+// ─── HELPERS DE CONDICIONALES ─────────────────────────────────
+
+/**
+ * Resuelve el nombre de la option_list a cargar según la configuración
+ * del campo y los valores actuales del formulario.
+ *
+ * Prioridad:
+ *  1. Cascada profunda: depends_on_multi + list_map_composite
+ *  2. Cascada simple:   depends_on + list_map
+ *  3. Sin condicional:  null (se usa option_list_id u options estáticas)
+ */
+function resolveConditionalList(
+  cfg: FormFieldV2['data_source_config'],
+  values: Record<string, any>
+): string | null {
+  if (!cfg) return null;
+
+  // Cascada profunda: todos los padres deben tener valor
+  if (cfg.depends_on_multi && cfg.list_map_composite) {
+    const allValues = cfg.depends_on_multi.map((f) => values[f] ?? '');
+    if (allValues.some((v) => !v)) return null; // algún padre vacío
+    const compositeKey = allValues.join('|');
+    return cfg.list_map_composite[compositeKey] ?? null;
+  }
+
+  // Cascada simple (backward compatible)
+  if (cfg.depends_on && cfg.list_map) {
+    const parentValue = values[cfg.depends_on] ?? '';
+    if (!parentValue) return null;
+    return cfg.list_map[parentValue] ?? null;
+  }
+
+  return null;
+}
+
+/**
+ * Determina si un campo está esperando que algún padre tenga valor.
+ */
+function isWaitingForParents(
+  cfg: FormFieldV2['data_source_config'],
+  values: Record<string, any>
+): boolean {
+  if (!cfg) return false;
+  if (cfg.depends_on_multi) {
+    return cfg.depends_on_multi.some((f) => !values[f]);
+  }
+  if (cfg.depends_on) {
+    return !values[cfg.depends_on];
+  }
+  return false;
+}
+
+/**
+ * Calcula la clave de reset: cambia cuando cualquier padre cambia.
+ * Se usa como dependencia en useEffect para resetear el campo hijo.
+ */
+function getParentValuesKey(
+  cfg: FormFieldV2['data_source_config'],
+  values: Record<string, any>
+): string {
+  if (!cfg) return '';
+  if (cfg.depends_on_multi) {
+    return cfg.depends_on_multi.map((f) => values[f] ?? '').join('|');
+  }
+  if (cfg.depends_on) {
+    return values[cfg.depends_on] ?? '';
+  }
+  return '';
+}
+
+/**
+ * Evalúa si un campo debe mostrarse según su regla `visible_when`.
+ * Sin regla → siempre visible.
+ */
+export function isFieldVisible(
+  field: FormFieldV2,
+  values: Record<string, any>
+): boolean {
+  const vw = field.data_source_config?.visible_when;
+  if (!vw) return true;
+  const current = values[vw.field] ?? '';
+  return Array.isArray(vw.value)
+    ? vw.value.includes(current)
+    : current === vw.value;
+}
+
+// ─── CAMPO SELECT (con carga lazy + cascada profunda) ──────────
 
 function SelectFieldV2({
   field,
   value,
   onChange,
   error,
+  values = {},
 }: {
   field: FormFieldV2 & { option_list_id?: string | null };
   value: any;
   onChange: (v: string) => void;
   error?: string;
+  values?: Record<string, any>;
 }) {
   const [options, setOptions] = useState<SelectOption[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const cfg = field.data_source_config;
+  const resolvedListName = resolveConditionalList(cfg, values);
+  const waitingForParent = isWaitingForParents(cfg, values);
+  const parentValuesKey = getParentValuesKey(cfg, values);
+
+  // Resetear este campo cuando cualquier padre cambia
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    if (cfg?.depends_on || cfg?.depends_on_multi) onChange('');
+  }, [parentValuesKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cargar opciones según la fuente resuelta
   useEffect(() => {
     let cancelled = false;
-
     const load = async () => {
       setLoading(true);
       try {
-        if (field.option_list_id) {
-          // Cargar desde option_list centralizado
+        if (resolvedListName) {
+          // Prioridad 1: lista condicional (cascada simple o profunda)
+          const items = await getOptionListItemsByName(resolvedListName);
+          if (!cancelled) setOptions(items);
+        } else if (!waitingForParent && field.option_list_id) {
+          // Prioridad 2: lista centralizada sin condición
           const items = await getOptionListItemsForSelect(field.option_list_id);
           if (!cancelled) setOptions(items);
-        } else if (field.options && field.options.length > 0) {
-          // Opciones estáticas ya cargadas con el campo
+        } else if (!waitingForParent && field.options?.length) {
+          // Prioridad 3: opciones estáticas inline
           if (!cancelled) setOptions(field.options);
-        } else {
-          // Cargar desde form_field_options_v2
+        } else if (!waitingForParent) {
+          // Prioridad 4: form_field_options_v2 (legacy)
           const raw = await getFieldOptions(field.id);
           if (!cancelled)
             setOptions(raw.filter((o) => o.is_active).map((o) => ({
               value: o.option_value,
               label: o.option_label,
             })));
+        } else {
+          if (!cancelled) setOptions([]);
         }
       } catch {
         if (!cancelled) setOptions([]);
@@ -77,19 +183,24 @@ function SelectFieldV2({
         if (!cancelled) setLoading(false);
       }
     };
-
     load();
     return () => { cancelled = true; };
-  }, [field.id, field.option_list_id]);
+  }, [field.id, field.option_list_id, resolvedListName, waitingForParent]);
 
   return (
     <select
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
-      disabled={loading}
-      className={`${inputCls} ${error ? 'border-red-400' : ''}`}
+      disabled={loading || waitingForParent}
+      className={`${inputCls} ${error ? 'border-red-400' : ''} ${waitingForParent ? 'opacity-50' : ''}`}
     >
-      <option value="">{loading ? 'Cargando...' : (field.placeholder || 'Seleccionar...')}</option>
+      <option value="">
+        {waitingForParent
+          ? 'Seleccioná primero...'
+          : loading
+          ? 'Cargando...'
+          : field.placeholder || 'Seleccionar...'}
+      </option>
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>
       ))}
@@ -138,11 +249,13 @@ function FieldRenderer({
   value,
   onChange,
   error,
+  values = {},
 }: {
   field: FormFieldV2 & { option_list_id?: string | null };
   value: any;
   onChange: (name: string, v: any) => void;
   error?: string;
+  values?: Record<string, any>;
 }) {
   const handleChange = (v: any) => onChange(field.field_name, v);
 
@@ -165,7 +278,7 @@ function FieldRenderer({
       </label>
 
       {field.field_type === 'select' || field.field_type === 'autocomplete' ? (
-        <SelectFieldV2 field={field} value={value} onChange={handleChange} error={error} />
+        <SelectFieldV2 field={field} value={value} onChange={handleChange} error={error} values={values} />
       ) : field.field_type === 'textarea' ? (
         <textarea
           value={value ?? ''}
@@ -231,9 +344,13 @@ export const DynamicFormV2Fields: React.FC<DynamicFormV2FieldsProps> = ({
   );
 
   const renderFields = (fields: (FormFieldV2 & { option_list_id?: string | null })[]) => {
+    // Filtrar campos ocultos por visible_when antes de renderizar
+    // (los campos ocultos no bloquean validación de required)
+    const visibleFields = fields.filter((f) => isFieldVisible(f, values));
+
     // Separar checkboxes del resto para agruparlos en grid diferente
-    const checkboxes = fields.filter((f) => f.field_type === 'checkbox');
-    const nonCheckboxes = fields.filter((f) => f.field_type !== 'checkbox');
+    const checkboxes = visibleFields.filter((f) => f.field_type === 'checkbox');
+    const nonCheckboxes = visibleFields.filter((f) => f.field_type !== 'checkbox');
 
     return (
       <>
@@ -254,6 +371,7 @@ export const DynamicFormV2Fields: React.FC<DynamicFormV2FieldsProps> = ({
                     value={values[field.field_name]}
                     onChange={onChange}
                     error={errors[field.field_name]}
+                    values={values}
                   />
                 </div>
               );

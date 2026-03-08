@@ -22,7 +22,7 @@ import {
   EyeOff, FileText, Calendar,
 } from 'lucide-react';
 import { notify } from '../../utils/notifications';
-import { PROVINCES, LOCALITIES_BY_PROVINCE } from '../../constants/locations';
+import { getProvinces, getLocalitiesByProvince, type Province, type Locality } from '../../services/v2/locationsService';
 import { hasPremiumFeatures as checkPremium } from '../../constants/plans';
 import { AvatarUpload } from '../common/AvatarUpload';
 import { sendVerificationCode, verifyCode } from '../../services/phoneVerificationService';
@@ -199,6 +199,8 @@ export const ProfilePanel: React.FC = () => {
     location:      profile?.location || '',
     codigo_postal: (profile as any)?.codigo_postal || '',
   });
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [locationLocalities, setLocationLocalities] = useState<Locality[]>([]);
 
   const [billingSameAddress, setBillingSameAddress] = useState(
     (profile as any)?.billing_same_address !== false
@@ -220,6 +222,16 @@ export const ProfilePanel: React.FC = () => {
   const [verificationCode,    setVerificationCode]    = useState('');
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [verificationMobile,  setVerificationMobile]  = useState('');
+
+  // ── Cargar provincias al montar ───────────────────────────────────────────
+  useEffect(() => { getProvinces().then(setProvinces); }, []);
+
+  // ── Cargar localidades cuando cambia la provincia ─────────────────────────
+  useEffect(() => {
+    if (!locationForm.province) { setLocationLocalities([]); return; }
+    const prov = provinces.find((p) => p.name === locationForm.province);
+    if (prov) getLocalitiesByProvince(prov.id).then(setLocationLocalities);
+  }, [locationForm.province, provinces]);
 
   // ── Sync cuando llega el perfil ───────────────────────────────────────────
   useEffect(() => {
@@ -708,8 +720,8 @@ export const ProfilePanel: React.FC = () => {
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent disabled:opacity-50"
                     >
                       <option value="">Seleccionar</option>
-                      {(LOCALITIES_BY_PROVINCE[locationForm.province] || []).map(loc => (
-                        <option key={loc} value={loc}>{loc}</option>
+                      {locationLocalities.map(loc => (
+                        <option key={loc.id} value={loc.name}>{loc.name}</option>
                       ))}
                     </select>
                   ) : (
@@ -727,8 +739,8 @@ export const ProfilePanel: React.FC = () => {
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
                     >
                       <option value="">Seleccionar</option>
-                      {PROVINCES.map(prov => (
-                        <option key={prov} value={prov}>{prov}</option>
+                      {provinces.map(prov => (
+                        <option key={prov.id} value={prov.name}>{prov.name}</option>
                       ))}
                     </select>
                   ) : (

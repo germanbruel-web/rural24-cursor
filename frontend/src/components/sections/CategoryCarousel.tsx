@@ -212,7 +212,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
   if (isLoading) {
     return (
       <section className="py-8">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-xl p-8 bg-white">
             {/* Header skeleton */}
             <div className="flex items-center mb-6 w-full" style={{ minHeight: '72px' }}>
@@ -266,7 +266,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
     if (category === 'Inmuebles') {
       return (
         <section className="py-8">
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 {categoryIcon && (
@@ -326,7 +326,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
     // Para categorías vacías, mostrar skeleton de cards
     return (
       <section className="py-8">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-xl p-4 md:p-8" style={{ backgroundColor: colors.bg }}>
             {/* Header */}
             <div className="mb-6">
@@ -375,7 +375,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
   // Renderizar el carrusel principal si hay productos
   return (
     <section className="py-10">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-xl p-6 md:p-10">
           {/* MOBILE: Layout vertical optimizado */}
           {isMobile ? (

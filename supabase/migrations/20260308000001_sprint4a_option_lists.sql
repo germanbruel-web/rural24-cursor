@@ -78,20 +78,32 @@ END $$;
 
 ALTER TABLE public.option_lists ENABLE ROW LEVEL SECURITY;
 
--- Todos pueden leer listas activas
-CREATE POLICY "option_lists_select_all"
-  ON public.option_lists FOR SELECT
-  USING (true);
+-- Todos pueden leer listas activas (idempotente)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'option_lists' AND policyname = 'option_lists_select_all'
+  ) THEN
+    EXECUTE $p$ CREATE POLICY "option_lists_select_all" ON public.option_lists FOR SELECT USING (true) $p$;
+  END IF;
+END $$;
 
 -- ─── RLS: option_list_items ───────────────────────────────────
 
 ALTER TABLE public.option_list_items ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "option_list_items_select_all"
-  ON public.option_list_items FOR SELECT
-  USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'option_list_items' AND policyname = 'option_list_items_select_all'
+  ) THEN
+    EXECUTE $p$ CREATE POLICY "option_list_items_select_all" ON public.option_list_items FOR SELECT USING (true) $p$;
+  END IF;
+END $$;
 
--- Policies de escritura (superadmin) — condicional según si profiles existe
+-- Policies de escritura (superadmin) — condicional según si profiles existe + idempotente
 DO $$
 BEGIN
   IF EXISTS (
@@ -100,50 +112,26 @@ BEGIN
   ) THEN
 
     -- option_lists write
-    EXECUTE $p$
-      CREATE POLICY "option_lists_insert_superadmin"
-        ON public.option_lists FOR INSERT
-        WITH CHECK (
-          EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')
-        )
-    $p$;
-    EXECUTE $p$
-      CREATE POLICY "option_lists_update_superadmin"
-        ON public.option_lists FOR UPDATE
-        USING (
-          EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')
-        )
-    $p$;
-    EXECUTE $p$
-      CREATE POLICY "option_lists_delete_superadmin"
-        ON public.option_lists FOR DELETE
-        USING (
-          EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')
-        )
-    $p$;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='option_lists' AND policyname='option_lists_insert_superadmin') THEN
+      EXECUTE $p$ CREATE POLICY "option_lists_insert_superadmin" ON public.option_lists FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')) $p$;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='option_lists' AND policyname='option_lists_update_superadmin') THEN
+      EXECUTE $p$ CREATE POLICY "option_lists_update_superadmin" ON public.option_lists FOR UPDATE USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')) $p$;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='option_lists' AND policyname='option_lists_delete_superadmin') THEN
+      EXECUTE $p$ CREATE POLICY "option_lists_delete_superadmin" ON public.option_lists FOR DELETE USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')) $p$;
+    END IF;
 
     -- option_list_items write
-    EXECUTE $p$
-      CREATE POLICY "option_list_items_insert_superadmin"
-        ON public.option_list_items FOR INSERT
-        WITH CHECK (
-          EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')
-        )
-    $p$;
-    EXECUTE $p$
-      CREATE POLICY "option_list_items_update_superadmin"
-        ON public.option_list_items FOR UPDATE
-        USING (
-          EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')
-        )
-    $p$;
-    EXECUTE $p$
-      CREATE POLICY "option_list_items_delete_superadmin"
-        ON public.option_list_items FOR DELETE
-        USING (
-          EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')
-        )
-    $p$;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='option_list_items' AND policyname='option_list_items_insert_superadmin') THEN
+      EXECUTE $p$ CREATE POLICY "option_list_items_insert_superadmin" ON public.option_list_items FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')) $p$;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='option_list_items' AND policyname='option_list_items_update_superadmin') THEN
+      EXECUTE $p$ CREATE POLICY "option_list_items_update_superadmin" ON public.option_list_items FOR UPDATE USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')) $p$;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='option_list_items' AND policyname='option_list_items_delete_superadmin') THEN
+      EXECUTE $p$ CREATE POLICY "option_list_items_delete_superadmin" ON public.option_list_items FOR DELETE USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin')) $p$;
+    END IF;
 
     RAISE NOTICE 'Superadmin RLS policies created (profiles table found).';
   ELSE

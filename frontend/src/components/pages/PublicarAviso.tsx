@@ -32,9 +32,9 @@ import {
 } from 'lucide-react';
 import { Building2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { getCategories, getSubcategories, getCategoryTypes } from '../../services/v2/formsService';
-import type { Category, Subcategory, CategoryType } from '../../types/v2';
-import { PROVINCES, LOCALITIES_BY_PROVINCE } from '../../constants/locations';
+import { getCategories, getSubcategories } from '../../services/v2/formsService';
+import type { Category, Subcategory } from '../../types/v2';
+import { getProvinces, getLocalitiesByProvince, type Province, type Locality } from '../../services/v2/locationsService';
 import { supabase } from '../../services/supabaseClient';
 import { uploadService } from '../../services/uploadService';
 import { notify } from '../../utils/notifications';
@@ -58,6 +58,7 @@ import TipsCard from '../molecules/TipsCard/TipsCard';
 import { AutoSaveIndicator } from '../molecules/AutoSaveIndicator';
 import { DynamicFormLoader } from '../forms/DynamicFormLoader';
 import { AutofillButton } from '../forms/AutofillButton';
+import { getWizardConfig, DEFAULT_STEPS, type WizardStep } from '../../services/v2/wizardConfigService';
 
 // ====================================================================
 // DESIGN SYSTEM RURAL24 - Estilos consistentes de formularios
@@ -88,16 +89,11 @@ const DS = {
 };
 
 // ====================================================================
-// WIZARD STEPS
+// WIZARD STEPS — icono map para config dinámica
 // ====================================================================
-const STEPS = [
-  { id: 1, title: 'Categoría', icon: Tag, description: '¿Qué publicas?' },
-  { id: 2, title: 'Características', icon: Settings, description: 'Detalles técnicos' },
-  { id: 3, title: 'Ubicación', icon: MapPin, description: 'Dónde está' },
-  { id: 4, title: 'Fotos', icon: Camera, description: 'Imágenes' },
-  { id: 5, title: 'Información', icon: FileText, description: 'Título y descripción' },
-  { id: 6, title: 'Revisar y Publicar', icon: CheckCircle2, description: 'Confirmar publicación' },
-];
+const STEP_ICON_MAP: Record<string, React.FC<any>> = {
+  Tag, Settings, MapPin, Camera, FileText, CheckCircle2,
+};
 
 // ====================================================================
 // MAIN COMPONENT
@@ -105,6 +101,7 @@ const STEPS = [
 export default function PublicarAviso() {
   const { profile } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [wizardSteps, setWizardSteps] = useState<WizardStep[]>(DEFAULT_STEPS);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [draftId, setDraftId] = useState<string>('');
@@ -133,12 +130,10 @@ export default function PublicarAviso() {
   // Step 1: Categorías
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  const [categoryTypes, setCategoryTypes] = useState<CategoryType[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
-  const [selectedCategoryType, setSelectedCategoryType] = useState<string>('');
+  const [selectedCategoryType] = useState<string>('');
   const [selectedPageType, setSelectedPageType] = useState<'particular' | 'empresa'>('particular');
-  const [expandedSubcategory, setExpandedSubcategory] = useState<string>('');
 
   // Step 2: Atributos dinámicos
   const [attributeValues, setAttributeValues] = useState<Record<string, any>>({});
@@ -146,6 +141,9 @@ export default function PublicarAviso() {
   // Step 3: Ubicación
   const [province, setProvince] = useState('');
   const [locality, setLocality] = useState('');
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [localities, setLocalities] = useState<Locality[]>([]);
+  const [selectedProvinceId, setSelectedProvinceId] = useState('');
 
   // Step 4: Fotos - NUEVO: usando SimpleImageUploader
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
@@ -308,6 +306,21 @@ export default function PublicarAviso() {
   // ====================================================================
   // EFFECTS - Cargar datos
   // ====================================================================
+
+  // Cargar wizard config cuando cambia la categoría seleccionada
+  useEffect(() => {
+    getWizardConfig(selectedCategory || null).then(setWizardSteps);
+  }, [selectedCategory]);
+
+  // Cargar localidades cuando cambia la provincia seleccionada
+  useEffect(() => {
+    if (!selectedProvinceId) { setLocalities([]); return; }
+    getLocalitiesByProvince(selectedProvinceId).then(setLocalities);
+  }, [selectedProvinceId]);
+
+  // Derivado: key del step actual
+  const activeStepKey = wizardSteps[currentStep - 1]?.key ?? '';
+
   // ====================================================================
   // LIFECYCLE & INITIALIZATION
   // ====================================================================
@@ -317,10 +330,8 @@ export default function PublicarAviso() {
     initializeOrRecoverDraft();
     cleanupOldDrafts();
     
-    // Establecer provincia por defecto
-    if (!province && PROVINCES.length > 0) {
-      setProvince(PROVINCES[0]);
-    }
+    // Cargar provincias desde DB
+    getProvinces().then(setProvinces);
     
     // Escuchar cambios en el hash para detectar modo edit
     const handleHashChange = () => {
@@ -379,7 +390,7 @@ export default function PublicarAviso() {
     // Step 1 - validar UUIDs del draft
     setSelectedCategory(UUID_REGEX.test(draft.selectedCategory) ? draft.selectedCategory : '');
     setSelectedSubcategory(UUID_REGEX.test(draft.selectedSubcategory) ? draft.selectedSubcategory : '');
-    setSelectedCategoryType(UUID_REGEX.test(draft.selectedCategoryType) ? draft.selectedCategoryType : '');
+    // selectedCategoryType ya no se usa en el wizard (nivel 3 eliminado)
     setSelectedPageType((draft.selectedPageType as 'particular' | 'empresa') || 'particular');
     
     // Step 2
@@ -553,18 +564,8 @@ export default function PublicarAviso() {
     } else {
       setSubcategories([]);
       setSelectedSubcategory('');
-      setExpandedSubcategory('');
-      setCategoryTypes([]);
     }
   }, [selectedCategory]);
-
-  useEffect(() => {
-    if (expandedSubcategory) {
-      getCategoryTypes(expandedSubcategory).then(setCategoryTypes);
-    } else {
-      setCategoryTypes([]);
-    }
-  }, [expandedSubcategory]);
 
   // ====================================================================
   // DATA LOADING
@@ -672,60 +673,50 @@ export default function PublicarAviso() {
   // NAVIGATION
   // ====================================================================
   function goNext() {
-    // Validaciones por step
-    if (currentStep === 1) {
+    // Validaciones por step key
+    if (activeStepKey === 'categoria') {
       if (!selectedCategory || !selectedSubcategory) {
         notify.error('Selecciona categoría y subcategoría');
         return;
       }
     }
 
-    if (currentStep === 2) {
-      // DynamicFormLoader maneja sus propias validaciones
-      // Por ahora permitimos continuar
-    }
-
-    if (currentStep === 3) {
+    if (activeStepKey === 'ubicacion') {
       if (!province) {
         notify.error('Selecciona provincia');
         return;
       }
     }
 
-    if (currentStep === 4) {
-      // Validar que haya al menos 1 imagen subida con éxito
+    if (activeStepKey === 'fotos') {
       const successImages = uploadedImagesRef.current.filter(img => img.status === 'success');
       if (successImages.length === 0) {
         notify.error('Debes subir al menos 1 foto para continuar');
         return;
       }
-      console.log(`[PublicarAviso] ✅ Step 4 validación OK: ${successImages.length} imagen(es) lista(s)`);
+      console.log(`[PublicarAviso] ✅ Step fotos validación OK: ${successImages.length} imagen(es) lista(s)`);
     }
 
-    if (currentStep === 5) {
+    if (activeStepKey === 'informacion') {
       if (!title.trim() || !description.trim()) {
         notify.error('Completa título y descripción');
         return;
       }
-
       if (title.trim().length < 10) {
         notify.error('El título debe tener al menos 10 caracteres');
         return;
       }
-
       if (description.trim().length < 20) {
         notify.error('La descripción debe tener al menos 20 caracteres');
         return;
       }
-
-      // 🔥 VALIDACIÓN ANTI-FRAUDE: Bloquear avance si hay errores
       if (titleError || descriptionError) {
         notify.error('Corrige los errores en título o descripción antes de continuar');
         return;
       }
     }
 
-    setCurrentStep(prev => Math.min(prev + 1, STEPS.length));
+    setCurrentStep(prev => Math.min(prev + 1, wizardSteps.length));
   }
 
   function goBack() {
@@ -980,13 +971,13 @@ export default function PublicarAviso() {
           {/* Row 2: Progress bar compacta */}
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-              <span className="font-medium text-gray-900">{STEPS[currentStep - 1].title}</span>
-              <span>{currentStep}/{STEPS.length}</span>
+              <span className="font-medium text-gray-900">{wizardSteps[currentStep - 1]?.label ?? ''}</span>
+              <span>{currentStep}/{wizardSteps.length}</span>
             </div>
             <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="bg-brand-600 h-full rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
+                style={{ width: `${(currentStep / wizardSteps.length) * 100}%` }}
               />
             </div>
           </div>
@@ -1047,13 +1038,14 @@ export default function PublicarAviso() {
           
           {/* Desktop Stepper */}
           <div className="hidden lg:flex items-center justify-between">
-            {STEPS.map((step, index) => {
-              const isActive = currentStep === step.id;
-              const isCompleted = currentStep > step.id;
-              const StepIcon = step.icon;
+            {wizardSteps.map((step, index) => {
+              const stepNumber = index + 1;
+              const isActive = currentStep === stepNumber;
+              const isCompleted = currentStep > stepNumber;
+              const StepIcon = STEP_ICON_MAP[step.icon] ?? Settings;
 
               return (
-                <React.Fragment key={step.id}>
+                <React.Fragment key={step.key}>
                   <div className="flex flex-col items-center gap-2">
                     <div
                       className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
@@ -1071,23 +1063,15 @@ export default function PublicarAviso() {
                       )}
                     </div>
                     <div className="text-center">
-                      <p
-                        className={`text-sm font-semibold ${
-                          isActive ? 'text-brand-600' : 'text-gray-600'
-                        }`}
-                      >
-                        {step.title}
+                      <p className={`text-sm font-semibold ${isActive ? 'text-brand-600' : 'text-gray-600'}`}>
+                        {step.label}
                       </p>
                       <p className="text-xs text-gray-500">{step.description}</p>
                     </div>
                   </div>
 
-                  {index < STEPS.length - 1 && (
-                    <div
-                      className={`flex-1 h-1 mx-4 rounded-full transition-all ${
-                        isCompleted ? 'bg-brand-600' : 'bg-gray-200'
-                      }`}
-                    />
+                  {index < wizardSteps.length - 1 && (
+                    <div className={`flex-1 h-1 mx-4 rounded-full transition-all ${isCompleted ? 'bg-brand-600' : 'bg-gray-200'}`} />
                   )}
                 </React.Fragment>
               );
@@ -1103,44 +1087,37 @@ export default function PublicarAviso() {
           <div>
             <div className="bg-white sm:bg-gray-100 rounded-xl sm:rounded-2xl shadow-sm sm:shadow-xl border sm:border-2 border-gray-200 sm:border-gray-300 overflow-hidden">
               <div className="p-4 sm:p-10 lg:p-12">
-                {/* STEP 1: CATEGORÍA (OPTIMIZADO - ACCORDION INLINE) */}
-                {currentStep === 1 && (
+                {/* STEP 1: CATEGORÍA — 2 niveles: Categoría → Subcategoría → formulario */}
+                {activeStepKey === 'categoria' && (
                   <div className="space-y-4 sm:space-y-8">
-                    {/* Header - Oculto en mobile (ya está en el sticky header) */}
                     <div className="hidden sm:block">
                       <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
                         ¿Qué vas a publicar?
                       </h2>
                       <p className="text-base sm:text-lg text-gray-600">
-                        Seleccioná la categoría y subcategoría de tu producto
+                        Seleccioná la categoría y subcategoría
                       </p>
                     </div>
 
-                    {/* Grid de categorías con accordion */}
                     <div className="space-y-2 sm:space-y-4">
                       {categories.map((cat) => {
                         const isExpanded = expandedCategory === cat.id;
                         const isSelected = selectedCategory === cat.id;
-                        
                         return (
                           <div key={cat.id} className="space-y-2 sm:space-y-3">
-                            {/* Botón categoría - Compacto en mobile */}
+                            {/* Botón categoría */}
                             <button
                               onClick={() => {
                                 if (isExpanded) {
                                   setExpandedCategory('');
                                   setSelectedCategory('');
                                   setSelectedSubcategory('');
-                                  setSelectedCategoryType('');
                                   setSelectedPageType('particular');
-                                  setExpandedSubcategory('');
                                 } else {
                                   setExpandedCategory(cat.id);
                                   setSelectedCategory(cat.id);
                                   setSelectedSubcategory('');
-                                  setSelectedCategoryType('');
                                   setSelectedPageType('particular');
-                                  setExpandedSubcategory('');
                                 }
                               }}
                               className={`w-full p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all text-left ${
@@ -1154,7 +1131,6 @@ export default function PublicarAviso() {
                                   <p className="text-base sm:text-xl font-bold text-gray-900">
                                     {cat.display_name}
                                   </p>
-                                  {/* Descripción oculta en mobile */}
                                   {cat.description && (
                                     <p className="hidden sm:block text-base sm:text-lg text-gray-600 mt-2">
                                       {cat.description}
@@ -1169,73 +1145,36 @@ export default function PublicarAviso() {
                               </div>
                             </button>
 
-                            {/* Subcategorías (accordion) */}
+                            {/* Subcategorías — click directo al formulario */}
                             {isExpanded && subcategories.length > 0 && (
                               <div className="space-y-2 animate-fadeIn pl-2 sm:pl-0">
                                 <p className="text-sm sm:text-base font-bold text-brand-600 mb-2">
                                   Elegí una subcategoría:
                                 </p>
-                                <div className="space-y-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                   {subcategories.map((sub) => {
-                                    const isSubExpanded = expandedSubcategory === sub.id;
+                                    const isEmpresa = sub.name === 'empresas' || sub.slug === 'empresas';
                                     return (
-                                      <div key={sub.id}>
-                                        {/* Subcategoría — click para expandir tipos */}
-                                        <button
-                                          onClick={() => {
-                                            setExpandedSubcategory(isSubExpanded ? '' : sub.id);
-                                            setSelectedSubcategory('');
-                                            setSelectedCategoryType('');
-                                          }}
-                                          className={`w-full p-3 rounded-lg border-2 transition-all text-left flex items-center justify-between ${
-                                            isSubExpanded
-                                              ? 'border-brand-500 bg-brand-50'
-                                              : 'border-gray-200 hover:border-brand-400 hover:bg-brand-50'
-                                          }`}
-                                        >
-                                          <span className="text-sm sm:text-base font-semibold text-gray-900">
+                                      <button
+                                        key={sub.id}
+                                        onClick={() => {
+                                          setSelectedSubcategory(sub.id);
+                                          setSelectedPageType(isEmpresa ? 'empresa' : 'particular');
+                                          setTimeout(() => {
+                                            setCurrentStep(2);
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                          }, 200);
+                                        }}
+                                        className="w-full p-3 rounded-lg border-2 border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-all text-left flex items-center justify-between group"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          {isEmpresa && <Building2 className="w-4 h-4 text-brand-600 flex-shrink-0" />}
+                                          <span className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-brand-700">
                                             {sub.display_name}
                                           </span>
-                                          <ChevronRight className={`w-4 h-4 text-brand-600 flex-shrink-0 transition-transform ${isSubExpanded ? 'rotate-90' : ''}`} />
-                                        </button>
-
-                                        {/* Tipos de la subcategoría (3er nivel) */}
-                                        {isSubExpanded && (
-                                          <div className="mt-2 ml-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                            {categoryTypes.length === 0 ? (
-                                              <p className="col-span-full text-xs text-gray-400 py-2">Cargando tipos...</p>
-                                            ) : (
-                                              categoryTypes.map((type) => (
-                                                <button
-                                                  key={type.id}
-                                                  onClick={() => {
-                                                    setSelectedSubcategory(sub.id);
-                                                    setSelectedCategoryType(type.id);
-                                                    setSelectedPageType(type.page_type || 'particular');
-                                                    setTimeout(() => {
-                                                      setCurrentStep(2);
-                                                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                                                    }, 300);
-                                                  }}
-                                                  className="p-2 sm:p-3 rounded-lg border-2 border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-all text-left group"
-                                                >
-                                                  <div className="flex items-center gap-1.5 mb-0.5">
-                                                    {type.page_type === 'empresa' && (
-                                                      <Building2 className="w-3 h-3 text-brand-600 flex-shrink-0" />
-                                                    )}
-                                                    <p className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-brand-600 leading-tight">
-                                                      {type.display_name}
-                                                    </p>
-                                                  </div>
-                                                  {type.page_type === 'empresa' && (
-                                                    <span className="text-[10px] text-brand-600 font-medium">Empresa</span>
-                                                  )}
-                                                </button>
-                                              ))
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-brand-400 flex-shrink-0 group-hover:text-brand-600 transition-colors" />
+                                      </button>
                                     );
                                   })}
                                 </div>
@@ -1249,7 +1188,7 @@ export default function PublicarAviso() {
                 )}
 
             {/* STEP 2: CARACTERÍSTICAS (Atributos Dinámicos) */}
-            {currentStep === 2 && (
+            {activeStepKey === 'caracteristicas' && (
               <div className="space-y-4">
                 {/* Breadcrumb integrado en el formulario - Mobile First */}
                 {selectedCategory && selectedSubcategory && (
@@ -1260,28 +1199,18 @@ export default function PublicarAviso() {
                         {categories.find(c => c.id === selectedCategory)?.display_name}
                       </span>
                       <ChevronRight className="w-3 h-3 text-brand-600 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm font-medium text-brand-600 truncate">
+                      <span className="text-xs sm:text-sm font-bold text-brand-700 truncate flex items-center gap-1">
+                        {selectedPageType === 'empresa' && <Building2 className="w-3 h-3" />}
                         {subcategories.find(s => s.id === selectedSubcategory)?.display_name}
                       </span>
-                      {selectedCategoryType && categoryTypes.find(t => t.id === selectedCategoryType) && (
-                        <>
-                          <ChevronRight className="w-3 h-3 text-brand-600 flex-shrink-0" />
-                          <span className="text-xs sm:text-sm font-bold text-brand-700 truncate flex items-center gap-1">
-                            {selectedPageType === 'empresa' && <Building2 className="w-3 h-3" />}
-                            {categoryTypes.find(t => t.id === selectedCategoryType)?.display_name}
-                          </span>
-                        </>
-                      )}
                     </div>
                     <button
                       onClick={() => {
                         setCurrentStep(1);
                         setSelectedCategory('');
                         setSelectedSubcategory('');
-                        setSelectedCategoryType('');
                         setSelectedPageType('particular');
                         setExpandedCategory('');
-                        setExpandedSubcategory('');
                       }}
                       className="text-xs text-brand-600 hover:text-brand-700 font-semibold hover:underline flex-shrink-0 ml-2"
                     >
@@ -1312,7 +1241,7 @@ export default function PublicarAviso() {
             )}
 
             {/* STEP 3: UBICACIÓN */}
-            {currentStep === 3 && (
+            {activeStepKey === 'ubicacion' && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
@@ -1330,17 +1259,19 @@ export default function PublicarAviso() {
                       Provincia <span className="text-error">*</span>
                     </label>
                     <select
-                      value={province}
+                      value={selectedProvinceId}
                       onChange={(e) => {
-                        setProvince(e.target.value);
+                        const prov = provinces.find((p) => p.id === e.target.value);
+                        setSelectedProvinceId(e.target.value);
+                        setProvince(prov?.name ?? '');
                         setLocality('');
                       }}
                       className={DS.input}
                     >
                       <option value="">Seleccionar provincia</option>
-                      {PROVINCES.map((prov) => (
-                        <option key={prov} value={prov}>
-                          {prov}
+                      {provinces.map((prov) => (
+                        <option key={prov.id} value={prov.id}>
+                          {prov.name}
                         </option>
                       ))}
                     </select>
@@ -1349,18 +1280,18 @@ export default function PublicarAviso() {
                   {/* Localidad */}
                   <Card variant="default" padding="md">
                     <label className={DS.label}>
-                      Localidad {province && <span className="text-error">*</span>}
+                      Localidad {selectedProvinceId && <span className="text-error">*</span>}
                     </label>
-                    {province ? (
+                    {selectedProvinceId ? (
                       <select
                         value={locality}
                         onChange={(e) => setLocality(e.target.value)}
                         className={DS.input}
                       >
                         <option value="">Seleccionar localidad</option>
-                        {(LOCALITIES_BY_PROVINCE[province] || []).map((loc) => (
-                          <option key={loc} value={loc}>
-                            {loc}
+                        {localities.map((loc) => (
+                          <option key={loc.id} value={loc.name}>
+                            {loc.name}
                           </option>
                         ))}
                       </select>
@@ -1386,7 +1317,7 @@ export default function PublicarAviso() {
             )}
 
             {/* STEP 4: FOTOS */}
-            {currentStep === 4 && (
+            {activeStepKey === 'fotos' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -1410,7 +1341,7 @@ export default function PublicarAviso() {
             )}
 
             {/* STEP 5: INFORMACIÓN */}
-            {currentStep === 5 && (
+            {activeStepKey === 'informacion' && (
               <div className="space-y-4 sm:space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -1588,7 +1519,7 @@ export default function PublicarAviso() {
             )}
 
             {/* STEP 6: PREVIEW FINAL - Vista exacta de cómo quedará publicado */}
-            {currentStep === 6 && (() => {
+            {activeStepKey === 'revision' && (() => {
               // 🔍 SUPER DEBUG MODE - Ver TODO lo que tenemos
               console.log('🚨🚨🚨 ======================================');
               console.log('🎬 STEP 6 - SUPER DEBUG PREVIEW');
@@ -1681,9 +1612,9 @@ export default function PublicarAviso() {
             <Button
               variant="primary"
               size="lg"
-              fullWidth={currentStep === 1}
+              fullWidth={activeStepKey === 'categoria'}
               onClick={() => {
-                if (currentStep === 6) {
+                if (activeStepKey === 'revision') {
                   handleSubmit();
                 } else {
                   goNext();
@@ -1692,13 +1623,13 @@ export default function PublicarAviso() {
               }}
               disabled={submitting}
               loading={submitting}
-              leftIcon={currentStep === 6 ? <CheckCircle2 className="w-6 h-6" /> : undefined}
-              rightIcon={currentStep !== 6 ? <ChevronRight className="w-5 h-5" /> : undefined}
-              className={currentStep === 1 ? 'ml-auto' : ''}
+              leftIcon={activeStepKey === 'revision' ? <CheckCircle2 className="w-6 h-6" /> : undefined}
+              rightIcon={activeStepKey !== 'revision' ? <ChevronRight className="w-5 h-5" /> : undefined}
+              className={activeStepKey === 'categoria' ? 'ml-auto' : ''}
             >
-              {submitting 
+              {submitting
                 ? (isEditMode ? 'Actualizando...' : 'Publicando...')
-                : currentStep === 6 
+                : activeStepKey === 'revision'
                   ? (isEditMode ? 'ACTUALIZAR AVISO' : 'PUBLICAR AVISO')
                   : 'Continuar'
               }

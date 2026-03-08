@@ -13,7 +13,6 @@ export { TopNav } from './TopNav';
 export { AppHeader } from './AppHeader';
 export { Footer } from './Footer';
 export { HeroWithCarousel } from './HeroWithCarousel';
-export { HeroCategoryButtons } from './HeroCategoryButtons';
 export { FilterSidebar } from './FilterSidebar';
 export { SearchResultsPageMinimal } from './SearchResultsPageMinimal';
 export { AdDetailPage } from './AdDetailPage';

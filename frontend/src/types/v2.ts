@@ -141,8 +141,21 @@ export interface FormFieldV2 {
   field_width: 'full' | 'half' | 'third';
   data_source?: 'brands' | 'models' | 'features' | 'custom';
   data_source_config?: {
-    category?: string;
+    // ── Cascada simple (1 padre → lista) ──────────────────────
     depends_on?: string;
+    list_map?: Record<string, string>;           // { "toros": "razas-toros" }
+
+    // ── Cascada profunda (N padres → lista) ───────────────────
+    depends_on_multi?: string[];                 // ["tipo_animal", "raza"]
+    list_map_composite?: Record<string, string>; // { "toros|angus": "subvar-toros-angus" }
+
+    // ── Visibilidad condicional ────────────────────────────────
+    visible_when?: {
+      field: string;                             // campo del que depende la visibilidad
+      value: string | string[];                  // valor(es) que activan la visibilidad
+    };
+
+    category?: string;
     filter?: Record<string, any>;
     [key: string]: any;
   };

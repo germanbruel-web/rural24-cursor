@@ -4,9 +4,11 @@
 // ====================================================================
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, X, GripVertical, AlertCircle, CheckCircle2, Download, Upload, Eye, LayoutGrid, Folder, FileText, ClipboardList } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, GripVertical, AlertCircle, CheckCircle2, Download, Upload, Eye, LayoutGrid, Folder, FileText, ClipboardList, Sliders, MapPin } from 'lucide-react';
 import { FormManagerTab } from './FormManagerTab';
 import { OptionListsTab } from './OptionListsTab';
+import { WizardConfigPanel } from './WizardConfigPanel';
+import { LocationsAdmin } from './LocationsAdmin';
 import { getCategories, getSubcategories, getCategoryTypes } from '../../services/v2/formsService';
 import {
   getAttributes,
@@ -135,7 +137,7 @@ function SortableAttribute({ attr, onEdit, onDelete }: SortableAttributeProps) {
   );
 }
 
-type AdminTab = 'attributes' | 'forms' | 'lists';
+type AdminTab = 'attributes' | 'forms' | 'lists' | 'wizard' | 'locations';
 
 const TABS: { id: AdminTab; label: string; icon: React.ReactNode; description: string }[] = [
   {
@@ -155,6 +157,18 @@ const TABS: { id: AdminTab; label: string; icon: React.ReactNode; description: s
     label: 'Listas de Opciones',
     icon: <ClipboardList className="w-4 h-4" />,
     description: 'Catálogos reutilizables',
+  },
+  {
+    id: 'wizard',
+    label: 'Wizard',
+    icon: <Sliders className="w-4 h-4" />,
+    description: 'Pasos del formulario de alta',
+  },
+  {
+    id: 'locations',
+    label: 'Ubicaciones',
+    icon: <MapPin className="w-4 h-4" />,
+    description: 'Provincias y localidades',
   },
 ];
 
@@ -656,6 +670,8 @@ export function AttributesAdmin() {
         </div>
         {activeTab === 'forms' && <FormManagerTab />}
         {activeTab === 'lists' && <OptionListsTab />}
+        {activeTab === 'wizard' && <WizardConfigPanel />}
+        {activeTab === 'locations' && <LocationsAdmin />}
       </div>
     );
   }

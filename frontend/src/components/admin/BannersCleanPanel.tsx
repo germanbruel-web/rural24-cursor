@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Play, 
-  Pause, 
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Play,
+  Pause,
   Image as ImageIcon,
-  ExternalLink,
-  Calendar,
-  User
+  ExternalLink
 } from 'lucide-react';
 import type { BannerClean, CreateBannerCleanInput, BannerPlacement } from '@/types';
 import {
@@ -29,7 +27,6 @@ interface BannerFormData {
   placement: BannerPlacement;
   category: string;
   client_name: string;
-  link_name: string;
   link_url: string;
   link_target: '_self' | '_blank';
   desktop_image_url: string;
@@ -44,9 +41,8 @@ const INITIAL_FORM: BannerFormData = {
   placement: 'hero_vip',
   category: 'all',
   client_name: '',
-  link_name: '',
   link_url: '',
-  link_target: '_self',
+  link_target: '_blank',
   desktop_image_url: '',
   mobile_image_url: '',
   carousel_image_url: '',
@@ -140,9 +136,8 @@ export default function BannersCleanPanel() {
       placement: banner.placement,
       category: banner.category,
       client_name: banner.client_name || '',
-      link_name: banner.link_name || '',
       link_url: banner.link_url || '',
-      link_target: banner.link_target || '_self',
+      link_target: banner.link_target || '_blank',
       desktop_image_url: banner.desktop_image_url || '',
       mobile_image_url: banner.mobile_image_url || '',
       carousel_image_url: banner.carousel_image_url || '',
@@ -212,7 +207,6 @@ export default function BannersCleanPanel() {
         placement: formData.placement,
         category: formData.category,
         client_name: formData.client_name,
-        link_name: formData.link_name || undefined,
         link_url: formData.link_url || undefined,
         link_target: formData.link_target || undefined,
         desktop_image_url: formData.desktop_image_url || undefined,
@@ -505,76 +499,14 @@ export default function BannersCleanPanel() {
                   />
                 </div>
 
-                {/* Link de Navegación (Hero VIP) */}
-                {formData.placement === 'hero_vip' && (
-                  <div className="border border-brand-200 bg-brand-50 rounded-lg p-4 space-y-3">
-                    <p className="text-xs font-semibold text-brand-700 uppercase tracking-wide">
-                      Link de Navegación — Hero VIP
-                    </p>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Texto del link
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.link_name}
-                        onChange={(e) => setFormData({ ...formData, link_name: e.target.value })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                        placeholder="Ej: Maquinarias Agrícolas (si vacío usa Nombre del Cliente)"
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          URL destino
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={formData.link_url}
-                            onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
-                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
-                            placeholder="https://... o #/categoria"
-                          />
-                          {formData.link_url && (
-                            <a
-                              href={formData.link_url}
-                              target={formData.link_target}
-                              rel="noopener noreferrer"
-                              className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
-                              title="Probar link"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Apertura
-                        </label>
-                        <select
-                          value={formData.link_target}
-                          onChange={(e) => setFormData({ ...formData, link_target: e.target.value as '_self' | '_blank' })}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                        >
-                          <option value="_self">Misma pestaña</option>
-                          <option value="_blank">Nueva pestaña</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* URL Externa — otros placements */}
-                {formData.placement !== 'hero_vip' && (
+                {/* URL del banner (todos los tipos) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    URL Externa (opcional)
+                    Link (opcional)
                   </label>
                   <div className="flex gap-2">
                     <input
-                      type="url"
+                      type="text"
                       value={formData.link_url}
                       onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
                       className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
@@ -592,13 +524,7 @@ export default function BannersCleanPanel() {
                       </a>
                     )}
                   </div>
-                  {formData.link_url && (
-                    <p className="mt-2 text-xs text-gray-500">
-                      El banner redirigirá a: <span className="font-mono text-brand-600">{formData.link_url}</span>
-                    </p>
-                  )}
                 </div>
-                )}
 
                 {/* Imágenes según tipo - PROFESIONAL */}
                 {formData.placement === 'hero_vip' ? (

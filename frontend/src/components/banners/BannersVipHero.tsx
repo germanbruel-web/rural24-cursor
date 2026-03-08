@@ -1,249 +1,136 @@
 // BannersVipHero.tsx
-// Banner VIP en Hero - Usa el nuevo sistema banners_clean
-// Desktop/Notebook: Banner 1100x200, cambia en hover de categorías, muestra 1 random al cargar
-// Tablet/Mobile: Carrusel automático 480x100 con TODOS los banners activos
+// Banner VIP en Hero — Carrusel automático en Desktop (1100x200) y Mobile (480x100)
 
 import { useEffect, useState, useRef } from 'react';
 import { getHeroVIPBanners, incrementBannerImpression, incrementBannerClick } from '../../services/bannersCleanService';
 import type { BannerClean } from '../../../types';
 import { optimizeCloudinaryUrl } from '../../utils/imageOptimizer';
 
-interface Props {
-  category?: string; // Categoría para filtrar (solo aplica en desktop)
-}
-
-// Mapeo de nombres de categorías del hover a slugs de banners_clean
-const CATEGORY_MAP: Record<string, string> = {
-  'Maquinarias': 'MAQUINARIAS AGRICOLAS',
-  'Maquinarias Agrícolas': 'MAQUINARIAS AGRICOLAS',
-  'Ganadería': 'GANADERIA',
-  'Insumos Agropecuarios': 'INSUMOS AGROPECUARIOS',
-  'Inmuebles Rurales': 'INMUEBLES RURALES',
-  'Servicios Rurales': 'SERVICIOS RURALES',
-  'Guía del Campo': 'SERVICIOS RURALES',
-};
-
-export const BannersVipHero: React.FC<Props> = ({ category }) => {
-  // Estado compartido
+export const BannersVipHero = () => {
+  const [allBanners, setAllBanners] = useState<BannerClean[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  
-  // Estado para DESKTOP: un solo banner a la vez
-  const [desktopBanner, setDesktopBanner] = useState<BannerClean | null>(null);
-  
-  // Estado para MOBILE: todos los banners para carrusel
-  const [mobileBanners, setMobileBanners] = useState<BannerClean[]>([]);
-  const [mobileIndex, setMobileIndex] = useState(0);
-  
   const impressionsRecorded = useRef<Set<string>>(new Set());
-  const hasLoadedInitial = useRef(false);
 
-  // Detectar mobile/tablet (< 1024 usa versión mobile 480x100)
+  // Detectar breakpoint (< 1024px → imagen mobile 480x100)
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Mapear categoría del hover al slug
-  const categorySlug = category ? CATEGORY_MAP[category] || category : undefined;
-
-  // Carga inicial: obtener TODOS los banners
+  // Carga única de todos los banners activos
   useEffect(() => {
-    if (hasLoadedInitial.current) return;
-    
-    const loadInitialBanners = async () => {
-      setLoading(true);
-      try {
-        const allBanners = await getHeroVIPBanners(undefined);
-        
-        if (allBanners.length > 0) {
-          // DESKTOP: seleccionar uno aleatorio
-          const randomIndex = Math.floor(Math.random() * allBanners.length);
-          setDesktopBanner(allBanners[randomIndex]);
-          
-          // MOBILE: filtrar los que tienen imagen mobile y guardar todos
-          const bannersWithMobile = allBanners.filter(b => b.mobile_image_url);
-          setMobileBanners(bannersWithMobile);
-          
-          hasLoadedInitial.current = true;
-          console.log('🎲 Banner desktop inicial:', allBanners[randomIndex].client_name);
-          console.log('📱 Banners mobile disponibles:', bannersWithMobile.length);
+    getHeroVIPBanners(undefined)
+      .then(banners => {
+        setAllBanners(banners);
+        if (banners.length > 1) {
+          setCurrentIndex(Math.floor(Math.random() * banners.length));
         }
-      } catch (error) {
-        console.error('[BannersVipHero] Error loading banners:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadInitialBanners();
+      })
+      .catch(e => console.error('[BannersVipHero]', e))
+      .finally(() => setLoading(false));
   }, []);
 
-  // DESKTOP: Cuando cambia la categoría (hover), cargar banner específico
-  useEffect(() => {
-    if (!category || isMobile) return;
-    
-    const loadCategoryBanner = async () => {
-      try {
-        const banners = await getHeroVIPBanners(categorySlug);
-        
-        if (banners.length > 0) {
-          const randomIndex = Math.floor(Math.random() * banners.length);
-          setDesktopBanner(banners[randomIndex]);
-          console.log('📢 Banner por categoría:', banners[randomIndex].client_name);
-        }
-      } catch (error) {
-        console.error('[BannersVipHero] Error loading category banner:', error);
-      }
-    };
+  // Filtrar según breakpoint y disponibilidad de imagen
+  const displayBanners = isMobile
+    ? allBanners.filter(b => b.mobile_image_url)
+    : allBanners.filter(b => b.desktop_image_url);
 
-    loadCategoryBanner();
-  }, [category, categorySlug, isMobile]);
+  const count = displayBanners.length;
+  const safeIndex = count > 0 ? currentIndex % count : 0;
 
-  // MOBILE: Auto-rotate carrusel cada 4 segundos
+  // Auto-rotate cada 4 segundos
   useEffect(() => {
-    if (!isMobile || mobileBanners.length <= 1) return;
-    
+    if (count <= 1) return;
     const interval = setInterval(() => {
-      setMobileIndex(prev => (prev + 1) % mobileBanners.length);
+      setCurrentIndex(prev => (prev + 1) % count);
     }, 4000);
-
     return () => clearInterval(interval);
-  }, [isMobile, mobileBanners.length]);
+  }, [count]);
 
-  // Registrar impresión del banner actual
+  // Registrar impresión del banner visible
   useEffect(() => {
-    const currentBanner = isMobile ? mobileBanners[mobileIndex] : desktopBanner;
-    if (!currentBanner) return;
-    if (impressionsRecorded.current.has(currentBanner.id)) return;
+    const banner = displayBanners[safeIndex];
+    if (!banner || impressionsRecorded.current.has(banner.id)) return;
+    incrementBannerImpression(banner.id).catch(console.error);
+    impressionsRecorded.current.add(banner.id);
+  }, [safeIndex, count]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    incrementBannerImpression(currentBanner.id).catch(console.error);
-    impressionsRecorded.current.add(currentBanner.id);
-  }, [isMobile, mobileIndex, mobileBanners, desktopBanner]);
-
-  // Handler de click para registrar métricas
-  const handleClick = async (banner: BannerClean) => {
-    try {
-      await incrementBannerClick(banner.id);
-    } catch (error) {
-      console.error('[BannersVipHero] Error recording click:', error);
-    }
+  const handleClick = (banner: BannerClean) => {
+    incrementBannerClick(banner.id).catch(console.error);
   };
 
-  // Skeleton animado mientras carga
+  // Skeleton mientras carga
   if (loading) {
     return (
-      <div className={`w-full overflow-hidden relative bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse ${isMobile ? 'h-[100px]' : 'h-[200px]'}`}>
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skeleton-shimmer" />
-        <style>{`
-          @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-          }
-          .skeleton-shimmer {
-            animation: shimmer 1.5s infinite;
-          }
-        `}</style>
-      </div>
+      <div
+        className={`w-full overflow-hidden relative bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse ${
+          isMobile ? 'h-[100px]' : 'h-[200px]'
+        }`}
+      />
     );
   }
 
-  // ====================================
-  // RENDER MOBILE: Carrusel automático
-  // ====================================
-  if (isMobile) {
-    if (mobileBanners.length === 0) return null;
-    
-    const currentBanner = mobileBanners[mobileIndex];
-    if (!currentBanner?.mobile_image_url) return null;
-
-    return (
-      <div className="w-full">
-        {/* Contenedor de imagen */}
-        <div className="relative w-full overflow-hidden bg-gray-100">
-          {/* Contenedor del carrusel con aspect ratio 480:100 = 20.83% */}
-          <div 
-            className="relative w-full"
-            style={{ paddingBottom: '20.83%' }} // Aspect ratio 480x100
-          >
-            {/* Track del carrusel */}
-            <div 
-              className="absolute inset-0 flex transition-transform duration-500 ease-out will-change-transform"
-              style={{ transform: `translateX(-${mobileIndex * 100}%)` }}
-            >
-              {mobileBanners.map((banner, idx) => (
-                <a
-                  key={banner.id}
-                  href={banner.link_url || '#'}
-                  target={banner.link_url ? '_blank' : '_self'}
-                  rel="noopener noreferrer"
-                  className="relative w-full h-full flex-shrink-0"
-                  onClick={() => handleClick(banner)}
-                  aria-hidden={idx !== mobileIndex}
-                >
-                  <img
-                    src={optimizeCloudinaryUrl(banner.mobile_image_url!, { width: 480, quality: 'auto:good' })}
-                    alt={banner.client_name}
-                    loading={idx === 0 ? 'eager' : 'lazy'}
-                    className="absolute inset-0 w-full h-full object-contain object-center"
-                    style={{ 
-                      imageRendering: 'auto',
-                      WebkitBackfaceVisibility: 'hidden',
-                      backfaceVisibility: 'hidden'
-                    }}
-                  />
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Indicadores FUERA de la imagen */}
-        {mobileBanners.length > 1 && (
-          <div className="flex justify-center gap-1.5 mt-2">
-            {mobileBanners.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setMobileIndex(index)}
-                className={`rounded-full transition-all duration-300 ${
-                  index === mobileIndex 
-                    ? 'bg-brand-600 w-4 h-1.5' 
-                    : 'bg-gray-300 w-1.5 h-1.5 hover:bg-gray-400'
-                }`}
-                aria-label={`Ver banner ${index + 1}`}
-                aria-current={index === mobileIndex ? 'true' : 'false'}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ====================================
-  // RENDER DESKTOP: Un banner a la vez
-  // ====================================
-  if (!desktopBanner?.desktop_image_url) return null;
+  if (count === 0) return null;
 
   return (
-    <div className="relative w-full max-w-[1100px] mx-auto overflow-hidden">
-      <a
-        href={desktopBanner.link_url || '#'}
-        target={desktopBanner.link_url ? '_blank' : '_self'}
-        rel="noopener noreferrer"
-        className="block w-full"
-        onClick={() => handleClick(desktopBanner)}
+    <div className="w-full">
+      {/* Track del carrusel */}
+      <div
+        className="relative w-full overflow-hidden bg-gray-100"
+        style={{ paddingBottom: isMobile ? '20.83%' : '18.18%' }}
       >
-        <img
-          src={optimizeCloudinaryUrl(desktopBanner.desktop_image_url, { width: 1100, quality: 'auto:good' })}
-          alt={desktopBanner.client_name}
-          className="w-full h-auto object-contain"
-          width={1100}
-          height={200}
-        />
-      </a>
+        <div
+          className="absolute inset-0 flex transition-transform duration-500 ease-out will-change-transform"
+          style={{ transform: `translateX(-${safeIndex * 100}%)` }}
+        >
+          {displayBanners.map((banner, idx) => (
+            <a
+              key={banner.id}
+              href={banner.link_url || '#'}
+              target={banner.link_url ? '_blank' : '_self'}
+              rel="noopener noreferrer"
+              className="relative w-full h-full flex-shrink-0"
+              onClick={() => handleClick(banner)}
+              aria-hidden={idx !== safeIndex}
+            >
+              <img
+                src={
+                  isMobile
+                    ? optimizeCloudinaryUrl(banner.mobile_image_url!, { width: 480, quality: 'auto:good' })
+                    : optimizeCloudinaryUrl(banner.desktop_image_url!, { width: 1100, quality: 'auto:good' })
+                }
+                alt={banner.client_name}
+                loading={idx === 0 ? 'eager' : 'lazy'}
+                className="absolute inset-0 w-full h-full object-contain object-center"
+                style={{ WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden' }}
+              />
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Indicadores de posición */}
+      {count > 1 && (
+        <div className="flex justify-center gap-1.5 mt-2">
+          {displayBanners.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`rounded-full transition-all duration-300 ${
+                index === safeIndex
+                  ? 'bg-brand-600 w-4 h-1.5'
+                  : 'bg-gray-300 w-1.5 h-1.5 hover:bg-gray-400'
+              }`}
+              aria-label={`Ver banner ${index + 1}`}
+              aria-current={index === safeIndex ? 'true' : 'false'}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

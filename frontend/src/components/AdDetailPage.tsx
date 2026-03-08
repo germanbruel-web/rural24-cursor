@@ -362,7 +362,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
     <div className="min-h-screen">
       {/* Título + Breadcrumb estáticos */}
       <div className="bg-white border-t border-gray-200">
-        <div className="max-w-[1400px] mx-auto px-4 py-2">
+        <div className="max-w-[1440px] mx-auto px-4 py-2">
           <h1 id="ad-title" className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mb-3 pt-[10px] break-words overflow-wrap">
             {ad.title}
           </h1>          
@@ -448,7 +448,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
           </nav>        </div>
       </div>
 
-      <div id="ad-detail-content" className="max-w-[1400px] mx-auto px-4 py-6">
+      <div id="ad-detail-content" className="max-w-[1440px] mx-auto px-4 py-6">
         <div id="ad-detail-grid" className="grid lg:grid-cols-3 gap-8">
           {/* Columna izquierda - Imágenes y descripción */}
           <div id="ad-left-column" className="lg:col-span-2 space-y-6">
@@ -1069,7 +1069,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
       {/* Otros avisos del vendedor */}
       {ad?.user_id && (
         <div className="bg-gray-50 border-t border-gray-200">
-          <div className="max-w-[1400px] mx-auto px-4 py-12">
+          <div className="max-w-[1440px] mx-auto px-4 py-12">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-900">
                 {TEXTS.adDetail.otherAds}
@@ -1110,7 +1110,7 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
       {/* Avisos Destacados */}
       {ad?.category_id && featuredAds.length > 0 && (
         <div className="bg-white border-t border-gray-200">
-          <div className="max-w-[1400px] mx-auto px-4 py-12">
+          <div className="max-w-[1440px] mx-auto px-4 py-12">
             {/* Título con icono Lucide */}
             <div className="flex items-center gap-2 mb-6">
               <Star className="w-6 h-6 text-yellow-500" fill="currentColor" />

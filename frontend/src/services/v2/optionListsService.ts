@@ -151,6 +151,20 @@ export async function getOptionListItemsForSelect(
     .map((i) => ({ value: i.value, label: i.label }));
 }
 
+// Obtener items de una lista por NAME (slug) — para campos condicionales
+export async function getOptionListItemsByName(
+  listName: string
+): Promise<Array<{ value: string; label: string }>> {
+  const { data: list } = await supabase
+    .from('option_lists')
+    .select('id')
+    .eq('name', listName)
+    .single();
+
+  if (!list?.id) return [];
+  return getOptionListItemsForSelect(list.id);
+}
+
 // ─── CREATE ───────────────────────────────────────────────────
 
 export async function createOptionList(input: CreateOptionListInput): Promise<OptionList> {
