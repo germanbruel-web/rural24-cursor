@@ -120,6 +120,51 @@ export async function getMaxCompaniesAllowed(): Promise<number> {
   }
 }
 
+// ── Página pública ────────────────────────────────────────────────────────
+
+export interface CompanyPublicPage {
+  id: string;
+  slug: string;
+  company_name: string;
+  logo_url: string | null;
+  cover_url: string | null;
+  tagline: string | null;
+  description: string | null;
+  whatsapp: string | null;
+  website: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  social_networks: { facebook?: string; instagram?: string } | null;
+  brands_worked: { name: string; logo_url?: string }[];
+  gallery_images: { url: string; caption?: string }[];
+  province: string | null;
+  city: string | null;
+  is_verified: boolean;
+  profile_views: number;
+  owner_public: boolean;
+  owner_full_name: string | null;
+  category_name: string | null;
+  ads_count: number;
+  created_at: string;
+}
+
+/**
+ * Página pública de empresa. Usa el RPC que incrementa vistas.
+ * owner_full_name solo viene poblado si owner_public = true.
+ */
+export async function getCompanyPublicPage(slug: string): Promise<CompanyPublicPage | null> {
+  try {
+    const { data, error } = await supabase.rpc('get_company_public_page', { p_slug: slug });
+    if (error) throw error;
+    const rows = data as CompanyPublicPage[];
+    return rows?.[0] ?? null;
+  } catch (err) {
+    console.error('Error getting company public page:', err);
+    return null;
+  }
+}
+
 // ── Mutaciones ─────────────────────────────────────────────────────────────
 
 /**

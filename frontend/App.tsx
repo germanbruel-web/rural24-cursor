@@ -81,6 +81,7 @@ const ExampleMigratedPage = lazy(() => import("./src/components/pages/ExampleMig
 
 // Empresa Components (Servicios Rurales B2B)
 const CompanyProfilePage = lazy(() => import("./src/components/empresa/CompanyProfilePage").then(m => ({ default: m.CompanyProfilePage })));
+const EmpresaPublicPage = lazy(() => import("./src/components/pages/EmpresaPublicPage").then(m => ({ default: m.EmpresaPublicPage })));
 
 // Dev/Test Pages (solo desarrollo - bloqueadas en producción)
 const TestDynamicForm = import.meta.env.DEV ? lazy(() => import("./src/pages/TestDynamicForm").then(m => ({ default: m.TestDynamicForm }))) : null;
@@ -716,21 +717,19 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Página de Perfil de Empresa (B2B Servicios Rurales)
+  // Página pública de Empresa — Sprint 6D
   if (currentPage === 'company-profile') {
     return (
       <div className="flex flex-col min-h-screen">
-        <AppHeader 
+        <AppHeader
           onNavigate={(page) => {
             navigateToPage(page);
-            if (page === 'home') {
-              handleBackToHome();
-            }
+            if (page === 'home') handleBackToHome();
           }}
           onSearch={handleSearch}
         />
         <Suspense fallback={<LoadingFallback />}>
-          <CompanyProfilePage />
+          <EmpresaPublicPage />
         </Suspense>
         <Footer />
       </div>
