@@ -151,10 +151,23 @@ export interface CompanyPublicPage {
 
 /**
  * Página pública de empresa. Usa el RPC que incrementa vistas.
- * owner_full_name solo viene poblado si owner_public = true.
+ * Acepta slug o UUID — si recibe UUID resuelve el slug primero.
  */
-export async function getCompanyPublicPage(slug: string): Promise<CompanyPublicPage | null> {
+export async function getCompanyPublicPage(slugOrId: string): Promise<CompanyPublicPage | null> {
   try {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
+
+    let slug = slugOrId;
+    if (isUUID) {
+      const { data } = await supabase
+        .from('business_profiles')
+        .select('slug')
+        .eq('id', slugOrId)
+        .single();
+      if (!data?.slug) return null;
+      slug = data.slug;
+    }
+
     const { data, error } = await supabase.rpc('get_company_public_page', { p_slug: slug });
     if (error) throw error;
     const rows = data as CompanyPublicPage[];
