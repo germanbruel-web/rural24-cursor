@@ -23,7 +23,7 @@ import {
 // ============================================================
 import { useProducts, useCategoryPrefetch, useRealtimeCategories, OfflineBanner } from "./src/hooks";
 import { PWAInstallBanner } from "./src/components/PWAInstallBanner";
-import { useAuth, CategoryProvider, ToastProvider } from "./src/contexts";
+import { useAuth, CategoryProvider, ToastProvider, AccountProvider } from "./src/contexts";
 import { useProfileNudge } from './src/hooks/useProfileNudge';
 
 // ============================================================
@@ -111,9 +111,11 @@ const App: React.FC = () => {
     <HelmetProvider>
       <ToastProvider>
         <CategoryProvider>
-          <OfflineBanner />
-          <PWAInstallBanner />
-          <AppContent />
+          <AccountProvider>
+            <OfflineBanner />
+            <PWAInstallBanner />
+            <AppContent />
+          </AccountProvider>
         </CategoryProvider>
       </ToastProvider>
     </HelmetProvider>

@@ -10,8 +10,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { canAccessPage } from '../../utils/rolePermissions';
-import { 
-  Heart, MessageSquare, Bell, User, ChevronDown, LogOut, 
+import { AccountSwitcher } from './AccountSwitcher';
+import {
+  Heart, MessageSquare, Bell, User, ChevronDown, LogOut,
   Package, Home, Settings, Search, Star, Clock
 } from 'lucide-react';
 import type { Page } from '../../../App';
@@ -145,35 +146,18 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, onShowAuthModal,
       {/* Separador */}
       <div className="hidden lg:block w-px h-6 bg-gray-200" />
 
-      {/* Avatar + Dropdown */}
+      {/* Account Switcher (reemplaza avatar puro) */}
+      <AccountSwitcher onNavigate={onNavigate} />
+
+      {/* Dropdown de opciones de usuario */}
       <div ref={dropdownRef} className="relative">
         <button
           onClick={() => setShowDropdown(!showDropdown)}
-          className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded-lg transition-colors group"
+          className="flex items-center gap-1 px-1.5 py-1.5 hover:bg-gray-50 rounded-lg transition-colors"
+          title="Opciones de cuenta"
         >
-          {/* Avatar */}
-          {profile?.avatar_url ? (
-            <img 
-              src={profile.avatar_url} 
-              alt={getUserDisplayName()}
-              className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 
-                          flex items-center justify-center text-white font-semibold text-sm
-                          ring-2 ring-white shadow-sm">
-              {getInitials()}
-            </div>
-          )}
-          
-          {/* Nombre (solo desktop) */}
-          <span className="hidden xl:inline text-sm font-medium text-gray-700 group-hover:text-gray-900">
-            {getUserDisplayName()}
-          </span>
-          
-          {/* Chevron */}
-          <ChevronDown 
-            className={`w-4 h-4 text-gray-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`} 
+          <ChevronDown
+            className={`w-4 h-4 text-gray-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`}
           />
         </button>
 

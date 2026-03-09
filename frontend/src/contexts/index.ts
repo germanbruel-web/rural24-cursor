@@ -6,6 +6,10 @@
 // Auth
 export { AuthProvider, useAuth } from './AuthContext';
 
+// Account Switcher
+export { AccountProvider, useAccount } from './AccountContext';
+export type { ActiveAccount } from './AccountContext';
+
 // Categories  
 export { CategoryProvider, useCategories } from './CategoryContext';
 export type { Category, Subcategory, Brand, Model } from './CategoryContext';

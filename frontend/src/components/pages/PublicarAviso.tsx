@@ -61,6 +61,7 @@ import { DynamicFormLoader } from '../forms/DynamicFormLoader';
 import { AutofillButton } from '../forms/AutofillButton';
 import { getWizardConfig, DEFAULT_STEPS, type WizardStep } from '../../services/v2/wizardConfigService';
 import { EmpresaSelectorWidget } from '../dashboard/EmpresaSelectorWidget';
+import { useAccount } from '../../contexts/AccountContext';
 
 // ====================================================================
 // DESIGN SYSTEM RURAL24 - Estilos consistentes de formularios
@@ -102,6 +103,7 @@ const STEP_ICON_MAP: Record<string, React.FC<any>> = {
 // ====================================================================
 export default function PublicarAviso() {
   const { profile } = useAuth();
+  const { activeAccount } = useAccount();
   const [currentStep, setCurrentStep] = useState(1);
   const [wizardSteps, setWizardSteps] = useState<WizardStep[]>(DEFAULT_STEPS);
   const [loading, setLoading] = useState(false);
@@ -134,7 +136,10 @@ export default function PublicarAviso() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [selectedCategoryType] = useState<string>('');
   const [selectedPageType, setSelectedPageType] = useState<'particular' | 'empresa'>('particular');
-  const [selectedBusinessProfileId, setSelectedBusinessProfileId] = useState<string | null>(null);
+  // Pre-selecciona empresa activa del AccountSwitcher al abrir el wizard
+  const [selectedBusinessProfileId, setSelectedBusinessProfileId] = useState<string | null>(
+    activeAccount.type === 'empresa' ? activeAccount.id : null
+  );
 
   // Step 2: Atributos dinámicos
   const [attributeValues, setAttributeValues] = useState<Record<string, any>>({});
