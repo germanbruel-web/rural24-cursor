@@ -136,7 +136,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
                 className={`h-8 sm:h-10 w-auto transition-all duration-300 
                           ${isScrolled ? 'sm:h-8' : 'sm:h-10'}`}
                 loading="eager"
-                fetchPriority="high"
+                fetchpriority="high"
               />
             </button>
 

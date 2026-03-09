@@ -494,11 +494,20 @@ export async function validateCatalogSelection(
 // =====================================================
 
 export async function getMaquinariasSubcategories() {
+  const { data: categoryData, error: categoryError } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('name', 'maquinarias')
+    .single();
+
+  if (categoryError || !categoryData) return [];
+
   const { data, error } = await supabase
-    .from('maquinarias_subcategorias')
+    .from('subcategories')
     .select('*')
+    .eq('category_id', categoryData.id)
     .eq('is_active', true)
-    .order('sort_order');
+    .order('sort_order', { ascending: true });
 
   if (error) throw error;
   return data || [];

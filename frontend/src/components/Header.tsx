@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
               alt="RURAL24" 
               className="h-8 sm:h-9 lg:h-10 w-auto"
               loading="eager"
-              fetchPriority="high"
+              fetchpriority="high"
             />
           </button>
           
