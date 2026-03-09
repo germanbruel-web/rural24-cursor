@@ -109,6 +109,10 @@ Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
 
 | Sprint | Objetivo | Estado |
 |---|---|---|
-| 5D | AdDetail — reescritura completa (Hero + Secciones v2 + Contacto) | En progreso |
-| 3F | Display Logic — conectar RPCs featured a frontend | Pendiente |
+| 5D | AdDetail — reescritura completa (Hero + Secciones v2 + Contacto) | ✅ Completo |
+| 3F | Display Logic — conectar RPCs featured a frontend | ✅ Completo |
+| 6A | Empresas DB — multi-empresa, members, límites por plan | ✅ Completo |
+| 6B | Dashboard Mis Empresas + EmpresaForm | Pendiente |
+| 6C | EmpresaSelectorWidget en PublicarAviso | Pendiente |
+| 6D | Perfil público EmpresaPublicPage | Pendiente |
 | 3D.6 | Notificación al activar Destacado (pg_cron → email) | Pendiente |
