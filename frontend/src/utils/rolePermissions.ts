@@ -22,6 +22,9 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   'my-ads': ALL_ROLES,
   contacts: ALL_ROLES,
   inbox: ALL_ROLES,
+
+  // Mis Empresas (premium + superadmin + revendedor)
+  'mis-empresas': ['superadmin', 'revendedor', 'premium'],
   
   // Revendedor y SuperAdmin
   users: ['superadmin', 'revendedor'],
@@ -118,6 +121,11 @@ export const MENU_STRUCTURE: MenuItem[] = [
     id: 'inbox',
     label: 'Mensajes',
     allowedRoles: ALL_ROLES,
+  },
+  {
+    id: 'mis-empresas',
+    label: 'Mis Empresas',
+    allowedRoles: ['superadmin', 'revendedor', 'premium'],
   },
   {
     id: 'profile',

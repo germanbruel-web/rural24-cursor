@@ -31,6 +31,7 @@ import {
   Map,
   Store,
   Palette,
+  Building2,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -67,6 +68,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     // Mi Cuenta
     'my-ads': <Package className="w-5 h-5" />,
     inbox: <MessageSquare className="w-5 h-5" />,
+    'mis-empresas': <Building2 className="w-5 h-5" />,
     profile: <User className="w-5 h-5" />,
     subscription: <CreditCard className="w-5 h-5" />,
     // Gestión Avisos
