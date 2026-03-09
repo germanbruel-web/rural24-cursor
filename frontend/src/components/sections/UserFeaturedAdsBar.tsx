@@ -16,18 +16,22 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Megaphone, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductCard } from '../organisms/ProductCard';
-import { getFeaturedForResults } from '../../services/userFeaturedService';
+import { getFeaturedForResults, getFeaturedForDetail } from '../../services/userFeaturedService';
 
 interface UserFeaturedAdsBarProps {
   categoryId?: string;
   onViewDetail?: (adId: string) => void;
   className?: string;
+  placement?: 'results' | 'detail';
+  excludeAdId?: string;
 }
 
 export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
   categoryId,
   onViewDetail,
-  className = ''
+  className = '',
+  placement = 'results',
+  excludeAdId,
 }) => {
   const [featuredAds, setFeaturedAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,10 +50,12 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
       }
 
       setLoading(true);
-      const { data, error } = await getFeaturedForResults(categoryId, 8, 0);
-      
+      const { data, error } = placement === 'detail' && excludeAdId
+        ? await getFeaturedForDetail(categoryId, excludeAdId, 8)
+        : await getFeaturedForResults(categoryId, 8, 0);
+
       if (error) {
-        console.error('Error loading user featured ads:', error);
+        console.error('Error loading featured ads bar:', error);
         setFeaturedAds([]);
       } else {
         setFeaturedAds(data || []);
@@ -58,7 +64,7 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
     };
 
     loadFeatured();
-  }, [categoryId]);
+  }, [categoryId, placement, excludeAdId]);
 
   // Reset page when ads change
   useEffect(() => {

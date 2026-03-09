@@ -9,7 +9,7 @@ import PremiumBadge from './PremiumBadge';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './auth/AuthModal';
 import { ProductCard } from './organisms/ProductCard';
-import { getFeaturedForResults } from '../services/userFeaturedService';
+import { getFeaturedForDetail } from '../services/userFeaturedService';
 import { supabase } from '../services/supabaseClient';
 import { AdDetailDynamic } from './AdDetailDynamic';
 import { getAttributes } from '../services/v2/attributesService';
@@ -64,11 +64,6 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
   useEffect(() => {
     if (user && profile && showContactForm) {
       const names = profile.full_name?.split(' ') || ['', ''];
-      console.log('📝 Autocompletando formulario:', { 
-        fullName: profile.full_name, 
-        email: user.email, 
-        phone: profile.phone || profile.mobile 
-      });
       setContactForm(prev => ({
         ...prev,
         name: names[0] || '',
@@ -83,7 +78,6 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
   useEffect(() => {
     const key = `contacted_ad_${adId}`;
     const wasContacted = sessionStorage.getItem(key) === 'true';
-    console.log('🔄 AdId cambió:', adId, '- Estado en sessionStorage:', wasContacted);
     setHasContactedSeller(wasContacted);
   }, [adId]);
   
@@ -92,41 +86,12 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
     const key = `contacted_ad_${adId}`;
     if (hasContactedSeller) {
       sessionStorage.setItem(key, 'true');
-      console.log('💾 Guardado en sessionStorage:', key, '= true');
     }
   }, [hasContactedSeller, adId]);
 
   const loadAd = async () => {
-    console.log('📄 AdDetailPage - loadAd iniciado para adId:', adId);
     setLoading(true);
     const data = await getAdById(adId);
-    console.log('📄 AdDetailPage - getAdById respondió:', {
-      data,
-      hasData: !!data,
-      isManual: data && !data.sourceUrl,
-      isScraped: data && !!data.sourceUrl,
-      hasAttributes: data && !!data.attributes,
-      images: data?.images,
-      imagesType: typeof data?.images,
-      imagesIsArray: Array.isArray(data?.images)
-    });
-    
-    // 🔍 DEBUG: Verificar URLs de imágenes
-    if (data?.images) {
-      console.log('🖼️ DEBUG - Imágenes detectadas:', data.images);
-      if (Array.isArray(data.images)) {
-        data.images.forEach((img: any, idx: number) => {
-          console.log(`🖼️ Imagen ${idx + 1}:`, {
-            type: typeof img,
-            value: img,
-            url: img?.url || img,
-            isString: typeof img === 'string',
-            isObject: typeof img === 'object'
-          });
-        });
-      }
-    }
-    
     setAd(data);
     
     // Si tiene attributes (JSONB) y subcategory_id, cargar el esquema dinámico V2
@@ -173,29 +138,25 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
         }));
 
         setDynamicSchema(formatted);
-        console.log('📐 Esquema dinámico V2 cargado:', formatted.length, 'atributos');
       } catch (error) {
         console.error('Error loading dynamic schema V2:', error);
       }
     }
     
     if (data?.user_id && data?.id) {
-      // Cargar otros avisos del vendedor usando el UUID real del ad
-      loadSellerOtherAds(data.user_id, data.id);
+      loadSellerOtherAds(data.user_id, data.id, data.category_id);
     }
     
     setLoading(false);
   };
 
-  const loadSellerOtherAds = async (sellerId: string, currentAdUuid: string) => {
+  const loadSellerOtherAds = async (sellerId: string, currentAdUuid: string, categoryId?: string) => {
     setLoadingOtherAds(true);
     try {
-      console.log('🔍 Cargando otros avisos del vendedor:', sellerId, 'excluyendo:', currentAdUuid);
-      
-      // Cargar avisos destacados si hay categoría
-      if (ad?.category_id) {
+      // Cargar destacados del placement 'detail', excluyendo el aviso actual
+      if (categoryId) {
         setLoadingFeatured(true);
-        const { data: featured } = await getFeaturedForResults(ad.category_id, 5, 0);
+        const { data: featured } = await getFeaturedForDetail(categoryId, currentAdUuid, 5);
         setFeaturedAds(featured || []);
         setLoadingFeatured(false);
       }
@@ -214,8 +175,6 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
         console.error('❌ Error en query:', error);
         throw error;
       }
-      
-      console.log('✅ Avisos encontrados:', data?.length || 0, data);
       
       // Transformar a formato Product para usar con ProductCard
       const transformedAds = (data || []).map((adItem: any) => {
@@ -250,7 +209,6 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
         };
       });
 
-      console.log('✅ Avisos transformados:', transformedAds.length);
       setSellerOtherAds(transformedAds);
     } catch (error) {
       console.error('❌ Error loading seller other ads:', error);
@@ -284,11 +242,9 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
       });
 
       if (result.success) {
-        console.log('✅ Mensaje enviado exitosamente - Guardando estado para aviso:', ad.id);
         setContactSuccess(true);
         setHasContactedSeller(true);
         setContactForm({ name: '', lastName: '', email: '', phone: '', message: '' });
-        console.log('🔒 Estado contactado guardado en sessionStorage - Botón deshabilitado hasta cerrar sesión');
       } else {
         // Manejo de errores específicos
         const errorMessage = result.error?.message || 'Error al enviar el mensaje';

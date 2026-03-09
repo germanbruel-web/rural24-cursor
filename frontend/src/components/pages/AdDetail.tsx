@@ -445,7 +445,12 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
         />
       </div>
 
-      <UserFeaturedAdsBar categoryId={ad.category_id} className="mt-2" />
+      <UserFeaturedAdsBar
+        categoryId={ad.category_id}
+        placement="detail"
+        excludeAdId={ad.id}
+        className="mt-2"
+      />
     </div>
   );
 };
