@@ -1,6 +1,6 @@
 # CLAUDE.md — Rural24 Orchestrator
 > Auto-cargado por Claude Code al inicio de cada sesión.
-> Última actualización: 2026-03-07 19:19
+> Última actualización: 2026-03-09 09:00
 > Governance detallado: `.claude/` | Legado Cursor: `OlderCursor/`
 
 ---
@@ -109,6 +109,6 @@ Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
 
 | Sprint | Objetivo | Estado |
 |---|---|---|
-| 4B | Form Manager — editor de campos de formulario | Pendiente |
+| 5D | AdDetail — reescritura completa (Hero + Secciones v2 + Contacto) | En progreso |
 | 3F | Display Logic — conectar RPCs featured a frontend | Pendiente |
 | 3D.6 | Notificación al activar Destacado (pg_cron → email) | Pendiente |
