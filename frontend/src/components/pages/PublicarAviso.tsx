@@ -60,6 +60,7 @@ import { AutoSaveIndicator } from '../molecules/AutoSaveIndicator';
 import { DynamicFormLoader } from '../forms/DynamicFormLoader';
 import { AutofillButton } from '../forms/AutofillButton';
 import { getWizardConfig, DEFAULT_STEPS, type WizardStep } from '../../services/v2/wizardConfigService';
+import { EmpresaSelectorWidget } from '../dashboard/EmpresaSelectorWidget';
 
 // ====================================================================
 // DESIGN SYSTEM RURAL24 - Estilos consistentes de formularios
@@ -135,6 +136,7 @@ export default function PublicarAviso() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [selectedCategoryType] = useState<string>('');
   const [selectedPageType, setSelectedPageType] = useState<'particular' | 'empresa'>('particular');
+  const [selectedBusinessProfileId, setSelectedBusinessProfileId] = useState<string | null>(null);
 
   // Step 2: Atributos dinámicos
   const [attributeValues, setAttributeValues] = useState<Record<string, any>>({});
@@ -845,6 +847,7 @@ export default function PublicarAviso() {
         subcategory_id: selectedSubcategory,
         category_type_id: selectedCategoryType || null,
         ad_type: selectedPageType === 'empresa' ? 'company' : 'particular',
+        business_profile_id: selectedBusinessProfileId || null,
         title: title.trim(),
         description: description.trim(),
         price: price ? parseInt(price) : null,
@@ -916,6 +919,7 @@ export default function PublicarAviso() {
           subcategory_id: selectedSubcategory,
           category_type_id: selectedCategoryType || null,
           ad_type: selectedPageType === 'empresa' ? 'company' : 'particular',
+          business_profile_id: selectedBusinessProfileId || null,
           title: title.trim(),
           description: description.trim(),
           price: priceNegotiable ? null : (price ? parseInt(price) : null),  // ✅ Sin decimales
@@ -1540,6 +1544,12 @@ export default function PublicarAviso() {
                     </div>
                   )}
                 </div>
+
+                {/* Empresa selector (solo visible si el usuario tiene empresas activas) */}
+                <EmpresaSelectorWidget
+                  selectedId={selectedBusinessProfileId}
+                  onChange={setSelectedBusinessProfileId}
+                />
               </div>
             )}
 
