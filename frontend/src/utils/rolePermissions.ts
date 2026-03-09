@@ -1,7 +1,7 @@
 import type { UserRole } from '../../types';
 
 // Constante para "todos los roles" - evita repetir arrays
-const ALL_ROLES: UserRole[] = ['superadmin', 'revendedor', 'premium', 'free'];
+const ALL_ROLES: UserRole[] = ['superadmin', 'premium', 'free'];
 
 /**
  * Define qué páginas puede acceder cada rol
@@ -13,7 +13,7 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   'email-confirm': ALL_ROLES,
   publicar: ALL_ROLES,
   'ad-detail': ALL_ROLES,
-  
+
   // Páginas de perfil (todos los usuarios autenticados)
   dashboard: ALL_ROLES,
   profile: ALL_ROLES,
@@ -24,19 +24,20 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   contacts: ALL_ROLES,
   inbox: ALL_ROLES,
 
-  // Mis Empresas (premium + superadmin + revendedor)
-  'mis-empresas': ['superadmin', 'revendedor', 'premium'],
-  
-  // Revendedor y SuperAdmin
-  users: ['superadmin', 'revendedor'],
-  'reseller-points': ['revendedor'],
-  
+  // Mis Empresas (premium + superadmin)
+  'mis-empresas': ['superadmin', 'premium'],
+
+  // Solo SuperAdmin - Usuarios
+  users: ['superadmin'],
+  'ad-finder': ['superadmin'],
+  'deleted-ads': ['superadmin'],
+
   // Solo SuperAdmin - Publicidad
   banners: ['superadmin'],
   coupons: ['superadmin'],
   'credits-config': ['superadmin'],
   'payments-admin': ['superadmin'],
-  
+
   // Solo SuperAdmin - Backend
   settings: ['superadmin'],
   'categories-admin': ['superadmin'],
@@ -54,10 +55,10 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
  */
 export function canAccessPage(page: string, userRole?: UserRole): boolean {
   if (!userRole) return false;
-  
+
   const allowedRoles = PAGE_PERMISSIONS[page];
   if (!allowedRoles) return false;
-  
+
   return (allowedRoles as UserRole[]).includes(userRole);
 }
 
@@ -66,7 +67,7 @@ export function canAccessPage(page: string, userRole?: UserRole): boolean {
  */
 export function getAllowedPages(userRole?: UserRole): string[] {
   if (!userRole) return [];
-  
+
   return Object.entries(PAGE_PERMISSIONS)
     .filter(([_, roles]) => (roles as UserRole[]).includes(userRole))
     .map(([page]) => page);
@@ -80,10 +81,10 @@ export function isSuperAdmin(userRole?: UserRole): boolean {
 }
 
 /**
- * Verifica si el usuario es Revendedor o SuperAdmin
+ * Verifica si el usuario tiene acceso administrativo (solo superadmin)
  */
 export function isAdmin(userRole?: UserRole): boolean {
-  return userRole === 'revendedor' || userRole === 'superadmin';
+  return userRole === 'superadmin';
 }
 
 /**
@@ -131,14 +132,14 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'mis-empresas',
     label: 'Mis Empresas',
-    allowedRoles: ['superadmin', 'revendedor', 'premium'],
+    allowedRoles: ['superadmin', 'premium'],
   },
   {
     id: 'profile',
     label: 'Mi Cuenta',
     allowedRoles: ALL_ROLES,
   },
-  
+
   // ============================================================
   // SECCIÓN 2: GESTIÓN DE AVISOS (SuperAdmin)
   // ============================================================
@@ -166,24 +167,14 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'users',
     label: 'Usuarios',
-    allowedRoles: ['superadmin', 'revendedor'],
-  },
-  
-  // ============================================================
-  // SECCIÓN 2.5: MI RED COMERCIAL (Revendedor)
-  // ============================================================
-  {
-    id: 'divider-red-comercial',
-    label: 'MI RED COMERCIAL',
-    allowedRoles: ['revendedor'],
-    divider: true,
+    allowedRoles: ['superadmin'],
   },
   {
-    id: 'reseller-points',
-    label: 'Puntos de Venta',
-    allowedRoles: ['revendedor'],
+    id: 'ad-finder',
+    label: 'Buscador de Avisos',
+    allowedRoles: ['superadmin'],
   },
-  
+
   // ============================================================
   // SECCIÓN 3: COMERCIAL (SuperAdmin)
   // ============================================================
@@ -208,7 +199,7 @@ export const MENU_STRUCTURE: MenuItem[] = [
     label: 'Cobranzas',
     allowedRoles: ['superadmin'],
   },
-  
+
   // ============================================================
   // SECCIÓN 4: CONFIGURACIÓN (SuperAdmin)
   // ============================================================
@@ -250,8 +241,8 @@ export const MENU_STRUCTURE: MenuItem[] = [
  */
 export function getMenuItems(userRole?: UserRole): MenuItem[] {
   if (!userRole) return [];
-  
-  return MENU_STRUCTURE.filter(item => 
+
+  return MENU_STRUCTURE.filter(item =>
     item.allowedRoles.includes(userRole)
   );
 }

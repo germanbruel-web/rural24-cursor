@@ -342,7 +342,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     created_at: new Date().toISOString(),
   } as User : user;
 
-  const isAdmin = effectiveProfile?.role === 'revendedor' || effectiveProfile?.role === 'superadmin';
+  const isAdmin = effectiveProfile?.role === 'superadmin';
 
   return (
     <AuthContext.Provider

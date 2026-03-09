@@ -120,8 +120,8 @@ export async function getUserAdLimit(userId?: string): Promise<{ limit: number; 
 
     // Determinar límite según rol
     let limit: number;
-    if (userData.role === 'superadmin' || userData.role === 'revendedor') {
-      limit = 999999; // Ilimitado para admins
+    if (userData.role === 'superadmin') {
+      limit = 999999; // Ilimitado para superadmin
     } else if (userData.role === 'free') {
       limit = 5; // Máximo 5 para usuarios free
     } else {

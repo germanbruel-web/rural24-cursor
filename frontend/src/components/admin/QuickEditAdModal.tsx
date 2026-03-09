@@ -120,8 +120,8 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
 
-  // Permisos: revendedor/superadmin puede editar otros
-  const canEditOthers = profile?.role === 'revendedor' || profile?.role === 'superadmin';
+  // Permisos: solo superadmin puede editar avisos de otros usuarios
+  const canEditOthers = profile?.role === 'superadmin';
 
   useEffect(() => {
     loadCatalog();

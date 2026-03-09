@@ -311,8 +311,8 @@ export const DashboardPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Mis Empresas — acceso rápido para premium/superadmin/revendedor */}
-      {profile?.role && ['superadmin', 'revendedor', 'premium'].includes(profile.role) && (
+      {/* Mis Empresas — acceso rápido para premium/superadmin */}
+      {profile?.role && ['superadmin', 'premium'].includes(profile.role) && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

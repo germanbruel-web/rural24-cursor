@@ -50,7 +50,7 @@ export const DevModePanel: React.FC = () => {
               <strong>Email:</strong> {user.email}
             </div>
             <div className="bg-purple-800 p-2 rounded">
-              <strong>Role:</strong> <span className={`font-bold ${userRole === 'superadmin' ? 'text-yellow-300' : userRole === 'revendedor' ? 'text-blue-300' : 'text-green-300'}`}>
+              <strong>Role:</strong> <span className={`font-bold ${userRole === 'superadmin' ? 'text-yellow-300' : 'text-green-300'}`}>
                 {userRole?.toUpperCase() || 'FREE'}
               </span>
             </div>

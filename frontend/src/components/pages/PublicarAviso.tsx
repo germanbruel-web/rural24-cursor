@@ -529,8 +529,8 @@ export default function PublicarAviso() {
 
       if (error) throw error;
 
-      // Validar permisos: solo dueño, superadmin o revendedor
-      if (ad.user_id !== profile?.id && profile?.role !== 'superadmin' && profile?.role !== 'revendedor') {
+      // Validar permisos: solo dueño o superadmin
+      if (ad.user_id !== profile?.id && profile?.role !== 'superadmin') {
         notify.error('No tienes permiso para editar este aviso');
         navigateTo('/my-ads');
         return;
