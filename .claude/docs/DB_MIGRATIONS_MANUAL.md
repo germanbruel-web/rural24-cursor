@@ -3,18 +3,25 @@
 
 ---
 
+## Concepto: DEV = Staging → fuente de verdad de PROD
+
+```
+Código  →  DEV (Staging)  →  validar  →  PROD
+Schema  →  DEV (Staging)  →  dump     →  PROD
+Config  →  DEV (Staging)  →  clone    →  PROD
+```
+
+---
+
 ## Herramientas disponibles
 
 | Script | Qué hace |
 |---|---|
-| `node scripts/db-run-migrations.mjs prod 20260309` | ✅ **Recomendado** — aplica solo las migraciones del día indicado |
-| `node scripts/db-run-migrations.mjs dev 20260309` | Ídem contra DEV |
-| `node scripts/db-push.mjs prod` | Via Supabase CLI (solo si el tracking está en orden) |
-| `node scripts/db-clone-config.mjs` | Clona tablas de config (banners, global_config) de DEV → PROD |
-
-> ⚠️ **Usar siempre `db-run-migrations.mjs`** — las migraciones viejas se aplicaron
-> manualmente (SQL Editor) y el CLI de Supabase no tiene registro de ellas.
-> `db-push.mjs` puede intentar re-aplicarlas y romper cosas.
+| `node scripts/db-dump-dev.mjs` | ① Exporta schema completo de DEV → `database/snapshots/dev-latest.sql` |
+| `node scripts/db-apply-snapshot.mjs prod --dry-run` | ② Ver qué va a aplicar (sin ejecutar) |
+| `node scripts/db-apply-snapshot.mjs prod` | ③ Aplica el snapshot a PROD (idempotente) |
+| `node scripts/db-clone-config.mjs` | ④ Clona config/banners de DEV → PROD |
+| `node scripts/db-run-migrations.mjs prod 20260309` | Alternativa quirúrgica: solo migraciones de un día |
 
 ---
 
@@ -35,61 +42,62 @@ PROD_DB_URL=postgresql://postgres.[ref-prod]:[password]@aws-0-us-west-2.pooler.s
 
 > ⚠️ Puerto **5432** (direct connection). NO usar 6543 (transaction pooler) — el script lo corrige automáticamente pero es mejor poner el correcto.
 
-### 2. Tener Supabase CLI instalado
+### 2. Tener pg_dump instalado (para db-dump-dev.mjs)
 ```powershell
-npx supabase --version
+pg_dump --version
 ```
-Si no responde: `npm install -g supabase`
+Si no responde: instalar [PostgreSQL client tools](https://www.postgresql.org/download/windows/) y agregar `C:\Program Files\PostgreSQL\XX\bin` al PATH.
 
 ---
 
-## Flujo normal: DEV → PROD
+## Flujo normal: DEV (Staging) → PROD
 
-### Paso 1 — Verificar qué migraciones están pendientes
-
-```powershell
-# Ver migraciones en la carpeta
-ls supabase/migrations/
-
-# Ver cuáles ya están aplicadas en PROD (requiere supabase CLI)
-npx supabase migration list --db-url "TU_PROD_DB_URL"
-```
-
-### Paso 2 — Aplicar migraciones en DEV primero (si no lo hiciste)
+### Paso 1 — Exportar schema de DEV
 
 ```powershell
-node scripts/db-push.mjs dev
+node scripts/db-dump-dev.mjs
 ```
 
-Verificar que no hay errores antes de ir a PROD.
+Genera `database/snapshots/dev-latest.sql` con el schema completo de DEV.
 
-### Paso 3 — Aplicar migraciones en PROD
+### Paso 2 — Revisar qué va a aplicar (dry run)
 
 ```powershell
-node scripts/db-push.mjs prod
+node scripts/db-apply-snapshot.mjs prod --dry-run
 ```
 
-El script aplica **solo las migraciones pendientes** (las que PROD no tiene). No repite las ya aplicadas.
+Muestra los primeros 20 statements sin ejecutar nada. Verificar que tiene sentido.
 
-### Paso 4 — Sincronizar configuración (si cambiaste banners/global_config)
+### Paso 3 — Aplicar a PROD
+
+```powershell
+node scripts/db-apply-snapshot.mjs prod
+```
+
+- Convierte `CREATE TABLE` → `CREATE TABLE IF NOT EXISTS` (idempotente)
+- Las tablas existentes **no se dropean** — solo agrega lo nuevo
+- Da 5 segundos para cancelar antes de ejecutar en PROD
+- Muestra resumen: aplicados / ya existían / warnings
+
+### Paso 4 — Sincronizar config/banners (si cambiaron)
 
 ```powershell
 node scripts/db-clone-config.mjs
 ```
 
-Esto clona: `site_settings`, `global_config`, `banners`, `banners_clean`.
-**No toca** usuarios, avisos, wallets, ni datos de negocio.
+Clona: `site_settings`, `global_config`, `banners`, `banners_clean`.
+**No toca** usuarios, avisos, wallets.
 
 ---
 
 ## Flujo rápido (día a día)
 
 ```powershell
-# En la raíz del proyecto:
-node scripts/db-push.mjs prod
+node scripts/db-dump-dev.mjs
+node scripts/db-apply-snapshot.mjs prod
 ```
 
-Listo. Si además cambiaste config/banners:
+Si además cambiaste config/banners:
 ```powershell
 node scripts/db-clone-config.mjs
 ```
