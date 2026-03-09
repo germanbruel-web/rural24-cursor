@@ -6,6 +6,9 @@
 -- También cambia varchar → text para compatibilidad PostgREST.
 -- ============================================================
 
+-- Eliminar la versión varchar para evitar ambigüedad de overload
+DROP FUNCTION IF EXISTS public.get_company_public_page(varchar);
+
 CREATE OR REPLACE FUNCTION public.get_company_public_page(p_slug text)
 RETURNS TABLE (
   id                uuid,
@@ -38,11 +41,11 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  -- Incrementar vistas
-  UPDATE public.business_profiles
-    SET profile_views = profile_views + 1
-    WHERE public.business_profiles.slug = p_slug
-      AND public.business_profiles.is_active = true;
+  -- Incrementar vistas (alias bp_ para evitar ambigüedad con columna del RETURNS TABLE)
+  UPDATE public.business_profiles AS bp_upd
+    SET profile_views = bp_upd.profile_views + 1
+    WHERE bp_upd.slug = p_slug
+      AND bp_upd.is_active = true;
 
   RETURN QUERY
     SELECT
@@ -66,8 +69,8 @@ BEGIN
       bp.is_verified,
       bp.profile_views,
       bp.owner_public,
-      CASE WHEN bp.owner_public THEN u.full_name ELSE NULL END AS owner_full_name,
-      c.display_name AS category_name,
+      CASE WHEN bp.owner_public THEN u.full_name::text ELSE NULL END AS owner_full_name,
+      c.display_name::text AS category_name,
       (
         SELECT COUNT(*) FROM public.ads
         WHERE business_profile_id = bp.id

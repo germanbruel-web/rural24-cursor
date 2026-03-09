@@ -142,6 +142,7 @@ const AppContent: React.FC = () => {
         hash.startsWith('#/publicar?')) return 'publicar-v3';
     if (hash.startsWith('#/edit/')) return 'publicar-v3';
     if (hash.startsWith('#/ad/')) return 'ad-detail';
+    if (hash.startsWith('#/empresa/')) return 'company-profile';
     if (hash === '#/dashboard/contacts') return 'contacts';
 
     if (hash === '#/my-ads') return 'my-ads';

@@ -108,8 +108,6 @@ export default function PublicarAviso() {
   const [submitting, setSubmitting] = useState(false);
   const [draftId, setDraftId] = useState<string>('');
 
-  console.log('🎨 PublicarAviso renderizado, hash:', window.location.hash);
-
   // Modal de autenticación
   const [showAuthModal, setShowAuthModal] = useState(false);
   
@@ -278,8 +276,6 @@ export default function PublicarAviso() {
         locality,
       };
 
-      console.log('🪄 Generando contenido con contexto:', context);
-
       // Llamada al endpoint (futuro: backend con LLM)
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/ads/generate-content`, {
         method: 'POST',
@@ -380,7 +376,6 @@ export default function PublicarAviso() {
       const draft = DraftManager.loadDraft(urlParams.draftId);
       if (draft) {
         restoreDraftState(draft);
-        console.log('✅ Draft recuperado desde URL:', urlParams.draftId);
         return;
       }
     }
@@ -392,7 +387,6 @@ export default function PublicarAviso() {
       if (draft) {
         restoreDraftState(draft);
         updateDraftURL(draft.draftId, draft.currentStep);
-        console.log('✅ Draft activo recuperado:', activeDraftId);
         return;
       }
     }
@@ -401,7 +395,6 @@ export default function PublicarAviso() {
     const newDraftId = DraftManager.generateDraftId();
     setDraftId(newDraftId);
     updateDraftURL(newDraftId, 1);
-    console.log('🆕 Nuevo draft creado:', newDraftId);
   }
 
   /**
@@ -491,7 +484,6 @@ export default function PublicarAviso() {
   async function detectEditMode() {
     // Detectar desde hash: #/edit/:id
     const hash = window.location.hash;
-    console.log('🔍 detectEditMode - hash actual:', hash);
     
     const editMatch = hash.match(/^#\/edit\/([a-f0-9-]+)$/);
     
@@ -500,7 +492,6 @@ export default function PublicarAviso() {
     if (editMatch) {
       // Formato nuevo: #/edit/:id
       editId = editMatch[1];
-      console.log('✅ Detectado modo edit (formato #/edit/:id):', editId);
     } else {
       // Formato legacy: ?edit=:id
       const hashParts = hash.split('?');
@@ -508,7 +499,6 @@ export default function PublicarAviso() {
         const urlParams = new URLSearchParams(hashParts[1]);
         editId = urlParams.get('edit');
         if (editId) {
-          console.log('✅ Detectado modo edit (formato ?edit=:id):', editId);
         }
       }
     }
@@ -518,7 +508,6 @@ export default function PublicarAviso() {
       setEditAdId(editId);
       await loadAdForEdit(editId);
     } else {
-      console.log('ℹ️ No se detectó modo edit - modo creación');
     }
   }
 
@@ -621,29 +610,14 @@ export default function PublicarAviso() {
   // PHOTO HANDLING - Usando SimpleImageUploader component
   // ====================================================================
   function handleImagesChange(images: UploadedImage[]) {
-    console.log('🚨🚨🚨 ====================================== 🚨🚨🚨');
-    console.log(`[PublicarAviso] 📸 handleImagesChange CALLED`);
-    console.log('🚨🚨🚨 ====================================== 🚨🚨🚨');
-    console.log(`📊 Cantidad: ${images.length} images`);
-    console.log('📦 Todas las imágenes recibidas:');
     images.forEach((img, idx) => {
-      console.log(`  [${idx}]:`);
-      console.log(`    ✓ URL: ${img.url}`);
-      console.log(`    ✓ PATH: ${img.path}`);
-      console.log(`    ✓ STATUS: ${img.status}`);
-      console.log(`    ✓ PROGRESS: ${img.progress}%`);
     });
     
-    console.log('🔄 Actualizando states...');
     setUploadedImages(images);
     uploadedImagesRef.current = images;
     
-    console.log(`✅ STATE actualizado: ${images.length} images`);
-    console.log(`✅ REF actualizado: ${uploadedImagesRef.current.length} images`);
     
     const successCount = images.filter(img => img.status === 'success').length;
-    console.log(`🎯 Images con SUCCESS status: ${successCount}`);
-    console.log('🚨🚨🚨 ====================================== 🚨🚨🚨');
   }
 
   // ====================================================================
@@ -707,6 +681,13 @@ export default function PublicarAviso() {
       }
     }
 
+    if (activeStepKey === 'caracteristicas') {
+      if (!price) {
+        notify.error('El precio es obligatorio');
+        return;
+      }
+    }
+
     if (activeStepKey === 'ubicacion') {
       if (!province) {
         notify.error('Selecciona provincia');
@@ -720,16 +701,11 @@ export default function PublicarAviso() {
         notify.error('Debes subir al menos 1 foto para continuar');
         return;
       }
-      console.log(`[PublicarAviso] ✅ Step fotos validación OK: ${successImages.length} imagen(es) lista(s)`);
     }
 
     if (activeStepKey === 'informacion') {
       if (!title.trim() || !description.trim()) {
         notify.error('Completa título y descripción');
-        return;
-      }
-      if (!price) {
-        notify.error('El precio es obligatorio');
         return;
       }
       if (title.trim().length < 10) {
@@ -766,27 +742,14 @@ export default function PublicarAviso() {
     try {
       setSubmitting(true);
 
-      console.log('=====================================================');
-      console.log('[PublicarAviso] 🚀 INICIANDO SUBMIT');
-      console.log('=====================================================');
       
       // 1. Las imágenes YA están subidas desde SimpleImageUploader
       // Leer desde el ref para evitar problemas de timing con el estado
       const currentImages = uploadedImagesRef.current;
-      console.log(`[PublicarAviso] 📸 uploadedImagesRef.current.length: ${currentImages.length}`);
-      console.log('[PublicarAviso] 📸 Images from ref:', JSON.stringify(currentImages, null, 2));
       
       // Validar estructura de imágenes ANTES de filtrar
       if (currentImages.length > 0) {
-        console.log('[PublicarAviso] 🔍 Validando estructura de imágenes:');
         currentImages.forEach((img, index) => {
-          console.log(`  Imagen ${index}:`, {
-            hasUrl: !!img.url,
-            hasPath: !!img.path,
-            hasStatus: !!img.status,
-            status: img.status,
-            urlPreview: img.url?.substring(0, 50) + '...'
-          });
         });
       }
       
@@ -794,7 +757,6 @@ export default function PublicarAviso() {
         .filter(img => {
           const isSuccess = img.status === 'success';
           if (!isSuccess) {
-            console.warn(`[PublicarAviso] ⚠️ Imagen filtrada (status: ${img.status}):`, img);
           }
           return isSuccess;
         })
@@ -810,9 +772,6 @@ export default function PublicarAviso() {
             isPrimary: img.isPrimary ?? false  // Fallback para compatibilidad
           };
         });
-
-      console.log(`[PublicarAviso] ✅ Images with success status: ${finalImages.length}`);
-      console.log('[PublicarAviso] 📦 finalImages array:', JSON.stringify(finalImages, null, 2));
 
       if (finalImages.length === 0) {
         console.error('[PublicarAviso] ❌ NO IMAGES FOUND - Aborting submit');
@@ -831,8 +790,6 @@ export default function PublicarAviso() {
       // 2. Preparar datos - Enviar TODOS los atributos (incluso vacíos) para debugging
       const cleanAttributes = attributeValues; // TEMPORAL: Enviar todo sin limpiar
       
-      console.log('🔍 DEBUG - attributeValues RAW:', attributeValues);
-      console.log('🔍 DEBUG - cleanAttributes:', cleanAttributes);
       
       // NOTA: Lógica original comentada para debugging
       // const cleanAttributes = Object.entries(attributeValues).reduce((acc, [key, value]) => {
@@ -861,8 +818,6 @@ export default function PublicarAviso() {
         status: 'active',
       };
 
-      console.log(isEditMode ? '📝 Datos a actualizar:' : '📦 Datos a insertar:', adData);
-      console.log('🔍 DEBUG - isEditMode:', isEditMode, 'editAdId:', editAdId);
       
       // Validar precio
       if (adData.price && adData.price > 9999999999) {
@@ -872,11 +827,8 @@ export default function PublicarAviso() {
 
       let resultId: string;
 
-      console.log('🔍 CHECKPOINT - Decidiendo flujo:', { isEditMode, editAdId, hasEditId: !!editAdId });
-
       if (isEditMode && editAdId) {
         // MODO UPDATE
-        console.log('✅ Entrando en flujo UPDATE con ID:', editAdId);
         const { data, error } = await supabase
           .from('ads')
           .update(adData)
@@ -893,7 +845,6 @@ export default function PublicarAviso() {
         notify.success('Aviso actualizado exitosamente!');
       } else {
         // MODO CREATE - Usar nuevo BFF API
-        console.log('✅ Entrando en flujo CREATE');
         
         // ⚠️ ALERTA: Si hay un editAdId pero isEditMode es false, algo está mal
         if (editAdId && !isEditMode) {
@@ -922,8 +873,8 @@ export default function PublicarAviso() {
           business_profile_id: selectedBusinessProfileId || null,
           title: title.trim(),
           description: description.trim(),
-          price: priceNegotiable ? null : (price ? parseInt(price) : null),  // ✅ Sin decimales
-          price_negotiable: priceNegotiable,  // ✅ Nuevo campo
+          price: price ? parseInt(price) : null,
+          price_negotiable: false,
           currency,
           city: finalCity,
           province: finalProvince,
@@ -933,11 +884,6 @@ export default function PublicarAviso() {
           contact_email: null,
         };
 
-        console.log('📦 Enviando a BFF API:', JSON.stringify(createData, null, 2));
-        console.log('📦 Tipo de images:', typeof createData.images);
-        console.log('📦 Es array?:', Array.isArray(createData.images));
-        console.log('📦 Primer elemento images:', createData.images[0]);
-
         const ad = await adsApi.create(createData);
 
         // Usar slug si está disponible, sino usar id
@@ -946,7 +892,6 @@ export default function PublicarAviso() {
         // ✅ Eliminar draft después de publicar exitosamente
         if (draftId) {
           DraftManager.deleteDraft(draftId);
-          console.log('🗑️ Draft eliminado después de publicación exitosa');
         }
         
         notify.success('Aviso publicado exitosamente!');
@@ -1270,6 +1215,77 @@ export default function PublicarAviso() {
                   onGroupToggle={setExpandedAttributeGroup}
                   completedGroups={completedGroups}
                 />
+
+                {/* Precio */}
+                <div className="space-y-4">
+                  <label className={DS.label}>
+                    Precio <span className="text-red-500">*</span>
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Monto */}
+                    <div className={priceUnitOptions.length > 0 ? 'sm:col-span-1' : 'sm:col-span-2'}>
+                      <input
+                        type="text"
+                        value={formatPriceDisplay(price)}
+                        onChange={(e) => setPrice(cleanPrice(e.target.value))}
+                        placeholder="ej: 50000"
+                        className={DS.input}
+                      />
+                      <p className={DS.helperText}>Solo números enteros</p>
+                    </div>
+
+                    {/* Moneda */}
+                    <div>
+                      <select
+                        value={currency}
+                        onChange={(e) => setCurrency(e.target.value as 'ARS' | 'USD')}
+                        className={DS.input}
+                      >
+                        <option value="ARS">ARS $</option>
+                        <option value="USD">USD $</option>
+                      </select>
+                    </div>
+
+                    {/* Unidad (solo si el template tiene price_config.units_list) */}
+                    {priceUnitOptions.length > 0 && (
+                      <div>
+                        <select
+                          value={priceUnit}
+                          onChange={(e) => setPriceUnit(e.target.value)}
+                          className={DS.input}
+                        >
+                          <option value="">Unidad...</option>
+                          {priceUnitOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Preview */}
+                  {price && (
+                    <div className="flex items-center gap-2 p-3 bg-primary-50 border-2 border-primary-200 rounded-lg">
+                      <DollarSign className="w-5 h-5 text-primary-600" />
+                      <span className="text-sm text-gray-700">
+                        Se publicará como:{' '}
+                        <strong className="text-primary-700 text-lg">
+                          {formatCurrency(price, currency)}
+                          {priceUnit && priceUnitOptions.find(o => o.value === priceUnit)
+                            ? ` ${priceUnitOptions.find(o => o.value === priceUnit)!.label}`
+                            : ''}
+                        </strong>
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Empresa selector (solo visible si el usuario tiene empresas activas) */}
+                <EmpresaSelectorWidget
+                  selectedId={selectedBusinessProfileId}
+                  onChange={setSelectedBusinessProfileId}
+                />
               </div>
             )}
 
@@ -1479,128 +1495,15 @@ export default function PublicarAviso() {
                     </InfoBox>
                   )}
                 </div>
-
-                {/* Precio */}
-                <div className="space-y-4">
-                  <label className={DS.label}>
-                    Precio <span className="text-red-500">*</span>
-                  </label>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {/* Monto */}
-                    <div className={priceUnitOptions.length > 0 ? 'sm:col-span-1' : 'sm:col-span-2'}>
-                      <input
-                        type="text"
-                        value={formatPriceDisplay(price)}
-                        onChange={(e) => setPrice(cleanPrice(e.target.value))}
-                        placeholder="ej: 50000"
-                        className={DS.input}
-                      />
-                      <p className={DS.helperText}>Solo números enteros</p>
-                    </div>
-
-                    {/* Moneda */}
-                    <div>
-                      <select
-                        value={currency}
-                        onChange={(e) => setCurrency(e.target.value as 'ARS' | 'USD')}
-                        className={DS.input}
-                      >
-                        <option value="ARS">ARS $</option>
-                        <option value="USD">USD $</option>
-                      </select>
-                    </div>
-
-                    {/* Unidad (solo si el template tiene price_config.units_list) */}
-                    {priceUnitOptions.length > 0 && (
-                      <div>
-                        <select
-                          value={priceUnit}
-                          onChange={(e) => setPriceUnit(e.target.value)}
-                          className={DS.input}
-                        >
-                          <option value="">Unidad...</option>
-                          {priceUnitOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Preview */}
-                  {price && (
-                    <div className="flex items-center gap-2 p-3 bg-primary-50 border-2 border-primary-200 rounded-lg">
-                      <DollarSign className="w-5 h-5 text-primary-600" />
-                      <span className="text-sm text-gray-700">
-                        Se publicará como:{' '}
-                        <strong className="text-primary-700 text-lg">
-                          {formatCurrency(price, currency)}
-                          {priceUnit && priceUnitOptions.find(o => o.value === priceUnit)
-                            ? ` ${priceUnitOptions.find(o => o.value === priceUnit)!.label}`
-                            : ''}
-                        </strong>
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Empresa selector (solo visible si el usuario tiene empresas activas) */}
-                <EmpresaSelectorWidget
-                  selectedId={selectedBusinessProfileId}
-                  onChange={setSelectedBusinessProfileId}
-                />
               </div>
             )}
 
-            {/* STEP 6: PREVIEW FINAL - Vista exacta de cómo quedará publicado */}
+            {/* STEP 6: PREVIEW FINAL */}
             {activeStepKey === 'revision' && (() => {
-              // 🔍 SUPER DEBUG MODE - Ver TODO lo que tenemos
-              console.log('🚨🚨🚨 ======================================');
-              console.log('🎬 STEP 6 - SUPER DEBUG PREVIEW');
-              console.log('🚨🚨🚨 ======================================');
-              console.log('📦 uploadedImagesRef.current:', uploadedImagesRef.current);
-              console.log('📦 uploadedImages state:', uploadedImages);
-              console.log('📊 Longitudes - Ref:', uploadedImagesRef.current.length, '| State:', uploadedImages.length);
-              
-              // Mostrar TODAS las imágenes con su info completa
-              uploadedImagesRef.current.forEach((img, idx) => {
-                console.log(`📸 [${idx}] STATUS: ${img.status} | URL: ${img.url?.substring(0, 80)} | PATH: ${img.path}`);
-              });
-              
               const successImages = uploadedImagesRef.current.filter(img => img.status === 'success');
-              console.log('✅ Success images FILTRADAS:', successImages.length);
-              console.log('🖼️ Images para preview:', successImages.map(img => ({
-                url: img.url?.substring(0, 60),
-                hasUrl: !!img.url,
-                hasPath: !!img.path,
-                status: img.status
-              })));
-              console.log('======================================');
-              
+
               return (
                 <div className="space-y-6">
-                  {/* Debug info - Solo en desarrollo */}
-                  {successImages.length === 0 && (
-                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6">
-                      <div className="flex items-start gap-3">
-                        <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-red-900 mb-2">⚠️ Debug: Sin imágenes detectadas</p>
-                          <ul className="text-sm text-red-800 space-y-1">
-                            <li>• uploadedImagesRef: {uploadedImagesRef.current.length} imágenes</li>
-                            <li>• uploadedImages state: {uploadedImages.length} imágenes</li>
-                            <li>• Con status success: {successImages.length}</li>
-                            <li>• Estados: {uploadedImagesRef.current.map(img => img.status).join(', ') || 'ninguno'}</li>
-                          </ul>
-                          <p className="text-sm text-red-700 mt-3">
-                            <strong>Solución:</strong> Vuelve al Step 4 y asegúrate de que las imágenes tengan el check verde ✓
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
                   <AdPreviewCard
                     data={{
                       title,

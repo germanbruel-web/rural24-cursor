@@ -692,8 +692,8 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                 </div>
               </div>
 
-              {/* Sección empresa — visible cuando ad_type=company */}
-              {(ad as any).ad_type === 'company' && (ad as any).business_profile_id && (
+              {/* Sección empresa — visible cuando hay business_profile_id */}
+              {(ad as any).business_profile_id && (
                 <div className="mb-4 p-4 rounded-xl border-2 border-brand-200 bg-brand-50">
                   <div className="flex items-center gap-2 mb-2">
                     <Building2 className="w-4 h-4 text-brand-600" />

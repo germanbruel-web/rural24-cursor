@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { X, Building2, Globe, Phone, Mail, MapPin, Instagram, Facebook, Eye, EyeOff, Loader2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { X, Building2, Globe, Phone, Mail, MapPin, Instagram, Facebook, Eye, EyeOff, Loader2, Upload, ImageOff } from 'lucide-react';
 import { getProvinces, getLocalitiesByProvince } from '../../services/v2/locationsService';
 import type { Province, Locality } from '../../services/v2/locationsService';
-import type { MyCompany, CreateEmpresaData, UpdateEmpresaData } from '../../services/empresaService';
+import type { MyCompany, CreateEmpresaData, UpdateEmpresaData } from '../../services/empresaService'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { createEmpresa, updateEmpresa, CompanyLimitError } from '../../services/empresaService';
+import { uploadsApi } from '../../services/api';
 
 interface EmpresaFormProps {
   empresa?: MyCompany | null;   // null = crear, objeto = editar
@@ -52,6 +53,28 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
   const [localities, setLocalities] = useState<Locality[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const logoRef = useRef<HTMLInputElement>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (
+    file: File,
+    setUploading: (v: boolean) => void,
+    setUrl: (url: string) => void,
+  ) => {
+    setUploading(true);
+    try {
+      const result = await uploadsApi.uploadImage(file, 'profiles');
+      setUrl(result.url);
+    } catch {
+      setError('Error al subir la imagen. Intentá de nuevo.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Cargar provincias
   useEffect(() => {
@@ -67,7 +90,9 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
 
   // Poblar form al editar
   useEffect(() => {
-    if (!empresa) { setForm(EMPTY); return; }
+    if (!empresa) { setForm(EMPTY); setLogoUrl(null); setCoverUrl(null); return; }
+    setLogoUrl(empresa.logo_url ?? null);
+    setCoverUrl(empresa.cover_url ?? null);
 
     // Cargar localidades para la provincia guardada
     if (empresa.province) {
@@ -105,7 +130,7 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
     setError(null);
 
     try {
-      const payload: CreateEmpresaData = {
+      const payload: UpdateEmpresaData = {
         company_name: form.company_name.trim(),
         tagline: form.tagline.trim() || undefined,
         description: form.description.trim() || undefined,
@@ -122,14 +147,23 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
         city: form.city || undefined,
         owner_public: form.owner_public,
         show_on_ad_detail: form.show_on_ad_detail,
+        logo_url: logoUrl ?? undefined,
+        cover_url: coverUrl ?? undefined,
       };
 
       if (isEdit && empresa) {
-        await updateEmpresa(empresa.id, payload as UpdateEmpresaData);
-        onSaved({ ...empresa, ...payload, role: empresa.role, ads_count: empresa.ads_count });
+        await updateEmpresa(empresa.id, payload);
+        onSaved({ ...empresa, ...payload, logo_url: logoUrl, cover_url: coverUrl, role: empresa.role, ads_count: empresa.ads_count });
       } else {
-        const created = await createEmpresa(payload);
-        onSaved(created);
+        const created = await createEmpresa(payload as CreateEmpresaData);
+        // Si subió imágenes en la creación, guardarlas en un segundo paso
+        if (logoUrl || coverUrl) {
+          await updateEmpresa(created.id, {
+            ...(logoUrl ? { logo_url: logoUrl } : {}),
+            ...(coverUrl ? { cover_url: coverUrl } : {}),
+          });
+        }
+        onSaved({ ...created, logo_url: logoUrl ?? null, cover_url: coverUrl ?? null });
       }
     } catch (err) {
       if (err instanceof CompanyLimitError) {
@@ -176,6 +210,93 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
               {error}
             </div>
           )}
+
+          {/* Imágenes — Logo + Cover */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-700">Imágenes</h3>
+            <div className="flex gap-4 flex-wrap">
+
+              {/* Logo */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 overflow-hidden flex items-center justify-center bg-gray-50 relative">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <Building2 className="w-8 h-8 text-gray-300" />
+                  )}
+                  {uploadingLogo && (
+                    <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={logoRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(file, setUploadingLogo, setLogoUrl);
+                    e.target.value = '';
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => logoRef.current?.click()}
+                  disabled={uploadingLogo}
+                  className="text-xs text-brand-600 hover:text-brand-700 flex items-center gap-1 disabled:opacity-50"
+                >
+                  <Upload className="w-3 h-3" />Logo
+                </button>
+                {logoUrl && (
+                  <button type="button" onClick={() => setLogoUrl(null)} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1">
+                    <ImageOff className="w-3 h-3" />Quitar
+                  </button>
+                )}
+              </div>
+
+              {/* Cover */}
+              <div className="flex flex-col items-center gap-2 flex-1 min-w-[160px]">
+                <div className="w-full h-20 rounded-xl border-2 border-dashed border-gray-300 overflow-hidden flex items-center justify-center bg-gray-50 relative">
+                  {coverUrl ? (
+                    <img src={coverUrl} alt="Portada" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs text-gray-400">Sin portada</span>
+                  )}
+                  {uploadingCover && (
+                    <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={coverRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(file, setUploadingCover, setCoverUrl);
+                    e.target.value = '';
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => coverRef.current?.click()}
+                  disabled={uploadingCover}
+                  className="text-xs text-brand-600 hover:text-brand-700 flex items-center gap-1 disabled:opacity-50"
+                >
+                  <Upload className="w-3 h-3" />Imagen de portada
+                </button>
+                {coverUrl && (
+                  <button type="button" onClick={() => setCoverUrl(null)} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1">
+                    <ImageOff className="w-3 h-3" />Quitar
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Nombre */}
           <div>

@@ -27,10 +27,18 @@ interface AdCard {
 // ── Component ──────────────────────────────────────────────────────────────
 
 export function EmpresaPublicPage() {
-  const slug = useMemo(() => {
-    const match = window.location.hash.match(/^#\/empresa\/([^/]+)/);
-    return match ? match[1] : null;
+  const [hash, setHash] = useState(window.location.hash);
+
+  useEffect(() => {
+    const onHashChange = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
+
+  const slug = useMemo(() => {
+    const match = hash.match(/^#\/empresa\/([^/]+)/);
+    return match ? match[1] : null;
+  }, [hash]);
 
   const [empresa, setEmpresa] = useState<CompanyPublicPage | null>(null);
   const [ads, setAds] = useState<AdCard[]>([]);
