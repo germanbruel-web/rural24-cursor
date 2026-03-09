@@ -72,6 +72,7 @@ const ProfilePanel = lazy(() => import("./src/components/dashboard/ProfilePanel"
 const SubscriptionPanel = lazy(() => import("./src/components/dashboard/SubscriptionPanel").then(m => ({ default: m.SubscriptionPanel })));
 const ReceivedContactsView = lazy(() => import("./src/components/dashboard/ReceivedContactsView").then(m => ({ default: m.ReceivedContactsView })));
 const MisEmpresasPanel = lazy(() => import("./src/components/dashboard/MisEmpresasPanel").then(m => ({ default: m.MisEmpresasPanel })));
+const DashboardPanel = lazy(() => import("./src/components/dashboard/DashboardPanel").then(m => ({ default: m.DashboardPanel })));
 
 // Pages (rutas secundarias)
 const HowItWorksPage = lazy(() => import("./src/components/pages/HowItWorksPage").then(m => ({ default: m.HowItWorksPage })));
@@ -100,7 +101,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'reseller-points' | 'payment-result' | 'featured-checkout' | 'mis-empresas';
+export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'reseller-points' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -164,6 +165,8 @@ const AppContent: React.FC = () => {
     if (hash === '#/featured-checkout') return 'featured-checkout';
     if (hash === '#/profile') return 'profile';
     if (hash === '#/subscription') return 'profile'; // Subscription integrada en profile
+    if (hash === '#/mis-empresas') return 'mis-empresas';
+    if (hash === '#/dashboard') return 'dashboard';
     
     // Si no hay hash específico o es #/ (home), ir a home y limpiar localStorage
     localStorage.removeItem('currentPage');
@@ -323,6 +326,12 @@ const AppContent: React.FC = () => {
       }
       else if (hash === '#/inbox') {
         navigateToPage('inbox');
+      }
+      else if (hash === '#/mis-empresas') {
+        navigateToPage('mis-empresas');
+      }
+      else if (hash === '#/dashboard') {
+        navigateToPage('dashboard');
       }
       else if (hash === '#/all-ads') {
         navigateToPage('all-ads');
@@ -550,7 +559,7 @@ const AppContent: React.FC = () => {
   }
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['profile', 'subscription', 'users', 'my-ads', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'reseller-points', 'design-system'].includes(currentPage);
+  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'reseller-points', 'design-system', 'mis-empresas'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
@@ -626,6 +635,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'credits-config' && canAccessPage('credits-config', profile?.role) && <SuperAdminCreditsConfig />}
                 {currentPage === 'reseller-points' && canAccessPage('reseller-points', profile?.role) && <ResellerPointsPanel />}
                 {currentPage === 'mis-empresas' && canAccessPage('mis-empresas', profile?.role) && <MisEmpresasPanel />}
+                {currentPage === 'dashboard' && <DashboardPanel />}
                 {currentPage === 'design-system' && canAccessPage('design-system', profile?.role) && <DesignSystemShowcaseSimple />}
                 {currentPage === 'settings' && (
                   <div className="bg-white rounded-lg shadow p-6">

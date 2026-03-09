@@ -3,9 +3,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getSentContactsCount, getMyReceivedContactsCount } from '../../services/contactService';
 import { navigateTo } from '../../hooks/useNavigate';
 import { UserCreditsPanel } from './UserCreditsPanel';
-import { 
-  Eye, 
-  MessageSquare, 
+import {
+  Eye,
+  MessageSquare,
   Calendar,
   Award,
   Users,
@@ -14,7 +14,9 @@ import {
   PenLine,
   LayoutGrid,
   Search,
-  Star
+  Star,
+  Building2,
+  ChevronRight,
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -309,6 +311,29 @@ export const DashboardPanel: React.FC = () => {
         </div>
       )}
 
+      {/* Mis Empresas — acceso rápido para premium/superadmin/revendedor */}
+      {profile?.role && ['superadmin', 'revendedor', 'premium'].includes(profile.role) && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-brand-50 rounded-lg">
+                <Building2 className="w-6 h-6 text-brand-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Mis Empresas</h3>
+                <p className="text-sm text-gray-500">Gestioná tus páginas de empresa</p>
+              </div>
+            </div>
+            <button
+              onClick={() => { window.location.hash = '#/mis-empresas'; }}
+              className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              Ir a Mis Empresas
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

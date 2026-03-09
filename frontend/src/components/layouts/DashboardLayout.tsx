@@ -66,6 +66,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   // Mapeo de iconos según el ID del ítem
   const iconMap: Record<string, React.ReactNode> = {
     // Mi Cuenta
+    dashboard: <LayoutDashboard className="w-5 h-5" />,
     'my-ads': <Package className="w-5 h-5" />,
     inbox: <MessageSquare className="w-5 h-5" />,
     'mis-empresas': <Building2 className="w-5 h-5" />,

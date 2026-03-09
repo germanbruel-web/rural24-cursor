@@ -15,9 +15,10 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   'ad-detail': ALL_ROLES,
   
   // Páginas de perfil (todos los usuarios autenticados)
+  dashboard: ALL_ROLES,
   profile: ALL_ROLES,
   subscription: ALL_ROLES,
-  
+
   // Mis avisos personales (todos los usuarios autenticados)
   'my-ads': ALL_ROLES,
   contacts: ALL_ROLES,
@@ -111,6 +112,11 @@ export const MENU_STRUCTURE: MenuItem[] = [
     label: 'MI CUENTA',
     allowedRoles: ALL_ROLES,
     divider: true,
+  },
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    allowedRoles: ALL_ROLES,
   },
   {
     id: 'my-ads',
