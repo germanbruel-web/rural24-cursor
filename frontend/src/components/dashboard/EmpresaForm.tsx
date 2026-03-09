@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Building2, Globe, Phone, Mail, MapPin, Instagram, Facebook, Eye, EyeOff, Loader2, Upload, ImageOff } from 'lucide-react';
+import { X, Building2, Globe, Phone, Mail, MapPin, Instagram, Facebook, Eye, EyeOff, Loader2, Upload, ImageOff, Wrench } from 'lucide-react';
 import { getProvinces, getLocalitiesByProvince } from '../../services/v2/locationsService';
 import type { Province, Locality } from '../../services/v2/locationsService';
 import type { MyCompany, CreateEmpresaData, UpdateEmpresaData } from '../../services/empresaService'; // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -27,6 +27,15 @@ interface FormState {
   city: string;
   owner_public: boolean;
   show_on_ad_detail: boolean;
+  // Social Proof — Sprint 7A
+  anos_experiencia: string;
+  area_cobertura: string;
+  superficie_maxima: string;
+  cultivos_input: string;       // texto libre, guardado como JSON array
+  equipamiento_propio: boolean;
+  aplica_precision: boolean;
+  usa_drones: boolean;
+  factura: boolean;
 }
 
 const EMPTY: FormState = {
@@ -44,6 +53,14 @@ const EMPTY: FormState = {
   city: '',
   owner_public: false,
   show_on_ad_detail: true,
+  anos_experiencia: '',
+  area_cobertura: '',
+  superficie_maxima: '',
+  cultivos_input: '',
+  equipamiento_propio: false,
+  aplica_precision: false,
+  usa_drones: false,
+  factura: false,
 };
 
 export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSaved }) => {
@@ -102,21 +119,30 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
       });
     }
 
+    const e = empresa as any;
     setForm({
       company_name: empresa.company_name ?? '',
       tagline: empresa.tagline ?? '',
       description: empresa.description ?? '',
-      phone: (empresa as any).phone ?? '',
-      email: (empresa as any).email ?? '',
-      address: (empresa as any).address ?? '',
-      whatsapp: (empresa as any).whatsapp ?? '',
-      website: (empresa as any).website ?? '',
-      facebook: (empresa as any).social_networks?.facebook ?? '',
-      instagram: (empresa as any).social_networks?.instagram ?? '',
+      phone: e.phone ?? '',
+      email: e.email ?? '',
+      address: e.address ?? '',
+      whatsapp: e.whatsapp ?? '',
+      website: e.website ?? '',
+      facebook: e.social_networks?.facebook ?? '',
+      instagram: e.social_networks?.instagram ?? '',
       province: empresa.province ?? '',
       city: empresa.city ?? '',
       owner_public: empresa.owner_public ?? false,
       show_on_ad_detail: empresa.show_on_ad_detail ?? true,
+      anos_experiencia: e.anos_experiencia != null ? String(e.anos_experiencia) : '',
+      area_cobertura: e.area_cobertura ?? '',
+      superficie_maxima: e.superficie_maxima != null ? String(e.superficie_maxima) : '',
+      cultivos_input: Array.isArray(e.cultivos_json) ? e.cultivos_json.join(', ') : '',
+      equipamiento_propio: e.equipamiento_propio ?? false,
+      aplica_precision: e.aplica_precision ?? false,
+      usa_drones: e.usa_drones ?? false,
+      factura: e.factura ?? false,
     });
   }, [empresa]);
 
@@ -130,6 +156,11 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
     setError(null);
 
     try {
+      // Parsear cultivos desde texto libre
+      const cultivos = form.cultivos_input
+        ? form.cultivos_input.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+
       const payload: UpdateEmpresaData = {
         company_name: form.company_name.trim(),
         tagline: form.tagline.trim() || undefined,
@@ -149,6 +180,15 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
         show_on_ad_detail: form.show_on_ad_detail,
         logo_url: logoUrl ?? undefined,
         cover_url: coverUrl ?? undefined,
+        // Social Proof
+        anos_experiencia: form.anos_experiencia ? parseInt(form.anos_experiencia) : undefined,
+        area_cobertura: form.area_cobertura || undefined,
+        superficie_maxima: form.superficie_maxima ? parseInt(form.superficie_maxima) : undefined,
+        cultivos_json: cultivos.length > 0 ? cultivos : undefined,
+        equipamiento_propio: form.equipamiento_propio,
+        aplica_precision: form.aplica_precision,
+        usa_drones: form.usa_drones,
+        factura: form.factura,
       };
 
       if (isEdit && empresa) {
@@ -467,6 +507,84 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
                 placeholder="https://instagram.com/miempresa"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
+            </div>
+          </div>
+
+          {/* Social Proof — Servicios y Capacidades */}
+          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <Wrench className="w-4 h-4 text-brand-600" />
+              Servicios y Capacidades
+              <span className="text-xs font-normal text-gray-400">(opcional — contratistas y servicios)</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Años de experiencia</label>
+                <input
+                  type="number"
+                  min={0} max={100}
+                  value={form.anos_experiencia}
+                  onChange={e => set('anos_experiencia', e.target.value)}
+                  placeholder="Ej: 15"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Zona de cobertura</label>
+                <select
+                  value={form.area_cobertura}
+                  onChange={e => set('area_cobertura', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+                >
+                  <option value="">Sin especificar</option>
+                  <option value="local">Local</option>
+                  <option value="regional">Regional</option>
+                  <option value="nacional">Nacional</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Superficie máx. (ha)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={form.superficie_maxima}
+                  onChange={e => set('superficie_maxima', e.target.value)}
+                  placeholder="Ej: 500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Cultivos con los que trabajás</label>
+              <input
+                type="text"
+                value={form.cultivos_input}
+                onChange={e => set('cultivos_input', e.target.value)}
+                placeholder="Ej: soja, maíz, trigo, girasol (separados por coma)"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <p className="text-xs text-gray-400 mt-0.5">Separalos con comas.</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {([
+                { field: 'equipamiento_propio', label: 'Equipo propio' },
+                { field: 'aplica_precision', label: 'Agricultura de precisión' },
+                { field: 'usa_drones', label: 'Utiliza drones' },
+                { field: 'factura', label: 'Emite factura' },
+              ] as const).map(({ field, label }) => (
+                <label key={field} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form[field]}
+                    onChange={e => set(field, e.target.checked)}
+                    className="accent-brand-600"
+                  />
+                  <span className="text-sm text-gray-700">{label}</span>
+                </label>
+              ))}
             </div>
           </div>
 

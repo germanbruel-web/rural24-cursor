@@ -147,6 +147,15 @@ export interface CompanyPublicPage {
   category_name: string | null;
   ads_count: number;
   created_at: string;
+  // Social Proof (Sprint 7A)
+  anos_experiencia: number | null;
+  area_cobertura: 'local' | 'regional' | 'nacional' | null;
+  superficie_maxima: number | null;
+  cultivos_json: string[];
+  equipamiento_propio: boolean;
+  aplica_precision: boolean;
+  usa_drones: boolean;
+  factura: boolean;
 }
 
 /**

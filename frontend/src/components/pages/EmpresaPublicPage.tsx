@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Building2, MapPin, Phone, Mail, Globe, MessageCircle,
   Facebook, Instagram, CheckCircle, ArrowLeft, Package,
-  Eye, Tag, ExternalLink, Loader2, ImageOff, User,
+  Eye, Tag, Loader2, ImageOff, User,
+  Clock, Wrench, Zap, Wind, FileText, ExternalLink,
 } from 'lucide-react';
 import { getCompanyPublicPage, type CompanyPublicPage } from '../../services/empresaService';
 import { supabase } from '../../services/supabaseClient';
@@ -106,6 +107,7 @@ export function EmpresaPublicPage() {
 
   const gallery = empresa.gallery_images ?? [];
   const brands = empresa.brands_worked ?? [];
+  const cultivos = empresa.cultivos_json ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -207,6 +209,32 @@ export function EmpresaPublicPage() {
                   <Tag className="w-3 h-3" />{empresa.category_name}
                 </span>
               )}
+
+              {/* Social Proof chips */}
+              {(empresa.anos_experiencia || empresa.area_cobertura || empresa.factura || empresa.usa_drones) && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {empresa.anos_experiencia != null && empresa.anos_experiencia > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-brand-50 border border-brand-200 text-brand-700 text-xs rounded-full font-medium">
+                      <Clock className="w-3 h-3" />{empresa.anos_experiencia} años de exp.
+                    </span>
+                  )}
+                  {empresa.area_cobertura && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-brand-50 border border-brand-200 text-brand-700 text-xs rounded-full font-medium capitalize">
+                      <Globe className="w-3 h-3" />{empresa.area_cobertura}
+                    </span>
+                  )}
+                  {empresa.factura && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-brand-50 border border-brand-200 text-brand-700 text-xs rounded-full font-medium">
+                      <FileText className="w-3 h-3" />Factura
+                    </span>
+                  )}
+                  {empresa.usa_drones && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-brand-50 border border-brand-200 text-brand-700 text-xs rounded-full font-medium">
+                      <Wind className="w-3 h-3" />Drones
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -243,11 +271,132 @@ export function EmpresaPublicPage() {
       {/* ── BODY ──────────────────────────────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
 
+        {/* ── Stats bar ─────────────────────────────────────────────── */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl shadow-sm p-4 text-center">
+            <p className="text-2xl font-bold text-brand-600">{empresa.ads_count}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Avisos activos</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-4 text-center">
+            <p className="text-2xl font-bold text-brand-600">{empresa.profile_views}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Visitas al perfil</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-4 text-center flex flex-col items-center justify-center">
+            {empresa.is_verified ? (
+              <>
+                <CheckCircle className="w-7 h-7 text-brand-500 mb-0.5" />
+                <p className="text-xs text-gray-500">Verificado</p>
+              </>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-gray-300">—</p>
+                <p className="text-xs text-gray-400 mt-0.5">Sin verificar</p>
+              </>
+            )}
+          </div>
+        </div>
+
         {/* Descripción */}
         {empresa.description && (
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-3">Sobre la empresa</h2>
             <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{empresa.description}</p>
+          </div>
+        )}
+
+        {/* ── Zona de Cobertura ─────────────────────────────────────── */}
+        {(empresa.area_cobertura || empresa.superficie_maxima) && (
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-brand-600" />
+              Zona de cobertura
+            </h2>
+            <div className="flex flex-wrap gap-4">
+              {empresa.area_cobertura && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-brand-50 border border-brand-200 rounded-lg">
+                  <Globe className="w-4 h-4 text-brand-600" />
+                  <div>
+                    <p className="text-xs text-brand-500 font-medium uppercase tracking-wide">Alcance</p>
+                    <p className="text-sm font-semibold text-gray-800 capitalize">{empresa.area_cobertura}</p>
+                  </div>
+                </div>
+              )}
+              {empresa.superficie_maxima != null && empresa.superficie_maxima > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                  <Tag className="w-4 h-4 text-gray-500" />
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Superficie máx.</p>
+                    <p className="text-sm font-semibold text-gray-800">
+                      {empresa.superficie_maxima.toLocaleString('es-AR')} ha / campaña
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Equipamiento y Capacidades ────────────────────────────── */}
+        {(empresa.anos_experiencia != null || empresa.equipamiento_propio || empresa.aplica_precision || empresa.usa_drones || empresa.factura || cultivos.length > 0) && (
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Wrench className="w-5 h-5 text-brand-600" />
+              Equipamiento y capacidades
+            </h2>
+
+            {/* Años de experiencia chip */}
+            {empresa.anos_experiencia != null && empresa.anos_experiencia > 0 && (
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="w-4 h-4 text-brand-500" />
+                <span className="text-sm font-semibold text-gray-800">
+                  {empresa.anos_experiencia} {empresa.anos_experiencia === 1 ? 'año' : 'años'} de experiencia
+                </span>
+              </div>
+            )}
+
+            {/* Verificaciones booleanas */}
+            {(empresa.equipamiento_propio || empresa.aplica_precision || empresa.usa_drones || empresa.factura) && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                {empresa.equipamiento_propio && (
+                  <div className="flex flex-col items-center gap-1.5 p-3 bg-brand-50 rounded-xl border border-brand-100 text-center">
+                    <Wrench className="w-5 h-5 text-brand-600" />
+                    <span className="text-xs font-medium text-gray-700">Equipo propio</span>
+                  </div>
+                )}
+                {empresa.aplica_precision && (
+                  <div className="flex flex-col items-center gap-1.5 p-3 bg-brand-50 rounded-xl border border-brand-100 text-center">
+                    <Zap className="w-5 h-5 text-brand-600" />
+                    <span className="text-xs font-medium text-gray-700">Agr. de precisión</span>
+                  </div>
+                )}
+                {empresa.usa_drones && (
+                  <div className="flex flex-col items-center gap-1.5 p-3 bg-brand-50 rounded-xl border border-brand-100 text-center">
+                    <Wind className="w-5 h-5 text-brand-600" />
+                    <span className="text-xs font-medium text-gray-700">Usa drones</span>
+                  </div>
+                )}
+                {empresa.factura && (
+                  <div className="flex flex-col items-center gap-1.5 p-3 bg-brand-50 rounded-xl border border-brand-100 text-center">
+                    <FileText className="w-5 h-5 text-brand-600" />
+                    <span className="text-xs font-medium text-gray-700">Emite factura</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Cultivos */}
+            {cultivos.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cultivos</p>
+                <div className="flex flex-wrap gap-2">
+                  {cultivos.map((c, i) => (
+                    <span key={i} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full capitalize">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
