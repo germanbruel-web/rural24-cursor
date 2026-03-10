@@ -52,7 +52,7 @@ Esta regla aplica también a agentes/subagentes delegados: deben reportar al Orq
 ## FUENTE DE VERDAD DB
 
 ```
-database/RURAL24_COMPLETE_SCHEMA_2026-02-16.sql
+database/RURAL24_COMPLETE_SCHEMA_2026-03-10.sql
 ```
 Consultar SIEMPRE antes de crear tablas, columnas o RPCs.
 Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
