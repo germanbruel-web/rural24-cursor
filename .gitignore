@@ -48,6 +48,9 @@ temp-*.cjs
 temp_*.sql
 debug-*.log
 
+# DB snapshots (dumps locales, no van al repo)
+database/snapshots/
+
 # Supabase DB credentials (local only)
 .env.db.local
 

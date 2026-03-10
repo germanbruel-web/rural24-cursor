@@ -81,12 +81,67 @@ sql = sql.replace(/\bCREATE UNIQUE INDEX\b(?!\s+IF\s+NOT\s+EXISTS)/gi, 'CREATE U
 sql = sql.replace(/\bCREATE SEQUENCE\b(?!\s+IF\s+NOT\s+EXISTS)/gi, 'CREATE SEQUENCE IF NOT EXISTS');
 sql = sql.replace(/\bCREATE TYPE\b(?!\s+IF\s+NOT\s+EXISTS)/gi, 'CREATE TYPE IF NOT EXISTS');
 
-// Dividir en statements individuales (separados por ;)
-// Ignorar líneas de comentario y statements vacíos
-const statements = sql
-  .split(/;\s*\n/)
-  .map(s => s.trim())
-  .filter(s => s && !s.startsWith('--') && s.length > 10);
+// Dividir en statements individuales respetando bloques dollar-quoted ($$...$$)
+// Un split simple por ";" rompe los cuerpos de funciones PL/pgSQL.
+// pg_dump también genera comentarios con ";" adentro (-- Name: x; Type: y; Schema: z)
+// → los fragmentos post-split pueden tener basura antes del keyword SQL.
+// Solución: extraer desde el primer keyword SQL en cada fragmento.
+const SQL_KEYWORD_RE = /(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|GRANT|REVOKE|SET\s|DO\b|COMMENT\s|TRUNCATE|BEGIN|COMMIT|ROLLBACK|CALL|WITH\s|COPY)\b/i;
+
+function extractSql(raw) {
+  const noComments = raw.replace(/--[^\n]*/g, ''); // strip -- lines
+  const m = noComments.match(SQL_KEYWORD_RE);
+  if (!m) return null;
+  const extracted = noComments.slice(m.index).trim();
+  return extracted.length > 5 ? extracted : null;
+}
+
+function splitStatements(input) {
+  const results = [];
+  let current = '';
+  let inDollarQuote = false;
+  let dollarTag = '';
+  let i = 0;
+
+  while (i < input.length) {
+    if (!inDollarQuote) {
+      // Detectar inicio de dollar quote: $TAG$ o $$ (pero NO $1, $2 que son parámetros)
+      const rest = input.slice(i);
+      const m = rest.match(/^\$([^$\s0-9][^$\s]*)?\$(?!\d)/);
+      if (m) {
+        dollarTag = m[0];
+        inDollarQuote = true;
+        current += dollarTag;
+        i += dollarTag.length;
+        continue;
+      }
+      // Separador de statement
+      if (input[i] === ';') {
+        const sql = extractSql(current);
+        if (sql) results.push(sql);
+        current = '';
+        i++;
+        continue;
+      }
+    } else {
+      // Dentro de dollar quote — buscar cierre del mismo tag
+      if (input.slice(i).startsWith(dollarTag)) {
+        inDollarQuote = false;
+        current += dollarTag;
+        i += dollarTag.length;
+        continue;
+      }
+    }
+    current += input[i];
+    i++;
+  }
+  // Último statement sin ";" al final
+  const sql = extractSql(current);
+  if (sql) results.push(sql);
+  return results;
+}
+
+const statements = splitStatements(sql);
 
 const label = env === 'prod' ? '🔴 PROD' : '🟡 DEV';
 

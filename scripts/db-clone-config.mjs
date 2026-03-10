@@ -56,8 +56,24 @@ const prodRefMatch = PROD_DB_URL.match(/db\.([a-z]+)\.supabase\.co/);
 const DEV_REF = devRefMatch?.[1];
 const PROD_REF = prodRefMatch?.[1];
 
-// Tablas de configuración a clonar (sin datos de usuarios ni avisos)
-const TABLES = ['site_settings', 'global_config', 'banners', 'banners_clean'];
+// Tablas a clonar DEV → PROD (sin datos de usuarios: no tocar ads, users, wallets)
+// Orden importa por FK:
+//   1. taxonomía (categories → subcategories)
+//   2. catálogos (option_lists → option_list_items)
+//   3. formularios (form_templates_v2 → form_fields_v2)
+//   4. config general
+const TABLES = [
+  // Taxonomía — base de todo (TRUNCATE CASCADE limpia las FK dependientes)
+  'categories', 'subcategories',
+  // Config general
+  'site_settings', 'global_config', 'banners', 'banners_clean',
+  // Catálogos de opciones
+  'option_lists', 'option_list_items',
+  // Formularios dinámicos
+  'form_templates_v2', 'form_fields_v2',
+  // Wizard
+  'wizard_configs',
+];
 
 // Columnas de auditoría que referencian auth.users → nullear al clonar
 // (los IDs de usuario DEV no existen en PROD)
@@ -90,9 +106,10 @@ async function cloneTable(devClient, prodClient, tableName) {
     return 0;
   }
 
-  // Detectar columnas JSONB (OID 3802) o JSON (OID 114)
-  // pg devuelve strings de JSONB sin comillas → hay que re-serializarlos al insertar
-  const jsonbCols = new Set(
+  // Detectar columnas JSON (OID 114) y JSONB (OID 3802)
+  // pg devuelve jsonb como objetos JS y json como strings
+  // → ambos necesitan pasar como string JSON a los placeholders de INSERT
+  const jsonCols = new Set(
     result.fields
       .filter(f => f.dataTypeID === 3802 || f.dataTypeID === 114)
       .map(f => f.name)
@@ -108,10 +125,10 @@ async function cloneTable(devClient, prodClient, tableName) {
     const processedValues = columns.map(col => {
       if (NULLIFY_COLS.includes(col)) return null;
       const val = replaceStorageRefs(row[col]);
-      // JSONB: si pg devolvió un string primitivo, hay que envolverlo con JSON.stringify
-      // para que PostgreSQL lo reciba como JSON string válido (con comillas)
-      if (jsonbCols.has(col) && val !== null && typeof val === 'string') {
-        return JSON.stringify(val);
+      // JSON/JSONB: pg devuelve jsonb como objeto JS y json como string
+      // Ambos necesitan ser string JSON para el INSERT parametrizado
+      if (jsonCols.has(col) && val !== null) {
+        return typeof val === 'string' ? val : JSON.stringify(val);
       }
       return val;
     });

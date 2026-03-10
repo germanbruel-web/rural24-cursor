@@ -1,5 +1,6 @@
 # DB Migrations — Manual del Operador
 > Rural24 | Actualizado: 2026-03-09
+> Arquitectura completa: `rural24/ai/DEVPROD_ARCHITECTURE.md`
 
 ---
 
@@ -131,9 +132,9 @@ Reemplazar el número por el de la migración en cuestión.
 | `20260309000001_sprint6a_empresas_db` | Sprint 6A | ✅ | ✅ |
 | `20260309000002_sprint6a_rpc_fix` | Sprint 6A | ✅ | ✅ |
 | `20260309000003_fix_get_company_public_page` | Sprint 7A fix | ✅ | ✅ |
-| `20260309000004_sprint7a_bp_social_proof` | Sprint 7A | ✅ | ⏳ pendiente |
-| `20260309000005_sprint7a_rpc_social_proof_fields` | Sprint 7A | ✅ | ⏳ pendiente |
-| `20260309000006_remove_revendedor_role` | Roles cleanup | ✅ | ⏳ pendiente |
+| `20260309000004_sprint7a_bp_social_proof` | Sprint 7A | ✅ | ✅ 2026-03-10 |
+| `20260309000005_sprint7a_rpc_social_proof_fields` | Sprint 7A | ✅ | ✅ 2026-03-10 |
+| `20260309000006_remove_revendedor_role` | Roles cleanup | ✅ | ✅ 2026-03-10 |
 
 ---
 
