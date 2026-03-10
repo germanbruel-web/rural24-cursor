@@ -1,5 +1,54 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Building2, Globe, Phone, Mail, MapPin, Instagram, Facebook, Eye, EyeOff, Loader2, Upload, ImageOff, Wrench } from 'lucide-react';
+import { X, Building2, Globe, Phone, Mail, MapPin, Instagram, Facebook, Youtube, Eye, EyeOff, Loader2, Upload, ImageOff, Wrench, Plus, Trash2 } from 'lucide-react';
+
+// ── Redes sociales disponibles ──────────────────────────────────────────────
+const SOCIAL_NETWORKS = [
+  {
+    key: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/in/usuario',
+    icon: () => (
+      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" style={{ color: '#0077B5' }}>
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/usuario',
+    icon: () => <Instagram className="w-4 h-4" style={{ color: '#E1306C' }} />,
+  },
+  {
+    key: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/usuario',
+    icon: () => <Facebook className="w-4 h-4" style={{ color: '#1877F2' }} />,
+  },
+  {
+    key: 'twitter', label: 'X / Twitter', placeholder: 'https://x.com/usuario',
+    icon: () => (
+      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-gray-900">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'youtube', label: 'YouTube', placeholder: 'https://youtube.com/@canal',
+    icon: () => <Youtube className="w-4 h-4" style={{ color: '#FF0000' }} />,
+  },
+  {
+    key: 'tiktok', label: 'TikTok', placeholder: 'https://tiktok.com/@usuario',
+    icon: () => (
+      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-gray-900">
+        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'web', label: 'Sitio Web', placeholder: 'https://misitioweb.com',
+    icon: () => <Globe className="w-4 h-4 text-gray-500" />,
+  },
+] as const;
+
+type SocialNetworkKey = typeof SOCIAL_NETWORKS[number]['key'];
+interface SocialLink { network: SocialNetworkKey; url: string; }
+
+const MAX_SOCIAL_LINKS = 5;
 import { getProvinces, getLocalitiesByProvince } from '../../services/v2/locationsService';
 import type { Province, Locality } from '../../services/v2/locationsService';
 import type { MyCompany, CreateEmpresaData, UpdateEmpresaData } from '../../services/empresaService'; // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -21,8 +70,6 @@ interface FormState {
   address: string;
   whatsapp: string;
   website: string;
-  facebook: string;
-  instagram: string;
   province: string;
   city: string;
   owner_public: boolean;
@@ -47,8 +94,6 @@ const EMPTY: FormState = {
   address: '',
   whatsapp: '',
   website: '',
-  facebook: '',
-  instagram: '',
   province: '',
   city: '',
   owner_public: false,
@@ -74,8 +119,26 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const logoRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
+
+  // ── Helpers redes sociales ──────────────────────────────────────────────
+  const addSocialLink = () => {
+    if (socialLinks.length >= MAX_SOCIAL_LINKS) return;
+    const used = new Set(socialLinks.map(l => l.network));
+    const next = SOCIAL_NETWORKS.find(n => !used.has(n.key));
+    if (!next) return;
+    setSocialLinks(prev => [...prev, { network: next.key, url: '' }]);
+  };
+
+  const removeSocialLink = (idx: number) =>
+    setSocialLinks(prev => prev.filter((_, i) => i !== idx));
+
+  const updateSocialLink = (idx: number, field: 'network' | 'url', value: string) =>
+    setSocialLinks(prev => prev.map((l, i) =>
+      i === idx ? { ...l, [field]: value as SocialNetworkKey } : l
+    ));
 
   const handleImageUpload = async (
     file: File,
@@ -129,8 +192,6 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
       address: e.address ?? '',
       whatsapp: e.whatsapp ?? '',
       website: e.website ?? '',
-      facebook: e.social_networks?.facebook ?? '',
-      instagram: e.social_networks?.instagram ?? '',
       province: empresa.province ?? '',
       city: empresa.city ?? '',
       owner_public: empresa.owner_public ?? false,
@@ -144,6 +205,15 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
       usa_drones: e.usa_drones ?? false,
       factura: e.factura ?? false,
     });
+
+    // Parsear social_networks JSONB → array de links
+    const sn = e.social_networks ?? {};
+    const validKeys = SOCIAL_NETWORKS.map(n => n.key);
+    const parsed: SocialLink[] = Object.entries(sn)
+      .filter(([k, v]) => validKeys.includes(k as SocialNetworkKey) && typeof v === 'string' && (v as string).trim())
+      .map(([k, v]) => ({ network: k as SocialNetworkKey, url: v as string }))
+      .slice(0, MAX_SOCIAL_LINKS);
+    setSocialLinks(parsed);
   }, [empresa]);
 
   const set = (field: keyof FormState, value: string | boolean) =>
@@ -170,10 +240,11 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
         address: form.address.trim() || undefined,
         whatsapp: form.whatsapp.trim() || undefined,
         website: form.website.trim() || undefined,
-        social_networks: {
-          facebook: form.facebook.trim() || undefined,
-          instagram: form.instagram.trim() || undefined,
-        },
+        social_networks: Object.fromEntries(
+          socialLinks
+            .filter(l => l.url.trim())
+            .map(l => [l.network, l.url.trim()])
+        ),
         province: form.province || undefined,
         city: form.city || undefined,
         owner_public: form.owner_public,
@@ -482,31 +553,79 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
             </div>
           </div>
 
-          {/* Redes Sociales */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <Facebook className="w-3.5 h-3.5 inline mr-1" />Facebook
+          {/* Redes Sociales — selector dinámico */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-gray-700">
+                Redes sociales
+                <span className="ml-1 text-xs font-normal text-gray-400">
+                  ({socialLinks.length}/{MAX_SOCIAL_LINKS})
+                </span>
               </label>
-              <input
-                type="url"
-                value={form.facebook}
-                onChange={e => set('facebook', e.target.value)}
-                placeholder="https://facebook.com/miempresa"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
+              {socialLinks.length < MAX_SOCIAL_LINKS && (
+                <button
+                  type="button"
+                  onClick={addSocialLink}
+                  className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Agregar red
+                </button>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <Instagram className="w-3.5 h-3.5 inline mr-1" />Instagram
-              </label>
-              <input
-                type="url"
-                value={form.instagram}
-                onChange={e => set('instagram', e.target.value)}
-                placeholder="https://instagram.com/miempresa"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
+
+            {socialLinks.length === 0 && (
+              <p className="text-xs text-gray-400 italic py-2">
+                Ninguna red agregada. Hacé click en "Agregar red" para sumar una.
+              </p>
+            )}
+
+            <div className="space-y-2">
+              {socialLinks.map((link, idx) => {
+                const netConfig = SOCIAL_NETWORKS.find(n => n.key === link.network)!;
+                const usedKeys = new Set(socialLinks.map((l, i) => i !== idx ? l.network : null));
+                return (
+                  <div key={idx} className="flex items-center gap-2">
+                    {/* Selector de red */}
+                    <div className="relative">
+                      <select
+                        value={link.network}
+                        onChange={e => updateSocialLink(idx, 'network', e.target.value)}
+                        className="appearance-none pl-8 pr-6 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer"
+                      >
+                        {SOCIAL_NETWORKS.map(n => (
+                          <option key={n.key} value={n.key} disabled={usedKeys.has(n.key)}>
+                            {n.label}
+                          </option>
+                        ))}
+                      </select>
+                      {/* Icono superpuesto */}
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <netConfig.icon />
+                      </span>
+                    </div>
+
+                    {/* Input URL */}
+                    <input
+                      type="url"
+                      value={link.url}
+                      onChange={e => updateSocialLink(idx, 'url', e.target.value)}
+                      placeholder={netConfig.placeholder}
+                      className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
+
+                    {/* Eliminar */}
+                    <button
+                      type="button"
+                      onClick={() => removeSocialLink(idx)}
+                      className="p-2 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
