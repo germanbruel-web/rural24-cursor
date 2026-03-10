@@ -44,6 +44,12 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
   const isFeatured = variant === 'featured';
   const isCompact = variant === 'compact';
 
+  // ── Clasificación del aviso para badge y borde ──────────────────────────
+  const adType = (product as any).ad_type as 'particular' | 'company' | undefined;
+  const hasBusinessProfile = !!(product as any).business_profile_id;
+  const isEmpresa = adType === 'company' && hasBusinessProfile;
+  const isServicio = adType === 'company' && !hasBusinessProfile;
+
   // Optimizar imagen con crop inteligente por variante
   const optimizedImageUrl = getImageVariant(
     imageError ? DEFAULT_PLACEHOLDER_IMAGE : imageUrl,
@@ -87,6 +93,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         'group cursor-pointer overflow-hidden',
         'transition-all duration-300 ease-out',
         'hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600',
+        isEmpresa && 'border-brand-400 shadow-sm shadow-brand-100',
         isFeatured && 'h-full',
         isCompact && 'h-auto',
         className
@@ -110,11 +117,21 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         {/* Gradient overlay en hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* Badge EMPRESA */}
-        {(product as any).ad_type === 'company' && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-brand-600 text-white text-[10px] font-bold rounded-full shadow">
+        {/* Badge EMPRESA — aviso con perfil de empresa vinculado */}
+        {isEmpresa && (
+          <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-brand-600 text-white text-[10px] font-bold rounded-full shadow-md">
             <Building2 size={10} />
             EMPRESA
+          </div>
+        )}
+
+        {/* Badge SERVICIO — aviso company sin perfil de empresa */}
+        {isServicio && (
+          <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full shadow-md">
+            <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-current flex-shrink-0">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+            </svg>
+            SERVICIO
           </div>
         )}
 
@@ -195,6 +212,11 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
             )}>
               {formatPrice(product.price, product.currency)}
             </p>
+            {product.price_unit && product.price && product.price > 0 && (
+              <p className="text-[10px] text-brand-500 font-medium leading-none mt-0.5">
+                por {product.price_unit.replace(/-/g, ' ')}
+              </p>
+            )}
           </div>
         </div>
 

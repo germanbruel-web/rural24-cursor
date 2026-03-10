@@ -32,6 +32,7 @@ export interface Product {
   model?: string; // Modelo (campo fijo legacy)
   ad_type?: 'particular' | 'company'; // Tipo de aviso (Sprint 3G)
   business_profile_id?: string; // FK a business_profiles (Sprint 3G)
+  price_unit?: string; // Unidad de precio (ej: 'cabeza', 'tn', 'ha', 'unidad')
   // Información del vendedor (para productos de usuarios)
   user_id?: string;
   seller?: {
