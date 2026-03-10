@@ -692,24 +692,30 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
                 </div>
               </div>
 
-              {/* Sección empresa — visible cuando hay business_profile_id */}
-              {(ad as any).business_profile_id && (
+              {/* Sección empresa — visible para avisos de tipo 'company' o 'empresa' (Servicios) */}
+              {((ad as any).ad_type === 'company' || (ad as any).ad_type === 'empresa') && (
                 <div className="mb-4 p-4 rounded-xl border-2 border-brand-200 bg-brand-50">
                   <div className="flex items-center gap-2 mb-2">
                     <Building2 className="w-4 h-4 text-brand-600" />
-                    <span className="text-xs font-bold text-brand-600 uppercase tracking-wide">Aviso de Empresa</span>
+                    <span className="text-xs font-bold text-brand-600 uppercase tracking-wide">Servicio Profesional</span>
                   </div>
-                  <a
-                    href={`#/empresa/${(ad as any).business_profile_id}`}
-                    className="flex items-center justify-between w-full mt-2 px-4 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors text-sm font-semibold"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.location.hash = `/empresa/${(ad as any).business_profile_id}`;
-                    }}
-                  >
-                    Ver Perfil de Empresa
-                    <ChevronRight className="w-4 h-4" />
-                  </a>
+                  {(ad as any).business_profile_id ? (
+                    <a
+                      href={`#/empresa/${(ad as any).business_profile_id}`}
+                      className="flex items-center justify-between w-full mt-2 px-4 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors text-sm font-semibold"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.location.hash = `/empresa/${(ad as any).business_profile_id}`;
+                      }}
+                    >
+                      Ver Perfil de Empresa
+                      <ChevronRight className="w-4 h-4" />
+                    </a>
+                  ) : (
+                    <p className="text-xs text-brand-700 mt-1">
+                      Proveedor de servicios — contactá directamente al oferente
+                    </p>
+                  )}
                 </div>
               )}
 

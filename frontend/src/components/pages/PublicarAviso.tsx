@@ -61,6 +61,8 @@ import { DynamicFormLoader } from '../forms/DynamicFormLoader';
 import { AutofillButton } from '../forms/AutofillButton';
 import { getWizardConfig, DEFAULT_STEPS, type WizardStep } from '../../services/v2/wizardConfigService';
 import { EmpresaSelectorWidget } from '../dashboard/EmpresaSelectorWidget';
+import { ProfileGate } from '../dashboard/ProfileGate';
+import { getMyCompanies } from '../../services/empresaService';
 import { useAccount } from '../../contexts/AccountContext';
 
 // ====================================================================
@@ -136,6 +138,9 @@ export default function PublicarAviso() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [selectedCategoryType] = useState<string>('');
   const [selectedPageType, setSelectedPageType] = useState<'particular' | 'empresa'>('particular');
+  // ProfileGate — Sprint 7B
+  const [showProfileGate, setShowProfileGate] = useState(false);
+  const [pendingSubcategoryName, setPendingSubcategoryName] = useState<string>('');
   // Pre-selecciona empresa activa del AccountSwitcher al abrir el wizard
   const [selectedBusinessProfileId, setSelectedBusinessProfileId] = useState<string | null>(
     activeAccount.type === 'empresa' ? activeAccount.id : null
@@ -1072,6 +1077,17 @@ export default function PublicarAviso() {
               <div className="p-4 sm:p-10 lg:p-12">
                 {/* STEP 1: CATEGORÍA — 2 niveles: Categoría → Subcategoría → formulario */}
                 {activeStepKey === 'categoria' && (
+                  showProfileGate ? (
+                    <ProfileGate
+                      subcategoryDisplayName={pendingSubcategoryName}
+                      onEmpresaCreated={(empresa) => {
+                        setShowProfileGate(false);
+                        setSelectedBusinessProfileId(empresa.id);
+                        setCurrentStep(2);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    />
+                  ) : (
                   <div className="space-y-4 sm:space-y-8">
                     <div className="hidden sm:block">
                       <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
@@ -1096,11 +1112,13 @@ export default function PublicarAviso() {
                                   setSelectedCategory('');
                                   setSelectedSubcategory('');
                                   setSelectedPageType('particular');
+                                  setShowProfileGate(false);
                                 } else {
                                   setExpandedCategory(cat.id);
                                   setSelectedCategory(cat.id);
                                   setSelectedSubcategory('');
                                   setSelectedPageType('particular');
+                                  setShowProfileGate(false);
                                 }
                               }}
                               className={`w-full p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all text-left ${
@@ -1136,13 +1154,23 @@ export default function PublicarAviso() {
                                 </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                   {subcategories.map((sub) => {
-                                    const isEmpresa = sub.name === 'empresas' || sub.slug === 'empresas';
+                                    const isServicioEmpresa = sub.slug === 'servicios' || sub.slug === 'empresas';
                                     return (
                                       <button
                                         key={sub.id}
-                                        onClick={() => {
+                                        onClick={async () => {
                                           setSelectedSubcategory(sub.id);
-                                          setSelectedPageType(isEmpresa ? 'empresa' : 'particular');
+                                          setSelectedPageType(isServicioEmpresa ? 'empresa' : 'particular');
+
+                                          if (isServicioEmpresa) {
+                                            const empresas = await getMyCompanies();
+                                            if (empresas.length === 0) {
+                                              setPendingSubcategoryName(sub.display_name);
+                                              setShowProfileGate(true);
+                                              return; // no avanzar — gate bloqueante
+                                            }
+                                          }
+
                                           setTimeout(() => {
                                             setCurrentStep(2);
                                             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1151,7 +1179,7 @@ export default function PublicarAviso() {
                                         className="w-full p-3 rounded-lg border-2 border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-all text-left flex items-center justify-between group"
                                       >
                                         <div className="flex items-center gap-2">
-                                          {isEmpresa && <Building2 className="w-4 h-4 text-brand-600 flex-shrink-0" />}
+                                          {isServicioEmpresa && <Building2 className="w-4 h-4 text-brand-600 flex-shrink-0" />}
                                           <span className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-brand-700">
                                             {sub.display_name}
                                           </span>
@@ -1168,6 +1196,7 @@ export default function PublicarAviso() {
                       })}
                     </div>
                   </div>
+                  )
                 )}
 
             {/* STEP 2: CARACTERÍSTICAS (Atributos Dinámicos) */}
@@ -1194,6 +1223,7 @@ export default function PublicarAviso() {
                         setSelectedSubcategory('');
                         setSelectedPageType('particular');
                         setExpandedCategory('');
+                        setShowProfileGate(false);
                       }}
                       className="text-xs text-brand-600 hover:text-brand-700 font-semibold hover:underline flex-shrink-0 ml-2"
                     >

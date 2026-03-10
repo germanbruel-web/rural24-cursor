@@ -5,6 +5,25 @@
 
 ---
 
+## ⚠️ REGLA DE ORO — PRODUCCIÓN (PRIORIDAD MÁXIMA)
+
+**ANTES de ejecutar cualquier acción que afecte PROD, el Orquestador DEBE pedir confirmación explícita al usuario.**
+
+Esto incluye SIN EXCEPCIÓN:
+- Migraciones DB contra PROD (`db-run-migrations.mjs prod`, `db-apply-snapshot.mjs prod`)
+- Push de schema/datos a PROD (`db-push.mjs prod`, `db-clone-config.mjs`)
+- Deploy manual de código a Render Prod
+- Cualquier script o SQL que escriba, borre o altere datos/schema en Supabase PROD
+
+**Flujo obligatorio:**
+1. Orquestador propone la acción con detalle de qué va a hacer
+2. Usuario (único superadmin del sistema) aprueba explícitamente
+3. Solo entonces se ejecuta
+
+Esta regla aplica también a agentes/subagentes delegados: deben reportar al Orquestador primero y NO ejecutar acciones PROD por su cuenta.
+
+---
+
 ## REGLAS OBLIGATORIAS DE SESION
 
 1. Leer este archivo + `MEMORY.md` antes de cualquier acción
@@ -111,8 +130,14 @@ Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
 |---|---|---|
 | 5D | AdDetail — reescritura completa (Hero + Secciones v2 + Contacto) | ✅ Completo |
 | 3F | Display Logic — conectar RPCs featured a frontend | ✅ Completo |
-| 6A | Empresas DB — multi-empresa, members, límites por plan | ✅ Completo |
-| 6B | Dashboard Mis Empresas + EmpresaForm | Pendiente |
-| 6C | EmpresaSelectorWidget en PublicarAviso | Pendiente |
-| 6D | Perfil público EmpresaPublicPage | Pendiente |
+| 6A-6D | Sistema Multi-Empresa completo | ✅ Completo |
+| 7A | Account Switcher + Social Proof EmpresaPublicPage | ✅ Completo |
+| 7B | ProfileGate + Unificación Taxonomía Servicios/Empresas + Fix Roles | ✅ Completo |
+| 7C | ProductCard badge INSUMO/SERVICIO + price_unit + completeness bar | Pendiente |
 | 3D.6 | Notificación al activar Destacado (pg_cron → email) | Pendiente |
+
+## TAXONOMÍA (Sprint 7B — decisión de producto)
+- **PRODUCTO** (ad_type=particular): Hacienda, Insumos, Maquinarias — sin gate, cualquier usuario
+- **SERVICIO** (ad_type=company): Servicios — gate bloqueante, requiere empresa creada
+- Subcategorías "Empresas" desactivadas del wizard (unificadas con "Servicios")
+- `role` es la fuente de verdad para plan/features — NO `plan_name`

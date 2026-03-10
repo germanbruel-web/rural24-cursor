@@ -103,6 +103,13 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Sincronizar plan_name con role para mantener consistencia
+    if (updates.role) {
+      updates.plan_name = updates.role === 'premium' ? 'premium'
+                        : updates.role === 'superadmin' ? 'superadmin'
+                        : 'free';
+    }
+
     const { data, error } = await supabaseAdmin
       .from('users')
       .update(updates)

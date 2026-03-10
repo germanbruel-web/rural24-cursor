@@ -144,6 +144,7 @@ function getSingleRole(opts: {
   user_type?: string;
 }): string {
   if (opts.role === 'superadmin') return 'SuperAdmin';
+  if (opts.role === 'premium') return 'Premium';  // role es la fuente de verdad
   if (opts.plan_name && opts.plan_name.toLowerCase() !== 'free') return opts.plan_name;
   return opts.user_type === 'empresa' ? 'Empresa' : 'Particular';
 }

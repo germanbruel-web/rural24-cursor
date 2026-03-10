@@ -14,8 +14,9 @@ export function hasPremiumFeatures(opts: {
   role?: string;
   plan_name?: string;
 }): boolean {
-  if (opts.user_type === 'empresa') return true;
   if (opts.role === 'superadmin') return true;
+  if (opts.role === 'premium') return true;     // role es la fuente de verdad
+  if (opts.user_type === 'empresa') return true;
   const planName = opts.plan_name?.toLowerCase() || '';
   return PREMIUM_PLANS.some(p => planName.includes(p));
 }

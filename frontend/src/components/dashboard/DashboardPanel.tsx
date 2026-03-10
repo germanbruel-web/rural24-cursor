@@ -240,7 +240,11 @@ export const DashboardPanel: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Mi Dashboard</h1>
-          <p className="text-gray-600 mt-1">Plan: {profile?.plan_name || 'Free'}</p>
+          <p className="text-gray-600 mt-1">Plan: {
+            profile?.role === 'superadmin' ? 'SuperAdmin'
+            : profile?.role === 'premium' ? 'Premium'
+            : 'Free'
+          }</p>
         </div>
         <button
           onClick={() => navigateTo('/my-ads')}
