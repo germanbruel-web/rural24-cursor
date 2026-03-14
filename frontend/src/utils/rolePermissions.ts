@@ -152,7 +152,7 @@ export const MENU_STRUCTURE: MenuItem[] = [
   },
   {
     id: 'categories-admin',
-    label: 'Categorías',
+    label: 'Taxonomía',
     allowedRoles: ['superadmin'],
   },
   {
