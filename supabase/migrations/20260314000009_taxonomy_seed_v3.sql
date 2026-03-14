@@ -18,30 +18,38 @@ DECLARE
   c_ser  uuid; -- servicios
 BEGIN
 
+  -- ── Maquinaria: arreglar slug NULL + nombre legacy ────────
+  -- En la DB actual el slug es NULL y name='maquinarias-agricolas'
+  UPDATE public.categories
+  SET slug = 'maquinaria-agricola',
+      name = 'maquinaria-agricola',
+      display_name = 'Maquinaria Agrícola',
+      is_active = true
+  WHERE (slug IS NULL OR slug = 'maquinaria-agricola' OR name = 'maquinarias-agricolas');
+
   SELECT id INTO c_maq FROM public.categories WHERE slug = 'maquinaria-agricola';
-  SELECT id INTO c_rep FROM public.categories WHERE slug = 'repuestos';
+  IF c_maq IS NULL THEN RAISE EXCEPTION 'No se pudo encontrar/arreglar maquinaria-agricola'; END IF;
+
+  -- ── Categorías existentes (slugs confirmados) ─────────────
   SELECT id INTO c_equ FROM public.categories WHERE slug = 'equipamiento';
   SELECT id INTO c_ins FROM public.categories WHERE slug = 'insumos';
   SELECT id INTO c_hac FROM public.categories WHERE slug = 'hacienda';
   SELECT id INTO c_emp FROM public.categories WHERE slug = 'empleos';
   SELECT id INTO c_ser FROM public.categories WHERE slug = 'servicios';
 
-  IF c_maq IS NULL THEN RAISE EXCEPTION 'maquinaria-agricola not found'; END IF;
   IF c_equ IS NULL THEN RAISE EXCEPTION 'equipamiento not found'; END IF;
   IF c_ins IS NULL THEN RAISE EXCEPTION 'insumos not found'; END IF;
   IF c_hac IS NULL THEN RAISE EXCEPTION 'hacienda not found'; END IF;
   IF c_emp IS NULL THEN RAISE EXCEPTION 'empleos not found'; END IF;
   IF c_ser IS NULL THEN RAISE EXCEPTION 'servicios not found'; END IF;
 
-  -- Crear repuestos si no existe
-  IF c_rep IS NULL THEN
-    INSERT INTO public.categories (name, display_name, slug, is_active, is_filter, sort_order)
-    VALUES ('repuestos','Repuestos','repuestos',true,true,2)
-    ON CONFLICT (slug) DO NOTHING;
-    SELECT id INTO c_rep FROM public.categories WHERE slug = 'repuestos';
-  END IF;
+  -- ── Crear repuestos (no existe en la DB actual) ────────────
+  INSERT INTO public.categories (name, display_name, slug, is_active, is_filter, sort_order)
+  VALUES ('repuestos','Repuestos','repuestos',true,true,2)
+  ON CONFLICT (slug) DO UPDATE SET is_active = true, is_filter = true;
+  SELECT id INTO c_rep FROM public.categories WHERE slug = 'repuestos';
 
-  -- Crear / activar inmobiliaria-rural
+  -- ── Crear inmobiliaria-rural (no existe en la DB actual) ──
   INSERT INTO public.categories (name, display_name, slug, is_active, is_filter, sort_order)
   VALUES ('inmobiliaria-rural','Inmobiliaria Rural','inmobiliaria-rural',true,true,3)
   ON CONFLICT (slug) DO UPDATE SET is_active = true, is_filter = true;
