@@ -76,10 +76,13 @@ export async function POST(request: NextRequest) {
 
       // 4. Respuesta exitosa
       return NextResponse.json({
-        success:      true,
-        ars_credited: result.ars_credited ?? 0,
-        new_balance:  result.new_balance  ?? 0,
-        message:      result.message || '¡Cupón canjeado exitosamente!',
+        success:              true,
+        ars_credited:         result.ars_credited         ?? 0,
+        new_balance:          result.new_balance           ?? 0,
+        membership_granted:   result.membership_granted    ?? false,
+        plan_display_name:    result.plan_display_name     ?? '',
+        membership_expires_at: result.membership_expires_at ?? null,
+        message:              result.message || '¡Cupón canjeado exitosamente!',
       });
     } catch (err) {
       console.error('[coupons/redeem] Unexpected error:', err);

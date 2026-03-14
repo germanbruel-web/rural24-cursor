@@ -19,16 +19,33 @@ export const FormConfigSchema = z.object({
   requires_condition: z.boolean(),
 });
 
-// Schema for Subcategory
+// Schema for SubcategoryLeaf (nivel 3 — siempre leaf node, habilita SIGUIENTE)
+export const SubcategoryLeafSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  display_name: z.string(),
+  slug: z.string(),
+  category_id: z.string().uuid(),
+  parent_id: z.string().uuid(),
+  sort_order: z.number(),
+  is_active: z.boolean(),
+  form_config: FormConfigSchema,
+});
+
+// Schema for Subcategory nivel 2
 export const SubcategorySchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   display_name: z.string(),
   slug: z.string(),
   category_id: z.string().uuid(),
+  parent_id: z.string().uuid().nullable(),
   sort_order: z.number(),
   is_active: z.boolean(),
+  is_leaf: z.boolean(),       // true si no tiene hijos → habilita SIGUIENTE
+  has_children: z.boolean(),  // true si tiene sub-subcategorías → muestra flecha →
   form_config: FormConfigSchema,
+  children: z.array(SubcategoryLeafSchema),
 });
 
 // Schema for Category
@@ -50,6 +67,7 @@ export const CategoriesResponseSchema = z.object({
 });
 
 export type FormConfigDTO = z.infer<typeof FormConfigSchema>;
+export type SubcategoryLeafDTO = z.infer<typeof SubcategoryLeafSchema>;
 export type SubcategoryDTO = z.infer<typeof SubcategorySchema>;
 export type CategoryDTO = z.infer<typeof CategorySchema>;
 export type CategoriesResponseDTO = z.infer<typeof CategoriesResponseSchema>;
@@ -98,9 +116,19 @@ export const AdCreateSchema = z.object({
   contact_phone: z.string().optional().nullable(),
   contact_email: z.string().email('Email inválido').optional().nullable(),
   
+  // Ubicación con privacidad
+  locality_id: z.string().uuid().optional().nullable(),
+
+  // Empresa vinculada
+  business_profile_id: z.string().uuid().optional().nullable(),
+  price_unit: z.string().max(30).optional().nullable(),
+
   // Estado inicial
   status: z.enum(['draft', 'active']).optional(),
   approval_status: z.enum(['pending', 'approved']).optional(),
+
+  // Draft: expiración automática (seteada por el backend, no el frontend)
+  draft_expires_at: z.string().datetime().optional().nullable(),
 });
 
 // Schema for updating an ad
@@ -215,6 +243,10 @@ export const DynamicAttributeSchema = z.object({
 export const FormConfigResponseSchema = z.object({
   subcategory_id: z.string().uuid(),
   subcategory_name: z.string(),
+  category_path: z.string(),        // "Maquinaria Agrícola > Acoplados > Balancín"
+  is_leaf_node: z.boolean(),        // true = puede avanzar al Step 2
+  current_step: z.number(),         // siempre 2 para este endpoint
+  total_steps: z.number(),          // 6 por defecto
   requires_brand: z.boolean(),
   requires_model: z.boolean(),
   requires_year: z.boolean(),

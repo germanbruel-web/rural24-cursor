@@ -10,6 +10,7 @@ export { default as BannersCleanPanel } from './BannersCleanPanel';
 export { UsersPanel } from './UsersPanel';
 export { CategoriasAdmin } from './CategoriasAdmin';
 export { AttributesAdmin } from './AttributesAdmin';
+export { FormBuilderAdmin } from './FormBuilderAdmin';
 export { BackendSettings } from './BackendSettings';
 
 // Paneles SuperAdmin - Gestión Comercial

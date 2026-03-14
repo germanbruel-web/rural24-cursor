@@ -115,62 +115,27 @@ export async function calculateCreditPrice(credits: number): Promise<number> {
 // ============================================
 
 /**
- * Obtener balance del usuario
+ * @deprecated Sistema legacy de créditos. Usar walletService.ts (ARS).
+ * Retorna vacío sin consultar DB.
  */
 export async function getUserCredits(userId: string): Promise<UserCredits | null> {
-  try {
-    const { data, error } = await supabase
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error obteniendo créditos:', error);
-      return null;
-    }
-
-    return data || {
-      user_id: userId,
-      balance: 0,
-      monthly_allowance: 0,
-      last_monthly_reset: null
-    };
-  } catch (error) {
-    console.error('Error en getUserCredits:', error);
-    return null;
-  }
+  return {
+    user_id: userId,
+    balance: 0,
+    monthly_allowance: 0,
+    last_monthly_reset: null,
+  };
 }
 
 /**
- * Comprar créditos
+ * @deprecated Sistema legacy. Compra de créditos deshabilitada.
  */
 export async function purchaseCredits(
-  userId: string,
-  credits: number,
-  paymentId: string
+  _userId: string,
+  _credits: number,
+  _paymentId: string
 ): Promise<{ success: boolean; newBalance?: number; error?: string }> {
-  try {
-    const { data, error } = await supabase.rpc('purchase_credits', {
-      p_user_id: userId,
-      p_credits: credits,
-      p_payment_id: paymentId
-    });
-
-    if (error) {
-      console.error('Error comprando créditos:', error);
-      return { success: false, error: error.message };
-    }
-
-    return {
-      success: data.success,
-      newBalance: data.new_balance,
-      error: data.error
-    };
-  } catch (error) {
-    console.error('Error en purchaseCredits:', error);
-    return { success: false, error: 'Error inesperado' };
-  }
+  return { success: false, error: 'Sistema de créditos legacy deshabilitado' };
 }
 
 // ============================================
@@ -292,30 +257,13 @@ export async function cancelFeatured(
 // ============================================
 
 /**
- * Obtener historial de transacciones
+ * @deprecated Sistema legacy. Usar walletService.getWalletTransactions() para historial ARS.
  */
 export async function getCreditTransactions(
-  userId: string,
-  limit: number = 50
+  _userId: string,
+  _limit: number = 50
 ): Promise<CreditTransaction[]> {
-  try {
-    const { data, error } = await supabase
-      .from('credit_transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      console.error('Error obteniendo transacciones:', error);
-      return [];
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error('Error en getCreditTransactions:', error);
-    return [];
-  }
+  return [];
 }
 
 // ============================================
@@ -377,54 +325,10 @@ export async function getMembershipPlans() {
 // ============================================
 
 /**
- * Calcular días restantes en el periodo de facturación del usuario
- * El periodo es de 30 días desde la última recarga mensual o el registro
+ * @deprecated Sistema legacy. Retorna valor fijo sin consultar DB.
  */
-export async function getDaysRemainingInBillingPeriod(userId: string): Promise<number> {
-  try {
-    // Obtener créditos del usuario para verificar last_monthly_reset
-    const credits = await getUserCredits(userId);
-    
-    if (!credits) {
-      // Si no tiene registro, asumir que tiene 30 días
-      return 30;
-    }
-
-    // Determinar la fecha de inicio del periodo
-    let periodStartDate: Date;
-    
-    if (credits.last_monthly_reset) {
-      periodStartDate = new Date(credits.last_monthly_reset);
-    } else {
-      // Si nunca tuvo reset, buscar fecha de registro del usuario
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('created_at')
-        .eq('id', userId)
-        .single();
-
-      if (error || !userData) {
-        console.error('Error obteniendo fecha de usuario:', error);
-        return 30; // Default a 30 días
-      }
-
-      periodStartDate = new Date(userData.created_at);
-    }
-
-    // Calcular fecha de fin del periodo (30 días después del inicio)
-    const periodEndDate = new Date(periodStartDate);
-    periodEndDate.setDate(periodEndDate.getDate() + 30);
-
-    // Calcular días restantes
-    const now = new Date();
-    const daysRemaining = Math.ceil((periodEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-    // Retornar al menos 1 día si el periodo ya expiró (será renovado pronto)
-    return Math.max(1, daysRemaining);
-  } catch (error) {
-    console.error('Error en getDaysRemainingInBillingPeriod:', error);
-    return 30; // Default en caso de error
-  }
+export async function getDaysRemainingInBillingPeriod(_userId: string): Promise<number> {
+  return 30;
 }
 
 // ============================================
@@ -433,27 +337,37 @@ export async function getDaysRemainingInBillingPeriod(userId: string): Promise<n
 
 export interface CouponValidation {
   valid: boolean;
-  credits?: number;
+  /** ARS a acreditar (null si solo es membresía) */
+  arsAmount?: number | null;
+  /** Nombre del plan a otorgar (null si no da membresía) */
+  membershipPlanName?: string | null;
+  /** Duración en días de la membresía */
+  membershipDays?: number;
   description?: string;
   error?: string;
+  /** @deprecated usar arsAmount */
+  credits?: number;
 }
 
 /**
- * Preview de cupón — lectura read-only informativa.
- * Solo hace un SELECT sobre `coupons` para mostrar info previa al usuario.
- * NO valida límites reales ni redenciones por usuario.
- * El canje definitivo se realiza a través de redeemCoupon() → API → RPC.
+ * Preview read-only de cupón antes de canjear.
+ * NO valida límites reales ni canjes por usuario — eso lo hace el RPC.
  */
 export async function validateCoupon(code: string): Promise<CouponValidation> {
   try {
     const upperCode = code.toUpperCase().trim();
     if (!upperCode) {
-      return { valid: false, error: 'Ingresa un código de cupón' };
+      return { valid: false, error: 'Ingresá un código de cupón' };
     }
 
     const { data: coupon, error } = await supabase
       .from('coupons')
-      .select('code, name, description, credits_amount, expires_at, is_active')
+      .select(`
+        code, name, description,
+        ars_amount, gives_membership, membership_duration_days,
+        membership_plan_ids, membership_id,
+        expires_at, is_active, max_redemptions, current_redemptions
+      `)
       .eq('code', upperCode)
       .single();
 
@@ -465,17 +379,40 @@ export async function validateCoupon(code: string): Promise<CouponValidation> {
       return { valid: false, error: 'Este cupón está desactivado' };
     }
 
-    if (new Date(coupon.expires_at) < new Date()) {
+    if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
       return { valid: false, error: 'Este cupón ha expirado' };
+    }
+
+    if (coupon.max_redemptions != null && coupon.current_redemptions >= coupon.max_redemptions) {
+      return { valid: false, error: 'Este cupón ya fue agotado' };
+    }
+
+    // Resolver nombre del plan si da membresía
+    let membershipPlanName: string | null = null;
+    if (coupon.gives_membership) {
+      const planId = coupon.membership_plan_ids?.[0] ?? coupon.membership_id;
+      if (planId) {
+        const { data: plan } = await supabase
+          .from('subscription_plans')
+          .select('display_name')
+          .eq('id', planId)
+          .single();
+        membershipPlanName = plan?.display_name ?? 'Premium';
+      } else {
+        membershipPlanName = 'Premium';
+      }
     }
 
     return {
       valid: true,
-      credits: coupon.credits_amount,
+      arsAmount: coupon.ars_amount ?? null,
+      credits: coupon.ars_amount ?? 0, // compat
+      membershipPlanName,
+      membershipDays: coupon.membership_duration_days ?? 365,
       description: coupon.description || coupon.name,
     };
-  } catch (error) {
-    console.error('Error validando cupón:', error);
+  } catch (err) {
+    console.error('Error validando cupón:', err);
     return { valid: false, error: 'Error al validar cupón' };
   }
 }
@@ -492,6 +429,9 @@ export async function redeemCoupon(
   success: boolean;
   creditsGranted?: number;
   newBalance?: number;
+  membershipGranted?: boolean;
+  planDisplayName?: string;
+  message?: string;
   error?: string;
 }> {
   try {
@@ -522,8 +462,11 @@ export async function redeemCoupon(
 
     return {
       success: true,
-      creditsGranted: data.credits_granted || 0,
+      creditsGranted: data.ars_credited || 0,
       newBalance: data.new_balance || 0,
+      membershipGranted: data.membership_granted ?? false,
+      planDisplayName: data.plan_display_name ?? '',
+      message: data.message ?? '',
     };
   } catch (error) {
     console.error('Error en redeemCoupon:', error);

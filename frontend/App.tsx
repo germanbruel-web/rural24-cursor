@@ -56,7 +56,7 @@ const CouponsAdminPanel = lazy(() => import("./src/components/admin/CouponsAdmin
 const BannersCleanPanel = lazy(() => import("./src/components/admin/BannersCleanPanel"));
 const UsersPanel = lazy(() => import("./src/components/admin/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const CategoriasAdmin = lazy(() => import("./src/components/admin/CategoriasAdmin").then(m => ({ default: m.CategoriasAdmin })));
-const AttributesAdmin = lazy(() => import("./src/components/admin/AttributesAdmin").then(m => ({ default: m.AttributesAdmin })));
+const FormBuilderAdmin = lazy(() => import("./src/components/admin/FormBuilderAdmin").then(m => ({ default: m.FormBuilderAdmin })));
 const TemplatesAdmin = lazy(() => import("./src/components/admin/TemplatesAdmin").then(m => ({ default: m.TemplatesAdmin })));
 const BackendSettings = lazy(() => import("./src/components/admin/BackendSettings").then(m => ({ default: m.BackendSettings })));
 const GlobalSettingsPanel = lazy(() => import("./src/components/admin/GlobalSettingsPanel"));
@@ -625,7 +625,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'inbox' && <MessagesPanel />}
                 {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersCleanPanel />}
                 {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <CategoriasAdmin />}
-                {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <AttributesAdmin />}
+                {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <FormBuilderAdmin />}
                 {currentPage === 'templates-admin' && canAccessPage('templates-admin', profile?.role) && <TemplatesAdmin />}
                 {currentPage === 'backend-settings' && canAccessPage('backend-settings', profile?.role) && <BackendSettings />}
                 {currentPage === 'global-settings' && canAccessPage('global-settings', profile?.role) && <GlobalSettingsPanel />}

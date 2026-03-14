@@ -1,175 +1,129 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Category, Subcategory } from './types';
+import { Category, Subcategory, SubcategoryLeaf } from './types';
 import { Result } from '../shared/result';
 import { DatabaseError } from '../shared/errors';
+
+const generateSlug = (name: string | null): string => {
+  if (!name) return 'sin-nombre';
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+};
 
 export class CategoryRepository {
   constructor(private supabase: SupabaseClient) {}
 
   async getAllCategories(): Promise<Result<Category[], DatabaseError>> {
     try {
-      // Fetch categories with subcategories
-      const { data: categories, error: catError } = await this.supabase
+      // Query 1: todas las categorías activas
+      const { data: cats, error: catError } = await this.supabase
         .from('categories')
-        .select(`
-          id,
-          name,
-          display_name,
-          slug,
-          icon,
-          sort_order,
-          is_active,
-          subcategories:subcategories(
-            id,
-            name,
-            display_name,
-            slug,
-            category_id,
-            sort_order,
-            is_active,
-            has_brands,
-            has_models,
-            has_year,
-            has_condition
-          )
-        `)
+        .select('id, name, display_name, slug, icon, sort_order, is_active')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
       if (catError) {
-        return Result.fail(
-          new DatabaseError('Failed to fetch categories', catError)
-        );
+        return Result.fail(new DatabaseError('Failed to fetch categories', catError));
       }
 
-      if (!categories) {
+      if (!cats || cats.length === 0) {
         return Result.ok([]);
       }
 
-      // Transform database response to domain model
-      // Helper to generate slug from name
-      const generateSlug = (name: string | null): string => {
-        if (!name) return 'sin-nombre';
-        return name
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '') // Remove accents
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, '');
-      };
+      // Query 2: todas las subcategorías activas (todos los niveles, flat)
+      const { data: allSubs, error: subError } = await this.supabase
+        .from('subcategories')
+        .select('id, name, display_name, slug, category_id, parent_id, sort_order, is_active, has_brands, has_models, has_year, has_condition')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
 
-      const transformedCategories: Category[] = categories.map((cat: any) => ({
-        id: cat.id,
-        name: cat.name,
-        display_name: cat.display_name,
-        slug: cat.slug || generateSlug(cat.name),
-        icon: cat.icon,
-        sort_order: cat.sort_order,
-        is_active: cat.is_active,
-        subcategories: (cat.subcategories || [])
-          .filter((sub: any) => sub.is_active)
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-          .map((sub: any) => ({
-            id: sub.id,
-            name: sub.name,
-            display_name: sub.display_name,
-            slug: sub.slug || generateSlug(sub.name),
-            category_id: sub.category_id,
-            sort_order: sub.sort_order,
-            is_active: sub.is_active,
-            form_config: {
-              requires_brand: sub.has_brands || false,
-              requires_model: sub.has_models || false,
-              requires_year: sub.has_year || false,
-              requires_condition: sub.has_condition || false,
-            },
-          })),
-      }));
+      if (subError) {
+        return Result.fail(new DatabaseError('Failed to fetch subcategories', subError));
+      }
 
-      return Result.ok(transformedCategories);
+      const subs: any[] = allSubs || [];
+
+      // Separar nivel 2 (parent_id IS NULL) y nivel 3 (parent_id IS NOT NULL)
+      const level2 = subs.filter((s) => s.parent_id === null);
+      const level3 = subs.filter((s) => s.parent_id !== null);
+
+      // Construir set de IDs que tienen hijos
+      const parentIds = new Set(level3.map((s) => s.parent_id));
+
+      // Agrupar level3 por parent_id
+      const childrenByParent: Record<string, SubcategoryLeaf[]> = {};
+      for (const s of level3) {
+        if (!childrenByParent[s.parent_id]) childrenByParent[s.parent_id] = [];
+        childrenByParent[s.parent_id].push({
+          id: s.id,
+          name: s.name,
+          display_name: s.display_name,
+          slug: s.slug || generateSlug(s.name),
+          category_id: s.category_id,
+          parent_id: s.parent_id,
+          sort_order: s.sort_order,
+          is_active: s.is_active,
+          form_config: {
+            requires_brand: s.has_brands || false,
+            requires_model: s.has_models || false,
+            requires_year: s.has_year || false,
+            requires_condition: s.has_condition || false,
+          },
+        });
+      }
+
+      // Construir categorías con el árbol completo
+      const categories: Category[] = cats.map((cat: any) => {
+        const catSubs: Subcategory[] = level2
+          .filter((s) => s.category_id === cat.id)
+          .map((s) => {
+            const hasChildren = parentIds.has(s.id);
+            return {
+              id: s.id,
+              name: s.name,
+              display_name: s.display_name,
+              slug: s.slug || generateSlug(s.name),
+              category_id: s.category_id,
+              parent_id: null,
+              sort_order: s.sort_order,
+              is_active: s.is_active,
+              is_leaf: !hasChildren,
+              has_children: hasChildren,
+              form_config: {
+                requires_brand: s.has_brands || false,
+                requires_model: s.has_models || false,
+                requires_year: s.has_year || false,
+                requires_condition: s.has_condition || false,
+              },
+              children: (childrenByParent[s.id] || []).sort((a, b) => a.sort_order - b.sort_order),
+            };
+          });
+
+        return {
+          id: cat.id,
+          name: cat.name,
+          display_name: cat.display_name,
+          slug: cat.slug || generateSlug(cat.name),
+          icon: cat.icon,
+          sort_order: cat.sort_order,
+          is_active: cat.is_active,
+          subcategories: catSubs,
+        };
+      });
+
+      return Result.ok(categories);
     } catch (error) {
-      return Result.fail(
-        new DatabaseError('Unexpected error fetching categories', error)
-      );
+      return Result.fail(new DatabaseError('Unexpected error fetching categories', error));
     }
   }
 
   async getCategoryById(id: string): Promise<Result<Category | null, DatabaseError>> {
-    try {
-      const { data: category, error } = await this.supabase
-        .from('categories')
-        .select(`
-          id,
-          name,
-          display_name,
-          slug,
-          icon,
-          sort_order,
-          is_active,
-          subcategories:subcategories(
-            id,
-            name,
-            display_name,
-            slug,
-            category_id,
-            sort_order,
-            is_active,
-            has_brands,
-            has_models,
-            has_year,
-            has_condition
-          )
-        `)
-        .eq('id', id)
-        .eq('is_active', true)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          return Result.ok(null);
-        }
-        return Result.fail(
-          new DatabaseError('Failed to fetch category', error)
-        );
-      }
-
-      if (!category) {
-        return Result.ok(null);
-      }
-
-      const transformedCategory: Category = {
-        id: category.id,
-        name: category.name,
-        display_name: category.display_name,
-        slug: category.slug,
-        icon: category.icon,
-        sort_order: category.sort_order,
-        is_active: category.is_active,
-        subcategories: (category.subcategories || [])
-          .filter((sub: any) => sub.is_active)
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-          .map((sub: any) => ({
-            id: sub.id,
-            name: sub.name,
-            display_name: sub.display_name,
-            slug: sub.slug,
-            category_id: sub.category_id,
-            sort_order: sub.sort_order,
-            is_active: sub.is_active,
-            form_config: {
-              requires_brand: sub.has_brands || false,
-              requires_model: sub.has_models || false,
-              requires_year: sub.has_year || false,
-              requires_condition: sub.has_condition || false,
-            },
-          })),
-      };
-
-      return Result.ok(transformedCategory);
-    } catch (error) {
-      return Result.fail(
-        new DatabaseError('Unexpected error fetching category', error)
-      );
-    }
+    const result = await this.getAllCategories();
+    if (result.isFailure) return Result.fail(result.error);
+    const category = result.value.find((c) => c.id === id) || null;
+    return Result.ok(category);
   }
 }

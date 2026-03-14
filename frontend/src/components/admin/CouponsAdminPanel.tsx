@@ -28,11 +28,13 @@ import {
   ChevronRight,
   Eye,
   ShieldCheck,
+  Crown,
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
 import { useAuth } from '../../contexts';
 import { formatARS } from '../../services/walletService';
+import { getAllPlans, type SubscriptionPlan } from '../../services/subscriptionService';
 
 // ============================================================
 // TYPES
@@ -66,6 +68,10 @@ interface CouponForm {
   name: string;
   title: string;
   description: string;
+  ars_amount: number | null;
+  gives_membership: boolean;
+  membership_plan_id: string;
+  membership_duration_days: number;
   featured_tier: string;
   discount_type: 'full' | 'percentage';
   discount_percent: number;
@@ -109,6 +115,10 @@ const EMPTY_FORM: CouponForm = {
   name: '',
   title: '',
   description: '',
+  ars_amount: null,
+  gives_membership: false,
+  membership_plan_id: '',
+  membership_duration_days: 365,
   featured_tier: '',
   discount_type: 'percentage',
   discount_percent: 50,
@@ -161,6 +171,9 @@ export default function CouponsAdminPanel() {
   const [searchText, setSearchText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+
+  // Planes disponibles para membresía
+  const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
 
   // Modal crear/editar
   const [showModal, setShowModal] = useState(false);
@@ -241,6 +254,11 @@ export default function CouponsAdminPanel() {
     loadCoupons(1);
   }, [loadCoupons]);
 
+  // Cargar planes activos una sola vez
+  useEffect(() => {
+    getAllPlans().then(setAvailablePlans).catch(() => {});
+  }, []);
+
   // ============================================================
   // CREATE / EDIT
   // ============================================================
@@ -263,6 +281,10 @@ export default function CouponsAdminPanel() {
       name: coupon.name,
       title: coupon.title,
       description: coupon.description || '',
+      ars_amount: coupon.ars_amount ?? null,
+      gives_membership: coupon.gives_membership ?? false,
+      membership_plan_id: (coupon as any).membership_plan_ids?.[0] ?? (coupon as any).membership_id ?? '',
+      membership_duration_days: (coupon as any).membership_duration_days ?? 365,
       featured_tier: coupon.featured_tier ?? '',
       discount_type: coupon.discount_type ?? 'percentage',
       discount_percent: coupon.discount_percent ?? 50,
@@ -303,13 +325,29 @@ export default function CouponsAdminPanel() {
       return;
     }
 
+    // Validar que al menos un tipo de beneficio esté configurado
+    const hasArs = form.ars_amount !== null && form.ars_amount > 0;
+    const hasMembership = form.gives_membership && form.membership_plan_id !== '';
+    const hasDiscount = form.featured_tier !== '' || form.discount_type !== null;
+    if (!hasArs && !hasMembership && !hasDiscount) {
+      notify.warning('El cupón debe otorgar al menos: saldo ARS, membresía o descuento en destacado');
+      return;
+    }
+
     setSaving(true);
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         code: form.code.toUpperCase().trim(),
         name: form.name.trim(),
         title: form.title.trim() || form.name.trim(),
         description: form.description.trim() || null,
+        ars_amount: hasArs ? form.ars_amount : null,
+        gives_credits: hasArs,
+        gives_membership: form.gives_membership,
+        membership_plan_ids: form.gives_membership && form.membership_plan_id
+          ? [form.membership_plan_id]
+          : [],
+        membership_duration_days: form.gives_membership ? form.membership_duration_days : 365,
         featured_tier: form.featured_tier || null,
         discount_type: form.discount_type,
         discount_percent: form.discount_type === 'percentage' ? form.discount_percent : null,
@@ -317,8 +355,6 @@ export default function CouponsAdminPanel() {
         max_redemptions: form.max_redemptions,
         expires_at: new Date(form.expires_at).toISOString(),
         is_active: form.is_active,
-        gives_credits: false,
-        gives_membership: false,
         updated_at: new Date().toISOString(),
       };
 
@@ -643,11 +679,25 @@ export default function CouponsAdminPanel() {
                         </div>
                       </td>
 
-                      {/* Nombre */}
+                      {/* Nombre + badges de tipo */}
                       <td className="px-4 py-3">
                         <span className="font-medium text-gray-900">{coupon.name}</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {coupon.ars_amount != null && coupon.ars_amount > 0 && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                              <DollarSign className="w-3 h-3" />
+                              {formatARS(coupon.ars_amount)}
+                            </span>
+                          )}
+                          {coupon.gives_membership && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-medium rounded-full bg-brand-100 text-brand-700">
+                              <Crown className="w-3 h-3" />
+                              Membresía
+                            </span>
+                          )}
+                        </div>
                         {coupon.description && (
-                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{coupon.description}</p>
+                          <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{coupon.description}</p>
                         )}
                       </td>
 
@@ -969,6 +1019,89 @@ export default function CouponsAdminPanel() {
                     rows={2}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none"
                   />
+                </div>
+
+                {/* FILA COMPLETA: Beneficios del cupón */}
+                <div className="col-span-2 border border-brand-100 rounded-xl p-4 bg-brand-50/40 space-y-4">
+                  <p className="text-xs font-semibold text-brand-800 uppercase tracking-wide">
+                    Beneficios del cupón
+                  </p>
+
+                  {/* Saldo ARS */}
+                  <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-2 w-48 shrink-0">
+                      <DollarSign className="w-4 h-4 text-brand-600" />
+                      <span className="text-sm font-medium text-gray-700">Saldo ARS</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-1">
+                      <span className="text-sm text-gray-500">$</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={100}
+                        value={form.ars_amount ?? ''}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setForm(f => ({ ...f, ars_amount: v === '' ? null : parseFloat(v) }));
+                        }}
+                        placeholder="0 = sin saldo"
+                        className="w-36 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                      />
+                      <span className="text-xs text-gray-400">ARS acreditados al wallet</span>
+                    </div>
+                  </div>
+
+                  {/* Membresía */}
+                  <div className="flex items-start gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, gives_membership: !f.gives_membership }))}
+                      className="flex items-center gap-2 w-48 shrink-0"
+                    >
+                      <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0 ${
+                        form.gives_membership ? 'bg-brand-600' : 'bg-gray-300'
+                      }`}>
+                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                          form.gives_membership ? 'translate-x-4' : 'translate-x-0.5'
+                        }`} />
+                      </div>
+                      <Crown className={`w-4 h-4 ${form.gives_membership ? 'text-brand-600' : 'text-gray-400'}`} />
+                      <span className={`text-sm font-medium ${form.gives_membership ? 'text-brand-700' : 'text-gray-500'}`}>
+                        Membresía
+                      </span>
+                    </button>
+
+                    {form.gives_membership && (
+                      <div className="flex items-center gap-2 flex-1 flex-wrap">
+                        <select
+                          value={form.membership_plan_id}
+                          onChange={(e) => setForm(f => ({ ...f, membership_plan_id: e.target.value }))}
+                          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 min-w-[160px]"
+                        >
+                          <option value="">— Seleccionar plan —</option>
+                          {availablePlans.map(p => (
+                            <option key={p.id} value={p.id}>
+                              {p.display_name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min={1}
+                            max={3650}
+                            value={form.membership_duration_days}
+                            onChange={(e) => setForm(f => ({ ...f, membership_duration_days: parseInt(e.target.value) || 365 }))}
+                            className="w-20 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                          />
+                          <span className="text-xs text-gray-400">días</span>
+                        </div>
+                        {!form.membership_plan_id && (
+                          <span className="text-xs text-red-500">Seleccionar plan obligatorio</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* FILA COMPLETA: Roles */}

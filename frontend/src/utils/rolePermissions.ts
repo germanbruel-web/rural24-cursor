@@ -156,7 +156,7 @@ export const MENU_STRUCTURE: MenuItem[] = [
   },
   {
     id: 'attributes-admin',
-    label: 'Atributos Dinámicos',
+    label: 'Constructor Formularios',
     allowedRoles: ['superadmin'],
   },
   {

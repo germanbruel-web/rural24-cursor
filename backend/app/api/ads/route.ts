@@ -11,6 +11,7 @@ import { AdsService } from '@/domain/ads/service';
 import { AdCreateSchema, AdFiltersSchema } from '@/types/schemas';
 import { ValidationError } from '@/domain/shared/errors';
 import { withAuth, withOptionalAuth, type AuthUser } from '@/infrastructure/auth/guard';
+import { sanitizeRichText } from '@/domain/shared/sanitize';
 
 // NO declarar runtime = 'edge' - Cloudinary requiere Node.js
 
@@ -24,6 +25,16 @@ export async function POST(request: NextRequest) {
 
       // Asegurar que el user_id sea el del usuario autenticado
       body.user_id = user.id;
+
+      // Sanitizar rich text para prevenir XSS / inyecciones HTML
+      if (typeof body.description === 'string') {
+        body.description = sanitizeRichText(body.description);
+      }
+
+      // Si es draft, setear expiración a 24h
+      if (body.status === 'draft') {
+        body.draft_expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      }
 
       // Sensitive data — only log in dev
       if (process.env.NODE_ENV !== 'production') console.log('[Ads] Body recibido:', JSON.stringify(body, null, 2));
