@@ -23,6 +23,7 @@ export interface Category {
 export interface Subcategory {
   id: string;
   category_id: string;
+  parent_id?: string | null;
   name: string;
   display_name: string;
   slug: string;

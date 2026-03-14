@@ -117,6 +117,8 @@ export default function PublicarAviso() {
   
   // Categoría expandida (para accordion)
   const [expandedCategory, setExpandedCategory] = useState<string>('');
+  // L2 expandida en Step 1 para mostrar hijos L3
+  const [expandedL2Sub, setExpandedL2Sub] = useState<string>('');
   
   // Grupo de atributos expandido (Step 2 - solo uno abierto a la vez)
   const [expandedAttributeGroup, setExpandedAttributeGroup] = useState<string>('');
@@ -1113,12 +1115,14 @@ export default function PublicarAviso() {
                                   setSelectedSubcategory('');
                                   setSelectedPageType('particular');
                                   setShowProfileGate(false);
+                                  setExpandedL2Sub('');
                                 } else {
                                   setExpandedCategory(cat.id);
                                   setSelectedCategory(cat.id);
                                   setSelectedSubcategory('');
                                   setSelectedPageType('particular');
                                   setShowProfileGate(false);
+                                  setExpandedL2Sub('');
                                 }
                               }}
                               className={`w-full p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all text-left ${
@@ -1146,51 +1150,102 @@ export default function PublicarAviso() {
                               </div>
                             </button>
 
-                            {/* Subcategorías — click directo al formulario */}
-                            {isExpanded && subcategories.length > 0 && (
-                              <div className="space-y-2 animate-fadeIn pl-2 sm:pl-0">
-                                <p className="text-sm sm:text-base font-bold text-brand-600 mb-2">
-                                  Elegí una subcategoría:
-                                </p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  {subcategories.map((sub) => {
-                                    const isServicioEmpresa = sub.slug === 'servicios' || sub.slug === 'empresas';
-                                    return (
-                                      <button
-                                        key={sub.id}
-                                        onClick={async () => {
-                                          setSelectedSubcategory(sub.id);
-                                          setSelectedPageType(isServicioEmpresa ? 'empresa' : 'particular');
+                            {/* Subcategorías con soporte L2 / L3 */}
+                            {isExpanded && subcategories.length > 0 && (() => {
+                              // Separar L2 (sin padre) de L3 (con padre)
+                              const l2Subs = subcategories.filter(s => !s.parent_id);
+                              const childrenMap: Record<string, Subcategory[]> = {};
+                              subcategories.filter(s => s.parent_id).forEach(s => {
+                                if (!childrenMap[s.parent_id!]) childrenMap[s.parent_id!] = [];
+                                childrenMap[s.parent_id!].push(s);
+                              });
 
-                                          if (isServicioEmpresa) {
-                                            const empresas = await getMyCompanies();
-                                            if (empresas.length === 0) {
-                                              setPendingSubcategoryName(sub.display_name);
-                                              setShowProfileGate(true);
-                                              return; // no avanzar — gate bloqueante
-                                            }
-                                          }
+                              const handleSelectLeaf = async (leafSub: Subcategory, parentSlug?: string) => {
+                                const isServicioEmpresa = leafSub.slug === 'servicios' || leafSub.slug === 'empresas' || parentSlug === 'servicios' || parentSlug === 'empresas';
+                                setSelectedSubcategory(leafSub.id);
+                                setSelectedPageType(isServicioEmpresa ? 'empresa' : 'particular');
 
-                                          setTimeout(() => {
-                                            setCurrentStep(2);
-                                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                                          }, 200);
-                                        }}
-                                        className="w-full p-3 rounded-lg border-2 border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-all text-left flex items-center justify-between group"
-                                      >
-                                        <div className="flex items-center gap-2">
-                                          {isServicioEmpresa && <Building2 className="w-4 h-4 text-brand-600 flex-shrink-0" />}
-                                          <span className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-brand-700">
-                                            {sub.display_name}
-                                          </span>
-                                        </div>
-                                        <ChevronRight className="w-4 h-4 text-brand-400 flex-shrink-0 group-hover:text-brand-600 transition-colors" />
-                                      </button>
-                                    );
-                                  })}
+                                if (isServicioEmpresa) {
+                                  const empresas = await getMyCompanies();
+                                  if (empresas.length === 0) {
+                                    setPendingSubcategoryName(leafSub.display_name);
+                                    setShowProfileGate(true);
+                                    return;
+                                  }
+                                }
+
+                                setTimeout(() => {
+                                  setCurrentStep(2);
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }, 200);
+                              };
+
+                              return (
+                                <div className="space-y-2 animate-fadeIn pl-2 sm:pl-0">
+                                  <p className="text-sm sm:text-base font-bold text-brand-600 mb-2">
+                                    Elegí una subcategoría:
+                                  </p>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {l2Subs.map((sub) => {
+                                      const children = childrenMap[sub.id] || [];
+                                      const hasChildren = children.length > 0;
+                                      const isExpL2 = expandedL2Sub === sub.id;
+                                      const isServicioEmpresa = sub.slug === 'servicios' || sub.slug === 'empresas';
+
+                                      if (hasChildren) {
+                                        // L2 con hijos — expandible
+                                        return (
+                                          <div key={sub.id} className={`col-span-1 sm:col-span-2 rounded-lg border-2 transition-all ${isExpL2 ? 'border-brand-400 bg-brand-50' : 'border-gray-200'}`}>
+                                            <button
+                                              onClick={() => setExpandedL2Sub(isExpL2 ? '' : sub.id)}
+                                              className="w-full p-3 text-left flex items-center justify-between group"
+                                            >
+                                              <span className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-brand-700">
+                                                {sub.display_name}
+                                              </span>
+                                              <ChevronRight className={`w-4 h-4 text-brand-400 flex-shrink-0 transition-transform ${isExpL2 ? 'rotate-90' : ''}`} />
+                                            </button>
+                                            {isExpL2 && (
+                                              <div className="px-3 pb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {children.map((child) => (
+                                                  <button
+                                                    key={child.id}
+                                                    onClick={() => handleSelectLeaf(child, sub.slug)}
+                                                    className="w-full p-2 sm:p-3 rounded-lg border-2 border-gray-200 hover:border-brand-500 hover:bg-white transition-all text-left flex items-center justify-between group"
+                                                  >
+                                                    <span className="text-sm font-medium text-gray-800 group-hover:text-brand-700">
+                                                      {child.display_name}
+                                                    </span>
+                                                    <ChevronRight className="w-3 h-3 text-brand-400 flex-shrink-0 group-hover:text-brand-600" />
+                                                  </button>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      }
+
+                                      // L2 hoja — selección directa
+                                      return (
+                                        <button
+                                          key={sub.id}
+                                          onClick={() => handleSelectLeaf(sub)}
+                                          className="w-full p-3 rounded-lg border-2 border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-all text-left flex items-center justify-between group"
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            {isServicioEmpresa && <Building2 className="w-4 h-4 text-brand-600 flex-shrink-0" />}
+                                            <span className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-brand-700">
+                                              {sub.display_name}
+                                            </span>
+                                          </div>
+                                          <ChevronRight className="w-4 h-4 text-brand-400 flex-shrink-0 group-hover:text-brand-600 transition-colors" />
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              );
+                            })()}
                           </div>
                         );
                       })}

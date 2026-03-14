@@ -57,17 +57,27 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
     setConnectionError(null);
 
     try {
-      // 1. Intentar form_templates_v2 (nuevo sistema)
-      const v2Form = await getFormForContext(categoryId, subcategoryId);
+      // 1. Cargar formulario global de la categoría (subcategory_id=NULL)
+      const globalForm = categoryId ? await getFormForContext(categoryId) : null;
 
-      if (v2Form && v2Form.fields && v2Form.fields.length > 0) {
-        setFormV2(v2Form);
+      // 2. Cargar formulario variante de la subcategoría
+      const variantForm = await getFormForContext(categoryId, subcategoryId);
+
+      // 3. Combinar: campos globales primero, variante después
+      const globalFields = globalForm?.fields ?? [];
+      const variantFields = variantForm?.fields ?? [];
+      const allFields = [...globalFields, ...variantFields];
+
+      if (allFields.length > 0) {
+        // Usar el form de variante como base (o global si no hay variante)
+        const baseForm = variantForm ?? globalForm!;
+        setFormV2({ ...baseForm, fields: allFields });
         setBackendFields([]);
         onConnectionError?.(false);
         return;
       }
 
-      // 2. Fallback: sistema legacy
+      // 4. Fallback: sistema legacy
       const legacyFields = await getFieldsForSubcategory(subcategoryId);
       setFormV2(null);
       setBackendFields(legacyFields);
