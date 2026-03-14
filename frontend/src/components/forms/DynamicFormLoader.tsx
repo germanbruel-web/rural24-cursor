@@ -5,6 +5,7 @@ import { getFormForContext } from '../../services/v2/formsService';
 import { DynamicFormV2Fields } from './DynamicFormV2Fields';
 import type { CompleteFormV2 } from '../../types/v2';
 import { WifiOff, RefreshCw, AlertTriangle } from 'lucide-react';
+import { supabase } from '../../services/supabaseClient';
 
 interface DynamicFormLoaderProps {
   subcategoryId: string;
@@ -60,13 +61,35 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
       // 1. Cargar formulario global de la categoría (subcategory_id=NULL)
       const globalForm = categoryId ? await getFormForContext(categoryId) : null;
 
-      // 2. Cargar formulario variante de la subcategoría
+      // 2. Detectar si la subcategoría es L3 (tiene parent_id) para cargar variante L2 intermedia
+      const { data: subData } = await supabase
+        .from('subcategories')
+        .select('parent_id')
+        .eq('id', subcategoryId)
+        .single();
+      const parentId = subData?.parent_id ?? null;
+
+      // 3. Cargar variante L2 (si existe padre) — campos comunes a todos los tipos del L2
+      const l2VariantForm = parentId
+        ? await getFormForContext(categoryId, parentId)
+        : null;
+
+      // 4. Cargar formulario variante de la subcategoría seleccionada (L2 hoja o L3)
       const variantForm = await getFormForContext(categoryId, subcategoryId);
 
-      // 3. Combinar: campos globales primero, variante después
-      const globalFields = globalForm?.fields ?? [];
-      const variantFields = variantForm?.fields ?? [];
-      const allFields = [...globalFields, ...variantFields];
+      // 5. Combinar en cascada: Global → L2 variante → L3 variante (sin duplicados por field_name)
+      const seen = new Set<string>();
+      const mergeFields = (fields: typeof globalForm.fields) =>
+        (fields ?? []).filter((f) => {
+          if (seen.has(f.field_name)) return false;
+          seen.add(f.field_name);
+          return true;
+        });
+
+      const globalFields   = mergeFields(globalForm?.fields ?? []);
+      const l2Fields       = mergeFields(l2VariantForm?.fields ?? []);
+      const variantFields  = mergeFields(variantForm?.fields ?? []);
+      const allFields = [...globalFields, ...l2Fields, ...variantFields];
 
       if (allFields.length > 0) {
         // Usar el form de variante como base (o global si no hay variante)

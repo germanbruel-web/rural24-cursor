@@ -4,8 +4,8 @@
 // ====================================================================
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, X, GripVertical, AlertCircle, CheckCircle2, Download, Upload, Eye, LayoutGrid, Folder, FileText, ClipboardList, Sliders, MapPin } from 'lucide-react';
-import { FormManagerTab } from './FormManagerTab';
+import { Plus, Edit2, Trash2, Save, X, GripVertical, AlertCircle, CheckCircle2, Download, Upload, Eye, LayoutGrid, Folder, FileText, ClipboardList, Sliders, MapPin, Hammer } from 'lucide-react';
+import { FormBuilderAdmin } from './FormBuilderAdmin';
 import { OptionListsTab } from './OptionListsTab';
 import { WizardConfigPanel } from './WizardConfigPanel';
 import { LocationsAdmin } from './LocationsAdmin';
@@ -137,20 +137,14 @@ function SortableAttribute({ attr, onEdit, onDelete }: SortableAttributeProps) {
   );
 }
 
-type AdminTab = 'attributes' | 'forms' | 'lists' | 'wizard' | 'locations';
+type AdminTab = 'constructor' | 'lists' | 'wizard' | 'locations';
 
 const TABS: { id: AdminTab; label: string; icon: React.ReactNode; description: string }[] = [
   {
-    id: 'attributes',
-    label: 'Atributos',
-    icon: <LayoutGrid className="w-4 h-4" />,
-    description: 'Campos por subcategoría',
-  },
-  {
-    id: 'forms',
-    label: 'Formularios',
-    icon: <FileText className="w-4 h-4" />,
-    description: 'Formularios de alta',
+    id: 'constructor',
+    label: 'Constructor',
+    icon: <Hammer className="w-4 h-4" />,
+    description: 'Drag & drop de campos',
   },
   {
     id: 'lists',
@@ -176,7 +170,7 @@ export function AttributesAdmin() {
   // ====================================================================
   // STATE
   // ====================================================================
-  const [activeTab, setActiveTab] = useState<AdminTab>('attributes');
+  const [activeTab, setActiveTab] = useState<AdminTab>('constructor');
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   // const [types, setTypes] = useState<any[]>([]); // SOFT HIDE: Campo tipo deshabilitado
@@ -668,7 +662,7 @@ export function AttributesAdmin() {
             ))}
           </nav>
         </div>
-        {activeTab === 'forms' && <FormManagerTab />}
+        {activeTab === 'constructor' && <FormBuilderAdmin />}
         {activeTab === 'lists' && <OptionListsTab />}
         {activeTab === 'wizard' && <WizardConfigPanel />}
         {activeTab === 'locations' && <LocationsAdmin />}

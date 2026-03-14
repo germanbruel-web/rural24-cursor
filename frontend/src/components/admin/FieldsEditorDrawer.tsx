@@ -59,15 +59,16 @@ type FieldType = FormFieldV2['field_type'];
 type FieldWidth = FormFieldV2['field_width'];
 
 const FIELD_TYPES: { value: FieldType; label: string; icon: React.ReactNode }[] = [
-  { value: 'text',         label: 'Texto',            icon: <Type className="w-3.5 h-3.5" /> },
-  { value: 'number',       label: 'Número',           icon: <Hash className="w-3.5 h-3.5" /> },
-  { value: 'textarea',     label: 'Texto largo',      icon: <AlignLeft className="w-3.5 h-3.5" /> },
-  { value: 'select',       label: 'Selector',         icon: <List className="w-3.5 h-3.5" /> },
-  { value: 'autocomplete', label: 'Autocompletar',    icon: <Zap className="w-3.5 h-3.5" /> },
-  { value: 'checkbox',     label: 'Sí / No',          icon: <CheckSquare className="w-3.5 h-3.5" /> },
-  { value: 'range',        label: 'Rango',            icon: <Sliders className="w-3.5 h-3.5" /> },
-  { value: 'tags',         label: 'Etiquetas',        icon: <Tag className="w-3.5 h-3.5" /> },
-  { value: 'features',     label: 'Características',  icon: <Star className="w-3.5 h-3.5" /> },
+  { value: 'text',           label: 'Texto',                  icon: <Type className="w-3.5 h-3.5" /> },
+  { value: 'number',         label: 'Número',                 icon: <Hash className="w-3.5 h-3.5" /> },
+  { value: 'textarea',       label: 'Texto largo',            icon: <AlignLeft className="w-3.5 h-3.5" /> },
+  { value: 'select',         label: 'Selector (una opción)',  icon: <List className="w-3.5 h-3.5" /> },
+  { value: 'autocomplete',   label: 'Autocompletar',          icon: <Zap className="w-3.5 h-3.5" /> },
+  { value: 'checkbox',       label: 'Checkbox (Sí/No)',       icon: <CheckSquare className="w-3.5 h-3.5" /> },
+  { value: 'checkbox_group', label: 'Checkboxes (múltiples)', icon: <ListOrdered className="w-3.5 h-3.5" /> },
+  { value: 'range',          label: 'Rango',                  icon: <Sliders className="w-3.5 h-3.5" /> },
+  { value: 'tags',           label: 'Etiquetas',              icon: <Tag className="w-3.5 h-3.5" /> },
+  { value: 'features',       label: 'Características',        icon: <Star className="w-3.5 h-3.5" /> },
 ];
 
 const FIELD_WIDTH_OPTIONS: { value: FieldWidth; label: string }[] = [
@@ -84,7 +85,7 @@ function fieldTypeLabel(type: FieldType) {
   return FIELD_TYPES.find((t) => t.value === type)?.label ?? type;
 }
 
-const NEEDS_OPTIONS: FieldType[] = ['select', 'autocomplete'];
+const NEEDS_OPTIONS: FieldType[] = ['select', 'autocomplete', 'checkbox_group'];
 
 // ─── STATIC OPTIONS MANAGER ───────────────────────────────────
 

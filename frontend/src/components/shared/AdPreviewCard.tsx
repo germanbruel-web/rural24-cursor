@@ -14,6 +14,7 @@ export interface AdPreviewData {
   title: string;
   description: string;
   price?: number | null;
+  price_unit?: string | null;
   currency: 'ARS' | 'USD';
   province: string;
   city?: string | null;

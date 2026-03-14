@@ -157,12 +157,7 @@ export const MENU_STRUCTURE: MenuItem[] = [
   },
   {
     id: 'attributes-admin',
-    label: 'Constructor Formularios',
-    allowedRoles: ['superadmin'],
-  },
-  {
-    id: 'option-lists',
-    label: 'Listas de Opciones',
+    label: 'Form Builder',
     allowedRoles: ['superadmin'],
   },
   {

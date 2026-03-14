@@ -2,7 +2,7 @@
 -- Migration: 20260314000009_taxonomy_seed_v3.sql
 -- Sprint 8C — Seed completo L2 subcategorías (datos reales)
 -- 8 categorías, 369 subcategorías
--- IDEMPOTENTE: ON CONFLICT (category_id, slug) DO UPDATE
+-- IDEMPOTENTE: ON CONFLICT (category_id, name) DO UPDATE
 -- Requiere: 000008 (is_filter) aplicada primero
 -- ============================================================
 
@@ -46,14 +46,23 @@ BEGIN
   -- ── Crear repuestos (no existe en la DB actual) ────────────
   INSERT INTO public.categories (name, display_name, slug, is_active, is_filter, sort_order)
   VALUES ('repuestos','Repuestos','repuestos',true,true,2)
-  ON CONFLICT (slug) DO UPDATE SET is_active = true, is_filter = true;
+  ON CONFLICT (name) DO UPDATE SET is_active = true, is_filter = true, slug = EXCLUDED.slug;
   SELECT id INTO c_rep FROM public.categories WHERE slug = 'repuestos';
 
   -- ── Crear inmobiliaria-rural (no existe en la DB actual) ──
   INSERT INTO public.categories (name, display_name, slug, is_active, is_filter, sort_order)
   VALUES ('inmobiliaria-rural','Inmobiliaria Rural','inmobiliaria-rural',true,true,3)
-  ON CONFLICT (slug) DO UPDATE SET is_active = true, is_filter = true;
+  ON CONFLICT (name) DO UPDATE SET is_active = true, is_filter = true, slug = EXCLUDED.slug;
   SELECT id INTO c_inm FROM public.categories WHERE slug = 'inmobiliaria-rural';
+
+  -- Normalizar: name = slug en filas existentes
+  -- (la DB tiene name con mayúsculas; igualamos a slug para que ON CONFLICT (category_id, name)
+  --  capture correctamente cuando ambos constraints apuntan al mismo row)
+  UPDATE public.subcategories
+  SET name = slug
+  WHERE parent_id IS NULL
+    AND slug IS NOT NULL
+    AND category_id IN (c_maq, c_rep, c_inm, c_equ, c_ins, c_hac, c_emp, c_ser);
 
   -- Desactivar L2 previas (reemplazadas por este seed)
   UPDATE public.subcategories SET is_active = false
@@ -137,8 +146,8 @@ BEGIN
     ('trituradoras-de-rastrojos','Trituradoras de rastrojos',72),
     ('vendimiadoras','Vendimiadoras',73)
   ) AS v(sl, dn, so)
-  ON CONFLICT (category_id, slug) DO UPDATE
-    SET display_name = EXCLUDED.display_name, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
+  ON CONFLICT (category_id, name) DO UPDATE
+    SET display_name = EXCLUDED.display_name, slug = EXCLUDED.slug, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
 
   -- ── REPUESTOS ─────────────────────────────────────────────
   INSERT INTO public.subcategories (name, display_name, slug, category_id, parent_id, sort_order, is_active, is_filter)
@@ -176,8 +185,8 @@ BEGIN
     ('repuestos-tolvas','Repuestos para Tolvas',31),
     ('repuestos-tractores','Repuestos para Tractores',32)
   ) AS v(sl, dn, so)
-  ON CONFLICT (category_id, slug) DO UPDATE
-    SET display_name = EXCLUDED.display_name, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
+  ON CONFLICT (category_id, name) DO UPDATE
+    SET display_name = EXCLUDED.display_name, slug = EXCLUDED.slug, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
 
   -- ── INMOBILIARIA RURAL ────────────────────────────────────
   INSERT INTO public.subcategories (name, display_name, slug, category_id, parent_id, sort_order, is_active, is_filter)
@@ -193,8 +202,8 @@ BEGIN
     ('otros','Otros',9),
     ('vinedos-y-bodegas','Viñedos y Bodegas',10)
   ) AS v(sl, dn, so)
-  ON CONFLICT (category_id, slug) DO UPDATE
-    SET display_name = EXCLUDED.display_name, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
+  ON CONFLICT (category_id, name) DO UPDATE
+    SET display_name = EXCLUDED.display_name, slug = EXCLUDED.slug, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
 
   -- ── EQUIPAMIENTO ──────────────────────────────────────────
   INSERT INTO public.subcategories (name, display_name, slug, category_id, parent_id, sort_order, is_active, is_filter)
@@ -289,8 +298,8 @@ BEGIN
     ('tratamiento-para-agua','Tratamiento para agua',88),
     ('verificacion-vehicular','Verificación vehicular',89)
   ) AS v(sl, dn, so)
-  ON CONFLICT (category_id, slug) DO UPDATE
-    SET display_name = EXCLUDED.display_name, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
+  ON CONFLICT (category_id, name) DO UPDATE
+    SET display_name = EXCLUDED.display_name, slug = EXCLUDED.slug, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
 
   -- ── INSUMOS ───────────────────────────────────────────────
   INSERT INTO public.subcategories (name, display_name, slug, category_id, parent_id, sort_order, is_active, is_filter)
@@ -338,8 +347,8 @@ BEGIN
     ('tambo','Tambo',41),
     ('tensores','Tensores',42)
   ) AS v(sl, dn, so)
-  ON CONFLICT (category_id, slug) DO UPDATE
-    SET display_name = EXCLUDED.display_name, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
+  ON CONFLICT (category_id, name) DO UPDATE
+    SET display_name = EXCLUDED.display_name, slug = EXCLUDED.slug, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
 
   -- ── HACIENDA ──────────────────────────────────────────────
   INSERT INTO public.subcategories (name, display_name, slug, category_id, parent_id, sort_order, is_active, is_filter)
@@ -361,8 +370,8 @@ BEGIN
     ('ovinos','Ovinos',15),
     ('yacarees','Yacarés',16)
   ) AS v(sl, dn, so)
-  ON CONFLICT (category_id, slug) DO UPDATE
-    SET display_name = EXCLUDED.display_name, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
+  ON CONFLICT (category_id, name) DO UPDATE
+    SET display_name = EXCLUDED.display_name, slug = EXCLUDED.slug, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
 
   -- ── EMPLEOS ───────────────────────────────────────────────
   INSERT INTO public.subcategories (name, display_name, slug, category_id, parent_id, sort_order, is_active, is_filter)
@@ -428,8 +437,8 @@ BEGIN
     ('veterinarios','Veterinarios',59),
     ('viticultor','Viticultor',60)
   ) AS v(sl, dn, so)
-  ON CONFLICT (category_id, slug) DO UPDATE
-    SET display_name = EXCLUDED.display_name, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
+  ON CONFLICT (category_id, name) DO UPDATE
+    SET display_name = EXCLUDED.display_name, slug = EXCLUDED.slug, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
 
   -- ── SERVICIOS ─────────────────────────────────────────────
   INSERT INTO public.subcategories (name, display_name, slug, category_id, parent_id, sort_order, is_active, is_filter)
@@ -484,8 +493,8 @@ BEGIN
     ('transporte','Transporte',48),
     ('turismo-rural','Turismo rural',49)
   ) AS v(sl, dn, so)
-  ON CONFLICT (category_id, slug) DO UPDATE
-    SET display_name = EXCLUDED.display_name, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
+  ON CONFLICT (category_id, name) DO UPDATE
+    SET display_name = EXCLUDED.display_name, slug = EXCLUDED.slug, is_active = true, is_filter = true, sort_order = EXCLUDED.sort_order;
 
   RAISE NOTICE '✅ Seed taxonomía v3 completado: 369 subcategorías L2 (8 categorías)';
 

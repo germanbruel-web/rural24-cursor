@@ -9,6 +9,34 @@ import { supabase } from '../supabaseClient';
 
 // ─── TIPOS ────────────────────────────────────────────────────
 
+export type WizardBlockType =
+  | 'dynamic_fields'
+  | 'price'
+  | 'location'
+  | 'images'
+  | 'title_description'
+  | 'empresa_selector';
+
+export interface WizardBlockConfig {
+  // price
+  price_optional?: boolean;
+  show_currency?: boolean;
+  show_unit?: boolean;
+  currencies?: string[];          // fallback estático ej: ['ARS','USD']
+  currencies_list?: string;       // nombre de option_list — tiene prioridad sobre currencies
+  // images
+  max_images?: number;
+  // title_description
+  title_max_chars?: number;
+  description_min_chars?: number;
+}
+
+export interface WizardBlock {
+  type: WizardBlockType;
+  order: number;
+  config?: WizardBlockConfig;
+}
+
 export interface WizardStep {
   key: string;          // 'categoria' | 'caracteristicas' | 'ubicacion' | 'fotos' | 'informacion' | 'revision'
   label: string;        // Título visible en el stepper
@@ -17,6 +45,7 @@ export interface WizardStep {
   visible: boolean;     // Si se muestra en el wizard
   order: number;        // Posición (1-based)
   locked: boolean;      // Si no puede ocultarse ni moverse (categoria y revision)
+  blocks: WizardBlock[]; // Bloques que renderiza este step ([] = step especial sin bloques)
 }
 
 export interface WizardConfig {
@@ -33,12 +62,37 @@ export interface WizardConfig {
 // ─── STEPS DEFAULT (fallback si no hay DB) ────────────────────
 
 export const DEFAULT_STEPS: WizardStep[] = [
-  { key: 'categoria',       label: 'Categoría',         description: '¿Qué publicás?',        icon: 'Tag',          visible: true, order: 1, locked: true  },
-  { key: 'caracteristicas', label: 'Características',   description: 'Detalles técnicos',      icon: 'Settings',     visible: true, order: 2, locked: false },
-  { key: 'ubicacion',       label: 'Ubicación',         description: 'Dónde está',             icon: 'MapPin',       visible: true, order: 3, locked: false },
-  { key: 'fotos',           label: 'Fotos',             description: 'Imágenes del aviso',     icon: 'Camera',       visible: true, order: 4, locked: false },
-  { key: 'informacion',     label: 'Información',       description: 'Título y descripción',   icon: 'FileText',     visible: true, order: 5, locked: false },
-  { key: 'revision',        label: 'Revisar y Publicar',description: 'Confirmar publicación',  icon: 'CheckCircle2', visible: true, order: 6, locked: true  },
+  {
+    key: 'categoria', label: 'Categoría', description: '¿Qué publicás?',
+    icon: 'Tag', visible: true, order: 1, locked: true, blocks: [],
+  },
+  {
+    key: 'caracteristicas', label: 'Características', description: 'Detalles técnicos',
+    icon: 'Settings', visible: true, order: 2, locked: false,
+    blocks: [
+      { type: 'dynamic_fields', order: 1 },
+      { type: 'price',          order: 2, config: { show_currency: true, show_unit: true } },
+    ],
+  },
+  {
+    key: 'ubicacion', label: 'Ubicación', description: 'Dónde está',
+    icon: 'MapPin', visible: true, order: 3, locked: false,
+    blocks: [{ type: 'location', order: 1 }],
+  },
+  {
+    key: 'fotos', label: 'Fotos', description: 'Imágenes del aviso',
+    icon: 'Camera', visible: true, order: 4, locked: false,
+    blocks: [{ type: 'images', order: 1, config: { max_images: 8 } }],
+  },
+  {
+    key: 'informacion', label: 'Información', description: 'Título y descripción',
+    icon: 'FileText', visible: true, order: 5, locked: false,
+    blocks: [{ type: 'title_description', order: 1 }],
+  },
+  {
+    key: 'revision', label: 'Revisar y Publicar', description: 'Confirmar publicación',
+    icon: 'CheckCircle2', visible: true, order: 6, locked: true, blocks: [],
+  },
 ];
 
 // ─── READ ─────────────────────────────────────────────────────
@@ -55,7 +109,7 @@ export async function getWizardConfig(categoryId?: string | null): Promise<Wizar
         .select('steps')
         .eq('category_id', categoryId)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (catConfig?.steps) {
         return sortVisible(catConfig.steps as WizardStep[]);

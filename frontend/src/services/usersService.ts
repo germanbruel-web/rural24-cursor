@@ -8,18 +8,26 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
  * @returns Headers con Authorization o null si no hay sesión
  */
 async function getAuthHeaders(): Promise<HeadersInit | null> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  // refreshSession() garantiza que el access_token esté vigente
+  const { data: { session } } = await supabase.auth.refreshSession();
+  const token = session?.access_token;
 
-  if (!session) {
-    console.error('No hay sesion activa para autenticar');
-    return null;
+  if (!token) {
+    // Fallback: intentar con la sesión almacenada
+    const { data: { session: stored } } = await supabase.auth.getSession();
+    if (!stored?.access_token) {
+      console.error('No hay sesion activa para autenticar');
+      return null;
+    }
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${stored.access_token}`,
+    };
   }
 
   return {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${session.access_token}`,
+    'Authorization': `Bearer ${token}`,
   };
 }
 

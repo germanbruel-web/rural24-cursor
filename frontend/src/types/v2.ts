@@ -138,7 +138,7 @@ export interface FormFieldV2 {
   field_name: string;
   field_label: string;
   section_id?: string;
-  field_type: 'text' | 'number' | 'select' | 'autocomplete' | 'textarea' | 'checkbox' | 'features' | 'tags' | 'range';
+  field_type: 'text' | 'number' | 'select' | 'autocomplete' | 'textarea' | 'checkbox' | 'checkbox_group' | 'features' | 'tags' | 'range';
   field_width: 'full' | 'half' | 'third';
   data_source?: 'brands' | 'models' | 'features' | 'custom';
   data_source_config?: {

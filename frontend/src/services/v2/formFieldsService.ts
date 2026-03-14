@@ -85,6 +85,29 @@ export async function updateFormField(
   if (error) throw error;
 }
 
+/** Elimina una plantilla completa (template + todos sus campos + opciones de campos) */
+export async function deleteFormTemplate(templateId: string): Promise<void> {
+  // 1. Obtener IDs de campos del template
+  const { data: fields } = await supabase
+    .from('form_fields_v2')
+    .select('id')
+    .eq('form_template_id', templateId);
+
+  const fieldIds = (fields ?? []).map((f) => f.id);
+
+  // 2. Eliminar opciones estáticas de esos campos
+  if (fieldIds.length > 0) {
+    await supabase.from('form_field_options_v2').delete().in('field_id', fieldIds);
+  }
+
+  // 3. Eliminar campos
+  await supabase.from('form_fields_v2').delete().eq('form_template_id', templateId);
+
+  // 4. Eliminar el template
+  const { error } = await supabase.from('form_templates_v2').delete().eq('id', templateId);
+  if (error) throw error;
+}
+
 export async function deleteFormField(fieldId: string): Promise<void> {
   // Eliminar opciones estáticas primero
   await supabase.from('form_field_options_v2').delete().eq('field_id', fieldId);

@@ -20,6 +20,7 @@ import {
   Loader2,
   ArrowRight,
   LayoutGrid,
+  Trash2,
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import type { Category, Subcategory } from '../../types/v2';
@@ -152,6 +153,7 @@ const ChildrenTable: React.FC<{
   onToggleActive: (sub: TaxSub) => void;
   onToggleFilter: (sub: TaxSub) => void;
   onStartEdit: (sub: TaxSub) => void;
+  onDelete: (sub: TaxSub) => void;
   editingId: string | null;
   editValue: string;
   onEditChange: (v: string) => void;
@@ -165,6 +167,7 @@ const ChildrenTable: React.FC<{
   onToggleActive,
   onToggleFilter,
   onStartEdit,
+  onDelete,
   editingId,
   editValue,
   onEditChange,
@@ -237,12 +240,22 @@ const ChildrenTable: React.FC<{
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-800">{sub.display_name}</span>
                     <span className="hidden group-hover:block text-xs text-gray-400">({sub.slug})</span>
-                    <button
-                      onClick={() => onStartEdit(sub)}
-                      className="hidden group-hover:flex p-1 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded ml-auto"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="hidden group-hover:flex items-center gap-0.5 ml-auto">
+                      <button
+                        onClick={() => onStartEdit(sub)}
+                        className="p-1 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded"
+                        title="Editar"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => onDelete(sub)}
+                        className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 )}
               </td>
@@ -479,11 +492,30 @@ export const TaxonomiaAdmin: React.FC = () => {
     setEditingId(null);
   }
 
+  // ── Delete subcategory ───────────────────────────────────
+  async function deleteSub(sub: TaxSub) {
+    const tieneHijos = allSubs.some(s => s.parent_id === sub.id);
+    if (tieneHijos) {
+      notify.error(`"${sub.display_name}" tiene ítems hijos. Eliminá primero los hijos.`);
+      return;
+    }
+    if (!window.confirm(`¿Eliminar "${sub.display_name}"? Esta acción no se puede deshacer.`)) return;
+    const { error } = await supabase.from('subcategories').delete().eq('id', sub.id);
+    if (!error) {
+      setAllSubs(prev => prev.filter(s => s.id !== sub.id));
+      notify.success(`"${sub.display_name}" eliminado`);
+    } else {
+      notify.error('Error: ' + error.message);
+    }
+  }
+
   // ── Create single ────────────────────────────────────────
   async function createNew() {
     if (!newDisplayName.trim() || !selectedCatId) return;
     setSavingNew(true);
-    const slug = toSlug(newDisplayName);
+    const parentSlug = navStack.length > 0 ? navStack[navStack.length - 1].slug : null;
+    const base = toSlug(newDisplayName);
+    const slug = parentSlug ? `${parentSlug}-${base}` : base;
     const { data, error } = await supabase
       .from('subcategories')
       .insert({
@@ -518,22 +550,40 @@ export const TaxonomiaAdmin: React.FC = () => {
   async function saveBulk() {
     if (!selectedCatId || bulkParsed.length === 0) return;
     setBulkSaving(true);
-    const rows = bulkParsed.map((line, i) => {
-      const slug = toSlug(line);
-      return {
-        category_id: selectedCatId,
-        parent_id: currentParentId,
-        name: slug,
-        display_name: line,
-        slug,
-        is_active: true,
-        is_filter: false,
-        sort_order: currentChildren.length + i,
-      };
-    });
-    const { data, error } = await supabase.from('subcategories').insert(rows).select();
+    const parentSlug = navStack.length > 0 ? navStack[navStack.length - 1].slug : null;
+    const seen = new Set<string>();
+    const rows = bulkParsed
+      .map((line, i) => {
+        const base = toSlug(line);
+        // Prefixar con el slug del padre para evitar colisión (category_id, name) en L3+
+        const slug = parentSlug ? `${parentSlug}-${base}` : base;
+        return {
+          category_id: selectedCatId,
+          parent_id: currentParentId,
+          name: slug,
+          display_name: line,
+          slug,
+          is_active: true,
+          is_filter: false,
+          sort_order: currentChildren.length + i,
+        };
+      })
+      .filter(row => {
+        if (seen.has(row.slug)) return false;
+        seen.add(row.slug);
+        return true;
+      });
+    const { data, error } = await supabase
+      .from('subcategories')
+      .upsert(rows, { onConflict: 'category_id,name', ignoreDuplicates: false })
+      .select();
     if (!error && data) {
-      setAllSubs(prev => [...prev, ...data]);
+      // Merge por id: evita duplicados cuando el upsert actualiza rows existentes
+      setAllSubs(prev => {
+        const map = new Map(prev.map(s => [s.id, s]));
+        data.forEach(s => map.set(s.id, s));
+        return Array.from(map.values());
+      });
       notify.success(`${data.length} ítems importados`);
     } else {
       notify.error('Error al importar: ' + error?.message);
@@ -858,6 +908,7 @@ export const TaxonomiaAdmin: React.FC = () => {
                     onToggleActive={toggleActive}
                     onToggleFilter={toggleFilter}
                     onStartEdit={startEdit}
+                    onDelete={deleteSub}
                     editingId={editingId}
                     editValue={editValue}
                     onEditChange={setEditValue}

@@ -38,13 +38,46 @@ import {
   Star,
   GripVertical,
   Info,
+  Handshake,
+  Tractor,
+  Leaf,
+  Warehouse,
+  Briefcase,
+  Building2,
+  Package,
+  Wrench,
+  Home,
+  Fish,
+  Wheat,
+  Beef,
+  Sprout,
 } from 'lucide-react';
+
+const CATEGORY_ICON_MAP: Record<string, React.ReactNode> = {
+  handshake: <Handshake className="w-4 h-4" />,
+  tractor: <Tractor className="w-4 h-4" />,
+  leaf: <Leaf className="w-4 h-4" />,
+  seedling: <Sprout className="w-4 h-4" />,
+  sprout: <Sprout className="w-4 h-4" />,
+  warehouse: <Warehouse className="w-4 h-4" />,
+  briefcase: <Briefcase className="w-4 h-4" />,
+  building: <Building2 className="w-4 h-4" />,
+  building2: <Building2 className="w-4 h-4" />,
+  package: <Package className="w-4 h-4" />,
+  wrench: <Wrench className="w-4 h-4" />,
+  home: <Home className="w-4 h-4" />,
+  fish: <Fish className="w-4 h-4" />,
+  wheat: <Wheat className="w-4 h-4" />,
+  cow: <Beef className="w-4 h-4" />,
+  beef: <Beef className="w-4 h-4" />,
+};
 import { supabase } from '../../services/supabaseClient';
 import {
   getFormFields,
   createFormField,
   updateFormField,
   deleteFormField,
+  deleteFormTemplate,
   moveFieldUp,
   moveFieldDown,
 } from '../../services/v2/formFieldsService';
@@ -281,10 +314,11 @@ interface PanelCamposProps {
   modo: ModoSeleccion;
   categoriaGlobal?: string;           // nombre de la categoría (para variante)
   onCrearPlantilla: () => Promise<void>;
+  onEliminarPlantilla: () => Promise<void>;
   listasOpciones: OptionList[];
 }
 
-function PanelCampos({ plantilla, cargando, modo, categoriaGlobal, onCrearPlantilla, listasOpciones }: PanelCamposProps) {
+function PanelCampos({ plantilla, cargando, modo, categoriaGlobal, onCrearPlantilla, onEliminarPlantilla, listasOpciones }: PanelCamposProps) {
   const [campos,      setCampos]      = useState<CampoExtendido[]>([]);
   const [cargandoCampos, setCargandoCampos] = useState(false);
   const [editandoId,  setEditandoId]  = useState<string | 'nuevo' | null>(null);
@@ -357,7 +391,7 @@ function PanelCampos({ plantilla, cargando, modo, categoriaGlobal, onCrearPlanti
             : 'Esta subcategoría no tiene variante de formulario todavía.'}
         </p>
         {modo === 'variante' && categoriaGlobal && (
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-gray-400 mb-2">
             Al crear la variante, el formulario global de <strong>{categoriaGlobal}</strong> se aplicará automáticamente.
           </p>
         )}
@@ -368,6 +402,9 @@ function PanelCampos({ plantilla, cargando, modo, categoriaGlobal, onCrearPlanti
           <Plus className="w-4 h-4" />
           {modo === 'global' ? 'Crear formulario global' : 'Crear variante'}
         </button>
+        <p className="text-xs text-gray-400 mt-3 italic">
+          Si ya existía un formulario con este nombre, se reasignará automáticamente.
+        </p>
       </div>
     );
   }
@@ -380,9 +417,21 @@ function PanelCampos({ plantilla, cargando, modo, categoriaGlobal, onCrearPlanti
           <span className="text-xs text-gray-500">Nombre interno:</span>
           <code className="text-xs bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">{plantilla.name}</code>
         </div>
-        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-          {campos.length} campo{campos.length !== 1 ? 's' : ''}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+            {campos.length} campo{campos.length !== 1 ? 's' : ''}
+          </span>
+          {modo === 'variante' && (
+            <button
+              onClick={onEliminarPlantilla}
+              className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 transition-colors"
+              title="Eliminar esta variante y todos sus campos"
+            >
+              <Trash2 className="w-3 h-3" />
+              Eliminar variante
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Aviso para variante: hereda global */}
@@ -503,6 +552,7 @@ export function FormBuilderAdmin() {
   // ── Estado del árbol ──
   const [categorias,      setCategorias]      = useState<CatNode[]>([]);
   const [subcategorias,   setSubcategorias]   = useState<SubNode[]>([]);
+  const [subsConVariante, setSubsConVariante] = useState<Set<string>>(new Set());
   const [cargandoCats,    setCargandoCats]    = useState(true);
   const [cargandoSubs,    setCargandoSubs]    = useState(false);
 
@@ -541,11 +591,19 @@ export function FormBuilderAdmin() {
 
   // ── Cargar subcategorías al seleccionar categoría ──
   const seleccionarCategoria = useCallback(async (cat: CatNode) => {
-    if (catSeleccionada?.id === cat.id) return;
+    if (catSeleccionada?.id === cat.id) {
+      // Toggle: colapsar si ya está seleccionada
+      setCatSeleccionada(null);
+      setHojaSeleccionada(null);
+      setExpandidosL2(new Set());
+      setSubcategorias([]);
+      return;
+    }
     setCatSeleccionada(cat);
     setHojaSeleccionada(null);
     setExpandidosL2(new Set());
     setSubcategorias([]);
+    setSubsConVariante(new Set());
     // Selección inicial: formulario global de esta categoría
     setModo('global');
     cargarPlantilla('global', cat.id, null);
@@ -557,7 +615,21 @@ export function FormBuilderAdmin() {
         .eq('category_id', cat.id)
         .order('sort_order');
       if (error) throw error;
-      setSubcategorias(data ?? []);
+      const subs = data ?? [];
+      setSubcategorias(subs);
+
+      // Detectar L2 con variante asignada pero que tienen hijos L3 (variante huérfana)
+      const subIds = subs.map((s) => s.id);
+      if (subIds.length > 0) {
+        const { data: variantes } = await supabase
+          .from('form_templates_v2')
+          .select('subcategory_id')
+          .in('subcategory_id', subIds);
+        const idsConVariante = new Set<string>(
+          (variantes ?? []).map((v) => v.subcategory_id).filter(Boolean)
+        );
+        setSubsConVariante(idsConVariante);
+      }
     } catch {
       notify.error('Error cargando subcategorías');
     } finally {
@@ -576,7 +648,7 @@ export function FormBuilderAdmin() {
     try {
       let query = supabase
         .from('form_templates_v2')
-        .select('id, name, display_name, category_id, subcategory_id');
+        .select('id, name, display_name, category_id, subcategory_id, is_active');
 
       if (modo === 'global') {
         query = query.eq('category_id', catId).is('subcategory_id', null);
@@ -585,6 +657,12 @@ export function FormBuilderAdmin() {
       }
 
       const { data } = await query.maybeSingle();
+
+      // Si existe pero está inactiva, activarla — el admin edita solo templates activos
+      if (data && (data as any).is_active === false) {
+        await supabase.from('form_templates_v2').update({ is_active: true }).eq('id', data.id);
+      }
+
       setPlantilla(data ?? null);
     } catch {
       notify.error('Error cargando formulario');
@@ -609,7 +687,7 @@ export function FormBuilderAdmin() {
     if (catSeleccionada) cargarPlantilla('global', catSeleccionada.id, null);
   }, [modo, hojaSeleccionada, catSeleccionada, cargarPlantilla]);
 
-  // ── Crear nueva plantilla ──
+  // ── Crear nueva plantilla (upsert por nombre para reparar templates huérfanos) ──
   const crearPlantilla = async () => {
     if (!catSeleccionada) return;
     const esGlobal = modo === 'global';
@@ -620,22 +698,44 @@ export function FormBuilderAdmin() {
       ? `${catSeleccionada.display_name} — Global`
       : hojaSeleccionada!.display_name;
     try {
+      // Upsert por name: si ya existe (huérfano de categoría renombrada), reasigna category_id
       const { data, error } = await supabase
         .from('form_templates_v2')
-        .insert({
+        .upsert({
           name:           nombre,
           display_name:   nombreMostrado,
           category_id:    catSeleccionada.id,
           subcategory_id: esGlobal ? null : hojaSeleccionada!.id,
           is_active:      true,
-        })
+        }, { onConflict: 'name' })
         .select('id, name, display_name, category_id, subcategory_id')
         .single();
       if (error) throw error;
       setPlantilla(data);
-      notify.success('Formulario creado');
+      notify.success('Formulario listo');
     } catch (e: any) {
       notify.error(e?.message ?? 'Error creando formulario');
+    }
+  };
+
+  // ── Eliminar plantilla variante ──
+  const eliminarPlantilla = async () => {
+    if (!plantilla) return;
+    if (!window.confirm(`¿Eliminar la variante "${plantilla.display_name}" y todos sus campos? Esta acción no se puede deshacer.`)) return;
+    try {
+      await deleteFormTemplate(plantilla.id);
+      setPlantilla(null);
+      // Actualizar subsConVariante quitando el id eliminado
+      if (hojaSeleccionada) {
+        setSubsConVariante((prev) => {
+          const next = new Set(prev);
+          next.delete(hojaSeleccionada.id);
+          return next;
+        });
+      }
+      notify.success('Variante eliminada');
+    } catch (e: any) {
+      notify.error(e?.message ?? 'Error al eliminar');
     }
   };
 
@@ -703,7 +803,7 @@ export function FormBuilderAdmin() {
                       esCatActiva ? 'bg-brand-50 text-brand-700' : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    {cat.icon && <span className="text-base leading-none">{cat.icon}</span>}
+                    {cat.icon && <span className="text-base leading-none">{CATEGORY_ICON_MAP[cat.icon] ?? cat.icon}</span>}
                     <span className="flex-1 truncate">{cat.display_name}</span>
                     {esCatActiva && cargandoSubs
                       ? <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-400" />
@@ -768,9 +868,23 @@ export function FormBuilderAdmin() {
                               {!sub2.is_active && <span className="text-gray-400">·</span>}
                             </button>
 
-                            {/* Subcategorías nivel 3 */}
+                            {/* Nivel 3: entrada "Formulario de [L2]" + hojas L3 */}
                             {!esHoja && expandido && (
                               <div className="ml-4">
+                                {/* Entrada formulario del L2 (campos comunes a todos sus tipos) */}
+                                <button
+                                  onClick={() => seleccionarHoja(sub2)}
+                                  className={`w-full flex items-center gap-1.5 px-3 py-1.5 text-left text-xs transition-colors rounded ${
+                                    hojaSeleccionada?.id === sub2.id && modo === 'variante'
+                                      ? 'bg-brand-100 text-brand-700 font-semibold'
+                                      : 'text-brand-600 hover:bg-brand-50'
+                                  }`}
+                                >
+                                  <Globe className="w-3 h-3 flex-shrink-0" />
+                                  <span className="flex-1 truncate italic">Formulario de {sub2.display_name}</span>
+                                </button>
+
+                                {/* Hojas L3 */}
                                 {hijos.map((sub3) => {
                                   const sel3 = hojaSeleccionada?.id === sub3.id && modo === 'variante';
                                   return (
@@ -853,6 +967,7 @@ export function FormBuilderAdmin() {
               modo={modo}
               categoriaGlobal={catSeleccionada.display_name}
               onCrearPlantilla={crearPlantilla}
+              onEliminarPlantilla={eliminarPlantilla}
               listasOpciones={listasOpciones}
             />
           </div>

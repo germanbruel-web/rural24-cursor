@@ -16,9 +16,7 @@ import {
   Eye,
   X,
   Upload,
-  AlertCircle,
   CheckCircle2,
-  DollarSign,
   Lock,
   CheckCircle,
   Smartphone,
@@ -35,14 +33,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getCategories, getSubcategories, getFormForContext } from '../../services/v2/formsService';
 import type { Category, Subcategory, PriceConfig } from '../../types/v2';
 import { getOptionListItemsByName } from '../../services/v2/optionListsService';
-import { getProvinces, getLocalitiesByProvince, type Province, type Locality } from '../../services/v2/locationsService';
+import { getProvinces, type Province } from '../../services/v2/locationsService';
 import { supabase } from '../../services/supabaseClient';
 import { uploadService } from '../../services/uploadService';
 import { notify } from '../../utils/notifications';
 import AuthModal from '../auth/AuthModal';
 import { adsApi } from '../../services/api';
 import { uploadsApi } from '../../services/api';
-import { SimpleImageUploader, UploadedImage } from '../SimpleImageUploader/SimpleImageUploader';
+import type { UploadedImage } from '../SimpleImageUploader/SimpleImageUploader';
 import { validateTitle, validateDescription } from '../../utils/contentValidator';
 import type { ValidationResult } from '../../utils/contentValidator';
 import { DraftManager, updateDraftURL, parseDraftURL, type DraftState } from '../../utils/draftManager';
@@ -50,48 +48,17 @@ import { navigateTo } from '../../hooks/useNavigate';
 
 // Design System Components
 import { Button } from '../../design-system/components/Button';
-import { Card } from '../molecules/Card';
 import { Input } from '../../design-system/components/Input';
 import { AdPreviewCard } from '../shared/AdPreviewCard';
 import type { AdPreviewData } from '../shared/AdPreviewCard';
-import InfoBox from '../molecules/InfoBox/InfoBox';
 import TipsCard from '../molecules/TipsCard/TipsCard';
 import { AutoSaveIndicator } from '../molecules/AutoSaveIndicator';
-import { DynamicFormLoader } from '../forms/DynamicFormLoader';
-import { AutofillButton } from '../forms/AutofillButton';
 import { getWizardConfig, DEFAULT_STEPS, type WizardStep } from '../../services/v2/wizardConfigService';
-import { EmpresaSelectorWidget } from '../dashboard/EmpresaSelectorWidget';
+import { BlockRenderer } from '../wizard/BlockRenderer';
+import type { WizardBlockProps } from '../wizard/wizardTypes';
 import { ProfileGate } from '../dashboard/ProfileGate';
 import { getMyCompanies } from '../../services/empresaService';
 import { useAccount } from '../../contexts/AccountContext';
-
-// ====================================================================
-// DESIGN SYSTEM RURAL24 - Estilos consistentes de formularios
-// ====================================================================
-const DS = {
-  // Input/Select base - Design System RURAL24
-  input: 'w-full px-4 py-3 text-base bg-white border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder:text-gray-400',
-  
-  // Input con error
-  inputError: 'w-full px-4 py-3 text-base bg-white border-2 border-error rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-error focus:border-transparent placeholder:text-gray-400',
-  
-  // Label
-  label: 'block text-sm font-semibold text-gray-700 mb-2',
-  
-  // Helper text
-  helperText: 'mt-1.5 text-sm text-gray-500',
-  
-  // Error text
-  errorText: 'mt-1.5 text-sm text-error flex items-center gap-1',
-  
-  // Checkbox
-  checkbox: 'h-5 w-5 text-primary-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all',
-  
-  // Card seleccionable
-  cardSelectable: 'w-full p-4 sm:p-5 rounded-xl border-2 transition-all text-left',
-  cardSelectableDefault: 'border-gray-200 hover:border-primary-400 hover:bg-primary-50',
-  cardSelectableActive: 'border-primary-500 bg-primary-50 shadow-md',
-};
 
 // ====================================================================
 // WIZARD STEPS — icono map para config dinámica
@@ -155,8 +122,6 @@ export default function PublicarAviso() {
   const [province, setProvince] = useState('');
   const [locality, setLocality] = useState('');
   const [provinces, setProvinces] = useState<Province[]>([]);
-  const [localities, setLocalities] = useState<Locality[]>([]);
-  const [selectedProvinceId, setSelectedProvinceId] = useState('');
 
   // Step 4: Fotos - NUEVO: usando SimpleImageUploader
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
@@ -217,42 +182,6 @@ export default function PublicarAviso() {
     }, 400);
     
     setDescDebounceTimer(timer);
-  };
-  
-  // ====================================================================
-  // HELPERS PARA PRECIO SIN DECIMALES
-  // ====================================================================
-  
-  /**
-   * Limpia y formatea precio: solo números enteros
-   */
-  const cleanPrice = (value: string): string => {
-    return value.replace(/[^\d]/g, '');
-  };
-  
-  /**
-   * Formatea precio con separador de miles
-   */
-  const formatPriceDisplay = (value: string): string => {
-    if (!value) return '';
-    const num = parseInt(value);
-    if (isNaN(num)) return '';
-    return num.toLocaleString('es-AR');
-  };
-  
-  /**
-   * Formatea precio con moneda
-   */
-  const formatCurrency = (amount: string, curr: 'ARS' | 'USD'): string => {
-    if (!amount) return '';
-    const num = parseInt(amount);
-    if (isNaN(num)) return '';
-    
-    if (curr === 'ARS') {
-      return `$${num.toLocaleString('es-AR')}`;
-    } else {
-      return `USD ${num.toLocaleString('en-US')}`;
-    }
   };
   
   // ====================================================================
@@ -344,14 +273,61 @@ export default function PublicarAviso() {
     }
   }, [selectedCategory, selectedSubcategory]);
 
-  // Cargar localidades cuando cambia la provincia seleccionada
-  useEffect(() => {
-    if (!selectedProvinceId) { setLocalities([]); return; }
-    getLocalitiesByProvince(selectedProvinceId).then(setLocalities);
-  }, [selectedProvinceId]);
-
   // Derivado: key del step actual
   const activeStepKey = wizardSteps[currentStep - 1]?.key ?? '';
+  const activeStep    = wizardSteps[currentStep - 1];
+
+  // Breadcrumb: derivar path L1 > L2 > L3 desde estado (sin hardcode)
+  const selectedSubFull = subcategories.find(s => s.id === selectedSubcategory);
+  const l2Sub = selectedSubFull?.parent_id
+    ? subcategories.find(s => s.id === selectedSubFull.parent_id)
+    : null;
+  const breadcrumbSegments: string[] = [
+    selectedCategory ? (categories.find(c => c.id === selectedCategory)?.display_name ?? '') : '',
+    l2Sub?.display_name ?? '',
+    selectedSubcategory ? (selectedSubFull?.display_name ?? '') : '',
+  ].filter(Boolean) as string[];
+
+  // Props del wizard para BlockRenderer — agrupa todo el estado que los bloques necesitan
+  const wizardBlockProps: WizardBlockProps = {
+    price, setPrice, currency, setCurrency, priceUnit, setPriceUnit, priceUnitOptions,
+    province, setProvince, locality, setLocality, provinces,
+    uploadedImages, uploadedImagesRef, onImagesChange: handleImagesChange,
+    title, description, titleError, descriptionError,
+    onTitleChange: handleTitleChange, onDescriptionChange: handleDescriptionChange,
+    autoFillContext: {
+      categoria:      categories.find(c => c.id === selectedCategory)?.name ?? '',
+      categorySlug:   categories.find(c => c.id === selectedCategory)?.slug ?? '',
+      subcategoria:   subcategories.find(s => s.id === selectedSubcategory)?.display_name ?? '',
+      subcategorySlug: subcategories.find(s => s.id === selectedSubcategory)?.slug ?? '',
+      marca:     attributeValues['marca'] as string,
+      modelo:    attributeValues['modelo'] as string,
+      año:       attributeValues['año'] as string,
+      condicion: attributeValues['condicion'] as string,
+      provincia:  province,
+      localidad:  locality,
+      atributos: Object.entries(attributeValues).reduce((acc, [k, v]) => {
+        if (typeof v === 'string') acc[k] = v;
+        return acc;
+      }, {} as Record<string, string>),
+    },
+    selectedBusinessProfileId, onBusinessProfileChange: setSelectedBusinessProfileId,
+    categoryId: selectedCategory, subcategoryId: selectedSubcategory,
+    categoryDisplayName:   categories.find(c => c.id === selectedCategory)?.display_name ?? '',
+    subcategoryDisplayName: subcategories.find(s => s.id === selectedSubcategory)?.display_name ?? '',
+    selectedPageType,
+    attributeValues, onAttributeChange: (name, value) => setAttributeValues(prev => ({ ...prev, [name]: value })),
+    expandedGroup: expandedAttributeGroup, onGroupToggle: setExpandedAttributeGroup,
+    completedGroups, categories, subcategories,
+    onChangeCategory: () => {
+      setCurrentStep(1);
+      setSelectedCategory('');
+      setSelectedSubcategory('');
+      setSelectedPageType('particular');
+      setExpandedCategory('');
+      setShowProfileGate(false);
+    },
+  };
 
   // ====================================================================
   // LIFECYCLE & INITIALIZATION
@@ -926,29 +902,54 @@ export default function PublicarAviso() {
   // ====================================================================
   // RENDER
   // ====================================================================
+
+  function WizardBreadcrumb({ segments, onChangeCat }: { segments: string[]; onChangeCat?: () => void }) {
+    if (segments.length === 0) return null;
+    return (
+      <div className="flex items-center gap-1 flex-wrap">
+        {segments.map((seg, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />}
+            <span className={`text-xs ${i === segments.length - 1 ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
+              {seg}
+            </span>
+          </React.Fragment>
+        ))}
+        {onChangeCat && (
+          <button
+            onClick={onChangeCat}
+            className="ml-1 text-xs text-brand-600 hover:underline font-medium flex-shrink-0"
+          >
+            Cambiar
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
       {/* Header Mobile Compacto - Solo 1 sticky element */}
       <div className={`lg:hidden border-b sticky top-0 z-30 ${
-        isEditMode 
-          ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200' 
+        isEditMode
+          ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200'
           : 'bg-white border-gray-200'
       }`}>
-        <div className="px-4 py-3">
+        <div className="px-4 py-3 space-y-2">
           {/* Row 1: Volver + Título + Badge Edit */}
           <div className="flex items-center justify-between gap-3">
             <button
-              onClick={() => window.history.back()}
+              onClick={currentStep > 1 ? goBack : () => window.history.back()}
               className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-all"
             >
               <ChevronLeft className="w-5 h-5" />
               <span className="text-sm font-medium">Volver</span>
             </button>
-            
+
             <h1 className="flex-1 text-center text-base font-bold text-gray-900 truncate">
-              {isEditMode ? 'Editar Aviso' : 'Nuevo Aviso'}
+              {isEditMode ? 'Editar Aviso' : currentStep === 1 ? '¿Qué querés publicar?' : 'Armado del Aviso'}
             </h1>
-            
+
             {isEditMode ? (
               <span className="px-2 py-0.5 bg-amber-500 text-white text-xs font-bold rounded-full">
                 EDIT
@@ -957,19 +958,30 @@ export default function PublicarAviso() {
               <AutoSaveIndicator lastSaved={lastSaved} />
             )}
           </div>
-          
-          {/* Row 2: Progress bar compacta */}
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-              <span className="font-medium text-gray-900">{wizardSteps[currentStep - 1]?.label ?? ''}</span>
-              <span>{currentStep}/{wizardSteps.length}</span>
-            </div>
-            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="bg-brand-600 h-full rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / wizardSteps.length) * 100}%` }}
-              />
-            </div>
+
+          {/* Row 2: Breadcrumb — visible cuando hay categoría seleccionada */}
+          {breadcrumbSegments.length > 0 && (
+            <WizardBreadcrumb
+              segments={breadcrumbSegments}
+              onChangeCat={currentStep > 1 ? wizardBlockProps.onChangeCategory : undefined}
+            />
+          )}
+
+          {/* Row 3: Step label + description + counter */}
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span className="font-medium text-gray-700 truncate pr-2">
+              {activeStep?.label ?? ''}
+              {activeStep?.description ? ` — ${activeStep.description}` : ''}
+            </span>
+            <span className="flex-shrink-0">{currentStep}/{wizardSteps.length}</span>
+          </div>
+
+          {/* Row 4: Progress bar */}
+          <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="bg-brand-600 h-full rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / wizardSteps.length) * 100}%` }}
+            />
           </div>
         </div>
       </div>
@@ -984,7 +996,7 @@ export default function PublicarAviso() {
           {/* Header con Auto-Save Indicator */}
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">
-              {isEditMode ? 'Editar Aviso' : 'Publicar Nuevo Aviso'}
+              {isEditMode ? 'Editar Aviso' : currentStep === 1 ? '¿Qué querés publicar?' : 'Armado del Aviso'}
             </h1>
             <div className="flex items-center gap-4">
               <AutoSaveIndicator lastSaved={lastSaved} />
@@ -1027,7 +1039,7 @@ export default function PublicarAviso() {
           </div>
           
           {/* Desktop Stepper */}
-          <div className="hidden lg:flex items-center justify-between">
+          <div className="flex items-center justify-between">
             {wizardSteps.map((step, index) => {
               const stepNumber = index + 1;
               const isActive = currentStep === stepNumber;
@@ -1067,6 +1079,16 @@ export default function PublicarAviso() {
               );
             })}
           </div>
+
+          {/* Breadcrumb row desktop — solo si hay categoría seleccionada y paso > 1 */}
+          {breadcrumbSegments.length > 0 && currentStep > 1 && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <WizardBreadcrumb
+                segments={breadcrumbSegments}
+                onChangeCat={wizardBlockProps.onChangeCategory}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -1075,7 +1097,7 @@ export default function PublicarAviso() {
         {/* Layout: Full width sin preview lateral */}
         <div className="max-w-4xl mx-auto">
           <div>
-            <div className="bg-white sm:bg-gray-100 rounded-xl sm:rounded-2xl shadow-sm sm:shadow-xl border sm:border-2 border-gray-200 sm:border-gray-300 overflow-hidden">
+            <div className="bg-white sm:bg-gray-100 rounded-md sm:rounded-lg shadow-sm sm:shadow-xl border sm:border-2 border-gray-200 sm:border-gray-300 overflow-hidden">
               <div className="p-4 sm:p-10 lg:p-12">
                 {/* STEP 1: CATEGORÍA — 2 niveles: Categoría → Subcategoría → formulario */}
                 {activeStepKey === 'categoria' && (
@@ -1136,11 +1158,6 @@ export default function PublicarAviso() {
                                   <p className="text-base sm:text-xl font-bold text-gray-900">
                                     {cat.display_name}
                                   </p>
-                                  {cat.description && (
-                                    <p className="hidden sm:block text-base sm:text-lg text-gray-600 mt-2">
-                                      {cat.description}
-                                    </p>
-                                  )}
                                 </div>
                                 <ChevronRight
                                   className={`w-5 h-5 sm:w-6 sm:h-6 text-primary-600 flex-shrink-0 ml-2 sm:ml-3 transition-transform ${
@@ -1254,337 +1271,20 @@ export default function PublicarAviso() {
                   )
                 )}
 
-            {/* STEP 2: CARACTERÍSTICAS (Atributos Dinámicos) */}
-            {activeStepKey === 'caracteristicas' && (
-              <div className="space-y-4">
-                {/* Breadcrumb integrado en el formulario - Mobile First */}
-                {selectedCategory && selectedSubcategory && (
-                  <div className="flex items-center justify-between bg-gradient-to-r from-brand-50 to-emerald-50 border border-brand-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3">
-                    <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-wrap">
-                      <Tag className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm font-medium text-brand-600 truncate">
-                        {categories.find(c => c.id === selectedCategory)?.display_name}
-                      </span>
-                      <ChevronRight className="w-3 h-3 text-brand-600 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm font-bold text-brand-700 truncate flex items-center gap-1">
-                        {selectedPageType === 'empresa' && <Building2 className="w-3 h-3" />}
-                        {subcategories.find(s => s.id === selectedSubcategory)?.display_name}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setCurrentStep(1);
-                        setSelectedCategory('');
-                        setSelectedSubcategory('');
-                        setSelectedPageType('particular');
-                        setExpandedCategory('');
-                        setShowProfileGate(false);
-                      }}
-                      className="text-xs text-brand-600 hover:text-brand-700 font-semibold hover:underline flex-shrink-0 ml-2"
-                    >
-                      Cambiar
-                    </button>
-                  </div>
-                )}
-
-                {/* DynamicFormLoader - Sin título redundante */}
-                <DynamicFormLoader
-                  subcategoryId={selectedSubcategory}
-                  categoryId={selectedCategory || undefined}
-                  categoryName={selectedCategory || ''}
-                  subcategoryName={subcategories.find(s => s.id === selectedSubcategory)?.display_name || ''}
-                  values={attributeValues}
-                  onChange={(name: string, value: any) => {
-                    setAttributeValues(prev => ({
-                      ...prev,
-                      [name]: value,
-                    }));
-                  }}
-                  errors={{}}
-                  expandedGroup={expandedAttributeGroup}
-                  onGroupToggle={setExpandedAttributeGroup}
-                  completedGroups={completedGroups}
-                />
-
-                {/* Precio */}
-                <div className="space-y-4">
-                  <label className={DS.label}>
-                    Precio <span className="text-red-500">*</span>
-                  </label>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {/* Monto */}
-                    <div className={priceUnitOptions.length > 0 ? 'sm:col-span-1' : 'sm:col-span-2'}>
-                      <input
-                        type="text"
-                        value={formatPriceDisplay(price)}
-                        onChange={(e) => setPrice(cleanPrice(e.target.value))}
-                        placeholder="ej: 50000"
-                        className={DS.input}
-                      />
-                      <p className={DS.helperText}>Solo números enteros</p>
-                    </div>
-
-                    {/* Moneda */}
-                    <div>
-                      <select
-                        value={currency}
-                        onChange={(e) => setCurrency(e.target.value as 'ARS' | 'USD')}
-                        className={DS.input}
-                      >
-                        <option value="ARS">ARS $</option>
-                        <option value="USD">USD $</option>
-                      </select>
-                    </div>
-
-                    {/* Unidad (solo si el template tiene price_config.units_list) */}
-                    {priceUnitOptions.length > 0 && (
-                      <div>
-                        <select
-                          value={priceUnit}
-                          onChange={(e) => setPriceUnit(e.target.value)}
-                          className={DS.input}
-                        >
-                          <option value="">Unidad...</option>
-                          {priceUnitOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Preview */}
-                  {price && (
-                    <div className="flex items-center gap-2 p-3 bg-primary-50 border-2 border-primary-200 rounded-lg">
-                      <DollarSign className="w-5 h-5 text-primary-600" />
-                      <span className="text-sm text-gray-700">
-                        Se publicará como:{' '}
-                        <strong className="text-primary-700 text-lg">
-                          {formatCurrency(price, currency)}
-                          {priceUnit && priceUnitOptions.find(o => o.value === priceUnit)
-                            ? ` ${priceUnitOptions.find(o => o.value === priceUnit)!.label}`
-                            : ''}
-                        </strong>
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Empresa selector (solo visible si el usuario tiene empresas activas) */}
-                <EmpresaSelectorWidget
-                  selectedId={selectedBusinessProfileId}
-                  onChange={setSelectedBusinessProfileId}
-                />
-              </div>
-            )}
-
-            {/* STEP 3: UBICACIÓN */}
-            {activeStepKey === 'ubicacion' && (
+            {/* STEPS 2-5: renderizados por BlockRenderer según config de wizard_configs */}
+            {/* STEPS 2-5: driven por blocks de wizard_configs */}
+            {activeStep && activeStep.blocks.length > 0 && (
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-                    ¿Dónde está ubicado?
-                  </h2>
-                  <p className="text-base sm:text-lg text-gray-600">
-                    Indicá la ubicación para que los compradores te encuentren
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  {/* Provincia */}
-                  <Card variant="default" padding="md">
-                    <label className={DS.label}>
-                      Provincia <span className="text-error">*</span>
-                    </label>
-                    <select
-                      value={selectedProvinceId}
-                      onChange={(e) => {
-                        const prov = provinces.find((p) => p.id === e.target.value);
-                        setSelectedProvinceId(e.target.value);
-                        setProvince(prov?.name ?? '');
-                        setLocality('');
-                      }}
-                      className={DS.input}
-                    >
-                      <option value="">Seleccionar provincia</option>
-                      {provinces.map((prov) => (
-                        <option key={prov.id} value={prov.id}>
-                          {prov.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Card>
-
-                  {/* Localidad */}
-                  <Card variant="default" padding="md">
-                    <label className={DS.label}>
-                      Localidad {selectedProvinceId && <span className="text-error">*</span>}
-                    </label>
-                    {selectedProvinceId ? (
-                      <select
-                        value={locality}
-                        onChange={(e) => setLocality(e.target.value)}
-                        className={DS.input}
-                      >
-                        <option value="">Seleccionar localidad</option>
-                        {localities.map((loc) => (
-                          <option key={loc.id} value={loc.name}>
-                            {loc.name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="w-full px-4 py-3 text-base rounded-lg border-2 border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed flex items-center">
-                        Selecciona primero una provincia
-                      </div>
-                    )}
-                  </Card>
-                </div>
-
-                <div className="flex items-start gap-3 p-5 sm:p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                  <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm sm:text-base text-blue-900">
-                    <p className="font-bold mb-2">Tu privacidad es importante</p>
-                    <p>
-                      Solo se mostrará la provincia públicamente. Los detalles
-                      específicos se compartirán solo cuando alguien se contacte contigo.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 4: FOTOS */}
-            {activeStepKey === 'fotos' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                    Fotos
-                  </h2>
-                  {uploadedImages.filter(img => img.status === 'success').length > 0 && (
-                    <span className="text-sm text-brand-600 font-medium">
-                      {uploadedImages.filter(img => img.status === 'success').length}/8
-                    </span>
-                  )}
-                </div>
-
-                {/* Simple Image Uploader Component */}
-                <SimpleImageUploader
-                  maxFiles={8}
-                  folder="ads"
-                  onImagesChange={handleImagesChange}
-                  existingImages={uploadedImages}
-                />
-              </div>
-            )}
-
-            {/* STEP 5: INFORMACIÓN */}
-            {activeStepKey === 'informacion' && (
-              <div className="space-y-4 sm:space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                    Información
-                  </h2>
-                </div>
-
-                {/* Botón Autocompletar */}
-                <AutofillButton
-                  context={{
-                    categoria: categories.find(c => c.id === selectedCategory)?.name || '',
-                    categorySlug: categories.find(c => c.id === selectedCategory)?.slug || '',
-                    subcategoria: subcategories.find(s => s.id === selectedSubcategory)?.display_name || '',
-                    subcategorySlug: subcategories.find(s => s.id === selectedSubcategory)?.slug || '',
-                    marca: attributeValues['marca'] as string,
-                    modelo: attributeValues['modelo'] as string,
-                    año: attributeValues['año'] as string,
-                    condicion: attributeValues['condicion'] as string,
-                    provincia: province,
-                    localidad: locality,
-                    atributos: Object.entries(attributeValues).reduce((acc, [key, val]) => {
-                      if (typeof val === 'string') acc[key] = val;
-                      return acc;
-                    }, {} as Record<string, string>),
-                  }}
-                  currentTitle={title}
-                  currentDescription={description}
-                  onFill={(t, d) => {
-                    setTitle(t);
-                    setDescription(d);
-                  }}
-                />
-
-                {/* Título */}
-                <div className="space-y-1.5">
-                  <label className={DS.label}>
-                    Título del aviso <span className="text-error">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => handleTitleChange(e.target.value)}
-                    placeholder="Ej: Tractor John Deere 5070E con pala frontal"
-                    maxLength={100}
-                    className={titleError ? DS.inputError : DS.input}
-                  />
-                  <div className="flex items-center justify-between">
-                    <p className={DS.helperText}>
-                      {title.length}/100 caracteres
-                    </p>
-                    {titleError && (
-                      <p className={DS.errorText}>
-                        <AlertCircle className="w-4 h-4" />
-                        Validando...
-                      </p>
-                    )}
-                  </div>
-                  {titleError ? (
-                    <div className="flex items-start gap-2 p-3 bg-red-50 border-2 border-red-300 rounded-lg">
-                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm font-medium text-red-700">{titleError}</p>
-                    </div>
-                  ) : (
-                    <InfoBox variant="info" size="sm">
-                      Números y años permitidos. No incluir teléfonos, emails o sitios web.
-                    </InfoBox>
-                  )}
-                </div>
-
-                {/* Descripción */}
-                <div className="space-y-1.5">
-                  <label className={DS.label}>
-                    Descripción <span className="text-error">*</span>
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => handleDescriptionChange(e.target.value)}
-                    placeholder="Describe tu producto con el mayor detalle posible. Incluye características, estado, año, etc."
-                    rows={6}
-                    maxLength={2000}
-                    className={`${descriptionError ? DS.inputError : DS.input} min-h-[120px] resize-y`}
-                  />
-                  <div className="flex items-center justify-between">
-                    <p className={DS.helperText}>
-                      {description.length}/2000 caracteres
-                    </p>
-                    {descriptionError && (
-                      <p className={DS.errorText}>
-                        <AlertCircle className="w-4 h-4" />
-                        Validando...
-                      </p>
-                    )}
-                  </div>
-                  {descriptionError ? (
-                    <div className="flex items-start gap-2 p-3 bg-red-50 border-2 border-error rounded-lg">
-                      <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
-                      <p className="text-sm font-medium text-red-700">{descriptionError}</p>
-                    </div>
-                  ) : (
-                    <InfoBox variant="info" size="sm">
-                      Números y años permitidos. No incluir teléfonos, emails o sitios web.
-                    </InfoBox>
-                  )}
-                </div>
+                {[...activeStep.blocks]
+                  .sort((a, b) => a.order - b.order)
+                  .map(block => (
+                    <BlockRenderer
+                      key={block.type}
+                      block={block}
+                      wizardProps={wizardBlockProps}
+                    />
+                  ))
+                }
               </div>
             )}
 

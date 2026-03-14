@@ -8,18 +8,18 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  GripVertical, Eye, EyeOff, Lock, Plus, Trash2,
+  GripVertical, Eye, EyeOff, Lock, Trash2,
   Tag, Settings, MapPin, Camera, FileText, CheckCircle2,
   Loader2, AlertCircle, ChevronUp, ChevronDown, Save,
+  DollarSign, Building2, Image, LayoutTemplate, Layers,
 } from 'lucide-react';
 import {
   getAllWizardConfigs,
   updateWizardConfigSteps,
-  createWizardConfig,
   deleteWizardConfig,
-  DEFAULT_STEPS,
   type WizardConfig,
   type WizardStep,
+  type WizardBlockType,
 } from '../../services/v2/wizardConfigService';
 import { notify } from '../../utils/notifications';
 
@@ -33,6 +33,17 @@ function StepIcon({ name }: { name: string }) {
   const Icon = ICON_MAP[name] ?? Settings;
   return <Icon className="w-4 h-4" />;
 }
+
+// ─── BLOCK CHIPS ──────────────────────────────────────────────
+
+const BLOCK_META: Record<WizardBlockType, { label: string; icon: React.FC<any>; color: string }> = {
+  dynamic_fields:   { label: 'Campos dinámicos',    icon: Layers,         color: 'bg-violet-100 text-violet-700' },
+  price:            { label: 'Precio',               icon: DollarSign,     color: 'bg-green-100 text-green-700' },
+  location:         { label: 'Ubicación',            icon: MapPin,         color: 'bg-blue-100 text-blue-700' },
+  images:           { label: 'Fotos',                icon: Image,          color: 'bg-amber-100 text-amber-700' },
+  title_description:{ label: 'Título y descripción', icon: LayoutTemplate, color: 'bg-sky-100 text-sky-700' },
+  empresa_selector: { label: 'Empresa',              icon: Building2,      color: 'bg-brand-100 text-brand-700' },
+};
 
 // ─── STEP ROW ─────────────────────────────────────────────────
 
@@ -68,9 +79,24 @@ function StepRow({
         <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center text-brand-600 flex-shrink-0">
           <StepIcon name={step.icon} />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-gray-900 truncate">{step.label}</p>
           <p className="text-xs text-gray-500 truncate">{step.description}</p>
+          {(step.blocks ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {[...(step.blocks ?? [])].sort((a, b) => a.order - b.order).map((block) => {
+                const meta = BLOCK_META[block.type];
+                if (!meta) return null;
+                const Icon = meta.icon;
+                return (
+                  <span key={block.type} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${meta.color}`}>
+                    <Icon className="w-2.5 h-2.5" />
+                    {meta.label}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 

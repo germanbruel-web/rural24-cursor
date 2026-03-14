@@ -56,7 +56,7 @@ const CouponsAdminPanel = lazy(() => import("./src/components/admin/CouponsAdmin
 const BannersCleanPanel = lazy(() => import("./src/components/admin/BannersCleanPanel"));
 const UsersPanel = lazy(() => import("./src/components/admin/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const TaxonomiaAdmin = lazy(() => import("./src/components/admin/TaxonomiaAdmin").then(m => ({ default: m.TaxonomiaAdmin })));
-const FormBuilderAdmin = lazy(() => import("./src/components/admin/FormBuilderAdmin").then(m => ({ default: m.FormBuilderAdmin })));
+const AttributesAdmin = lazy(() => import("./src/components/admin/AttributesAdmin").then(m => ({ default: m.AttributesAdmin })));
 const OptionListsAdmin = lazy(() => import("./src/components/admin/OptionListsTab").then(m => ({ default: m.OptionListsTab })));
 const TemplatesAdmin = lazy(() => import("./src/components/admin/TemplatesAdmin").then(m => ({ default: m.TemplatesAdmin })));
 const BackendSettings = lazy(() => import("./src/components/admin/BackendSettings").then(m => ({ default: m.BackendSettings })));
@@ -631,7 +631,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'inbox' && <MessagesPanel />}
                 {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersCleanPanel />}
                 {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <TaxonomiaAdmin />}
-                {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <FormBuilderAdmin />}
+                {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <AttributesAdmin />}
                 {currentPage === 'option-lists' && canAccessPage('option-lists', profile?.role) && <OptionListsAdmin />}
                 {currentPage === 'templates-admin' && canAccessPage('templates-admin', profile?.role) && <TemplatesAdmin />}
                 {currentPage === 'backend-settings' && canAccessPage('backend-settings', profile?.role) && <BackendSettings />}
