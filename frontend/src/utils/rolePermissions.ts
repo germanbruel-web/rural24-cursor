@@ -42,6 +42,7 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   settings: ['superadmin'],
   'categories-admin': ['superadmin'],
   'attributes-admin': ['superadmin'],
+  'option-lists': ['superadmin'],
   'templates-admin': ['superadmin'],
   'backend-settings': ['superadmin'],
   'global-settings': ['superadmin'],
@@ -157,6 +158,11 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'attributes-admin',
     label: 'Constructor Formularios',
+    allowedRoles: ['superadmin'],
+  },
+  {
+    id: 'option-lists',
+    label: 'Listas de Opciones',
     allowedRoles: ['superadmin'],
   },
   {

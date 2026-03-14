@@ -57,6 +57,7 @@ const BannersCleanPanel = lazy(() => import("./src/components/admin/BannersClean
 const UsersPanel = lazy(() => import("./src/components/admin/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const CategoriasAdmin = lazy(() => import("./src/components/admin/CategoriasAdmin").then(m => ({ default: m.CategoriasAdmin })));
 const FormBuilderAdmin = lazy(() => import("./src/components/admin/FormBuilderAdmin").then(m => ({ default: m.FormBuilderAdmin })));
+const OptionListsAdmin = lazy(() => import("./src/components/admin/OptionListsTab").then(m => ({ default: m.OptionListsTab })));
 const TemplatesAdmin = lazy(() => import("./src/components/admin/TemplatesAdmin").then(m => ({ default: m.TemplatesAdmin })));
 const BackendSettings = lazy(() => import("./src/components/admin/BackendSettings").then(m => ({ default: m.BackendSettings })));
 const GlobalSettingsPanel = lazy(() => import("./src/components/admin/GlobalSettingsPanel"));
@@ -100,7 +101,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard';
+export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -158,6 +159,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/credits-config') return 'credits-config';
     if (hash === '#/categories-admin') return 'categories-admin';
     if (hash === '#/attributes-admin') return 'attributes-admin';
+    if (hash === '#/option-lists') return 'option-lists';
     if (hash === '#/templates-admin') return 'templates-admin';
     if (hash === '#/backend-settings') return 'backend-settings';
     if (hash === '#/deleted-ads') return 'deleted-ads';
@@ -202,6 +204,7 @@ const AppContent: React.FC = () => {
       'banners': '#/banners',
       'categories-admin': '#/categories-admin',
       'attributes-admin': '#/attributes-admin',
+      'option-lists': '#/option-lists',
       'templates-admin': '#/templates-admin',
       'backend-settings': '#/backend-settings',
       'global-settings': '#/global-settings',
@@ -349,6 +352,9 @@ const AppContent: React.FC = () => {
       }
       else if (hash === '#/attributes-admin') {
         navigateToPage('attributes-admin');
+      }
+      else if (hash === '#/option-lists') {
+        navigateToPage('option-lists');
       }
       else if (hash === '#/templates-admin') {
         navigateToPage('templates-admin');
@@ -561,12 +567,12 @@ const AppContent: React.FC = () => {
   }
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'design-system', 'mis-empresas'].includes(currentPage);
+  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'design-system', 'mis-empresas'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
     // Esperar a que cargue el perfil antes de verificar permisos en páginas protegidas
-    const isProtectedPage = ['users', 'banners', 'coupons', 'credits-config', 'settings', 'categories-admin', 'attributes-admin', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'design-system'].includes(currentPage);
+    const isProtectedPage = ['users', 'banners', 'coupons', 'credits-config', 'settings', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'design-system'].includes(currentPage);
     
     if (authLoading && isProtectedPage) {
       return (
@@ -626,6 +632,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersCleanPanel />}
                 {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <CategoriasAdmin />}
                 {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <FormBuilderAdmin />}
+                {currentPage === 'option-lists' && canAccessPage('option-lists', profile?.role) && <OptionListsAdmin />}
                 {currentPage === 'templates-admin' && canAccessPage('templates-admin', profile?.role) && <TemplatesAdmin />}
                 {currentPage === 'backend-settings' && canAccessPage('backend-settings', profile?.role) && <BackendSettings />}
                 {currentPage === 'global-settings' && canAccessPage('global-settings', profile?.role) && <GlobalSettingsPanel />}
