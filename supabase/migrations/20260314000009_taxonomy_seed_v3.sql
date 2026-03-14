@@ -43,16 +43,16 @@ BEGIN
   IF c_emp IS NULL THEN RAISE EXCEPTION 'empleos not found'; END IF;
   IF c_ser IS NULL THEN RAISE EXCEPTION 'servicios not found'; END IF;
 
-  -- ── Crear repuestos (no existe en la DB actual) ────────────
+  -- ── Crear repuestos (ON CONFLICT por slug — puede existir con name distinto en PROD) ──
   INSERT INTO public.categories (name, display_name, slug, is_active, is_filter, sort_order)
   VALUES ('repuestos','Repuestos','repuestos',true,true,2)
-  ON CONFLICT (name) DO UPDATE SET is_active = true, is_filter = true, slug = EXCLUDED.slug;
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, is_active = true, is_filter = true;
   SELECT id INTO c_rep FROM public.categories WHERE slug = 'repuestos';
 
-  -- ── Crear inmobiliaria-rural (no existe en la DB actual) ──
+  -- ── Crear inmobiliaria-rural (ON CONFLICT por slug) ─────────────────────────────────
   INSERT INTO public.categories (name, display_name, slug, is_active, is_filter, sort_order)
   VALUES ('inmobiliaria-rural','Inmobiliaria Rural','inmobiliaria-rural',true,true,3)
-  ON CONFLICT (name) DO UPDATE SET is_active = true, is_filter = true, slug = EXCLUDED.slug;
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, is_active = true, is_filter = true;
   SELECT id INTO c_inm FROM public.categories WHERE slug = 'inmobiliaria-rural';
 
   -- Normalizar: name = slug en filas existentes
