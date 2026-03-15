@@ -58,7 +58,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
 
   // Formateo de precio
   const formatPrice = (price?: number, currency?: string) => {
-    if (!price || price <= 0) return 'Consultar';
+    if (!price || price <= 0) return '—';
     
     const formatted = new Intl.NumberFormat('es-AR', {
       minimumFractionDigits: 0,

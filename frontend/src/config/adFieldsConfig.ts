@@ -52,8 +52,8 @@ export const UNIVERSAL_FIELDS: FieldConfig[] = [
     name: 'price',
     label: 'Precio',
     type: 'number',
-    required: false,
-    placeholder: 'Opcional - Dejar vacío si es "Consultar"',
+    required: true,
+    placeholder: 'Ingresá el precio',
     min: 0
   },
   {

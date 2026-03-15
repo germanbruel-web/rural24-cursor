@@ -283,10 +283,9 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
   };
 
   const formatPrice = (price?: number, currency?: string) => {
-    if (price === undefined || price === null) return 'Consultar';
-    
-    // Si el precio es 0 o negativo, mostrar "Consultar"
-    if (price <= 0) return 'Consultar';
+    if (price === undefined || price === null) return '—';
+
+    if (price <= 0) return '—';
     
     // Formatear solo el número con separadores de miles
     const formattedNumber = new Intl.NumberFormat('es-AR', {

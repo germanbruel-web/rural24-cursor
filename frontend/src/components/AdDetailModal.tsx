@@ -92,7 +92,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({ isOpen, onClose, a
   if (!isOpen) return null;
 
   const formatPrice = (price?: number, currency?: string) => {
-    if (price === undefined || price === null || price <= 0) return 'Consultar';
+    if (price === undefined || price === null || price <= 0) return '—';
     const formattedNumber = new Intl.NumberFormat('es-AR').format(price);
     const symbol = currency === 'USD' ? 'USD' : '$';
     return `${symbol} ${formattedNumber}`;

@@ -246,27 +246,60 @@ export async function getAds(filters?: {
       }
     }
 
+    // Mapa extendido: id → { display_name, parent_id }
+    let subcategoriesFullMap: Record<string, { display_name: string; parent_id: string | null }> = {};
+
     if (subcategoryIds.length > 0) {
       const { data: subcatsData } = await supabase
         .from('subcategories')
-        .select('id, display_name')
+        .select('id, display_name, parent_id')
         .in('id', subcategoryIds);
-      
+
       if (subcatsData) {
+        subcatsData.forEach((s: any) => {
+          subcategoriesFullMap[s.id] = { display_name: s.display_name, parent_id: s.parent_id };
+        });
         subcategoriesMap = Object.fromEntries(
           subcatsData.map((s: any) => [s.id, s.display_name])
         );
       }
     }
 
+    // Para L3: cargar también los L2 padres que no estén ya en el mapa
+    const parentIds = Object.values(subcategoriesFullMap)
+      .map(s => s.parent_id)
+      .filter((pid): pid is string => !!pid && !subcategoriesFullMap[pid]);
+
+    if (parentIds.length > 0) {
+      const { data: parentsData } = await supabase
+        .from('subcategories')
+        .select('id, display_name, parent_id')
+        .in('id', parentIds);
+
+      if (parentsData) {
+        parentsData.forEach((s: any) => {
+          subcategoriesFullMap[s.id] = { display_name: s.display_name, parent_id: s.parent_id };
+          subcategoriesMap[s.id] = s.display_name;
+        });
+      }
+    }
+
     // Transformar datos para agregar category y subcategory como strings
-    const adsWithCategories = (data || []).map((ad: any) => ({
-      ...ad,
-      category: categoriesMap[ad.category_id] || 'Sin categoría',
-      subcategory: subcategoriesMap[ad.subcategory_id] || undefined,
-      category_name: categoriesMap[ad.category_id] || undefined,
-      subcategory_name: subcategoriesMap[ad.subcategory_id] || undefined,
-    }));
+    const adsWithCategories = (data || []).map((ad: any) => {
+      const subId = ad.subcategory_id;
+      const sub = subId ? subcategoriesFullMap[subId] : null;
+      const subName = sub?.display_name || undefined;
+      const parentId = sub?.parent_id || null;
+      const parentName = parentId ? subcategoriesFullMap[parentId]?.display_name : undefined;
+      return {
+        ...ad,
+        category: categoriesMap[ad.category_id] || 'Sin categoría',
+        subcategory: subName,
+        category_name: categoriesMap[ad.category_id] || undefined,
+        subcategory_name: subName,
+        subcategory_parent_name: parentName, // L2 name cuando la sub es L3
+      };
+    });
 
     console.log('✅ [getAds] Avisos transformados:', adsWithCategories.length);
     return adsWithCategories as Ad[];

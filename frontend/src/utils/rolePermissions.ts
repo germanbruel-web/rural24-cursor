@@ -116,11 +116,6 @@ export const MENU_STRUCTURE: MenuItem[] = [
     divider: true,
   },
   {
-    id: 'dashboard',
-    label: 'Dashboard',
-    allowedRoles: ALL_ROLES,
-  },
-  {
     id: 'my-ads',
     label: 'Mis Avisos',
     allowedRoles: ALL_ROLES,

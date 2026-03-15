@@ -488,7 +488,7 @@ export function EmpresaPublicPage() {
                       <span className="text-brand-600 font-bold text-sm">
                         {ad.price
                           ? `${ad.currency === 'USD' ? 'USD' : '$'} ${ad.price.toLocaleString('es-AR')}${ad.price_unit ? ` / ${ad.price_unit.replace(/-/g, ' ')}` : ''}`
-                          : 'A convenir'
+                          : '—'
                         }
                       </span>
                       {(ad.city || ad.province) && (

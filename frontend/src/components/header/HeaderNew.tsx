@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { PlusCircle, Menu, X, Home, Package, Clock, MessageSquare, User, LogOut, Settings, Star, Search, ChevronDown, HelpCircle, CreditCard } from 'lucide-react';
+import { PlusCircle, Clock, User, LogOut, Settings, Star, Search, ChevronDown, HelpCircle, Briefcase, Tag } from 'lucide-react';
 import { TopNav } from './TopNav';
 import { GlobalSearchBar } from '../GlobalSearchBar';
 import { UserMenu } from './UserMenu';
@@ -38,7 +38,6 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
   const { user, profile, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login');
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileUserMenu, setShowMobileUserMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -118,8 +117,8 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
 
       {/* HEADER PRINCIPAL */}
       <header 
-        className={`bg-white border-b border-gray-200 transition-all duration-300
-                   ${isScrolled ? 'sticky top-0 shadow-md backdrop-blur-sm bg-white/95 z-40' : 'z-30'}`}
+        className={`bg-white border-b border-gray-200 transition-all duration-300 relative z-50
+                   ${isScrolled ? 'sticky top-0 shadow-md backdrop-blur-sm bg-white/95' : ''}`}
       >
         <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-3 h-14 sm:h-16">
@@ -136,7 +135,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
                 className={`h-8 sm:h-10 w-auto transition-all duration-300 
                           ${isScrolled ? 'sm:h-8' : 'sm:h-10'}`}
                 loading="eager"
-                fetchpriority="high"
+                fetchPriority="high"
               />
             </button>
 
@@ -210,22 +209,20 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
                     <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showMobileUserMenu ? 'rotate-180' : ''}`} />
                   </button>
 
-                  {/* Dropdown Dashboard Menu - Mobile */}
+                  {/* Dropdown Perfil - Mobile */}
                   {showMobileUserMenu && (
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-50 overflow-hidden">
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-[100] overflow-hidden">
+                      {/* Info usuario */}
                       <div className="px-4 py-3 border-b border-gray-100">
                         <p className="text-sm font-semibold text-gray-900">{profile?.full_name || 'Usuario'}</p>
                         <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
 
+                      {/* Mi cuenta */}
                       <div className="py-1">
-                        <button onClick={() => { onNavigate('my-ads'); setShowMobileUserMenu(false); }}
+                        <button onClick={() => { onNavigate('profile'); setShowMobileUserMenu(false); }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                          <Home className="w-4 h-4 text-gray-500" /> Dashboard
-                        </button>
-                        <button onClick={() => { onNavigate('my-ads'); setShowMobileUserMenu(false); }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                          <Package className="w-4 h-4 text-gray-500" /> Mis Avisos
+                          <User className="w-4 h-4 text-gray-500" /> Mi Cuenta
                         </button>
                         {canAccessPage('deleted-ads', profile?.role) && (
                           <button onClick={() => { onNavigate('deleted-ads'); setShowMobileUserMenu(false); }}
@@ -235,16 +232,26 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
                         )}
                       </div>
 
+                      {/* Links informativos */}
                       <div className="border-t border-gray-100 py-1">
-                        <button onClick={() => { onNavigate('inbox'); setShowMobileUserMenu(false); }}
+                        <button onClick={() => { onNavigate('how-it-works'); setShowMobileUserMenu(false); }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                          <MessageSquare className="w-4 h-4 text-gray-500" /> Mensajes
+                          <HelpCircle className="w-4 h-4 text-gray-500" /> ¿Cómo funciona?
+                        </button>
+                        <button onClick={() => { onNavigate('pricing'); setShowMobileUserMenu(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                          <Tag className="w-4 h-4 text-gray-500" /> Precios
+                        </button>
+                        <button onClick={() => { onNavigate('contact'); setShowMobileUserMenu(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                          <Briefcase className="w-4 h-4 text-gray-500" /> Contacto
                         </button>
                       </div>
 
+                      {/* Admin (superadmin only) */}
                       {(canAccessPage('users', profile?.role) || canAccessPage('banners', profile?.role)) && (
                         <div className="border-t border-gray-100 py-1">
-                          <div className="px-4 py-1 text-xs font-semibold text-gray-400 uppercase">Admin</div>
+                          <div className="px-4 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin</div>
                           {canAccessPage('users', profile?.role) && (
                             <button onClick={() => { onNavigate('users'); setShowMobileUserMenu(false); }}
                               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
@@ -272,11 +279,8 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
                         </div>
                       )}
 
+                      {/* Cerrar sesión */}
                       <div className="border-t border-gray-100 py-1">
-                        <button onClick={() => { onNavigate('profile'); setShowMobileUserMenu(false); }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                          <User className="w-4 h-4 text-gray-500" /> Mi Perfil
-                        </button>
                         <button onClick={handleMobileLogout} disabled={isLoggingOut}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50">
                           <LogOut className="w-4 h-4" /> {isLoggingOut ? 'Cerrando...' : 'Cerrar Sesión'}
@@ -296,14 +300,6 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
                 />
               </div>
 
-              {/* Mobile Menu Toggle */}
-              <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="sm:hidden p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
-                aria-label="Menú"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
             </div>
           </div>
 
@@ -326,74 +322,6 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
         />
       )}
 
-      {/* Mobile Menu Overlay */}
-      {showMobileMenu && (
-        <div className="sm:hidden fixed inset-0 bg-black/50 z-50" onClick={() => setShowMobileMenu(false)}>
-          <div 
-            className="absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header del menú */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between z-10">
-              <h3 className="font-semibold text-gray-900">Menú</h3>
-              <button
-                onClick={() => setShowMobileMenu(false)}
-                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Contenido del menú - Links de navegación */}
-            <div className="p-4 space-y-2">
-              <button
-                onClick={() => { onNavigate('how-it-works'); setShowMobileMenu(false); }}
-                className="w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-3"
-              >
-                <HelpCircle className="w-5 h-5 text-gray-400" />
-                ¿Qué es Rural24?
-              </button>
-              
-              <button
-                onClick={() => { onNavigate('pricing'); setShowMobileMenu(false); }}
-                className="w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-3"
-              >
-                <CreditCard className="w-5 h-5 text-gray-400" />
-                Planes y Servicios
-              </button>
-
-              <button
-                onClick={() => { handlePublish(); setShowMobileMenu(false); }}
-                className="w-full text-left px-4 py-3 text-base font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg flex items-center gap-3"
-              >
-                <PlusCircle className="w-5 h-5" />
-                Publicar Aviso Gratis
-              </button>
-
-              {!user && (
-                <>
-                  <hr className="my-2 border-gray-200" />
-                  <div className="grid grid-cols-2 gap-2 px-4">
-                    <button
-                      onClick={() => { openAuth('login'); setShowMobileMenu(false); }}
-                      className="px-4 py-3 text-sm font-semibold text-brand-600 border-2 border-brand-600 hover:bg-brand-50 rounded-lg flex items-center justify-center gap-2"
-                    >
-                      <User className="w-4 h-4" />
-                      Entrar
-                    </button>
-                    <button
-                      onClick={() => { openAuth('register'); setShowMobileMenu(false); }}
-                      className="px-4 py-3 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-500 rounded-lg flex items-center justify-center gap-2"
-                    >
-                      Registrarse
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

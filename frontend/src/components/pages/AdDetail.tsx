@@ -401,7 +401,7 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
           ) : (
             <div className="text-right ml-4">
               <div className="text-sm text-gray-500">Precio</div>
-              <div className="text-xl font-semibold text-gray-400">A convenir</div>
+              <div className="text-xl font-semibold text-gray-400">—</div>
             </div>
           )}
         </div>

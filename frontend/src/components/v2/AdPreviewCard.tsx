@@ -25,7 +25,7 @@ export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ formData = {} }) =
 
   // Formatear precio
   const formatPrice = (value: number) => {
-    if (!value || value === 0) return 'Consultar precio';
+    if (!value || value === 0) return '—';
     const currencySymbol = currency === 'USD' ? 'US$' : '$';
     return `${currencySymbol} ${value.toLocaleString('es-AR')}`;
   };

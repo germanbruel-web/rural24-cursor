@@ -36,7 +36,7 @@ export const LivePreviewCard: React.FC<LivePreviewCardProps> = ({ formData }) =>
   } = formData;
 
   const formatPrice = (value: string, curr: string) => {
-    if (!value || parseFloat(value) <= 0) return 'A consultar';
+    if (!value || parseFloat(value) <= 0) return '—';
     const formatted = new Intl.NumberFormat('es-AR').format(parseFloat(value));
     return `${curr} $${formatted}`;
   };

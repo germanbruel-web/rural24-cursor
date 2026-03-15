@@ -5,6 +5,27 @@
 
 ---
 
+## ⚠️ REGLA DE ORO — DISEÑO UI/UX (PRIORIDAD MÁXIMA)
+
+**NUNCA modificar layouts, estilos, componentes visuales o estructura de pantallas sin aprobación explícita del usuario.**
+
+Esto incluye SIN EXCEPCIÓN:
+- Cambios de layout (grid, flex, columnas, stacking)
+- Cambios de colores, tipografía, espaciado
+- Reemplazar componentes visuales (ej: accordion → miller columns)
+- Agregar o quitar secciones visibles al usuario
+- Cambios responsive (breakpoints, mobile vs desktop)
+
+**Flujo obligatorio:**
+1. Consultar al agente diseñador UX/UI (`subagent_type: Plan`) con contexto completo
+2. Presentar propuesta al usuario con mockup/descripción clara
+3. Usuario aprueba explícitamente
+4. Solo entonces se implementa
+
+Si un cambio funcional implica también un cambio visual → preguntar antes igualmente.
+
+---
+
 ## ⚠️ REGLA DE ORO — PRODUCCIÓN (PRIORIDAD MÁXIMA)
 
 **ANTES de ejecutar cualquier acción que afecte PROD, el Orquestador DEBE pedir confirmación explícita al usuario.**

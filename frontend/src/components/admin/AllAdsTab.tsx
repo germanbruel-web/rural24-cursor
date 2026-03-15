@@ -511,7 +511,7 @@ export default function AllAdsTab() {
                 <div className="flex items-center justify-between py-2 border-b border-gray-100">
                   <span className="text-xs text-gray-500 font-medium">Precio</span>
                   <span className="text-sm font-black text-brand-600">
-                    {viewingAd.currency} {viewingAd.price?.toLocaleString('es-AR') ?? 'Consultar'}
+                    {viewingAd.price ? `${viewingAd.currency} ${viewingAd.price.toLocaleString('es-AR')}` : '—'}
                   </span>
                 </div>
                 {viewingAd.seller_name && (

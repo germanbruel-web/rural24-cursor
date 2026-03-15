@@ -27,13 +27,13 @@ export function formatPrice(
   const { locale, currency } = { ...DEFAULT_CURRENCY_CONFIG, ...config };
 
   if (!price || price === 'consultar' || price === 'a_consultar') {
-    return TEXTS.adDetail.consultPrice;
+    return '—';
   }
 
   const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
 
   if (isNaN(numericPrice)) {
-    return TEXTS.adDetail.consultPrice;
+    return '—';
   }
 
   return new Intl.NumberFormat(locale, {

@@ -17,6 +17,7 @@ import {
   OAuthCallbackPage,
   DashboardLayout,
 } from "./src/components";
+import { BottomNav } from "./src/components/BottomNav";
 
 // ============================================================
 // HOOKS & CONTEXTS (Agrupados por barrel)
@@ -101,7 +102,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard';
+export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -115,6 +116,7 @@ const App: React.FC = () => {
             <OfflineBanner />
             <PWAInstallBanner />
             <AppContent />
+            <BottomNav />
           </AccountProvider>
         </CategoryProvider>
       </ToastProvider>
@@ -130,13 +132,14 @@ const AppContent: React.FC = () => {
     
     if (hash.startsWith('#/auth/confirm')) return 'email-confirm';
     if (hash.startsWith('#/auth/callback')) return 'auth-callback';
-    if (hash === '#/how-it-works') return 'how-it-works';
+    if (hash === '#/preguntas-frecuentes-rural24' || hash === '#/how-it-works') return 'how-it-works';
+    if (hash === '#/contacto-rural24') return 'contact';
     if (hash === '#/design-showcase') return 'design-showcase';
     if (hash === '#/design-system') return 'design-system';
     if (hash === '#/example-migration') return 'example-migration';
     if (hash === '#/api-test') return 'api-test';
     if (hash === '#/diagnostics') return 'diagnostics';
-    if (hash === '#/pricing' || hash === '#/planes') return 'pricing';
+    if (hash === '#/precios-rural24' || hash === '#/pricing' || hash === '#/planes') return 'pricing';
     if (hash === '#/test-form') return 'test-form';
     // Wizard de publicación
     if (hash === '#/publicar' || hash === '#/publicar-v3' || hash === '#/publicar-aviso' || 
@@ -215,11 +218,12 @@ const AppContent: React.FC = () => {
       'profile': '#/profile',
       'subscription': '#/subscription',
       'contacts': '#/dashboard/contacts',
-      'how-it-works': '#/how-it-works',
+      'how-it-works': '#/preguntas-frecuentes-rural24',
+      'contact': '#/contacto-rural24',
       'publicar-v3': '#/publicar-v3',
       'test-form': '#/test-form',
       'api-test': '#/api-test',
-      'pricing': '#/pricing',
+      'pricing': '#/precios-rural24',
       'design-system': '#/design-system',
       'home': '#/',
       'payment-result': '#/payment-result',
@@ -290,8 +294,12 @@ const AppContent: React.FC = () => {
         navigateToPage('email-confirm');
       }
       // Routing para "¿Cómo funciona?"
-      else if (hash === '#/how-it-works') {
+      else if (hash === '#/preguntas-frecuentes-rural24' || hash === '#/how-it-works') {
         navigateToPage('how-it-works');
+      }
+      // Routing para Contacto
+      else if (hash === '#/contacto-rural24') {
+        navigateToPage('contact');
       }
       // Routing para publicar aviso V3 (wizard con atributos dinámicos)
       else if (hash === '#/publicar-v3' || hash === '#/publicar-aviso' || 
@@ -386,6 +394,14 @@ const AppContent: React.FC = () => {
       // Routing para perfil de empresa: #/empresa/:slug
       else if (hash.startsWith('#/empresa/')) {
         navigateToPage('company-profile');
+      }
+      // Routing para Precios
+      else if (hash === '#/precios-rural24' || hash === '#/pricing' || hash === '#/planes') {
+        navigateToPage('pricing');
+      }
+      // Routing para Contacto
+      else if (hash === '#/contacto-rural24') {
+        navigateToPage('contact');
       }
       // Routing para dashboard - redirigir a Mis Avisos
       else if (hash.startsWith('#/dashboard')) {
@@ -820,11 +836,35 @@ const AppContent: React.FC = () => {
         <Suspense fallback={<LoadingFallback />}>
           <HowItWorksPage />
         </Suspense>
-        <AuthModal 
+        <AuthModal
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
           initialView="register"
         />
+      </div>
+    );
+  }
+
+  // Página de Contacto
+  if (currentPage === 'contact') {
+    return (
+      <div className="flex flex-col min-h-screen bg-white">
+        <AppHeader
+          onNavigate={(page) => { navigateToPage(page); if (page === 'home') handleBackToHome(); }}
+          onSearch={handleSearch}
+        />
+        <main className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center max-w-md">
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Contacto</h1>
+            <p className="text-gray-500">Sección en desarrollo. Próximamente.</p>
+            <button
+              onClick={() => { navigateToPage('home'); handleBackToHome(); }}
+              className="mt-6 px-6 py-2.5 bg-brand-600 text-white rounded-full font-semibold hover:bg-brand-500 transition-colors"
+            >
+              Volver al inicio
+            </button>
+          </div>
+        </main>
       </div>
     );
   }
@@ -909,7 +949,7 @@ const AppContent: React.FC = () => {
       {showScrollTop && currentPage === 'home' && !isSearching && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 bg-brand-600 hover:bg-brand-500 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 group"
+          className="hidden md:flex fixed bottom-8 right-8 z-50 bg-brand-600 hover:bg-brand-500 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 group"
           aria-label="Volver arriba"
         >
           <svg 

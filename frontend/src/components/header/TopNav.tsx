@@ -7,15 +7,25 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { DollarSign, PlusCircle } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 import type { Page } from '../../../App';
 
 interface TopNavProps {
   onNavigate: (page: Page) => void;
 }
 
+const WIZARD_HASHES = ['#/publicar', '#/publicar-v3', '#/edit/'];
+const isWizardHash = (hash: string) => WIZARD_HASHES.some(w => hash.startsWith(w));
+
 export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
   const [dollarRates, setDollarRates] = useState({ oficial: 0, blue: 0 });
+  const [isWizard, setIsWizard] = useState(() => isWizardHash(window.location.hash));
+
+  useEffect(() => {
+    const onHashChange = () => setIsWizard(isWizardHash(window.location.hash));
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
 
   useEffect(() => {
     const fetchDollar = async () => {
@@ -43,12 +53,12 @@ export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
   }, []);
 
   return (
-    <div className="bg-gray-50 border-b border-gray-200">
+    <div className="hidden md:block bg-gray-50 border-b border-gray-200">
       <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-10">
 
-          {/* ===== MOBILE ===== */}
-          <div className="flex md:hidden items-center justify-between w-full">
+          {/* ===== MOBILE ===== solo cotización USD (oculto en wizard) */}
+          <div className={`md:hidden items-center w-full ${isWizard ? 'hidden' : 'flex'}`}>
             <div className="flex items-center gap-1.5 text-sm text-gray-600">
               <span className="font-medium">USD</span>
               {dollarRates.oficial > 0 ? (
@@ -57,13 +67,6 @@ export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
                 <span className="text-gray-400 text-xs">Cargando...</span>
               )}
             </div>
-            <button
-              onClick={() => { window.location.hash = '#/publicar'; }}
-              className="flex items-center gap-1.5 px-5 py-1.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-bold rounded-full min-h-[34px] transition-colors active:scale-95"
-            >
-              <PlusCircle size={14} />
-              PUBLICAR
-            </button>
           </div>
 
           {/* ===== DESKTOP ===== */}
@@ -83,21 +86,21 @@ export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('how-it-works')}
               className="px-2 py-1 hover:text-gray-900 hover:underline transition-colors"
             >
-              Preguntas Frecuentes
+              ¿Cómo funciona?
             </button>
             <span className="text-gray-300">·</span>
             <button
               onClick={() => onNavigate('pricing')}
               className="px-2 py-1 hover:text-gray-900 hover:underline transition-colors"
             >
-              Servicios
+              Precios
             </button>
             <span className="text-gray-300">·</span>
             <button
-              onClick={() => onNavigate('how-it-works')}
+              onClick={() => onNavigate('contact')}
               className="px-2 py-1 hover:text-gray-900 hover:underline transition-colors"
             >
-              Sobre Rural24
+              Contacto
             </button>
           </div>
 

@@ -101,7 +101,6 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [priceNegotiable, setPriceNegotiable] = useState(false);
   const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
   const [province, setProvince] = useState('');
   const [locality, setLocality] = useState('');
@@ -173,7 +172,6 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
       setTitle(data.title || '');
       setDescription(data.description || '');
       setPrice(data.price ? String(data.price) : '');
-      setPriceNegotiable(data.price_negotiable || false);
       setCurrency(data.currency || 'ARS');
       setProvince(data.province || '');
       setLocality(data.city || data.location || '');
@@ -274,8 +272,8 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
       const updateData: Record<string, any> = {
         title: title.trim(),
         description: description.trim(),
-        price: priceNegotiable ? null : (price ? parseInt(price) : null),
-        price_negotiable: priceNegotiable,
+        price: price ? parseInt(price) : null,
+        price_negotiable: false,
         currency,
         province,
         city: locality,
@@ -534,21 +532,8 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
 
             {/* Precio */}
             <div className="bg-gray-50 rounded-lg p-2">
-              <label className="flex items-center gap-2 cursor-pointer mb-2">
-                <input
-                  type="checkbox"
-                  checked={priceNegotiable}
-                  onChange={(e) => {
-                    setPriceNegotiable(e.target.checked);
-                    trackFieldChange('price_negotiable');
-                  }}
-                  className="w-3.5 h-3.5 text-primary-600 rounded"
-                />
-                <span className="text-xs font-medium text-gray-600">A Convenir</span>
-              </label>
-
-              {!priceNegotiable && (
-                <div className="grid grid-cols-3 gap-2">
+              <p className="text-xs font-medium text-gray-600 mb-2">Precio *</p>
+              <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-2">
                     <input
                       type="text"
@@ -578,7 +563,6 @@ export const QuickEditAdModal: React.FC<QuickEditAdModalProps> = ({
                     <option value="USD">USD</option>
                   </select>
                 </div>
-              )}
             </div>
 
             {/* Atributos Dinámicos */}

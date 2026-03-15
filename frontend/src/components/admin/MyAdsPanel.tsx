@@ -10,7 +10,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { DEFAULT_PLACEHOLDER_IMAGE } from '../../constants/defaultImages';
 import { isSuperAdmin as checkIsSuperAdmin } from '../../utils/rolePermissions';
 import { supabase } from '../../services/supabaseClient';
-import { QuickEditAdModal } from './QuickEditAdModal';
 import BulkVisibilityModal from './BulkVisibilityModal';
 import SuperAdminFeaturedPanel from './SuperAdminFeaturedPanel';
 
@@ -49,7 +48,6 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   const [loading, setLoading] = useState(true);
   const [adLimit, setAdLimit] = useState({ limit: 0, current: 0 });
   const [selectedAdForViews, setSelectedAdForViews] = useState<Ad | null>(null);
-  const [selectedAdForEdit, setSelectedAdForEdit] = useState<Ad | null>(null);
   const [selectedAdForDelete, setSelectedAdForDelete] = useState<Ad | null>(null);
   const [showBulkVisibility, setShowBulkVisibility] = useState(false);
   const [featuredMap, setFeaturedMap] = useState<Record<string, FeaturedInfo[]>>({});
@@ -126,25 +124,6 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     }
   };
 
-  const handleSaveEdit = async (updatedData: Partial<Ad>) => {
-    if (!selectedAdForEdit) return;
-
-    try {
-      const { error } = await supabase
-        .from('ads')
-        .update(updatedData)
-        .eq('id', selectedAdForEdit.id);
-
-      if (error) throw error;
-
-      notify.success('Aviso actualizado correctamente');
-      setSelectedAdForEdit(null);
-      loadData();
-    } catch (error) {
-      console.error('Error updating ad:', error);
-      notify.error('Error al actualizar aviso');
-    }
-  };
 
   /** Navega a FeaturedCheckoutPage con el aviso y tier pre-seleccionado */
   const handleStartCheckout = (ad: Ad, tier: 'alta' | 'media' | 'baja') => {
@@ -373,7 +352,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           <button
             onClick={() => navigateTo('/publicar')}
             disabled={!isSuperAdmin && adLimit.current >= adLimit.limit}
-            className="bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-600 hover:to-brand-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="hidden sm:flex bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-600 hover:to-brand-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             <Plus className="w-5 h-5" />
             Crear Nuevo Aviso
@@ -391,24 +370,6 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         </div>
       )}
 
-      {/* Filtros simples */}
-      <div className="flex flex-wrap gap-2">
-        {(['all', 'active', 'paused'] as const).map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilterStatus(status)}
-            className={`px-4 py-2 rounded-full font-medium text-sm transition-colors ${
-              filterStatus === status
-                ? 'bg-brand-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {status === 'all' && `Todos (${stats.total})`}
-            {status === 'active' && `Activos (${stats.active})`}
-            {status === 'paused' && `Pausados (${stats.paused})`}
-          </button>
-        ))}
-      </div>
 
       {/* Lista de avisos — rows horizontales */}
       {filteredAds.length === 0 ? (
@@ -440,16 +401,10 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
             const adFeatureds = featuredMap[ad.id] || [];
             const isAdFeatured = adFeatureds.length > 0;
             const thumbnail = ad.images?.[0] || DEFAULT_PLACEHOLDER_IMAGE;
-            const isSelected = selectedAdForEdit?.id === ad.id;
-
             return (
               <div
                 key={ad.id}
-                className={`bg-white rounded-2xl border transition-all duration-150 flex gap-4 p-4 ${
-                  isSelected
-                    ? 'border-brand-400 shadow-md ring-1 ring-brand-200'
-                    : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                }`}
+                className="bg-white rounded-2xl border transition-all duration-150 flex gap-4 p-4 border-gray-200 hover:border-gray-300 hover:shadow-sm"
               >
                 {/* Thumbnail */}
                 <div className="relative flex-shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-gray-100">
@@ -473,10 +428,37 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                       <p className="font-bold text-gray-900 text-base leading-snug line-clamp-2">
                         {ad.title}
                       </p>
-                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <span className="text-xs text-gray-500">{ad.category}</span>
-                        {ad.province && (
-                          <span className="text-xs text-gray-400">· {ad.province}</span>
+                      <div className="flex items-center gap-1 mt-1 flex-wrap">
+                        {isSuperAdmin ? (
+                          // Admin: taxonomía completa + localidad + provincia
+                          <>
+                            <span className="text-xs text-gray-500 font-medium">{ad.category}</span>
+                            {(ad as any).subcategory_parent_name && (
+                              <>
+                                <span className="text-xs text-gray-300">›</span>
+                                <span className="text-xs text-gray-500">{(ad as any).subcategory_parent_name}</span>
+                              </>
+                            )}
+                            {ad.subcategory && (
+                              <>
+                                <span className="text-xs text-gray-300">›</span>
+                                <span className="text-xs text-gray-500">{ad.subcategory}</span>
+                              </>
+                            )}
+                            {(ad.location || ad.province) && (
+                              <span className="text-xs text-gray-400">
+                                · {[ad.location, ad.province].filter(Boolean).join(', ')}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          // Usuario: categoría + lugar
+                          <>
+                            <span className="text-xs text-gray-500">{ad.category}</span>
+                            {(ad.location || ad.province) && (
+                              <span className="text-xs text-gray-400">· {ad.location || ad.province}</span>
+                            )}
+                          </>
                         )}
                         <span className={`text-xs font-semibold ${
                           ad.status === 'active' ? 'text-emerald-600' : 'text-amber-600'
@@ -486,7 +468,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                       </div>
                     </div>
                     <span className="font-black text-brand-600 text-base tabular-nums whitespace-nowrap flex-shrink-0">
-                      {ad.currency} {ad.price?.toLocaleString('es-AR') || 'Consultar'}
+                      {ad.price ? `${ad.currency} ${ad.price.toLocaleString('es-AR')}` : '—'}
                     </span>
                   </div>
 
@@ -531,12 +513,8 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                   {/* Fila de acciones */}
                   <div className="flex items-center gap-1 flex-wrap pt-1 border-t border-gray-100">
                     <button
-                      onClick={() => setSelectedAdForEdit(isSelected ? null : ad)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                        isSelected
-                          ? 'text-brand-600 bg-brand-50'
-                          : 'text-gray-500 hover:text-brand-600 hover:bg-brand-50'
-                      }`}
+                      onClick={() => navigateTo(`/edit/${ad.id}`)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors text-gray-500 hover:text-brand-600 hover:bg-brand-50"
                     >
                       <Edit className="w-3.5 h-3.5" />
                       Modificar
@@ -615,7 +593,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                 <div className="flex items-center justify-between py-2 border-b border-gray-100">
                   <span className="text-xs text-gray-500 font-medium">Precio</span>
                   <span className="text-sm font-black text-brand-600">
-                    {selectedAdForViews.currency} {selectedAdForViews.price?.toLocaleString('es-AR') || 'Consultar'}
+                    {selectedAdForViews.price ? `${selectedAdForViews.currency} ${selectedAdForViews.price.toLocaleString('es-AR')}` : '—'}
                   </span>
                 </div>
                 {selectedAdForViews.category && (
@@ -657,28 +635,6 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         </>
       )}
 
-      {/* Drawer lateral — Editar aviso (desktop: panel derecho; mobile: full screen) */}
-      {selectedAdForEdit && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/40 z-40"
-            onClick={() => setSelectedAdForEdit(null)}
-          />
-          {/* Panel lateral */}
-          <div className="drawer-enter fixed inset-y-0 right-0 z-50 w-[90vw] sm:w-1/2 max-w-2xl flex flex-col shadow-2xl">
-            <QuickEditAdModal
-              adId={selectedAdForEdit.id}
-              mode="drawer"
-              onClose={() => setSelectedAdForEdit(null)}
-              onSuccess={() => {
-                loadData();
-                setSelectedAdForEdit(null);
-              }}
-            />
-          </div>
-        </>
-      )}
 
       {isSuperAdmin && showBulkVisibility && (
         <BulkVisibilityModal

@@ -416,6 +416,17 @@
   animation: slideInRight 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+@keyframes slideInFromRight {
+  from { transform: translateX(20px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes slideInFromLeft {
+  from { transform: translateX(-20px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+.drill-enter-forward { animation: slideInFromRight 0.22s ease-out both; }
+.drill-enter-back    { animation: slideInFromLeft  0.22s ease-out both; }
+
 /* Utility para line-clamp */
 .line-clamp-2 {
   display: -webkit-box;
