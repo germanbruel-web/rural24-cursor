@@ -51,6 +51,8 @@ import {
   Wheat,
   Beef,
   Sprout,
+  ClipboardList,
+  MapPin,
 } from 'lucide-react';
 
 const CATEGORY_ICON_MAP: Record<string, React.ReactNode> = {
@@ -85,6 +87,11 @@ import { getOptionLists } from '../../services/v2/optionListsService';
 import type { OptionList } from '../../services/v2/optionListsService';
 import { notify } from '../../utils/notifications';
 import type { FormFieldV2 } from '../../types/v2';
+import { OptionListsTab } from './OptionListsTab';
+import { WizardConfigPanel } from './WizardConfigPanel';
+import { LocationsAdmin } from './LocationsAdmin';
+
+type AdminTab = 'formularios' | 'listas' | 'wizard' | 'ubicaciones';
 
 // ─── TIPOS ────────────────────────────────────────────────────
 
@@ -549,6 +556,8 @@ function PanelCampos({ plantilla, cargando, modo, categoriaGlobal, onCrearPlanti
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────
 
 export function FormBuilderAdmin() {
+  const [activeTab, setActiveTab] = useState<AdminTab>('formularios');
+
   // ── Estado del árbol ──
   const [categorias,      setCategorias]      = useState<CatNode[]>([]);
   const [subcategorias,   setSubcategorias]   = useState<SubNode[]>([]);
@@ -775,7 +784,46 @@ export function FormBuilderAdmin() {
   // ──────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex bg-gray-50 overflow-hidden" style={{ height: 'calc(100vh - 64px)' }}>
+    <div className="flex flex-col bg-gray-50 overflow-hidden" style={{ height: 'calc(100vh - 64px)' }}>
+
+      {/* ── Barra de tabs ── */}
+      <div className="flex items-center gap-1 px-4 pt-3 pb-0 border-b border-gray-200 bg-white shrink-0">
+        {([
+          { key: 'formularios', label: 'Constructor',        icon: <Wrench        className="w-4 h-4" /> },
+          { key: 'listas',      label: 'Listas de Opciones', icon: <ClipboardList className="w-4 h-4" /> },
+          { key: 'wizard',      label: 'Wizard',             icon: <Sliders       className="w-4 h-4" /> },
+          { key: 'ubicaciones', label: 'Ubicaciones',        icon: <MapPin        className="w-4 h-4" /> },
+        ] as { key: AdminTab; label: string; icon: React.ReactNode }[]).map(t => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key)}
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              activeTab === t.key
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            {t.icon}
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Contenido del tab activo ── */}
+      {activeTab === 'listas' ? (
+        <div className="flex-1 overflow-y-auto p-6">
+          <OptionListsTab />
+        </div>
+      ) : activeTab === 'wizard' ? (
+        <div className="flex-1 overflow-y-auto p-6">
+          <WizardConfigPanel />
+        </div>
+      ) : activeTab === 'ubicaciones' ? (
+        <div className="flex-1 overflow-y-auto p-6">
+          <LocationsAdmin />
+        </div>
+      ) : (
+    <div className="flex bg-gray-50 overflow-hidden flex-1">
 
       {/* ══ PANEL IZQUIERDO: Árbol ══ */}
       <div className="w-72 flex-shrink-0 border-r border-gray-200 bg-white flex flex-col overflow-hidden">
@@ -974,5 +1022,7 @@ export function FormBuilderAdmin() {
         )}
       </div>
     </div>
+    )}
+  </div>
   );
 }
