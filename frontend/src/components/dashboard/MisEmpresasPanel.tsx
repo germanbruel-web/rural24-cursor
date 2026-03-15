@@ -176,6 +176,53 @@ export const MisEmpresasPanel: React.FC = () => {
   );
 };
 
+// ── CompletenessBar ─────────────────────────────────────────────────────────
+
+const COMPLETENESS_FIELDS: { key: keyof MyCompany; label: string }[] = [
+  { key: 'logo_url',    label: 'Logo' },
+  { key: 'cover_url',  label: 'Imagen de portada' },
+  { key: 'tagline',    label: 'Eslogan' },
+  { key: 'description', label: 'Descripción' },
+  { key: 'province',   label: 'Ubicación' },
+];
+
+function computeCompleteness(empresa: MyCompany) {
+  const filled = COMPLETENESS_FIELDS.filter(f => !!empresa[f.key]);
+  return {
+    percent: Math.round((filled.length / COMPLETENESS_FIELDS.length) * 100),
+    missing: COMPLETENESS_FIELDS.filter(f => !empresa[f.key]).map(f => f.label),
+  };
+}
+
+const CompletenessBar: React.FC<{ empresa: MyCompany; onEdit: () => void }> = ({ empresa, onEdit }) => {
+  const { percent, missing } = computeCompleteness(empresa);
+  if (percent === 100) return null;
+
+  const color =
+    percent < 40 ? 'bg-red-400' :
+    percent < 80 ? 'bg-brand-400' :
+    'bg-brand-500';
+
+  return (
+    <div className="px-5 pb-4 pt-0">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-gray-500">
+          Perfil {percent}% completo — falta: {missing.join(', ')}
+        </span>
+        <button
+          onClick={onEdit}
+          className="text-xs text-brand-600 hover:underline font-medium"
+        >
+          Completar
+        </button>
+      </div>
+      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  );
+};
+
 // ── EmpresaCard ─────────────────────────────────────────────────────────────
 
 interface EmpresaCardProps {
@@ -254,7 +301,7 @@ const EmpresaCard: React.FC<EmpresaCardProps> = ({
           </div>
         </div>
 
-        {/* Acciones */}
+        {/* Acciones — solo owner */}
         {empresa.role === 'owner' && (
           <div className="flex items-center gap-1 shrink-0">
             {/* Ver página pública */}
@@ -307,6 +354,10 @@ const EmpresaCard: React.FC<EmpresaCardProps> = ({
           </div>
         )}
       </div>
+
+      {empresa.role === 'owner' && (
+        <CompletenessBar empresa={empresa} onEdit={onEdit} />
+      )}
     </div>
   );
 };

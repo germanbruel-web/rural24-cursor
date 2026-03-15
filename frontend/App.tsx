@@ -57,7 +57,7 @@ const CouponsAdminPanel = lazy(() => import("./src/components/admin/CouponsAdmin
 const BannersCleanPanel = lazy(() => import("./src/components/admin/BannersCleanPanel"));
 const UsersPanel = lazy(() => import("./src/components/admin/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const TaxonomiaAdmin = lazy(() => import("./src/components/admin/TaxonomiaAdmin").then(m => ({ default: m.TaxonomiaAdmin })));
-const AttributesAdmin = lazy(() => import("./src/components/admin/AttributesAdmin").then(m => ({ default: m.AttributesAdmin })));
+const FormBuilderAdmin = lazy(() => import("./src/components/admin/FormBuilderAdmin").then(m => ({ default: m.FormBuilderAdmin })));
 const OptionListsAdmin = lazy(() => import("./src/components/admin/OptionListsTab").then(m => ({ default: m.OptionListsTab })));
 const TemplatesAdmin = lazy(() => import("./src/components/admin/TemplatesAdmin").then(m => ({ default: m.TemplatesAdmin })));
 const BackendSettings = lazy(() => import("./src/components/admin/BackendSettings").then(m => ({ default: m.BackendSettings })));
@@ -78,6 +78,7 @@ const DashboardPanel = lazy(() => import("./src/components/dashboard/DashboardPa
 // Pages (rutas secundarias)
 const HowItWorksPage = lazy(() => import("./src/components/pages/HowItWorksPage").then(m => ({ default: m.HowItWorksPage })));
 const PricingPage = lazy(() => import("./src/components/pages/PricingPage").then(m => ({ default: m.PricingPage })));
+import { ContactoDrawer } from './src/components/ContactoDrawer';
 const PublicarAviso = lazy(() => import("./src/components/pages/PublicarAviso"));
 const ExampleMigratedPage = lazy(() => import("./src/components/pages/ExampleMigratedPage").then(m => ({ default: m.ExampleMigratedPage })));
 
@@ -269,9 +270,20 @@ const AppContent: React.FC = () => {
   const [adToEdit, setAdToEdit] = useState<Ad | undefined>(undefined);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login');
+  const [showContacto, setShowContacto] = useState(false);
   
   // Estado global para el límite de avisos destacados en HomePage (desde Config Global)
   const [homepageFeaturedLimit, setHomepageFeaturedLimit] = useState<number | null>(null);
+
+  // Interceptar navegación a 'contact' — abre el drawer sin salir de la página actual
+  React.useEffect(() => {
+    if (currentPage === 'contact') {
+      setShowContacto(true);
+      setCurrentPage('home');
+      localStorage.removeItem('currentPage');
+      window.history.replaceState(null, '', '#/');
+    }
+  }, [currentPage]);
 
   // Hash-based routing
   React.useEffect(() => {
@@ -647,7 +659,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'inbox' && <MessagesPanel />}
                 {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersCleanPanel />}
                 {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <TaxonomiaAdmin />}
-                {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <AttributesAdmin />}
+                {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <FormBuilderAdmin />}
                 {currentPage === 'option-lists' && canAccessPage('option-lists', profile?.role) && <OptionListsAdmin />}
                 {currentPage === 'templates-admin' && canAccessPage('templates-admin', profile?.role) && <TemplatesAdmin />}
                 {currentPage === 'backend-settings' && canAccessPage('backend-settings', profile?.role) && <BackendSettings />}
@@ -845,30 +857,6 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Página de Contacto
-  if (currentPage === 'contact') {
-    return (
-      <div className="flex flex-col min-h-screen bg-white">
-        <AppHeader
-          onNavigate={(page) => { navigateToPage(page); if (page === 'home') handleBackToHome(); }}
-          onSearch={handleSearch}
-        />
-        <main className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center max-w-md">
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">Contacto</h1>
-            <p className="text-gray-500">Sección en desarrollo. Próximamente.</p>
-            <button
-              onClick={() => { navigateToPage('home'); handleBackToHome(); }}
-              className="mt-6 px-6 py-2.5 bg-brand-600 text-white rounded-full font-semibold hover:bg-brand-500 transition-colors"
-            >
-              Volver al inicio
-            </button>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   // Página de prueba de API (solo dev)
   if (currentPage === 'api-test') {
     if (!import.meta.env.DEV || !APITestPage) {
@@ -967,11 +955,16 @@ const AppContent: React.FC = () => {
       <Footer onCategoryClick={(category) => handleAdvancedSearch({ categories: [category] })} />
 
       {/* Modal de Autenticación Global */}
-      <AuthModal 
-        isOpen={showAuthModal} 
+      <AuthModal
+        isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         initialView={authModalView}
       />
+
+      {/* Drawer de Contacto Institucional */}
+      {showContacto && (
+        <ContactoDrawer onClose={() => setShowContacto(false)} />
+      )}
     </div>
   );
 };
