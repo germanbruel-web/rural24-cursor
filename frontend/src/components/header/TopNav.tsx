@@ -95,13 +95,6 @@ export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
             >
               Precios
             </button>
-            <span className="text-gray-300">·</span>
-            <button
-              onClick={() => onNavigate('contact')}
-              className="px-2 py-1 hover:text-gray-900 hover:underline transition-colors"
-            >
-              Contacto
-            </button>
           </div>
 
         </div>

@@ -226,10 +226,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
 
           {/* Copyright mobile */}
           <div className="text-center mt-6 pt-4 text-xs text-gray-500">
-            <p>© 2024-2026 <span className="text-white font-semibold">RURAL24.COM</span></p>
-            <p className="mt-1">
-              Diseño: <a href="https://www.germanbruel.com.ar" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:text-brand-700 transition-colors">Brüel Studio</a>
-            </p>
+            <p>© Copyright 2026 | <span className="text-white font-semibold">RURAL24.COM.AR</span></p>
           </div>
         </div>
 
@@ -373,10 +370,7 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick }) => {
           {/* Copyright desktop */}
           <div className="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
             <p className="text-gray-400">
-              © Copyright 2024 - 2026 | <span className="text-white font-semibold">RURAL24.COM</span> | Todos los derechos reservados.
-            </p>
-            <p className="text-gray-400 mt-2 md:mt-0">
-              Diseño Web: <a href="https://www.germanbruel.com.ar" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:text-brand-700 transition-colors">Brüel Studio</a>
+              © Copyright 2026 | <span className="text-white font-semibold">RURAL24.COM.AR</span> | Todos los derechos reservados.
             </p>
           </div>
         </div>

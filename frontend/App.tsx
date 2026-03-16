@@ -78,6 +78,7 @@ const DashboardPanel = lazy(() => import("./src/components/dashboard/DashboardPa
 // Pages (rutas secundarias)
 const HowItWorksPage = lazy(() => import("./src/components/pages/HowItWorksPage").then(m => ({ default: m.HowItWorksPage })));
 const PricingPage = lazy(() => import("./src/components/pages/PricingPage").then(m => ({ default: m.PricingPage })));
+const ContactoPage = lazy(() => import("./src/components/pages/ContactoPage").then(m => ({ default: m.ContactoPage })));
 import { ContactoDrawer } from './src/components/ContactoDrawer';
 const PublicarAviso = lazy(() => import("./src/components/pages/PublicarAviso"));
 const ExampleMigratedPage = lazy(() => import("./src/components/pages/ExampleMigratedPage").then(m => ({ default: m.ExampleMigratedPage })));
@@ -275,15 +276,6 @@ const AppContent: React.FC = () => {
   // Estado global para el límite de avisos destacados en HomePage (desde Config Global)
   const [homepageFeaturedLimit, setHomepageFeaturedLimit] = useState<number | null>(null);
 
-  // Interceptar navegación a 'contact' — abre el drawer sin salir de la página actual
-  React.useEffect(() => {
-    if (currentPage === 'contact') {
-      setShowContacto(true);
-      setCurrentPage('home');
-      localStorage.removeItem('currentPage');
-      window.history.replaceState(null, '', '#/');
-    }
-  }, [currentPage]);
 
   // Hash-based routing
   React.useEffect(() => {
@@ -853,6 +845,25 @@ const AppContent: React.FC = () => {
           onClose={() => setShowAuthModal(false)}
           initialView="register"
         />
+      </div>
+    );
+  }
+
+  // Página de Contacto
+  if (currentPage === 'contact') {
+    return (
+      <div className="flex flex-col min-h-screen bg-white">
+        <AppHeader
+          onNavigate={(page) => {
+            navigateToPage(page);
+            if (page === 'home') handleBackToHome();
+          }}
+          onSearch={handleSearch}
+        />
+        <Suspense fallback={<LoadingFallback />}>
+          <ContactoPage />
+        </Suspense>
+        <Footer />
       </div>
     );
   }
