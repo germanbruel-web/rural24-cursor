@@ -11,7 +11,7 @@ import { Card } from '../../molecules/Card';
 import { useProductImage, getProductLabel } from '../../../hooks/useProductImage';
 import { getAdDetailUrl } from '../../../utils/slugUtils';
 import { cn } from '../../../design-system/utils';
-import { DEFAULT_PLACEHOLDER_IMAGE } from '../../../constants/defaultImages';
+import { getCategoryPlaceholder } from '../../../services/categoryPlaceholderCache';
 import { navigateTo } from '../../../hooks/useNavigate';
 import { getImageVariant } from '../../../utils/imageOptimizer';
 import { FavoriteButton } from '../../favorites/FavoriteButton';
@@ -50,7 +50,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
 
   // Optimizar imagen con crop inteligente por variante
   const optimizedImageUrl = getImageVariant(
-    imageError ? DEFAULT_PLACEHOLDER_IMAGE : imageUrl,
+    imageError ? getCategoryPlaceholder((product as any).category_id) : imageUrl,
     isFeatured ? 'detail' : 'card'
   );
 

@@ -40,6 +40,7 @@ import { getSettingNumber } from "./src/services/v2/globalSettingsService";
 import { extractIdFromUrl, canAccessPage } from "./src/utils";
 import { PROVINCES, ALL_CATEGORIES } from "./src/constants";
 import { navigateTo } from './src/hooks/useNavigate';
+import { initCategoryPlaceholders } from './src/services/categoryPlaceholderCache';
 
 // ============================================================
 // LAZY LOADED COMPONENTS (Code Splitting - Mejora LCP)
@@ -499,6 +500,9 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     getSettingNumber('homepage_featured_ads_limit', 12).then(setHomepageFeaturedLimit);
   }, []);
+
+  // Pre-cargar cache de placeholders por categoría
+  useEffect(() => { initCategoryPlaceholders(); }, []);
 
   // Detectar retorno desde MercadoPago Checkout Pro (mobile redirect o popup en mismo tab)
   useEffect(() => {

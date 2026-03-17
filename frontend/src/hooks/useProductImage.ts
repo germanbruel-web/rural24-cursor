@@ -5,7 +5,8 @@
 
 import { useMemo } from 'react';
 import type { Product } from '../../types';
-import { DEFAULT_PLACEHOLDER_IMAGE, LOCAL_PLACEHOLDER_IMAGE } from '../constants/defaultImages';
+import { LOCAL_PLACEHOLDER_IMAGE } from '../constants/defaultImages';
+import { getCategoryPlaceholder } from '../services/categoryPlaceholderCache';
 
 interface ImageData {
   url: string;
@@ -59,8 +60,8 @@ export const useProductImage = (product: Product): string => {
       if (typeof first === 'string' && first) return first;
     }
     
-    // 5. Fallback a Cloudinary
-    return DEFAULT_PLACEHOLDER_IMAGE;
+    // 5. Fallback a placeholder por categoría (o genérico si no está en cache)
+    return getCategoryPlaceholder((product as any).category_id);
   }, [product]);
 };
 
