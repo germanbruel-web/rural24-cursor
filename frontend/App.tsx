@@ -79,6 +79,7 @@ const DashboardPanel = lazy(() => import("./src/components/dashboard/DashboardPa
 const HowItWorksPage = lazy(() => import("./src/components/pages/HowItWorksPage").then(m => ({ default: m.HowItWorksPage })));
 const PricingPage = lazy(() => import("./src/components/pages/PricingPage").then(m => ({ default: m.PricingPage })));
 const ContactoPage = lazy(() => import("./src/components/pages/ContactoPage").then(m => ({ default: m.ContactoPage })));
+const ServiciosPage = lazy(() => import("./src/components/pages/ServiciosPage").then(m => ({ default: m.ServiciosPage })));
 const FavoritesPanel = lazy(() => import("./src/components/favorites/FavoritesPanel").then(m => ({ default: m.FavoritesPanel })));
 const PublicarAviso = lazy(() => import("./src/components/pages/PublicarAviso"));
 const ExampleMigratedPage = lazy(() => import("./src/components/pages/ExampleMigratedPage").then(m => ({ default: m.ExampleMigratedPage })));
@@ -104,7 +105,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard';
+export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'servicios' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -135,6 +136,7 @@ const AppContent: React.FC = () => {
     if (hash.startsWith('#/auth/confirm')) return 'email-confirm';
     if (hash.startsWith('#/auth/callback')) return 'auth-callback';
     if (hash === '#/preguntas-frecuentes-rural24' || hash === '#/how-it-works') return 'how-it-works';
+    if (hash === '#/servicios-rural24') return 'servicios';
     if (hash === '#/contacto-rural24') return 'contact';
     if (hash === '#/design-showcase') return 'design-showcase';
     if (hash === '#/design-system') return 'design-system';
@@ -221,6 +223,7 @@ const AppContent: React.FC = () => {
       'subscription': '#/subscription',
       'contacts': '#/dashboard/contacts',
       'how-it-works': '#/preguntas-frecuentes-rural24',
+      'servicios': '#/servicios-rural24',
       'contact': '#/contacto-rural24',
       'publicar-v3': '#/publicar-v3',
       'test-form': '#/test-form',
@@ -300,6 +303,10 @@ const AppContent: React.FC = () => {
       // Routing para "¿Cómo funciona?"
       else if (hash === '#/preguntas-frecuentes-rural24' || hash === '#/how-it-works') {
         navigateToPage('how-it-works');
+      }
+      // Routing para Servicios
+      else if (hash === '#/servicios-rural24') {
+        navigateToPage('servicios');
       }
       // Routing para Contacto
       else if (hash === '#/contacto-rural24') {
@@ -866,6 +873,25 @@ const AppContent: React.FC = () => {
         />
         <Suspense fallback={<LoadingFallback />}>
           <ContactoPage />
+        </Suspense>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Página de Servicios Rurales
+  if (currentPage === 'servicios') {
+    return (
+      <div className="flex flex-col min-h-screen bg-white">
+        <AppHeader
+          onNavigate={(page) => {
+            navigateToPage(page);
+            if (page === 'home') handleBackToHome();
+          }}
+          onSearch={handleSearch}
+        />
+        <Suspense fallback={<LoadingFallback />}>
+          <ServiciosPage />
         </Suspense>
         <Footer />
       </div>
