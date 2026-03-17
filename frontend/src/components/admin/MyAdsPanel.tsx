@@ -29,6 +29,19 @@ function extractCloudinaryPublicId(url: string): string | null {
   }
 }
 
+const COMPLETENESS_TOTAL = 6;
+
+function calcCompleteness(ad: Ad): number {
+  let done = 0;
+  if ((ad as any).subcategory_id) done++;
+  if (ad.price && ad.price > 0) done++;
+  if (ad.province) done++;
+  if (ad.images && ad.images.length > 0) done++;
+  if (ad.title && ad.title.length > 10 && (ad as any).description?.length > 20) done++;
+  if (ad.status === 'active') done++;
+  return done;
+}
+
 interface MyAdsPanelProps {
   onNavigate?: (page: string) => void;
 }
@@ -452,9 +465,20 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                             )}
                           </>
                         ) : (
-                          // Usuario: categoría + lugar
+                          // Usuario: tipo · categoría › subcategoría · lugar
                           <>
+                            {(ad as any).ad_type === 'company' && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-900 text-white mr-1">
+                                {(ad as any).business_profile_id ? 'EMPRESA' : 'SERVICIO'}
+                              </span>
+                            )}
                             <span className="text-xs text-gray-500">{ad.category}</span>
+                            {ad.subcategory && (
+                              <>
+                                <span className="text-xs text-gray-300">›</span>
+                                <span className="text-xs text-gray-500">{ad.subcategory}</span>
+                              </>
+                            )}
                             {(ad.location || ad.province) && (
                               <span className="text-xs text-gray-400">· {ad.location || ad.province}</span>
                             )}
@@ -510,8 +534,39 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                     </div>
                   )}
 
+                  {/* Barra de completitud — solo borradores */}
+                  {ad.status === 'draft' && (() => {
+                    const done = calcCompleteness(ad);
+                    const pct = Math.round((done / COMPLETENESS_TOTAL) * 100);
+                    return (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-gray-400 font-medium">
+                            Completado {done} de {COMPLETENESS_TOTAL} pasos
+                          </span>
+                          <span className="text-[11px] font-bold text-amber-600">{pct}%</span>
+                        </div>
+                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-400 rounded-full transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* Fila de acciones */}
                   <div className="flex items-center gap-1 flex-wrap pt-1 border-t border-gray-100">
+                    {ad.status === 'draft' ? (
+                      <button
+                        onClick={() => navigateTo(`/edit/${ad.id}`)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors bg-amber-50 text-amber-700 hover:bg-amber-100"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        Continuar editando {calcCompleteness(ad)} de {COMPLETENESS_TOTAL}
+                      </button>
+                    ) : (
                     <button
                       onClick={() => navigateTo(`/edit/${ad.id}`)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors text-gray-500 hover:text-brand-600 hover:bg-brand-50"
@@ -519,6 +574,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                       <Edit className="w-3.5 h-3.5" />
                       Modificar
                     </button>
+                    )}
 
                     {canUseFeaturedFlow && ad.status === 'active' && !isAdFeatured && (
                       <button

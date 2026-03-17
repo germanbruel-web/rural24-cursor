@@ -82,6 +82,7 @@ export function BlockRenderer({ block, wizardProps: p }: Props) {
           uploadedImagesRef={p.uploadedImagesRef}
           onImagesChange={p.onImagesChange}
           config={block.config}
+          categorySlug={p.autoFillContext.categorySlug}
         />
       );
 

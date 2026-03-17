@@ -1,15 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SimpleImageUploader } from '../../SimpleImageUploader/SimpleImageUploader';
 import type { WizardBlockProps } from '../wizardTypes';
 import type { WizardBlockConfig } from '../../../services/v2/wizardConfigService';
+import { getSetting } from '../../../services/siteSettingsService';
 
 interface Props extends Pick<WizardBlockProps, 'uploadedImages' | 'uploadedImagesRef' | 'onImagesChange'> {
   config?: WizardBlockConfig;
+  categorySlug?: string;
 }
 
-export function ImagesBlock({ uploadedImages, uploadedImagesRef, onImagesChange, config }: Props) {
+export function ImagesBlock({ uploadedImages, uploadedImagesRef, onImagesChange, config, categorySlug }: Props) {
   const maxFiles = config?.max_images ?? 8;
   const successCount = uploadedImages.filter(img => img.status === 'success').length;
+  const [categoryPlaceholder, setCategoryPlaceholder] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!categorySlug) return;
+    getSetting(`default_ad_image_${categorySlug}`).then(url => {
+      if (url) setCategoryPlaceholder(url);
+    });
+  }, [categorySlug]);
 
   function handleChange(images: typeof uploadedImages) {
     onImagesChange(images);
@@ -31,6 +41,7 @@ export function ImagesBlock({ uploadedImages, uploadedImagesRef, onImagesChange,
         folder="ads"
         onImagesChange={handleChange}
         existingImages={uploadedImages}
+        defaultImageUrl={categoryPlaceholder}
       />
     </div>
   );

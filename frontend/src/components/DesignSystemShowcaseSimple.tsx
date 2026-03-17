@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { CategoryBadge, CATEGORY_BADGE_STYLES } from './atoms/CategoryBadge/CategoryBadge';
 import { Button } from './atoms/Button';
 import { Input } from './atoms/Input';
 import { Label } from './atoms/Label';
@@ -1580,6 +1581,25 @@ export function DesignSystemShowcaseSimple() {
                 </div>
               </div>
             </Modal>
+          </section>
+
+          {/* ========== SECCIÓN: CATEGORY BADGES ========== */}
+          <section>
+            <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">CategoryBadge</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Pills de categoría para cards de avisos. Modificar colores en{' '}
+              <code className="text-brand-600 text-sm">atoms/CategoryBadge/CategoryBadge.tsx</code> —{' '}
+              mapa <code className="text-brand-600 text-sm">CATEGORY_BADGE_STYLES</code>.
+            </p>
+            <div className="flex flex-wrap gap-3 items-center p-6 bg-gray-100 dark:bg-gray-800 rounded-xl">
+              {Object.keys(CATEGORY_BADGE_STYLES).map((slug) => (
+                <CategoryBadge key={slug} slug={slug} />
+              ))}
+            </div>
+            <div className="mt-4 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-500 mb-3 font-mono">{'// Uso en ProductCard:'}</p>
+              <pre className="text-xs text-brand-600 font-mono">{`<CategoryBadge slug={product.category} />`}</pre>
+            </div>
           </section>
 
           {/* ========== SECCIÓN 6: ICONOS ========== */}

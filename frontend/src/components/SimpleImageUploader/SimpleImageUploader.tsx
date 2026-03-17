@@ -44,13 +44,15 @@ interface Props {
   folder?: 'ads' | 'profiles' | 'banners';
   onImagesChange: (images: UploadedImage[]) => void;
   existingImages?: UploadedImage[];
+  defaultImageUrl?: string; // placeholder por categoría (override de DEFAULT_IMAGE)
 }
 
 export const SimpleImageUploader: React.FC<Props> = ({
   maxFiles = 8,
   folder = 'ads',
   onImagesChange,
-  existingImages = []
+  existingImages = [],
+  defaultImageUrl
 }) => {
   const [images, setImages] = useState<UploadedImage[]>(existingImages);
   const [uploading, setUploading] = useState(false);
@@ -283,19 +285,15 @@ export const SimpleImageUploader: React.FC<Props> = ({
   };
 
   const addDefaultImage = () => {
-    console.log('[SimpleUploader] 🔵 Agregando imagen predeterminada...');
-    console.log('[SimpleUploader] 📍 URL:', DEFAULT_IMAGE.url);
-    console.log('[SimpleUploader] 📂 Path:', DEFAULT_IMAGE.path);
-    
+    // Si hay URL por categoría (prop), usarla; si no, usar la genérica del sistema
+    const targetUrl = defaultImageUrl || DEFAULT_IMAGE.url;
+
     // Verificar que la imagen carga antes de agregarla
     const img = new Image();
     img.onload = () => {
-      console.log('[SimpleUploader] ✅ Imagen predeterminada cargada correctamente');
-      
-      // Imagen predeterminada del sistema (del CMS Backend)
       const defaultImage: UploadedImage = {
-        url: DEFAULT_IMAGE.url,
-        path: DEFAULT_IMAGE.path,
+        url: targetUrl,
+        path: targetUrl === DEFAULT_IMAGE.url ? DEFAULT_IMAGE.path : 'cms/category-placeholder',
         status: 'success',
         progress: 100,
         sortOrder: images.length,
@@ -303,17 +301,12 @@ export const SimpleImageUploader: React.FC<Props> = ({
       };
 
       const updated = [...images, defaultImage];
-      console.log('[SimpleUploader] ✅ Array actualizado con', updated.length, 'imágenes');
-      console.log('[SimpleUploader] 🖼️ Imagen agregada:', defaultImage);
-      
       setImages(updated);
       onImagesChange(updated);
     };
-    
+
     img.onerror = () => {
-      console.error('[SimpleUploader] ❌ Error cargando imagen predeterminada, usando fallback');
-      
-      // Usar fallback si la imagen principal falla
+      // Fallback al placeholder genérico si la imagen de categoría falla
       const defaultImage: UploadedImage = {
         url: DEFAULT_IMAGE.fallback,
         path: 'fallback/placeholder',
@@ -327,8 +320,8 @@ export const SimpleImageUploader: React.FC<Props> = ({
       setImages(updated);
       onImagesChange(updated);
     };
-    
-    img.src = DEFAULT_IMAGE.url;
+
+    img.src = targetUrl;
   };
 
   return (
@@ -378,8 +371,8 @@ export const SimpleImageUploader: React.FC<Props> = ({
           onClick={addDefaultImage}
           className="w-full flex items-center justify-center gap-2 py-2 text-sm text-gray-600 hover:text-blue-600 transition-colors"
         >
-          <img 
-            src={DEFAULT_IMAGE.url} 
+          <img
+            src={defaultImageUrl || DEFAULT_IMAGE.url}
             alt=""
             className="w-8 h-8 rounded object-cover"
             onError={(e) => { e.currentTarget.src = DEFAULT_IMAGE.fallback; }}

@@ -8,8 +8,6 @@ import React, { useState } from 'react';
 import { MapPin, Tag, Building2 } from 'lucide-react';
 import type { Product } from '../../../../types';
 import { Card } from '../../molecules/Card';
-import { Badge } from '../../atoms/Badge';
-import { Button } from '../../atoms/Button';
 import { useProductImage, getProductLabel } from '../../../hooks/useProductImage';
 import { getAdDetailUrl } from '../../../utils/slugUtils';
 import { cn } from '../../../design-system/utils';
@@ -17,12 +15,12 @@ import { DEFAULT_PLACEHOLDER_IMAGE } from '../../../constants/defaultImages';
 import { navigateTo } from '../../../hooks/useNavigate';
 import { getImageVariant } from '../../../utils/imageOptimizer';
 import { FavoriteButton } from '../../favorites/FavoriteButton';
+import { CategoryBadge } from '../../atoms/CategoryBadge/CategoryBadge';
 
 interface ProductCardProps {
   product: Product;
   variant?: 'featured' | 'compact';
   onViewDetail?: (adId: string) => void;
-  showBadges?: boolean;
   showLocation?: boolean;
   /** Mostrar provincia además de localidad (ej: en página de detalle) */
   showProvince?: boolean;
@@ -33,7 +31,6 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
   product,
   variant = 'featured',
   onViewDetail,
-  showBadges = true,
   showLocation = true,
   showProvince = false,
   className,
@@ -127,7 +124,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
 
         {/* Badge EMPRESA — aviso con perfil de empresa vinculado */}
         {isEmpresa && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-brand-600 text-white text-[10px] font-bold rounded-full shadow-md">
+          <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-gray-900 text-white text-[10px] font-bold rounded-full shadow-md">
             <Building2 size={10} />
             EMPRESA
           </div>
@@ -135,11 +132,18 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
 
         {/* Badge SERVICIO — aviso company sin perfil de empresa */}
         {isServicio && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full shadow-md">
+          <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-stone-600 text-white text-[10px] font-bold rounded-full shadow-md">
             <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-current flex-shrink-0">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
             </svg>
             SERVICIO
+          </div>
+        )}
+
+        {/* Badge de categoría — cuando no hay badge EMPRESA/SERVICIO */}
+        {!isEmpresa && !isServicio && product.category && (
+          <div className="absolute top-2 left-2">
+            <CategoryBadge slug={product.category} />
           </div>
         )}
 
