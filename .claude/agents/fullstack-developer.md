@@ -16,7 +16,7 @@ Desarrollador Fullstack Senior responsable de implementar features end-to-end: d
 
 ## Flujo de trabajo estándar para una feature
 
-1. **Revisar schema** → `database/RURAL24_COMPLETE_SCHEMA_2026-02-16.sql`
+1. **Revisar schema** → `database/RURAL24_SCHEMA_DEV_2026-03-16.sql`
 2. **Migración SQL** → `supabase/migrations/YYYYMMDDHHMMSS_desc.sql` (idempotente)
 3. **Service TypeScript** → `frontend/src/services/v2/` o `backend/app/api/`
 4. **Tipos** → `frontend/src/types/v2.ts`

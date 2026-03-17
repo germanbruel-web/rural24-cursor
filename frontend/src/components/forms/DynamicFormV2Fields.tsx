@@ -119,21 +119,13 @@ export function isFieldVisible(
     : current === vw.value;
 }
 
-// ─── CAMPO SELECT (con carga lazy + cascada profunda) ──────────
+// ─── HOOK: CARGA DE OPCIONES (compartido por Select, Radio, Múltiple) ─────────
 
-function SelectFieldV2({
-  field,
-  value,
-  onChange,
-  error,
-  values = {},
-}: {
-  field: FormFieldV2 & { option_list_id?: string | null };
-  value: any;
-  onChange: (v: string) => void;
-  error?: string;
-  values?: Record<string, any>;
-}) {
+function useOptionList(
+  field: FormFieldV2 & { option_list_id?: string | null },
+  values: Record<string, any>,
+  onResetValue?: () => void,
+) {
   const [options, setOptions] = useState<SelectOption[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -142,32 +134,26 @@ function SelectFieldV2({
   const waitingForParent = isWaitingForParents(cfg, values);
   const parentValuesKey = getParentValuesKey(cfg, values);
 
-  // Resetear este campo cuando cualquier padre cambia
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
-    if (cfg?.depends_on || cfg?.depends_on_multi) onChange('');
+    if ((cfg?.depends_on || cfg?.depends_on_multi) && onResetValue) onResetValue();
   }, [parentValuesKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cargar opciones según la fuente resuelta
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
       try {
         if (resolvedListName) {
-          // Prioridad 1: lista condicional (cascada simple o profunda)
           const items = await getOptionListItemsByName(resolvedListName);
           if (!cancelled) setOptions(items);
         } else if (!waitingForParent && field.option_list_id) {
-          // Prioridad 2: lista centralizada sin condición
           const items = await getOptionListItemsForSelect(field.option_list_id);
           if (!cancelled) setOptions(items);
         } else if (!waitingForParent && field.options?.length) {
-          // Prioridad 3: opciones estáticas inline
           if (!cancelled) setOptions(field.options);
         } else if (!waitingForParent) {
-          // Prioridad 4: form_field_options_v2 (legacy)
           const raw = await getFieldOptions(field.id);
           if (!cancelled)
             setOptions(raw.filter((o) => o.is_active).map((o) => ({
@@ -187,6 +173,26 @@ function SelectFieldV2({
     return () => { cancelled = true; };
   }, [field.id, field.option_list_id, resolvedListName, waitingForParent]);
 
+  return { options, loading, waitingForParent };
+}
+
+// ─── CAMPO SELECT (dropdown) ───────────────────────────────────
+
+function SelectFieldV2({
+  field,
+  value,
+  onChange,
+  error,
+  values = {},
+}: {
+  field: FormFieldV2 & { option_list_id?: string | null };
+  value: any;
+  onChange: (v: string) => void;
+  error?: string;
+  values?: Record<string, any>;
+}) {
+  const { options, loading, waitingForParent } = useOptionList(field, values, () => onChange(''));
+
   return (
     <select
       value={value ?? ''}
@@ -205,6 +211,112 @@ function SelectFieldV2({
         <option key={opt.value} value={opt.value}>{opt.label}</option>
       ))}
     </select>
+  );
+}
+
+// ─── CAMPO RADIO ───────────────────────────────────────────────
+
+function RadioFieldV2({
+  field,
+  value,
+  onChange,
+  error,
+  values = {},
+}: {
+  field: FormFieldV2 & { option_list_id?: string | null };
+  value: any;
+  onChange: (v: string) => void;
+  error?: string;
+  values?: Record<string, any>;
+}) {
+  const { options, loading, waitingForParent } = useOptionList(field, values, () => onChange(''));
+
+  if (loading || waitingForParent) {
+    return (
+      <p className="text-sm text-gray-400">
+        {waitingForParent ? 'Seleccioná primero...' : 'Cargando...'}
+      </p>
+    );
+  }
+
+  return (
+    <div className={`flex flex-wrap gap-x-6 gap-y-3 ${error ? 'p-2 border border-red-400 rounded-lg' : ''}`}>
+      {options.map((opt) => (
+        <label key={opt.value} className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="radio"
+            name={field.field_name}
+            value={opt.value}
+            checked={value === opt.value}
+            onChange={() => onChange(opt.value)}
+            className="w-4 h-4 accent-brand-600 cursor-pointer"
+          />
+          <span className="text-sm text-gray-700">{opt.label}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+// ─── CAMPO MÚLTIPLE (checkbox_group) ──────────────────────────
+
+function CheckboxGroupFieldV2({
+  field,
+  value,
+  onChange,
+  error,
+  values = {},
+}: {
+  field: FormFieldV2 & { option_list_id?: string | null };
+  value: any;
+  onChange: (v: string[]) => void;
+  error?: string;
+  values?: Record<string, any>;
+}) {
+  const { options, loading, waitingForParent } = useOptionList(field, values, () => onChange([]));
+  const selected: string[] = Array.isArray(value) ? value : [];
+
+  const toggle = (optValue: string) => {
+    if (selected.includes(optValue)) {
+      onChange(selected.filter((v) => v !== optValue));
+    } else {
+      onChange([...selected, optValue]);
+    }
+  };
+
+  if (loading || waitingForParent) {
+    return (
+      <p className="text-sm text-gray-400">
+        {waitingForParent ? 'Seleccioná primero...' : 'Cargando...'}
+      </p>
+    );
+  }
+
+  return (
+    <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 ${error ? 'p-2 border border-red-400 rounded-lg' : ''}`}>
+      {options.map((opt) => {
+        const checked = selected.includes(opt.value);
+        return (
+          <label key={opt.value} className="flex items-center gap-2 cursor-pointer select-none group">
+            <div
+              onClick={() => toggle(opt.value)}
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                checked
+                  ? 'bg-brand-600 border-brand-600'
+                  : 'bg-white border-gray-300 group-hover:border-brand-400'
+              }`}
+            >
+              {checked && (
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+            <span className="text-sm text-gray-700">{opt.label}</span>
+          </label>
+        );
+      })}
+    </div>
   );
 }
 
@@ -279,6 +391,10 @@ function FieldRenderer({
 
       {field.field_type === 'select' || field.field_type === 'autocomplete' ? (
         <SelectFieldV2 field={field} value={value} onChange={handleChange} error={error} values={values} />
+      ) : field.field_type === 'radio' ? (
+        <RadioFieldV2 field={field} value={value} onChange={handleChange} error={error} values={values} />
+      ) : field.field_type === 'checkbox_group' ? (
+        <CheckboxGroupFieldV2 field={field} value={value} onChange={handleChange} error={error} values={values} />
       ) : field.field_type === 'textarea' ? (
         <textarea
           value={value ?? ''}
@@ -296,7 +412,7 @@ function FieldRenderer({
           className={`${inputCls} ${error ? 'border-red-400' : ''}`}
         />
       ) : (
-        // text, tags, features, range → input text
+        // text / fallback
         <input
           type="text"
           value={value ?? ''}

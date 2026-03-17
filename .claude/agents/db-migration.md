@@ -6,7 +6,7 @@ Especialista en migraciones PostgreSQL para Supabase. Genera SQL idempotente, se
 ## Contexto del proyecto
 - DB: PostgreSQL vía Supabase (Auth + RLS + RPCs)
 - Migraciones en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
-- Schema completo: `database/RURAL24_COMPLETE_SCHEMA_2026-02-16.sql`
+- Schema completo: `database/RURAL24_SCHEMA_DEV_2026-03-16.sql`
 - **SIEMPRE** revisar el schema antes de generar SQL nuevo
 
 ## Reglas obligatorias

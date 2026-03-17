@@ -31,11 +31,11 @@ import {
   AlignLeft,
   List,
   CheckSquare,
+  ListChecks,
+  CircleDot,
   Sliders,
   Type,
   Zap,
-  Tag,
-  Star,
   GripVertical,
   Info,
   Handshake,
@@ -132,15 +132,14 @@ type TipoCampo = FormFieldV2['field_type'];
 // ─── CONSTANTES ───────────────────────────────────────────────
 
 const TIPOS_CAMPO: { valor: TipoCampo; etiqueta: string; icono: React.ReactNode }[] = [
-  { valor: 'text',         etiqueta: 'Texto corto',     icono: <Type className="w-3.5 h-3.5" /> },
-  { valor: 'number',       etiqueta: 'Número',          icono: <Hash className="w-3.5 h-3.5" /> },
-  { valor: 'textarea',     etiqueta: 'Texto largo',     icono: <AlignLeft className="w-3.5 h-3.5" /> },
-  { valor: 'select',       etiqueta: 'Selector',        icono: <List className="w-3.5 h-3.5" /> },
-  { valor: 'autocomplete', etiqueta: 'Autocompletar',   icono: <Zap className="w-3.5 h-3.5" /> },
-  { valor: 'checkbox',     etiqueta: 'Sí / No',         icono: <CheckSquare className="w-3.5 h-3.5" /> },
-  { valor: 'range',        etiqueta: 'Rango',           icono: <Sliders className="w-3.5 h-3.5" /> },
-  { valor: 'tags',         etiqueta: 'Etiquetas',       icono: <Tag className="w-3.5 h-3.5" /> },
-  { valor: 'features',     etiqueta: 'Características', icono: <Star className="w-3.5 h-3.5" /> },
+  { valor: 'text',           etiqueta: 'Texto corto',    icono: <Type className="w-3.5 h-3.5" /> },
+  { valor: 'number',         etiqueta: 'Número',         icono: <Hash className="w-3.5 h-3.5" /> },
+  { valor: 'textarea',       etiqueta: 'Texto largo',    icono: <AlignLeft className="w-3.5 h-3.5" /> },
+  { valor: 'select',         etiqueta: 'Selector',       icono: <List className="w-3.5 h-3.5" /> },
+  { valor: 'autocomplete',   etiqueta: 'Autocompletar',  icono: <Zap className="w-3.5 h-3.5" /> },
+  { valor: 'checkbox',       etiqueta: 'Sí / No',        icono: <CheckSquare className="w-3.5 h-3.5" /> },
+  { valor: 'radio',          etiqueta: 'Radio',          icono: <CircleDot className="w-3.5 h-3.5" /> },
+  { valor: 'checkbox_group', etiqueta: 'Múltiple',       icono: <ListChecks className="w-3.5 h-3.5" /> },
 ];
 
 function etiquetaTipo(t: TipoCampo) {
@@ -169,7 +168,7 @@ function EditorCampo({ inicial, listasOpciones, onGuardar, onCancelar }: EditorC
   const [listaOpcionesId, setListaOpcionesId] = useState<string>(inicial?.option_list_id ?? '');
   const [guardando,   setGuardando]   = useState(false);
 
-  const necesitaOpciones = tipo === 'select' || tipo === 'autocomplete';
+  const necesitaOpciones = tipo === 'select' || tipo === 'autocomplete' || tipo === 'radio' || tipo === 'checkbox_group';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

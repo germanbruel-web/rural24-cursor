@@ -1,6 +1,6 @@
 # CLAUDE.md — Rural24 Orchestrator
 > Auto-cargado por Claude Code al inicio de cada sesión.
-> Última actualización: 2026-03-14
+> Última actualización: 2026-03-17
 > Governance detallado: `.claude/` | Legado Cursor: `OlderCursor/`
 
 ---
@@ -73,10 +73,10 @@ Esta regla aplica también a agentes/subagentes delegados: deben reportar al Orq
 ## FUENTE DE VERDAD DB
 
 ```
-database/RURAL24_SCHEMA_DEV_2026-03-14.sql
+database/RURAL24_SCHEMA_DEV_2026-03-16.sql
 ```
-Dump real de DEV generado 2026-03-14. Consultar SIEMPRE antes de crear tablas, columnas o RPCs.
-Schema anterior disponible en `database/RURAL24_COMPLETE_SCHEMA_2026-03-10.sql`.
+Dump real de DEV generado 2026-03-16. Consultar SIEMPRE antes de crear tablas, columnas o RPCs.
+Schema anterior disponible en `database/RURAL24_SCHEMA_DEV_2026-03-15.sql`.
 Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
 
 ---
@@ -155,12 +155,15 @@ Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
 | 6A-6D | Sistema Multi-Empresa completo | ✅ Completo |
 | 7A | Account Switcher + Social Proof EmpresaPublicPage | ✅ Completo |
 | 7B | ProfileGate + Unificación Taxonomía Servicios/Empresas + Fix Roles | ✅ Completo |
-| 7C | ProductCard badge INSUMO/SERVICIO + price_unit + completeness bar | Pendiente |
 | 8A | Constructor Formularios + Taxonomía 3 niveles + Backend BFF | ✅ Completo |
 | 8A fixes | Icons FormBuilderAdmin, toggle colapso, delete CRUD TaxonomiaAdmin, 194 dups DB | ✅ 2026-03-14 |
+| 8B | PublicarAviso: Step 1 navegar 3 niveles + BlockRenderer + DynamicFormLoader | ✅ Completo |
+| 8C | TaxonomiaAdmin 4 niveles + seed 369 subcategorías | ✅ Completo |
+| 8D | wizard_configs DB + option_list price-currencies | ✅ Completo |
+| 9 | Mobile UX: BottomNav, drill-down wizard, edit unificado, slugs informativos | ✅ Completo |
+| 10 | Notificaciones campanita + Favoritos (Fase 1) | ✅ Completo |
+| 7C | ProductCard badge INSUMO/SERVICIO + price_unit + completeness bar | Pendiente |
 | 3D.6 | Notificación al activar Destacado (pg_cron → email) | Pendiente |
-| 8B | PublicarAviso: Step 1 navegar 3 niveles (L2 con hijos expande, L3/hoja selecciona) | Pendiente |
-| 8C | DynamicFormLoader: cargar Global + Variante combinados en wizard | Pendiente |
 
 ## TAXONOMÍA (Sprint 7B — decisión de producto)
 - **PRODUCTO** (ad_type=particular): Hacienda, Insumos, Maquinarias — sin gate, cualquier usuario
