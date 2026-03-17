@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle } from 'lucide-react';
 import { getLocalitiesByProvince, type Locality } from '../../../services/v2/locationsService';
 import { Card } from '../../molecules/Card';
 import type { WizardBlockProps } from '../wizardTypes';
@@ -84,16 +83,6 @@ export function LocationBlock({ province, setProvince, locality, setLocality, pr
         </Card>
       </div>
 
-      <div className="flex items-start gap-3 p-5 sm:p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
-        <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-        <div className="text-sm sm:text-base text-blue-900">
-          <p className="font-bold mb-2">Tu privacidad es importante</p>
-          <p>
-            Solo se mostrará la provincia públicamente. Los detalles
-            específicos se compartirán solo cuando alguien se contacte con vos.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

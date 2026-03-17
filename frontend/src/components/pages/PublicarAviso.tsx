@@ -937,8 +937,8 @@ export default function PublicarAviso() {
       <div className="flex items-center gap-1 flex-wrap">
         {segments.map((seg, i) => (
           <React.Fragment key={i}>
-            {i > 0 && <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />}
-            <span className={`text-xs ${i === segments.length - 1 ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
+            {i > 0 && <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />}
+            <span className={`text-xs sm:text-base ${i === segments.length - 1 ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
               {seg}
             </span>
           </React.Fragment>
@@ -946,7 +946,7 @@ export default function PublicarAviso() {
         {onChangeCat && (
           <button
             onClick={onChangeCat}
-            className="ml-1 text-xs text-brand-600 hover:underline font-medium flex-shrink-0"
+            className="ml-1 text-xs sm:text-sm text-brand-600 hover:underline font-medium flex-shrink-0"
           >
             Cambiar
           </button>
@@ -1480,7 +1480,8 @@ export default function PublicarAviso() {
   </div>
 
     {/* Actions */}
-    <div className="px-3 sm:px-10 lg:px-12 py-3 sm:py-6 bg-gray-50 border-t-2 border-gray-200 flex items-center justify-between gap-3">
+    <div className="bg-gray-50 border-t-2 border-gray-200">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-6 flex items-center justify-between gap-3">
             {/* Back */}
             {currentStep > 1 && (
               <Button
@@ -1524,6 +1525,7 @@ export default function PublicarAviso() {
                   : 'Continuar'
               }
             </Button>
+      </div>
     </div>
 
     {/* Modal de Autenticación */}

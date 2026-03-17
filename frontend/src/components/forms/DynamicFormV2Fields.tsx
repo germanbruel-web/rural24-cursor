@@ -8,6 +8,7 @@
 // ============================================================
 
 import React, { useEffect, useRef, useState } from 'react';
+import { Check } from 'lucide-react';
 import type { CompleteFormV2, FormFieldV2, FormSection } from '../../types/v2';
 import { getOptionListItemsForSelect, getOptionListItemsByName } from '../../services/v2/optionListsService';
 import { getFieldOptions } from '../../services/v2/formFieldsService';
@@ -176,6 +177,16 @@ function useOptionList(
   return { options, loading, waitingForParent };
 }
 
+// ─── PLACEHOLDER DE CARGA (compartido por Radio y Múltiple) ──────
+
+function OptionLoadingPlaceholder({ waitingForParent }: { waitingForParent: boolean }) {
+  return (
+    <p className="text-sm text-gray-400">
+      {waitingForParent ? 'Seleccioná primero...' : 'Cargando...'}
+    </p>
+  );
+}
+
 // ─── CAMPO SELECT (dropdown) ───────────────────────────────────
 
 function SelectFieldV2({
@@ -232,11 +243,7 @@ function RadioFieldV2({
   const { options, loading, waitingForParent } = useOptionList(field, values, () => onChange(''));
 
   if (loading || waitingForParent) {
-    return (
-      <p className="text-sm text-gray-400">
-        {waitingForParent ? 'Seleccioná primero...' : 'Cargando...'}
-      </p>
-    );
+    return <OptionLoadingPlaceholder waitingForParent={waitingForParent} />;
   }
 
   return (
@@ -275,9 +282,10 @@ function CheckboxGroupFieldV2({
 }) {
   const { options, loading, waitingForParent } = useOptionList(field, values, () => onChange([]));
   const selected: string[] = Array.isArray(value) ? value : [];
+  const selectedSet = new Set(selected);
 
   const toggle = (optValue: string) => {
-    if (selected.includes(optValue)) {
+    if (selectedSet.has(optValue)) {
       onChange(selected.filter((v) => v !== optValue));
     } else {
       onChange([...selected, optValue]);
@@ -285,32 +293,31 @@ function CheckboxGroupFieldV2({
   };
 
   if (loading || waitingForParent) {
-    return (
-      <p className="text-sm text-gray-400">
-        {waitingForParent ? 'Seleccioná primero...' : 'Cargando...'}
-      </p>
-    );
+    return <OptionLoadingPlaceholder waitingForParent={waitingForParent} />;
   }
 
   return (
     <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 ${error ? 'p-2 border border-red-400 rounded-lg' : ''}`}>
       {options.map((opt) => {
-        const checked = selected.includes(opt.value);
+        const checked = selectedSet.has(opt.value);
         return (
           <label key={opt.value} className="flex items-center gap-2 cursor-pointer select-none group">
+            <input
+              type="checkbox"
+              className="sr-only"
+              name={field.field_name}
+              value={opt.value}
+              checked={checked}
+              onChange={() => toggle(opt.value)}
+            />
             <div
-              onClick={() => toggle(opt.value)}
               className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                 checked
                   ? 'bg-brand-600 border-brand-600'
                   : 'bg-white border-gray-300 group-hover:border-brand-400'
               }`}
             >
-              {checked && (
-                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              )}
+              {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
             </div>
             <span className="text-sm text-gray-700">{opt.label}</span>
           </label>

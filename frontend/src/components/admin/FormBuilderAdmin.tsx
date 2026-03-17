@@ -142,12 +142,12 @@ const TIPOS_CAMPO: { valor: TipoCampo; etiqueta: string; icono: React.ReactNode 
   { valor: 'checkbox_group', etiqueta: 'Múltiple',       icono: <ListChecks className="w-3.5 h-3.5" /> },
 ];
 
-function etiquetaTipo(t: TipoCampo) {
-  return TIPOS_CAMPO.find((f) => f.valor === t)?.etiqueta ?? t;
-}
-function iconoTipo(t: TipoCampo) {
-  return TIPOS_CAMPO.find((f) => f.valor === t)?.icono ?? <Type className="w-3.5 h-3.5" />;
-}
+const ETIQUETA_TIPO = Object.fromEntries(TIPOS_CAMPO.map((f) => [f.valor, f.etiqueta])) as Record<TipoCampo, string>;
+const ICONO_TIPO    = Object.fromEntries(TIPOS_CAMPO.map((f) => [f.valor, f.icono]))    as Record<TipoCampo, React.ReactNode>;
+const TIPOS_CON_OPCIONES = new Set<TipoCampo>(['select', 'autocomplete', 'radio', 'checkbox_group']);
+
+function etiquetaTipo(t: TipoCampo) { return ETIQUETA_TIPO[t] ?? t; }
+function iconoTipo(t: TipoCampo)    { return ICONO_TIPO[t]    ?? <Type className="w-3.5 h-3.5" />; }
 
 // ─── EDITOR DE CAMPO (inline) ─────────────────────────────────
 
@@ -168,7 +168,7 @@ function EditorCampo({ inicial, listasOpciones, onGuardar, onCancelar }: EditorC
   const [listaOpcionesId, setListaOpcionesId] = useState<string>(inicial?.option_list_id ?? '');
   const [guardando,   setGuardando]   = useState(false);
 
-  const necesitaOpciones = tipo === 'select' || tipo === 'autocomplete' || tipo === 'radio' || tipo === 'checkbox_group';
+  const necesitaOpciones = TIPOS_CON_OPCIONES.has(tipo);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
