@@ -16,7 +16,7 @@ interface ImageData {
 export const useProductImage = (product: Product): string => {
   return useMemo(() => {
     // 1. imageUrl directo (ya procesado)
-    if (product.imageUrl && product.imageUrl !== LOCAL_PLACEHOLDER_IMAGE && product.imageUrl !== DEFAULT_PLACEHOLDER_IMAGE) {
+    if (product.imageUrl && product.imageUrl !== LOCAL_PLACEHOLDER_IMAGE) {
       return product.imageUrl;
     }
     
