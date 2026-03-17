@@ -10,6 +10,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Heart, Plus, MessageCircle, User } from 'lucide-react';
 import { navigateTo } from '../hooks/useNavigate';
+import { NotificationBell } from './notifications/NotificationBell';
 
 const WIZARD_PREFIXES = ['#/publicar', '#/publicar-v3', '#/publicar-v2', '#/edit/', '#/publicar-aviso'];
 const isWizardPage = (hash: string) => WIZARD_PREFIXES.some(p => hash.startsWith(p));
@@ -17,9 +18,10 @@ const isWizardPage = (hash: string) => WIZARD_PREFIXES.some(p => hash.startsWith
 type TabId = 'my-ads' | 'favorites' | 'publicar' | 'inbox' | 'profile';
 
 const getActiveTab = (hash: string): TabId | null => {
-  if (hash === '#/my-ads')   return 'my-ads';
-  if (hash === '#/inbox')    return 'inbox';
-  if (hash === '#/profile')  return 'profile';
+  if (hash === '#/my-ads')      return 'my-ads';
+  if (hash === '#/favorites')   return 'favorites';
+  if (hash === '#/inbox')       return 'inbox';
+  if (hash === '#/profile')     return 'profile';
   return null;
 };
 
@@ -64,8 +66,8 @@ export const BottomNav: React.FC = () => {
       {/* Altura fija de la barra */}
       <div className="flex items-end h-[64px]">
 
-        <NavTab id="my-ads"    label="Mis Avisos" icon={FileText}       path="/my-ads"  />
-        <NavTab id="favorites" label="Favoritos"  icon={Heart}          path="/my-ads"  />
+        <NavTab id="my-ads"    label="Mis Avisos" icon={FileText}    path="/my-ads"     />
+        <NavTab id="favorites" label="Favoritos"  icon={Heart}       path="/favorites"  />
 
         {/* Botón central Publicar — flota sobre la barra */}
         <div className="flex-1 flex flex-col items-center justify-end pb-2 relative">
@@ -90,8 +92,26 @@ export const BottomNav: React.FC = () => {
           </span>
         </div>
 
+        {/* Tab Mensajes */}
         <NavTab id="inbox"   label="Mensajes"  icon={MessageCircle} path="/inbox"   />
-        <NavTab id="profile" label="Mi Perfil" icon={User}          path="/profile" />
+
+        {/* Tab Perfil con campanita encima */}
+        <div className="flex-1 flex flex-col items-center justify-end pb-2.5 gap-1 relative">
+          {/* Campanita mobile — flotante sobre el perfil */}
+          <div className="absolute -top-3 right-1">
+            <NotificationBell />
+          </div>
+          <button
+            onClick={() => navigateTo('/profile')}
+            className={`
+              flex flex-col items-center gap-1 transition-colors active:scale-95
+              ${activeTab === 'profile' ? 'text-brand-600' : 'text-gray-400'}
+            `}
+          >
+            <User size={21} strokeWidth={activeTab === 'profile' ? 2 : 1.5} />
+            <span className="text-[10px] font-medium leading-none tracking-wide">Mi Perfil</span>
+          </button>
+        </div>
 
       </div>
     </nav>

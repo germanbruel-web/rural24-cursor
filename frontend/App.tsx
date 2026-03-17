@@ -79,7 +79,7 @@ const DashboardPanel = lazy(() => import("./src/components/dashboard/DashboardPa
 const HowItWorksPage = lazy(() => import("./src/components/pages/HowItWorksPage").then(m => ({ default: m.HowItWorksPage })));
 const PricingPage = lazy(() => import("./src/components/pages/PricingPage").then(m => ({ default: m.PricingPage })));
 const ContactoPage = lazy(() => import("./src/components/pages/ContactoPage").then(m => ({ default: m.ContactoPage })));
-import { ContactoDrawer } from './src/components/ContactoDrawer';
+const FavoritesPanel = lazy(() => import("./src/components/favorites/FavoritesPanel").then(m => ({ default: m.FavoritesPanel })));
 const PublicarAviso = lazy(() => import("./src/components/pages/PublicarAviso"));
 const ExampleMigratedPage = lazy(() => import("./src/components/pages/ExampleMigratedPage").then(m => ({ default: m.ExampleMigratedPage })));
 
@@ -104,7 +104,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard';
+export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -340,6 +340,9 @@ const AppContent: React.FC = () => {
       }
       else if (hash === '#/my-ads') {
         navigateToPage('my-ads');
+      }
+      else if (hash === '#/favorites') {
+        navigateToPage('favorites');
       }
       else if (hash === '#/inbox') {
         navigateToPage('inbox');
@@ -587,7 +590,7 @@ const AppContent: React.FC = () => {
   }
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'design-system', 'mis-empresas'].includes(currentPage);
+  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'favorites', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'design-system', 'mis-empresas'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
@@ -648,6 +651,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'contacts' && <ReceivedContactsView />}
                 {currentPage === 'users' && canAccessPage('users', profile?.role) && <UsersPanel />}
                 {currentPage === 'my-ads' && <MyAdsPanel />}
+                {currentPage === 'favorites' && <FavoritesPanel />}
                 {currentPage === 'inbox' && <MessagesPanel />}
                 {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersCleanPanel />}
                 {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <TaxonomiaAdmin />}

@@ -20,6 +20,7 @@ import { DEFAULT_PLACEHOLDER_IMAGE } from '../constants/defaultImages';
 import { getImageVariant } from '../utils/imageOptimizer';
 import { TEXTS } from '../constants/texts';
 import { formatPrice, formatBoolean } from '../utils/currency';
+import { FavoriteButton } from './favorites/FavoriteButton';
 import { separateValues, formatAttributeLabel } from '../utils/textProcessing';
 import { groupAttributes } from '../config/attributeGroups';
 
@@ -685,12 +686,18 @@ export const AdDetailPage: React.FC<AdDetailPageProps> = ({ adId, onBack, onSear
           <div id="ad-right-column" className="space-y-6">
             {/* Precio destacado */}
             <div id="price-card" className="bg-white rounded-2xl shadow-md p-6 sticky top-24">
-              <div className="mb-6">
+              <div className="mb-4">
                 <p className="text-base text-gray-500 font-medium mb-2">{TEXTS.adDetail.price}</p>
                 <div className="text-4xl sm:text-5xl font-black text-gray-900">
                   {formatPrice(ad.price, ad.currency)}
                 </div>
               </div>
+              {/* Guardar en favoritos */}
+              {ad.id && (
+                <div className="mb-4">
+                  <FavoriteButton adId={ad.id} variant="detail" />
+                </div>
+              )}
 
               {/* Sección empresa — visible para avisos de tipo 'company' o 'empresa' (Servicios) */}
               {((ad as any).ad_type === 'company' || (ad as any).ad_type === 'empresa') && (

@@ -16,6 +16,7 @@ import { cn } from '../../../design-system/utils';
 import { DEFAULT_PLACEHOLDER_IMAGE } from '../../../constants/defaultImages';
 import { navigateTo } from '../../../hooks/useNavigate';
 import { getImageVariant } from '../../../utils/imageOptimizer';
+import { FavoriteButton } from '../../favorites/FavoriteButton';
 
 interface ProductCardProps {
   product: Product;
@@ -116,6 +117,13 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         
         {/* Gradient overlay en hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        {/* Favorito — sutil, aparece en hover */}
+        {product.id && (
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <FavoriteButton adId={product.id} variant="card" />
+          </div>
+        )}
 
         {/* Badge EMPRESA — aviso con perfil de empresa vinculado */}
         {isEmpresa && (
@@ -249,15 +257,6 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         )}
       </div>
     </Card>
-  );
-}, (prevProps, nextProps) => {
-  // Solo re-renderizar si cambia el ID del producto o las props de visualización
-  return (
-    prevProps.product.id === nextProps.product.id &&
-    prevProps.variant === nextProps.variant &&
-    prevProps.showBadges === nextProps.showBadges &&
-    prevProps.showLocation === nextProps.showLocation &&
-    prevProps.showProvince === nextProps.showProvince
   );
 });
 
