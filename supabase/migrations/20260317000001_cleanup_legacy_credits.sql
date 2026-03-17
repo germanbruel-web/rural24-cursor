@@ -156,7 +156,12 @@ $$;
 
 -- ================================================================
 -- STEP 3: Actualizar admin_get_featured_ads — eliminar transaction_id
+-- (DROP previo necesario: cambia el tipo de retorno)
 -- ================================================================
+
+DROP FUNCTION IF EXISTS public.admin_get_featured_ads(
+  character varying[], character varying, uuid, uuid, text, date, date, integer, integer
+);
 
 CREATE OR REPLACE FUNCTION public.admin_get_featured_ads(
   p_status      character varying[] DEFAULT NULL::character varying[],
@@ -281,4 +286,6 @@ DROP TABLE IF EXISTS public.credit_transactions CASCADE;
 DROP TABLE IF EXISTS public.user_credits CASCADE;
 DROP TABLE IF EXISTS public.user_featured_credits CASCADE;
 
-RAISE NOTICE '✅ Limpieza legacy credits completada — tablas eliminadas: credit_transactions, user_credits, user_featured_credits';
+DO $$ BEGIN
+  RAISE NOTICE '✅ Limpieza legacy credits completada — tablas eliminadas: credit_transactions, user_credits, user_featured_credits';
+END $$;
