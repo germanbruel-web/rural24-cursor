@@ -129,22 +129,29 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
               }));
           } catch {}
 
-          const subcatsWithCount = await Promise.all(
-            (subcategories || []).map(async (s) => {
-              const { count } = await supabase
-                .from('ads')
-                .select('id', { count: 'exact', head: true })
-                .eq('subcategory_id', s.id)
-                .eq('status', 'active')
-                .eq('approval_status', 'approved');
-              return {
-                id: s.id,
-                name: s.display_name || s.name,
-                slug: s.slug,
-                ads_count: count || 0,
-              };
-            })
-          );
+          // Una sola query por categoría en lugar de N queries (una por subcategoría)
+          const subcatIds = (subcategories || []).map((s) => s.id);
+          const countMap = new Map<string, number>();
+          if (subcatIds.length > 0) {
+            const { data: adRows } = await supabase
+              .from('ads')
+              .select('subcategory_id')
+              .eq('category_id', cat.id)
+              .eq('status', 'active')
+              .eq('approval_status', 'approved');
+            for (const row of adRows || []) {
+              if (row.subcategory_id) {
+                countMap.set(row.subcategory_id, (countMap.get(row.subcategory_id) || 0) + 1);
+              }
+            }
+          }
+
+          const subcatsWithCount = (subcategories || []).map((s) => ({
+            id: s.id,
+            name: s.display_name || s.name,
+            slug: s.slug,
+            ads_count: countMap.get(s.id) || 0,
+          }));
 
           return {
             category_id: cat.id,
