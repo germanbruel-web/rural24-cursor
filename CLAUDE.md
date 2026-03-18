@@ -1,6 +1,6 @@
 # CLAUDE.md — Rural24 Orchestrator
 > Auto-cargado por Claude Code al inicio de cada sesión.
-> Última actualización: 2026-03-17
+> Última actualización: 2026-03-18
 > Governance detallado: `.claude/` | Legado Cursor: `OlderCursor/`
 
 ---
@@ -162,6 +162,10 @@ Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
 | 8D | wizard_configs DB + option_list price-currencies | ✅ Completo |
 | 9 | Mobile UX: BottomNav, drill-down wizard, edit unificado, slugs informativos | ✅ Completo |
 | 10 | Notificaciones campanita + Favoritos (Fase 1) | ✅ Completo |
+| Chat-A | Chat P2P: canales, mensajes, realtime, ChatWindow/ChatList/Badges | ✅ 2026-03-18 |
+| Chat-B | Notificación vendedor + enmascarado datos sensibles | ✅ 2026-03-18 |
+| UX-Mobile | BottomNav 80px + safe-area, 5 tabs (FAB Publicar + Chat + Alertas) | ✅ 2026-03-18 |
+| UX-Desktop | Header: campanita reemplaza Favoritos, Chat abre overlay inline | ✅ 2026-03-18 |
 | 7C | ProductCard badge INSUMO/SERVICIO + price_unit + completeness bar | Pendiente |
 | 3D.6 | Notificación al activar Destacado (pg_cron → email) | Pendiente |
 
