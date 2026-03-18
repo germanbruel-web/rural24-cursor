@@ -1,12 +1,15 @@
 /**
  * BottomNav.tsx
  * Barra de navegación inferior sticky — solo mobile (lg:hidden)
- * Tabs: Mis Avisos | Favoritos | [PUBLICAR FAB] | Chat | Notificaciones
+ * Tabs: Mis Avisos | Favoritos | [PUBLICAR FAB] | Chat | Alertas
+ * Altura: 80px + safe-area-inset-bottom (Material Design 3)
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FileText, Heart, Plus, Bell } from 'lucide-react';
+import { FileText, Heart, Plus, MessageCircle, Bell } from 'lucide-react';
 import { navigateTo } from '../hooks/useNavigate';
+import { useChatBadge } from '../hooks/useChatBadge';
+import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import { getUnreadCount, subscribeToNotifications } from '../services/notificationsService';
 import { NotificationsPanel } from './notifications/NotificationsPanel';
@@ -17,21 +20,23 @@ const isWizardPage = (hash: string) => WIZARD_PREFIXES.some(p => hash.startsWith
 type TabId = 'my-ads' | 'favorites' | 'publicar' | 'inbox' | 'notifications';
 
 const getActiveTab = (hash: string): TabId | null => {
-  if (hash === '#/my-ads')      return 'my-ads';
-  if (hash === '#/favorites')   return 'favorites';
-  if (hash === '#/inbox')       return 'inbox';
+  if (hash === '#/my-ads')    return 'my-ads';
+  if (hash === '#/favorites') return 'favorites';
+  if (hash === '#/inbox')     return 'inbox';
   return null;
 };
 
 export const BottomNav: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId | null>(() => getActiveTab(window.location.hash));
   const [hidden,    setHidden]    = useState(() => isWizardPage(window.location.hash));
+  const [userId,    setUserId]    = useState<string | null>(null);
+  const chatUnread = useChatBadge(userId);
 
   // Notificaciones
   const { user } = useAuth();
-  const [bellUnread,  setBellUnread]  = useState(0);
-  const [bellOpen,    setBellOpen]    = useState(false);
-  const bellPanelRef                  = useRef<HTMLDivElement>(null);
+  const [bellUnread, setBellUnread] = useState(0);
+  const [bellOpen,   setBellOpen]   = useState(false);
+  const bellPanelRef                = useRef<HTMLDivElement>(null);
 
   const fetchBellCount = useCallback(async () => {
     if (!user) return;
@@ -52,7 +57,6 @@ export const BottomNav: React.FC = () => {
     return () => { ch.unsubscribe(); };
   }, [user]);
 
-  // Cerrar panel al click fuera
   useEffect(() => {
     if (!bellOpen) return;
     const handler = (e: MouseEvent) => {
@@ -63,6 +67,10 @@ export const BottomNav: React.FC = () => {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [bellOpen]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+  }, []);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -76,18 +84,20 @@ export const BottomNav: React.FC = () => {
 
   if (hidden) return null;
 
-  const NavTab = ({ id, label, icon: Icon, path }: { id: TabId; label: string; icon: typeof FileText; path: string }) => {
+  const NavTab = ({
+    id, label, icon: Icon, path,
+  }: { id: TabId; label: string; icon: typeof FileText; path: string }) => {
     const isActive = activeTab === id;
     return (
       <button
         onClick={() => navigateTo(path)}
         className={`
-          flex-1 flex flex-col items-center justify-end pb-3 gap-1
+          flex-1 flex flex-col items-center justify-center gap-1.5 pt-1
           transition-colors active:scale-95
           ${isActive ? 'text-brand-600' : 'text-gray-400'}
         `}
       >
-        <Icon size={21} strokeWidth={isActive ? 2 : 1.5} />
+        <Icon size={22} strokeWidth={isActive ? 2.2 : 1.6} />
         <span className="text-[10px] font-medium leading-none tracking-wide">{label}</span>
       </button>
     );
@@ -98,22 +108,22 @@ export const BottomNav: React.FC = () => {
       className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-gray-200 overflow-visible"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      {/* Altura fija de la barra — más alta para que el FAB no se corte */}
-      <div className="flex items-end h-[72px]">
+      {/* 80px — Material Design 3 */}
+      <div className="flex items-center h-[80px]">
 
-        <NavTab id="my-ads"    label="Mis Avisos" icon={FileText} path="/my-ads"    />
-        <NavTab id="favorites" label="Favoritos"  icon={Heart}    path="/favorites" />
+        <NavTab id="my-ads"    label="Mis Avisos" icon={FileText}       path="/my-ads"    />
+        <NavTab id="favorites" label="Favoritos"  icon={Heart}          path="/favorites" />
 
-        {/* Botón central Publicar — FAB flotante */}
-        <div className="flex-1 flex flex-col items-center justify-end pb-3 relative">
+        {/* FAB central Publicar */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-1.5 pt-1 relative">
           <button
             onClick={() => navigateTo('/publicar')}
             className="
-              absolute -top-9
-              w-[62px] h-[62px] rounded-full
+              -mt-8
+              w-[60px] h-[60px] rounded-full
               bg-brand-600 hover:bg-brand-500 active:bg-brand-700
               flex items-center justify-center
-              shadow-xl shadow-brand-600/40
+              shadow-lg shadow-brand-600/40
               ring-4 ring-white
               transition-all active:scale-95
             "
@@ -121,34 +131,52 @@ export const BottomNav: React.FC = () => {
           >
             <Plus size={28} strokeWidth={2.5} className="text-white" />
           </button>
-          <span className="text-[10px] font-medium leading-none tracking-wide text-brand-600 mt-auto">
+          <span className="text-[10px] font-medium leading-none tracking-wide text-brand-600">
             Publicar
           </span>
         </div>
 
-        {/* Tab Notificaciones con badge */}
-        <div ref={bellPanelRef} className="flex-1 flex flex-col items-center justify-end pb-3 gap-1 relative">
+        {/* Tab Chat con badge */}
+        <button
+          onClick={() => navigateTo('/inbox')}
+          className={`
+            flex-1 flex flex-col items-center justify-center gap-1.5 pt-1
+            transition-colors active:scale-95
+            ${activeTab === 'inbox' ? 'text-brand-600' : 'text-gray-400'}
+          `}
+        >
           <div className="relative">
-            <button
-              onClick={() => setBellOpen(prev => !prev)}
-              className={`transition-colors active:scale-95 ${bellOpen ? 'text-brand-600' : 'text-gray-400'}`}
-            >
-              <Bell size={21} strokeWidth={bellOpen ? 2 : 1.5} />
-            </button>
-            {bellUnread > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full px-1 leading-none">
-                {bellUnread > 9 ? '9+' : bellUnread}
+            <MessageCircle size={22} strokeWidth={activeTab === 'inbox' ? 2.2 : 1.6} />
+            {chatUnread > 0 && (
+              <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 flex items-center justify-center bg-brand-600 text-white text-[9px] font-bold rounded-full px-1 leading-none">
+                {chatUnread > 9 ? '9+' : chatUnread}
               </span>
             )}
           </div>
+          <span className="text-[10px] font-medium leading-none tracking-wide">Chat</span>
+        </button>
+
+        {/* Tab Alertas con badge */}
+        <div ref={bellPanelRef} className="flex-1 flex flex-col items-center justify-center gap-1.5 pt-1 relative">
           <button
             onClick={() => setBellOpen(prev => !prev)}
-            className={`text-[10px] font-medium leading-none tracking-wide transition-colors ${bellOpen ? 'text-brand-600' : 'text-gray-400'}`}
+            className={`
+              flex flex-col items-center gap-1.5
+              transition-colors active:scale-95
+              ${bellOpen ? 'text-brand-600' : 'text-gray-400'}
+            `}
           >
-            Alertas
+            <div className="relative">
+              <Bell size={22} strokeWidth={bellOpen ? 2.2 : 1.6} />
+              {bellUnread > 0 && (
+                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full px-1 leading-none">
+                  {bellUnread > 9 ? '9+' : bellUnread}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] font-medium leading-none tracking-wide">Alertas</span>
           </button>
 
-          {/* Panel de notificaciones — se abre hacia arriba */}
           {bellOpen && (
             <div className="absolute bottom-full right-0 mb-2 z-50">
               <NotificationsPanel
