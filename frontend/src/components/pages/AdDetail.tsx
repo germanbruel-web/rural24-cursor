@@ -1,15 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
-import { MapPin, Calendar, Tag } from 'lucide-react';
-import { normalizeImages, type NormalizedImage } from '../../utils/imageHelpers';
+import { MapPin, Calendar, Tag, ArrowLeft, User } from 'lucide-react';
+import { normalizeImages, getFirstImage, type NormalizedImage } from '../../utils/imageHelpers';
 import { ContactVendorButton } from '../ContactVendorButton';
 import { UserFeaturedAdsBar } from '../sections/UserFeaturedAdsBar';
+import { FavoriteButton } from '../favorites/FavoriteButton';
+import { VerifiedBadge } from '../UserBadges';
+import PremiumBadge from '../PremiumBadge';
+import { ProductCard } from '../organisms/ProductCard';
 import { getFormForContext } from '../../services/v2/formsService';
 import { getOptionListItemsForSelect } from '../../services/v2/optionListsService';
 import type { CompleteFormV2, FormFieldV2 } from '../../types/v2';
+import type { Product } from '../../../types';
 
 interface AdDetailProps {
   adId: string;
+  onBack?: () => void;
+}
+
+interface Seller {
+  full_name?: string;
+  email_verified?: boolean;
+  role?: string;
+  created_at?: string;
 }
 
 interface Ad {
@@ -17,6 +30,7 @@ interface Ad {
   title: string;
   description: string;
   location: string;
+  province?: string;
   price?: number;
   price_unit?: string;
   phone: string;
@@ -30,17 +44,20 @@ interface Ad {
   subcategories?: { name: string; display_name: string } | null;
   operation_types?: { display_name: string } | null;
   images?: NormalizedImage[];
+  seller?: Seller | null;
 }
 
 // { option_list_id → { value → label } }
 type OptionLabels = Record<string, Record<string, string>>;
 
-export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
+export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [form, setForm] = useState<CompleteFormV2 | null>(null);
   const [optionLabels, setOptionLabels] = useState<OptionLabels>({});
+  const [sellerOtherAds, setSellerOtherAds] = useState<Product[]>([]);
+  const [loadingOtherAds, setLoadingOtherAds] = useState(false);
 
   useEffect(() => {
     loadAd();
@@ -49,6 +66,7 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
   useEffect(() => {
     if (!ad) return;
     loadFormAndLabels(ad);
+    loadSellerOtherAds(ad.user_id, ad.id);
   }, [ad?.id]);
 
   // ── Carga principal del aviso ──────────────────────────────
@@ -65,8 +83,8 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
 
       const normalizedImages = normalizeImages(data.images);
 
-      // Cargar subcategoría, categoría y tipo de operación en paralelo
-      const [subcatResult, opTypeResult] = await Promise.all([
+      // Cargar subcategoría, categoría, tipo de operación y vendedor en paralelo
+      const [subcatResult, opTypeResult, sellerResult] = await Promise.all([
         data.subcategory_id
           ? supabase
               .from('subcategories')
@@ -79,6 +97,13 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
               .from('operation_types')
               .select('display_name')
               .eq('id', data.operation_type_id)
+              .single()
+          : Promise.resolve({ data: null }),
+        data.user_id
+          ? supabase
+              .from('users')
+              .select('full_name, email_verified, role, created_at')
+              .eq('id', data.user_id)
               .single()
           : Promise.resolve({ data: null }),
       ]);
@@ -99,11 +124,54 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
         categories: categoryData,
         subcategories: subcatResult.data ?? null,
         operation_types: opTypeResult.data ?? null,
+        seller: sellerResult.data ?? null,
       });
     } catch (err) {
       console.error('Error al cargar aviso:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ── Otros avisos del mismo vendedor ───────────────────────
+
+  const loadSellerOtherAds = async (sellerId: string, excludeId: string) => {
+    setLoadingOtherAds(true);
+    try {
+      const { data } = await supabase
+        .from('ads')
+        .select('*')
+        .eq('user_id', sellerId)
+        .eq('status', 'active')
+        .neq('id', excludeId)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      const products: Product[] = (data || []).map((item: any) => ({
+        id: item.id,
+        slug: item.slug,
+        short_id: item.short_id,
+        title: item.title,
+        description: item.description || '',
+        price: item.price,
+        currency: item.currency || 'ARS',
+        location: item.location || '',
+        province: item.province,
+        imageUrl: getFirstImage(item.images || item.image_urls || []),
+        images: normalizeImages(item.images || item.image_urls || []),
+        category: item.category || '',
+        subcategory: item.subcategory,
+        sourceUrl: '#',
+        isSponsored: false,
+        user_id: item.user_id,
+        createdAt: item.created_at,
+      }));
+
+      setSellerOtherAds(products);
+    } catch (err) {
+      console.error('Error cargando otros avisos del vendedor:', err);
+    } finally {
+      setLoadingOtherAds(false);
     }
   };
 
@@ -118,7 +186,6 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
 
     if (!loadedForm) return;
 
-    // Recopilar option_list_id únicos
     const listIds = [
       ...new Set(
         loadedForm.fields
@@ -146,18 +213,15 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
 
     const strValue = String(value);
 
-    // Opciones estáticas del campo
     if (field.options?.length) {
       const opt = field.options.find((o) => o.value === strValue);
       return opt?.label ?? strValue;
     }
 
-    // Catálogo centralizado
     if (field.option_list_id && optionLabels[field.option_list_id]) {
       return optionLabels[field.option_list_id][strValue] ?? strValue;
     }
 
-    // Sufijo numérico (ej: "250 HP")
     if (field.field_type === 'number' && (field.metadata as any)?.suffix) {
       return `${strValue} ${(field.metadata as any).suffix}`;
     }
@@ -172,7 +236,6 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
 
     if (!attrs || Object.keys(attrs).length === 0) return null;
 
-    // Fallback genérico si no hay template v2
     if (!form) {
       return (
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -193,7 +256,6 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
       );
     }
 
-    // Agrupar campos por sección, filtrar sólo los que tienen valor
     const sectionedBlocks = form.sections
       .map((section) => ({
         section,
@@ -207,7 +269,6 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
       }))
       .filter((b) => b.fields.length > 0);
 
-    // Campos sin sección asignada
     const unsectioned = form.fields
       .filter((f) => !f.section_id)
       .filter((f) => {
@@ -278,6 +339,17 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
+
+      {/* Botón volver */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-brand-600 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Volver
+        </button>
+      )}
 
       {/* ── Segmento 1: Hero ─────────────────────────────────── */}
 
@@ -385,33 +457,38 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{ad.title}</h1>
           </div>
 
-          {/* Precio */}
-          {ad.price ? (
-            <div className="text-right ml-4">
-              <div className="text-sm text-gray-500">Precio</div>
-              <div className="text-3xl font-bold text-brand-600">
-                ${ad.price.toLocaleString('es-AR')}
-              </div>
-              {ad.price_unit && (
-                <div className="text-sm text-gray-500 mt-0.5">
-                  por {ad.price_unit.replace(/-/g, ' ')}
+          {/* Precio + Favorito */}
+          <div className="flex flex-col items-end gap-2 ml-4">
+            {ad.price ? (
+              <div className="text-right">
+                <div className="text-sm text-gray-500">Precio</div>
+                <div className="text-3xl font-bold text-brand-600">
+                  ${ad.price.toLocaleString('es-AR')}
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-right ml-4">
-              <div className="text-sm text-gray-500">Precio</div>
-              <div className="text-xl font-semibold text-gray-400">—</div>
-            </div>
-          )}
+                {ad.price_unit && (
+                  <div className="text-sm text-gray-500 mt-0.5">
+                    por {ad.price_unit.replace(/-/g, ' ')}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-right">
+                <div className="text-sm text-gray-500">Precio</div>
+                <div className="text-xl font-semibold text-gray-400">—</div>
+              </div>
+            )}
+            <FavoriteButton adId={ad.id} variant="detail" />
+          </div>
         </div>
 
         {/* Meta: ubicación y fecha */}
         <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-6">
-          {ad.location && (
+          {(ad.province || ad.location) && (
             <div className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              <span>{ad.location}</span>
+              <span>
+                {[ad.province, ad.location].filter(Boolean).join(' · ')}
+              </span>
             </div>
           )}
           <div className="flex items-center gap-1">
@@ -434,9 +511,45 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
       {/* ── Segmento 2: Secciones del template v2 ────────────── */}
       {renderFormSections()}
 
-      {/* ── Segmento 3: Contacto + Featured Bar ──────────────── */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Contacto</h2>
+      {/* ── Segmento 3: Vendedor + Contacto ──────────────────── */}
+      <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
+        {/* Info del vendedor */}
+        {ad.seller && (
+          <div className="pb-4 border-b border-gray-100">
+            <div className="flex items-center gap-2 mb-2">
+              <User className="w-4 h-4 text-brand-600" />
+              <span className="font-semibold text-gray-900">
+                {ad.seller.full_name
+                  ? (() => {
+                      const parts = ad.seller.full_name.split(' ');
+                      return parts.length >= 2
+                        ? `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`
+                        : ad.seller.full_name;
+                    })()
+                  : 'Vendedor'}
+              </span>
+              {ad.seller.role === 'premium' && <PremiumBadge size="sm" />}
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <VerifiedBadge
+                verified={ad.seller.email_verified ?? false}
+                size="sm"
+                showLabel
+              />
+              {ad.seller.created_at && (
+                <span className="text-xs text-gray-500">
+                  Miembro desde{' '}
+                  {new Date(ad.seller.created_at).toLocaleDateString('es-AR', {
+                    year: 'numeric',
+                    month: 'long',
+                  })}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        <h2 className="text-xl font-semibold text-gray-900">Contacto</h2>
         <ContactVendorButton
           adId={ad.id}
           adOwnerId={ad.user_id}
@@ -445,12 +558,39 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId }) => {
         />
       </div>
 
+      {/* ── Segmento 4: Featured Bar ──────────────────────────── */}
       <UserFeaturedAdsBar
         categoryId={ad.category_id}
         placement="detail"
         excludeAdId={ad.id}
         className="mt-2"
       />
+
+      {/* ── Segmento 5: Otros avisos del vendedor ─────────────── */}
+      {(loadingOtherAds || sellerOtherAds.length > 0) && (
+        <div className="bg-gray-50 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-1">
+            Más avisos de este vendedor
+          </h2>
+          {loadingOtherAds ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600" />
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-gray-500 mb-4">
+                {sellerOtherAds.length}{' '}
+                {sellerOtherAds.length === 1 ? 'aviso disponible' : 'avisos disponibles'}
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {sellerOtherAds.map((otherAd) => (
+                  <ProductCard key={otherAd.id} product={otherAd} variant="compact" showProvince />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };
