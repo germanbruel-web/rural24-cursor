@@ -8,7 +8,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Send, ChevronLeft, Loader2 } from 'lucide-react';
+import { X, Send, ChevronLeft, Loader2, AlertTriangle } from 'lucide-react';
 import { useMessages } from '../../hooks/useMessages';
 import type { ChatChannel } from '../../services/chatService';
 
@@ -24,9 +24,19 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   onClose,
 }) => {
   const { messages, loading, sending, send } = useMessages(channel.id, currentUserId);
-  const [input, setInput]     = useState('');
-  const messagesEndRef         = useRef<HTMLDivElement>(null);
-  const inputRef               = useRef<HTMLTextAreaElement>(null);
+  const [input, setInput]         = useState('');
+  const [sensitiveWarning, setSensitiveWarning] = useState(false);
+  const messagesEndRef             = useRef<HTMLDivElement>(null);
+  const inputRef                   = useRef<HTMLTextAreaElement>(null);
+
+  const SENSITIVE_RE = [
+    /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/,
+    /(\+?54[\s\-.]?)?(\(?\d{2,4}\)?)[\s\-.]?\d{4}[\s\-.]?\d{4}/,
+    /https?:\/\/\S+/i,
+    /\b(whatsapp|wsp|telegram|instagram|facebook|mercadolibre|mercadopago|tiktok|signal)\b/i,
+  ];
+
+  const hasSensitive = (text: string) => SENSITIVE_RE.some((re) => re.test(text));
 
   const isBuyer      = currentUserId === channel.buyer_id;
   const otherUser    = isBuyer ? channel.seller : channel.buyer;
@@ -43,10 +53,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    setSensitiveWarning(hasSensitive(e.target.value));
+  };
+
   const handleSend = async () => {
     const text = input.trim();
     if (!text || sending) return;
     setInput('');
+    setSensitiveWarning(false);
     await send(text);
   };
 
@@ -180,10 +196,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         <div className="flex items-end gap-2 px-3 py-3 border-t border-gray-100 bg-white flex-shrink-0"
           style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
         >
+          {sensitiveWarning && (
+            <div className="flex items-start gap-2 px-3 py-2 mb-1 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700">
+              <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+              <span>Tu mensaje contiene datos de contacto que serán ocultados automáticamente.</span>
+            </div>
+          )}
           <textarea
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             rows={1}
             placeholder="Escribí un mensaje..."
