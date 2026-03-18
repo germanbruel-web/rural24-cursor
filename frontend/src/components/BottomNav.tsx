@@ -93,11 +93,16 @@ export const BottomNav: React.FC = () => {
         onClick={() => navigateTo(path)}
         className={`
           flex-1 flex flex-col items-center justify-center gap-1.5 pt-1
-          transition-colors active:scale-95
-          ${isActive ? 'text-brand-600' : 'text-gray-400'}
+          transition-all active:scale-95
+          ${isActive ? 'text-brand-600' : 'text-gray-400 hover:text-brand-400'}
         `}
       >
-        <Icon size={22} strokeWidth={isActive ? 2.2 : 1.6} />
+        <div className={`
+          p-1.5 rounded-xl transition-all duration-200
+          ${isActive ? 'bg-brand-50 scale-105' : 'hover:bg-brand-50/60'}
+        `}>
+          <Icon size={22} strokeWidth={isActive ? 2.2 : 1.6} />
+        </div>
         <span className="text-[10px] font-medium leading-none tracking-wide">{label}</span>
       </button>
     );
@@ -141,14 +146,17 @@ export const BottomNav: React.FC = () => {
           onClick={() => navigateTo('/inbox')}
           className={`
             flex-1 flex flex-col items-center justify-center gap-1.5 pt-1
-            transition-colors active:scale-95
-            ${activeTab === 'inbox' ? 'text-brand-600' : 'text-gray-400'}
+            transition-all active:scale-95
+            ${activeTab === 'inbox' ? 'text-brand-600' : 'text-gray-400 hover:text-brand-400'}
           `}
         >
-          <div className="relative">
+          <div className={`
+            relative p-1.5 rounded-xl transition-all duration-200
+            ${activeTab === 'inbox' ? 'bg-brand-50 scale-105' : 'hover:bg-brand-50/60'}
+          `}>
             <MessageCircle size={22} strokeWidth={activeTab === 'inbox' ? 2.2 : 1.6} />
             {chatUnread > 0 && (
-              <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 flex items-center justify-center bg-brand-600 text-white text-[9px] font-bold rounded-full px-1 leading-none">
+              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center bg-brand-600 text-white text-[9px] font-bold rounded-full px-1 leading-none">
                 {chatUnread > 9 ? '9+' : chatUnread}
               </span>
             )}
@@ -162,14 +170,17 @@ export const BottomNav: React.FC = () => {
             onClick={() => setBellOpen(prev => !prev)}
             className={`
               flex flex-col items-center gap-1.5
-              transition-colors active:scale-95
-              ${bellOpen ? 'text-brand-600' : 'text-gray-400'}
+              transition-all active:scale-95
+              ${bellOpen ? 'text-brand-600' : 'text-gray-400 hover:text-brand-400'}
             `}
           >
-            <div className="relative">
+            <div className={`
+              relative p-1.5 rounded-xl transition-all duration-200
+              ${bellOpen ? 'bg-brand-50 scale-105' : 'hover:bg-brand-50/60'}
+            `}>
               <Bell size={22} strokeWidth={bellOpen ? 2.2 : 1.6} />
               {bellUnread > 0 && (
-                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full px-1 leading-none">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full px-1 leading-none">
                   {bellUnread > 9 ? '9+' : bellUnread}
                 </span>
               )}
