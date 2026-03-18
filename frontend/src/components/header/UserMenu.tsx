@@ -3,13 +3,15 @@
  * Menú de usuario - Design System RURAL24
  *
  * - No autenticado: Links de Login/Registro
- * - Autenticado: Iconos de acceso rápido + AccountSwitcher (dropdown unificado)
+ * - Autenticado: Campanita | Chat overlay | AccountSwitcher
  */
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { AccountSwitcher } from './AccountSwitcher';
-import { Heart, MessageSquare } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
+import { NotificationBell } from '../notifications/NotificationBell';
+import { ChatList } from '../chat/ChatList';
 import type { Page } from '../../../App';
 
 interface UserMenuProps {
@@ -20,6 +22,20 @@ interface UserMenuProps {
 
 export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, onShowAuthModal, onShowRegisterModal }) => {
   const { user } = useAuth();
+  const [showChat, setShowChat] = useState(false);
+  const chatRef = useRef<HTMLDivElement>(null);
+
+  // Cerrar chat al hacer click fuera
+  useEffect(() => {
+    if (!showChat) return;
+    const handler = (e: MouseEvent) => {
+      if (chatRef.current && !chatRef.current.contains(e.target as Node)) {
+        setShowChat(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showChat]);
 
   if (!user) {
     return (
@@ -45,21 +61,33 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, onShowAuthModal,
     <div className="flex items-center gap-3">
       {/* Iconos de acceso rápido (desktop) */}
       <div className="hidden lg:flex items-center gap-1">
-        <button
-          onClick={() => onNavigate('my-ads')}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-          title="Mis avisos"
-        >
-          <Heart className="w-5 h-5" />
-        </button>
 
-        <button
-          onClick={() => onNavigate('inbox')}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-          title="Mensajes"
-        >
-          <MessageSquare className="w-5 h-5" />
-        </button>
+        {/* Campanita — reemplaza Favoritos */}
+        <NotificationBell />
+
+        {/* Chat — abre overlay inline */}
+        <div ref={chatRef} className="relative">
+          <button
+            onClick={() => setShowChat(prev => !prev)}
+            className={`p-2 rounded-lg transition-colors ${
+              showChat
+                ? 'text-brand-600 bg-brand-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+            title="Chat"
+          >
+            <MessageSquare className="w-5 h-5" />
+          </button>
+
+          {showChat && (
+            <div className="absolute right-0 top-full mt-2 z-50 w-[380px] max-h-[520px] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-200">
+              <ChatList
+                currentUserId={user.id}
+                onClose={() => setShowChat(false)}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Separador */}

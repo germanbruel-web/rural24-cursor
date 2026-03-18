@@ -27,7 +27,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { canAccessPage } from '../../utils/rolePermissions';
 import { useSiteSetting } from '../../hooks/useSiteSetting';
 import AuthModal from '../auth/AuthModal';
-import { NotificationBell } from '../notifications/NotificationBell';
 import type { Page } from '../../../App';
 
 interface HeaderNewProps {
@@ -150,11 +149,6 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
 
             {/* Derecha */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-
-              {/* Campanita notificaciones — solo autenticado, desktop */}
-              <div className="hidden sm:block">
-                <NotificationBell />
-              </div>
 
               {/* CTA "Publicar Aviso Gratis" - Solo Desktop */}
               <button

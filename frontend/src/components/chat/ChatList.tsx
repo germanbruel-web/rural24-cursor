@@ -13,6 +13,7 @@ import { getFirstImage } from '../../utils/imageHelpers';
 
 interface ChatListProps {
   currentUserId: string;
+  onClose?: () => void;
 }
 
 export const ChatList: React.FC<ChatListProps> = ({ currentUserId }) => {
