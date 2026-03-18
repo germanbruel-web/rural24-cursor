@@ -15,7 +15,6 @@ export { Footer } from './Footer';
 export { HeroWithCarousel } from './HeroWithCarousel';
 export { FilterSidebar } from './FilterSidebar';
 export { SearchResultsPageMinimal } from './SearchResultsPageMinimal';
-export { AdDetailPage } from './AdDetailPage';
 export { RegisterBanner } from './RegisterBanner';
 // AdvancedSearchBar DEPRECATED - usar GlobalSearchBar
 export { DesignSystemShowcase } from './DesignSystemShowcase';

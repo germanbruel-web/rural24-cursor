@@ -113,7 +113,7 @@ export const ContactVendorButton: React.FC<ContactVendorButtonProps> = ({
           disabled={!canSendContact}
           className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-colors ${
             canSendContact
-              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+              ? 'bg-brand-600 hover:bg-brand-700 text-white'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
@@ -201,7 +201,7 @@ export const ContactVendorButton: React.FC<ContactVendorButtonProps> = ({
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     placeholder="Juan Pérez"
                   />
                 </div>
@@ -215,7 +215,7 @@ export const ContactVendorButton: React.FC<ContactVendorButtonProps> = ({
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     placeholder="juan@ejemplo.com"
                   />
                 </div>
@@ -229,7 +229,7 @@ export const ContactVendorButton: React.FC<ContactVendorButtonProps> = ({
                     value={formData.phone}
                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     placeholder="+54 9 11 1234-5678"
                   />
                 </div>
@@ -243,7 +243,7 @@ export const ContactVendorButton: React.FC<ContactVendorButtonProps> = ({
                     onChange={e => setFormData({ ...formData, message: e.target.value })}
                     required
                     rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
                     placeholder="Escribe tu consulta aquí..."
                   />
                 </div>
@@ -259,7 +259,7 @@ export const ContactVendorButton: React.FC<ContactVendorButtonProps> = ({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <>

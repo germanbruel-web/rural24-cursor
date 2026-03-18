@@ -92,6 +92,7 @@ export function getNotificationMeta(type: string): { icon: string; color: string
     aviso_publicado:       { icon: '✅', color: 'text-brand-600' },
     aviso_expirado:        { icon: '❌', color: 'text-red-500' },
     nuevo_contacto:        { icon: '💬', color: 'text-blue-500' },
+    nuevo_mensaje_chat:    { icon: '💬', color: 'text-brand-600' },
     cupon_canjeado:        { icon: '🎁', color: 'text-purple-500' },
     nuevo_aviso_favorito:  { icon: '❤️', color: 'text-rose-500' },
   };

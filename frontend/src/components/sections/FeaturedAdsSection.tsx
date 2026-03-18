@@ -12,7 +12,6 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { getFeaturedForHomepage } from '../../services/userFeaturedService';
 import { getCategoryCarouselBanners } from '../../services/bannersCleanService';
-import { useCategories } from '../../contexts/CategoryContext';
 import { ProductCard } from '../organisms/ProductCard';
 import { SubcategoriesExpressBar } from './SubcategoriesExpressBar';
 import { CategoryBannerSlider } from './CategoryBannerSlider';
@@ -87,23 +86,17 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
   const [recentOffset, setRecentOffset] = useState(0);
   const recentCarouselRef = useRef<HTMLDivElement>(null);
 
-  const { categories: contextCategories } = useCategories();
-
   // ─── Cargar categorías + destacados ──────────────────────────────────────
   const loadFeaturedAds = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const categories = contextCategories.length > 0 ? contextCategories : [];
-
-      if (categories.length === 0) {
-        const { data: catsData } = await supabase
-          .from('categories')
-          .select('id, name, display_name, slug')
-          .eq('is_active', true)
-          .order('sort_order');
-        categories.push(...(catsData || []) as any[]);
-      }
+      const { data: catsData } = await supabase
+        .from('categories')
+        .select('id, name, display_name, slug')
+        .eq('is_active', true)
+        .order('sort_order');
+      const categories: any[] = catsData || [];
 
       const categoriesWithData = await Promise.all(
         categories.map(async (cat) => {
@@ -181,7 +174,7 @@ export const FeaturedAdsSection: React.FC<FeaturedAdsSectionProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [maxAdsPerCategory, contextCategories]);
+  }, [maxAdsPerCategory]);
 
   useEffect(() => {
     loadFeaturedAds();
