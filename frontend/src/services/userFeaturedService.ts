@@ -462,11 +462,15 @@ export async function getFeaturedForHomepage(
     const adIds = featuredIds.map((f: any) => f.ad_id);
     const { data: ads, error: adsError } = await supabase
       .from('ads')
-      .select('*, categories(name, slug)')
+      .select('*')
       .in('id', adIds);
 
     if (adsError) {
       return { data: [], error: adsError };
+    }
+
+    if (!ads || ads.length === 0) {
+      return { data: [], error: null };
     }
 
     // Mantener el orden FIFO
