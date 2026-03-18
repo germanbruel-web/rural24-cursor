@@ -7,7 +7,6 @@ import {
   Settings, Hash, DollarSign, List, Loader2,
 } from 'lucide-react';
 import { normalizeImages, getFirstImage, type NormalizedImage } from '../../utils/imageHelpers';
-import { ContactVendorButton } from '../ContactVendorButton';
 import { UserFeaturedAdsBar } from '../sections/UserFeaturedAdsBar';
 import { VerticalThumbnailCarousel } from '../molecules/VerticalThumbnailCarousel/VerticalThumbnailCarousel';
 
@@ -224,7 +223,6 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
     if (!ad) return;
     loadFormAndLabels(ad);
     loadSellerOtherAds(ad.user_id, ad.id);
-    setContactMessage('Hola, me interesa. ¿Está disponible?');
   }, [ad?.id]);
 
   const loadAd = async () => {
@@ -833,13 +831,8 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
             </div>
 
             {/* CTA mobile */}
-            <div ref={mobileCTARef} id="mobile-cta" className="lg:hidden space-y-3">
-              <ContactVendorButton
-                adId={ad.id}
-                adOwnerId={ad.user_id}
-                adTitle={ad.title}
-                vendorPhone={ad.phone}
-              />
+            <div ref={mobileCTARef} id="mobile-cta" className="lg:hidden">
+              {renderSidebarContactForm()}
             </div>
 
             {/* Secciones dinámicas */}
