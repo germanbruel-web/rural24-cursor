@@ -51,14 +51,12 @@ const INITIAL_FORM: BannerFormData = {
   is_active: true
 };
 
-// Categorías reales del sistema (SINCRONIZADO con tabla categories en BD — Sprint 3G)
-// normalizeForComparison() en bannersCleanService compara sin acentos/espacios/mayúsculas
-const CATEGORIES = [
-  { value: 'all', label: 'Todas las Categorías' },
-  { value: 'ganaderia', label: 'Ganadería' },
-  { value: 'agricultura', label: 'Agricultura' },
-  { value: 'maquinarias', label: 'Maquinarias' },
-];
+interface CategoryOption {
+  value: string;   // slug — lo que se guarda en banners_clean.category
+  label: string;   // display_name para mostrar en UI
+}
+
+const ALL_categories_OPTION: CategoryOption = { value: 'all', label: 'Todas las Categorías' };
 
 const PLACEMENTS = [
   { value: 'hero_vip' as BannerPlacement, label: 'Hero VIP', desc: '1 por categoría (Desktop 1100x200 + Mobile 480x100)' },
@@ -78,11 +76,29 @@ export default function BannersCleanPanel() {
   const [showModal, setShowModal] = useState(false);
   const [editingBanner, setEditingBanner] = useState<BannerClean | null>(null);
   const [formData, setFormData] = useState<BannerFormData>(INITIAL_FORM);
+  const [categories, setCategories] = useState<CategoryOption[]>([ALL_categories_OPTION]);
 
   // Filtros
   const [filterPlacement, setFilterPlacement] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+
+  // Cargar categorías desde DB (fuente de verdad — no hardcoded)
+  useEffect(() => {
+    supabase
+      .from('categories')
+      .select('slug, display_name')
+      .eq('is_active', true)
+      .order('sort_order')
+      .then(({ data }) => {
+        if (data?.length) {
+          setCategories([
+            ALL_categories_OPTION,
+            ...data.map(c => ({ value: c.slug, label: c.display_name })),
+          ]);
+        }
+      });
+  }, []);
 
   // Cargar banners
   useEffect(() => {
@@ -281,7 +297,7 @@ export default function BannersCleanPanel() {
                 onChange={(e) => setFilterCategory(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
               >
-                {CATEGORIES.map(cat => (
+                {categories.map(cat => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
                 ))}
               </select>
@@ -355,7 +371,7 @@ export default function BannersCleanPanel() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {CATEGORIES.find(c => c.value === banner.category)?.label || banner.category}
+                      {categories.find(c => c.value === banner.category)?.label || banner.category}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900 font-medium">
                       {banner.client_name}
@@ -478,7 +494,7 @@ export default function BannersCleanPanel() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     required
                   >
-                    {CATEGORIES.map(cat => (
+                    {categories.map(cat => (
                       <option key={cat.value} value={cat.value}>{cat.label}</option>
                     ))}
                   </select>

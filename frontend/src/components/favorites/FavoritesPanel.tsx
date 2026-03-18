@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Heart, Bell, BellOff, Trash2, ExternalLink, Tag } from 'lucide-react';
+import { Heart, Bell, Trash2, ExternalLink, Tag, MapPin } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   getFavoriteAds,
@@ -17,8 +17,6 @@ import {
   type FavoriteSubcategory,
 } from '../../services/favoritesService';
 import { navigateTo } from '../../hooks/useNavigate';
-import { getImageVariant } from '../../utils/imageOptimizer';
-import { DEFAULT_PLACEHOLDER_IMAGE } from '../../constants/defaultImages';
 
 type Tab = 'avisos' | 'categorias';
 
@@ -121,57 +119,50 @@ export const FavoritesPanel: React.FC = () => {
             </div>
           )}
 
-          <div className="space-y-3">
+          <div className="divide-y divide-gray-100">
             {ads.map(fav => {
               const ad = fav.ad;
-              const img = getImageVariant(
-                (ad.images?.[0]) || DEFAULT_PLACEHOLDER_IMAGE,
-                'card'
-              );
               return (
                 <div
                   key={fav.id}
-                  className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 hover:border-brand-300 transition-colors"
+                  className="flex items-center gap-3 py-3 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors"
                 >
-                  {/* Imagen */}
-                  <img
-                    src={img}
-                    alt={ad.title}
-                    className="w-16 h-16 object-cover rounded-lg flex-shrink-0 bg-gray-100"
-                    onError={e => { (e.target as HTMLImageElement).src = DEFAULT_PLACEHOLDER_IMAGE; }}
-                  />
-
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{ad.title}</p>
-                    <p className="text-xs text-brand-600 font-bold mt-0.5">
-                      {formatPrice(ad.price, ad.currency)}
-                    </p>
-                    {ad.province && (
-                      <p className="text-xs text-gray-400 mt-0.5">{ad.province}</p>
-                    )}
-                    {ad.status !== 'active' && (
-                      <span className="inline-block mt-1 px-1.5 py-0.5 text-[10px] bg-amber-100 text-amber-700 rounded font-medium">
-                        No disponible
+                    <p className="text-sm font-semibold text-gray-900 truncate leading-snug">{ad.title}</p>
+                    <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                      <span className="text-xs font-bold text-brand-600">
+                        {formatPrice(ad.price, ad.currency)}
                       </span>
-                    )}
+                      {ad.province && (
+                        <span className="flex items-center gap-1 text-xs text-gray-400">
+                          <MapPin size={11} />
+                          {ad.province}
+                        </span>
+                      )}
+                      {ad.status !== 'active' && (
+                        <span className="px-1.5 py-0.5 text-[10px] bg-amber-100 text-amber-700 rounded font-medium">
+                          No disponible
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Acciones */}
-                  <div className="flex flex-col gap-1.5 flex-shrink-0">
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <button
                       onClick={() => navigateTo(`/ad/${ad.slug || ad.id}`)}
                       className="p-1.5 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
                       title="Ver aviso"
                     >
-                      <ExternalLink size={15} />
+                      <ExternalLink size={14} />
                     </button>
                     <button
                       onClick={() => handleRemoveAd(fav.id, fav.ad_id)}
                       className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       title="Quitar de favoritos"
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>

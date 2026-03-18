@@ -21,6 +21,7 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
 
   // Mis avisos personales (todos los usuarios autenticados)
   'my-ads': ALL_ROLES,
+  favorites: ALL_ROLES,
   contacts: ALL_ROLES,
   inbox: ALL_ROLES,
 
@@ -123,6 +124,11 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'inbox',
     label: 'Mensajes',
+    allowedRoles: ALL_ROLES,
+  },
+  {
+    id: 'favorites',
+    label: 'Favoritos',
     allowedRoles: ALL_ROLES,
   },
   {

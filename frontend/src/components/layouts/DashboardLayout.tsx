@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   MessageSquare,
+  Heart,
   Edit3,
   Settings as SettingsIcon,
   Globe,
@@ -70,6 +71,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     'my-ads': <Package className="w-5 h-5" />,
     inbox: <MessageSquare className="w-5 h-5" />,
     'mis-empresas': <Building2 className="w-5 h-5" />,
+    favorites: <Heart className="w-5 h-5" />,
     profile: <User className="w-5 h-5" />,
     subscription: <CreditCard className="w-5 h-5" />,
     // Gestión Avisos
@@ -192,7 +194,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                     ? 'bg-amber-100 text-amber-800'
                     : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {profile?.role === 'superadmin' ? 'SuperAdmin' : profile?.plan_name || 'Free'}
+                  {profile?.role === 'superadmin' ? 'SuperAdmin' : profile?.role === 'premium' ? 'Premium' : 'Free'}
                 </span>
                 {profile?.user_type === 'empresa' && profile?.role !== 'superadmin' && (
                   <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-semibold">
@@ -269,7 +271,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   ? 'bg-amber-100 text-amber-800'
                   : 'bg-gray-100 text-gray-800'
               }`}>
-                {profile?.role === 'superadmin' ? 'SuperAdmin' : profile?.plan_name || 'Free'}
+                {profile?.role === 'superadmin' ? 'SuperAdmin' : profile?.role === 'premium' ? 'Premium' : 'Free'}
               </span>
               {profile?.user_type === 'empresa' && profile?.role !== 'superadmin' && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold">
