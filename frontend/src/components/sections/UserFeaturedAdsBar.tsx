@@ -1,16 +1,11 @@
 /**
  * UserFeaturedAdsBar - Avisos Destacados (Carrusel)
- * 
+ *
  * Muestra avisos destacados de usuarios (pago) + superadmin (manual)
- * en un carrusel de 4 cards visibles (desktop) con navegación por flechas.
- * 
- * Caracteristicas:
- * - Carrusel con 4 cards visibles en desktop, 2 en mobile, 3 en tablet
- * - Hasta 8 avisos cargados, paginados de a 4
- * - Transición suave con CSS transform
- * - Flechas prev/next elegantes
- * - Fondo brand-200, diseño sutil
- * - Design System RURAL24
+ * en un carrusel de 5 cards visibles (desktop) con navegación por flechas.
+ *
+ * Carga hasta 30 avisos por sesión en lotes de 10 ("Cargar más").
+ * El carrusel navega dentro del conjunto visible con flechas prev/next.
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -26,6 +21,10 @@ interface UserFeaturedAdsBarProps {
   excludeAdId?: string;
 }
 
+const CARDS_PER_PAGE = 5;
+const LOAD_BATCH = 10;
+const MAX_ADS = 30;
+
 export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
   categoryId,
   onViewDetail,
@@ -33,43 +32,45 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
   placement = 'results',
   excludeAdId,
 }) => {
-  const [featuredAds, setFeaturedAds] = useState<any[]>([]);
+  const [allAds, setAllAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(LOAD_BATCH);
   const [currentPage, setCurrentPage] = useState(0);
 
-  // Cards visibles por breakpoint (synced con CSS grid)
-  const CARDS_PER_PAGE = 4; // desktop
+  const featuredAds = allAds.slice(0, visibleCount);
   const totalPages = Math.ceil(featuredAds.length / CARDS_PER_PAGE);
 
   useEffect(() => {
     const loadFeatured = async () => {
       if (!categoryId) {
-        setFeaturedAds([]);
+        setAllAds([]);
         setLoading(false);
         return;
       }
 
       setLoading(true);
       const { data, error } = placement === 'detail' && excludeAdId
-        ? await getFeaturedForDetail(categoryId, excludeAdId, 8)
-        : await getFeaturedForResults(categoryId, 8, 0);
+        ? await getFeaturedForDetail(categoryId, excludeAdId, MAX_ADS)
+        : await getFeaturedForResults(categoryId, MAX_ADS, 0);
 
       if (error) {
         console.error('Error loading featured ads bar:', error);
-        setFeaturedAds([]);
+        setAllAds([]);
       } else {
-        setFeaturedAds(data || []);
+        setAllAds(data || []);
       }
       setLoading(false);
     };
 
     loadFeatured();
+    setVisibleCount(LOAD_BATCH);
+    setCurrentPage(0);
   }, [categoryId, placement, excludeAdId]);
 
-  // Reset page when ads change
+  // Reset page when visible set changes
   useEffect(() => {
     setCurrentPage(0);
-  }, [featuredAds.length]);
+  }, [visibleCount]);
 
   const goNext = useCallback(() => {
     setCurrentPage(prev => (prev + 1) % totalPages);
@@ -79,10 +80,11 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
     setCurrentPage(prev => (prev - 1 + totalPages) % totalPages);
   }, [totalPages]);
 
-  // No mostrar nada si no hay categoría
-  if (!categoryId) {
-    return null;
-  }
+  const handleLoadMore = () => {
+    setVisibleCount(prev => Math.min(prev + LOAD_BATCH, MAX_ADS));
+  };
+
+  if (!categoryId) return null;
 
   if (loading) {
     return (
@@ -93,8 +95,8 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
             <h3 className="text-sm font-semibold text-brand-700 tracking-wide uppercase">Avisos Destacados</h3>
             <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-600 ml-1" />
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map(i => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {[1, 2, 3, 4, 5].map(i => (
               <div key={i} className="bg-white/60 rounded-lg h-48 animate-pulse" />
             ))}
           </div>
@@ -103,12 +105,10 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
     );
   }
 
-  // No mostrar si no hay avisos
-  if (featuredAds.length === 0) {
-    return null;
-  }
+  if (allAds.length === 0) return null;
 
   const showArrows = featuredAds.length > CARDS_PER_PAGE;
+  const canLoadMore = visibleCount < Math.min(allAds.length, MAX_ADS);
 
   return (
     <div className={`mb-6 ${className}`}>
@@ -120,17 +120,16 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
             <h3 className="text-sm font-semibold text-brand-700 tracking-wide uppercase">Avisos Destacados</h3>
           </div>
           <div className="flex items-center gap-2">
-            {/* Dots indicator */}
             {showArrows && (
               <div className="flex items-center gap-1.5 mr-2">
                 {Array.from({ length: totalPages }).map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentPage(i)}
-                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
                       i === currentPage
                         ? 'bg-brand-600 w-3'
-                        : 'bg-brand-600/50 hover:bg-brand-500'
+                        : 'bg-brand-600/50 hover:bg-brand-500 w-1.5'
                     }`}
                     aria-label={`Página ${i + 1}`}
                   />
@@ -141,30 +140,27 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
           </div>
         </div>
 
-        {/* Carousel container */}
+        {/* Carousel */}
         <div className="relative">
-          {/* Prev arrow */}
           {showArrows && (
             <button
               onClick={goPrev}
-              className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/90 dark:bg-neutral-800/90 shadow-md rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-neutral-700 transition-colors border border-brand-300/50"
+              className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/90 shadow-md rounded-full flex items-center justify-center hover:bg-white transition-colors border border-brand-300/50"
               aria-label="Anterior"
             >
               <ChevronLeft className="w-4 h-4 text-brand-700" />
             </button>
           )}
 
-          {/* Cards viewport */}
           <div className="overflow-hidden">
             <div
               className="flex transition-transform duration-500 ease-in-out"
               style={{ transform: `translateX(-${currentPage * 100}%)` }}
             >
-              {/* Render pages */}
               {Array.from({ length: totalPages }).map((_, pageIdx) => (
                 <div
                   key={pageIdx}
-                  className="w-full flex-shrink-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+                  className="w-full flex-shrink-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
                 >
                   {featuredAds
                     .slice(pageIdx * CARDS_PER_PAGE, (pageIdx + 1) * CARDS_PER_PAGE)
@@ -203,17 +199,28 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
             </div>
           </div>
 
-          {/* Next arrow */}
           {showArrows && (
             <button
               onClick={goNext}
-              className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/90 dark:bg-neutral-800/90 shadow-md rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-neutral-700 transition-colors border border-brand-300/50"
+              className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/90 shadow-md rounded-full flex items-center justify-center hover:bg-white transition-colors border border-brand-300/50"
               aria-label="Siguiente"
             >
               <ChevronRight className="w-4 h-4 text-brand-700" />
             </button>
           )}
         </div>
+
+        {/* Cargar más */}
+        {canLoadMore && (
+          <div className="mt-3 flex justify-center">
+            <button
+              onClick={handleLoadMore}
+              className="text-xs font-semibold text-brand-700 hover:text-brand-900 bg-white/70 hover:bg-white border border-brand-300 rounded-lg px-4 py-1.5 transition-colors"
+            >
+              Cargar más
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

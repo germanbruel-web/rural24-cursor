@@ -70,6 +70,7 @@ const HeroCmsPanel = lazy(() => import("./src/components/admin/HeroCmsPanel"));
 
 // Dashboard Components (solo para usuarios autenticados)
 const MessagesPanel = lazy(() => import("./src/components/dashboard/MessagesPanel").then(m => ({ default: m.MessagesPanel })));
+const ChatList = lazy(() => import("./src/components/chat/ChatList").then(m => ({ default: m.ChatList })));
 const ProfilePanel = lazy(() => import("./src/components/dashboard/ProfilePanel").then(m => ({ default: m.ProfilePanel })));
 const SubscriptionPanel = lazy(() => import("./src/components/dashboard/SubscriptionPanel").then(m => ({ default: m.SubscriptionPanel })));
 const ReceivedContactsView = lazy(() => import("./src/components/dashboard/ReceivedContactsView").then(m => ({ default: m.ReceivedContactsView })));
@@ -205,6 +206,7 @@ const AppContent: React.FC = () => {
     // Actualizar hash para que la URL refleje la página actual
     const hashMap: Record<string, string> = {
       'my-ads': '#/my-ads',
+      'favorites': '#/favorites',
       'inbox': '#/inbox',
       'all-ads': '#/all-ads',
       'ads-management': '#/my-ads',
@@ -275,7 +277,6 @@ const AppContent: React.FC = () => {
   const [adToEdit, setAdToEdit] = useState<Ad | undefined>(undefined);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login');
-  const [showContacto, setShowContacto] = useState(false);
   
   // Estado global para el límite de avisos destacados en HomePage (desde Config Global)
   const [homepageFeaturedLimit, setHomepageFeaturedLimit] = useState<number | null>(null);
@@ -663,7 +664,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'users' && canAccessPage('users', profile?.role) && <UsersPanel />}
                 {currentPage === 'my-ads' && <MyAdsPanel />}
                 {currentPage === 'favorites' && <FavoritesPanel />}
-                {currentPage === 'inbox' && <MessagesPanel />}
+                {currentPage === 'inbox' && profile?.id && <ChatList currentUserId={profile.id} />}
                 {currentPage === 'banners' && canAccessPage('banners', profile?.role) && <BannersCleanPanel />}
                 {currentPage === 'categories-admin' && canAccessPage('categories-admin', profile?.role) && <TaxonomiaAdmin />}
                 {currentPage === 'attributes-admin' && canAccessPage('attributes-admin', profile?.role) && <FormBuilderAdmin />}
@@ -1006,10 +1007,6 @@ const AppContent: React.FC = () => {
         initialView={authModalView}
       />
 
-      {/* Drawer de Contacto Institucional */}
-      {showContacto && (
-        <ContactoDrawer onClose={() => setShowContacto(false)} />
-      )}
     </div>
   );
 };

@@ -11,6 +11,8 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Heart, Plus, MessageCircle, User } from 'lucide-react';
 import { navigateTo } from '../hooks/useNavigate';
 import { NotificationBell } from './notifications/NotificationBell';
+import { useChatBadge } from '../hooks/useChatBadge';
+import { supabase } from '../services/supabaseClient';
 
 const WIZARD_PREFIXES = ['#/publicar', '#/publicar-v3', '#/publicar-v2', '#/edit/', '#/publicar-aviso'];
 const isWizardPage = (hash: string) => WIZARD_PREFIXES.some(p => hash.startsWith(p));
@@ -28,6 +30,12 @@ const getActiveTab = (hash: string): TabId | null => {
 export const BottomNav: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId | null>(() => getActiveTab(window.location.hash));
   const [hidden,    setHidden]    = useState(() => isWizardPage(window.location.hash));
+  const [userId,    setUserId]    = useState<string | null>(null);
+  const chatUnread = useChatBadge(userId);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+  }, []);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -92,24 +100,30 @@ export const BottomNav: React.FC = () => {
           </span>
         </div>
 
-        {/* Tab Mensajes */}
-        <NavTab id="inbox"   label="Mensajes"  icon={MessageCircle} path="/inbox"   />
-
-        {/* Tab Perfil con campanita encima */}
+        {/* Tab Mensajes con badge */}
         <div className="flex-1 flex flex-col items-center justify-end pb-2.5 gap-1 relative">
-          {/* Campanita mobile — flotante sobre el perfil */}
+          {/* Campanita — flotante sobre mensajes */}
           <div className="absolute -top-3 right-1">
             <NotificationBell />
           </div>
+          <div className="relative">
+            <button
+              onClick={() => navigateTo('/inbox')}
+              className={`transition-colors active:scale-95 ${activeTab === 'inbox' ? 'text-brand-600' : 'text-gray-400'}`}
+            >
+              <MessageCircle size={21} strokeWidth={activeTab === 'inbox' ? 2 : 1.5} />
+            </button>
+            {chatUnread > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center bg-brand-600 text-white text-[9px] font-bold rounded-full px-1 leading-none">
+                {chatUnread > 9 ? '9+' : chatUnread}
+              </span>
+            )}
+          </div>
           <button
-            onClick={() => navigateTo('/profile')}
-            className={`
-              flex flex-col items-center gap-1 transition-colors active:scale-95
-              ${activeTab === 'profile' ? 'text-brand-600' : 'text-gray-400'}
-            `}
+            onClick={() => navigateTo('/inbox')}
+            className={`text-[10px] font-medium leading-none tracking-wide transition-colors ${activeTab === 'inbox' ? 'text-brand-600' : 'text-gray-400'}`}
           >
-            <User size={21} strokeWidth={activeTab === 'profile' ? 2 : 1.5} />
-            <span className="text-[10px] font-medium leading-none tracking-wide">Mi Perfil</span>
+            Mensajes
           </button>
         </div>
 
