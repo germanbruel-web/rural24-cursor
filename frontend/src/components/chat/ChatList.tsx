@@ -10,6 +10,7 @@ import { MessageCircle, Loader2, Search } from 'lucide-react';
 import { getMyChannels, type ChatChannel } from '../../services/chatService';
 import { ChatWindow } from './ChatWindow';
 import { getFirstImage } from '../../utils/imageHelpers';
+import { formatRelativeDate } from '../../utils/formatters';
 
 interface ChatListProps {
   currentUserId: string;
@@ -38,17 +39,6 @@ export const ChatList: React.FC<ChatListProps> = ({ currentUserId }) => {
     const q = search.toLowerCase();
     return !q || adTitle.includes(q) || otherName.includes(q);
   });
-
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    const now = new Date();
-    const diff = now.getTime() - d.getTime();
-    const days = Math.floor(diff / 86400000);
-    if (days === 0) return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-    if (days === 1) return 'ayer';
-    if (days < 7)  return d.toLocaleDateString('es-AR', { weekday: 'short' });
-    return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
-  };
 
   if (loading) {
     return (
@@ -127,7 +117,7 @@ export const ChatList: React.FC<ChatListProps> = ({ currentUserId }) => {
                       {other?.full_name || 'Usuario'}
                     </span>
                     <span className="text-[11px] text-gray-400 flex-shrink-0">
-                      {formatDate(ch.last_message_at)}
+                      {formatRelativeDate(ch.last_message_at)}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 truncate mt-0.5">
