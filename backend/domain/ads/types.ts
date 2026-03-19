@@ -102,7 +102,7 @@ export interface AdCreate {
 export interface AdUpdate {
   title?: string;
   description?: string;
-  price?: number;
+  price?: number | null;
   currency?: 'ARS' | 'USD';
   province?: string;
   city?: string | null;
@@ -111,7 +111,15 @@ export interface AdUpdate {
   images?: AdImage[];
   contact_phone?: string | null;
   contact_email?: string | null;
-  status?: 'draft' | 'active' | 'inactive';
+  status?: 'draft' | 'active' | 'paused' | 'sold' | 'deleted';
+  subcategory_id?: string;
+  brand_id?: string | null;
+  model_id?: string | null;
+  business_profile_id?: string | null;
+  locality_id?: string | null;
+  price_unit?: string | null;
+  price_negotiable?: boolean;
+  ad_type?: 'product' | 'service';
 }
 
 export interface AdFilters {

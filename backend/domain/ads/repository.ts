@@ -103,6 +103,30 @@ export class AdsRepository {
   }
 
   /**
+   * Obtener anuncio por slug
+   */
+  async getAdBySlug(slug: string): Promise<Result<Ad, DatabaseError | NotFoundError>> {
+    try {
+      const { data, error } = await this.supabase
+        .from('ads')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return Result.fail(new NotFoundError(`Ad with slug ${slug} not found`));
+        }
+        return Result.fail(new DatabaseError(`Error fetching ad by slug: ${error.message}`));
+      }
+
+      return Result.ok(data as Ad);
+    } catch (error) {
+      return Result.fail(new DatabaseError(`Unexpected error fetching ad by slug: ${error}`));
+    }
+  }
+
+  /**
    * Obtener lista de anuncios con filtros
    */
   async getAds(filters: AdFilters = {}): Promise<Result<AdListResponse, DatabaseError>> {

@@ -152,10 +152,30 @@ export class AdsService {
   }
 
   /**
-   * Obtener anuncio por ID
+   * Obtener anuncio por ID o slug, con control de visibilidad
    */
-  async getAdById(id: string): Promise<Result<Ad, DatabaseError | NotFoundError>> {
-    return this.adsRepo.getAdById(id);
+  async getAdById(
+    idOrSlug: string,
+    userId?: string,
+    isSuperadmin?: boolean
+  ): Promise<Result<Ad, DatabaseError | NotFoundError | ValidationError>> {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+
+    const result = isUuid
+      ? await this.adsRepo.getAdById(idOrSlug)
+      : await this.adsRepo.getAdBySlug(idOrSlug);
+
+    if (result.isFailure) {
+      return Result.fail(result.error);
+    }
+
+    const ad = result.value;
+
+    if (ad.status !== 'active' && ad.user_id !== userId && !isSuperadmin) {
+      return Result.fail(new NotFoundError(`Ad not found`));
+    }
+
+    return Result.ok(ad);
   }
 
   /**
@@ -166,24 +186,39 @@ export class AdsService {
   }
 
   /**
-   * Actualizar anuncio
+   * Actualizar anuncio con verificación de ownership
    */
   async updateAd(
     id: string,
-    data: AdUpdate
+    data: AdUpdate,
+    userId: string,
+    isSuperadmin: boolean
   ): Promise<Result<Ad, ValidationError | DatabaseError | NotFoundError>> {
-    // Si se actualizan atributos, validar
-    if (data.attributes) {
-      const adResult = await this.adsRepo.getAdById(id);
-      if (adResult.isFailure) {
-        return Result.fail(adResult.error);
-      }
+    const adResult = await this.adsRepo.getAdById(id);
+    if (adResult.isFailure) {
+      return Result.fail(adResult.error);
+    }
 
-      const ad = adResult.value;
+    const ad = adResult.value;
+
+    if (ad.user_id !== userId && !isSuperadmin) {
+      return Result.fail(new NotFoundError(`Ad not found`));
+    }
+
+    // Campos protegidos: eliminar si vinieran en el payload
+    const { ...cleanData } = data as any;
+    delete cleanData.user_id;
+    delete cleanData.created_at;
+    delete cleanData.short_id;
+    delete cleanData.slug;
+
+    // Si se actualizan atributos, validar contra la subcategoría
+    const subcategoryIdForValidation = cleanData.subcategory_id || ad.subcategory_id;
+    if (cleanData.attributes) {
       const attributesValidation = await this.validateDynamicAttributes(
-        ad.subcategory_id,
-        data.attributes,
-        true // isUpdate = true, permite updates parciales sin validar campos requeridos
+        subcategoryIdForValidation,
+        cleanData.attributes,
+        true
       );
 
       if (attributesValidation.isFailure) {
@@ -191,8 +226,7 @@ export class AdsService {
       }
     }
 
-    // Validaciones opcionales
-    if (data.title && data.title.trim().length < 10) {
+    if (cleanData.title && cleanData.title.trim().length < 10) {
       return Result.fail(
         new ValidationError('El título debe tener al menos 10 caracteres', {
           title: ['Título muy corto'],
@@ -200,7 +234,7 @@ export class AdsService {
       );
     }
 
-    if (data.description && data.description.trim().length < 50) {
+    if (cleanData.description && cleanData.description.trim().length < 50) {
       return Result.fail(
         new ValidationError('La descripción debe tener al menos 50 caracteres', {
           description: ['Descripción muy corta'],
@@ -208,21 +242,28 @@ export class AdsService {
       );
     }
 
-    if (data.price !== undefined && data.price <= 0) {
-      return Result.fail(
-        new ValidationError('El precio debe ser mayor a 0', {
-          price: ['Precio inválido'],
-        })
-      );
-    }
-
-    return this.adsRepo.updateAd(id, data);
+    return this.adsRepo.updateAd(id, cleanData as AdUpdate);
   }
 
   /**
-   * Eliminar anuncio (soft delete)
+   * Eliminar anuncio (soft delete) con verificación de ownership
    */
-  async deleteAd(id: string): Promise<Result<void, DatabaseError | NotFoundError>> {
+  async deleteAd(
+    id: string,
+    userId: string,
+    isSuperadmin: boolean
+  ): Promise<Result<void, DatabaseError | NotFoundError>> {
+    const adResult = await this.adsRepo.getAdById(id);
+    if (adResult.isFailure) {
+      return Result.fail(adResult.error);
+    }
+
+    const ad = adResult.value;
+
+    if (ad.user_id !== userId && !isSuperadmin) {
+      return Result.fail(new NotFoundError(`Ad not found`));
+    }
+
     return this.adsRepo.deleteAd(id);
   }
 
