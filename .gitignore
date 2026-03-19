@@ -56,3 +56,4 @@ database/snapshots/
 
 # Vite PWA dev artifacts (generados en runtime)
 frontend/dev-dist/
+.claude/worktrees/
