@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(powershell.exe:*)",
-      "Bash(npx tsc --noEmit)"
+      "Bash(npx tsc --noEmit)",
+      "Bash(node db-run-migrations.mjs prod 20260314)",
+      "Bash(node scripts/db-run-migrations.mjs prod 20260314000005 20260314000006)"
     ]
   }
 }

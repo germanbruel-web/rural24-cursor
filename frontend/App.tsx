@@ -91,7 +91,6 @@ const CompanyProfilePage = lazy(() => import("./src/components/empresa/CompanyPr
 const EmpresaPublicPage = lazy(() => import("./src/components/pages/EmpresaPublicPage").then(m => ({ default: m.EmpresaPublicPage })));
 
 // Dev/Test Pages (solo desarrollo - bloqueadas en producción)
-const TestDynamicForm = import.meta.env.DEV ? lazy(() => import("./src/pages/TestDynamicForm").then(m => ({ default: m.TestDynamicForm }))) : null;
 const APITestPage = import.meta.env.DEV ? lazy(() => import("./src/pages/APITest")) : null;
 const DiagnosticsPage = import.meta.env.DEV ? lazy(() => import("./src/pages/DiagnosticsPage").then(m => ({ default: m.DiagnosticsPage }))) : null;
 const DesignSystemShowcaseSimple = lazy(() => import("./src/components/DesignSystemShowcaseSimple").then(m => ({ default: m.DesignSystemShowcaseSimple })));
@@ -810,30 +809,6 @@ const AppContent: React.FC = () => {
           onClose={() => setShowAuthModal(false)}
           initialView={authModalView}
         />
-      </div>
-    );
-  }
-
-  // Página de prueba: Formulario Dinámico (solo dev)
-  if (currentPage === 'test-form') {
-    if (!import.meta.env.DEV || !TestDynamicForm) {
-      navigateToPage('home');
-      return null;
-    }
-    return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <AppHeader 
-          onNavigate={(page) => {
-            navigateToPage(page);
-            if (page === 'home') {
-              handleBackToHome();
-            }
-          }}
-          onSearch={handleSearch}
-        />
-        <Suspense fallback={<LoadingFallback />}>
-          <TestDynamicForm />
-        </Suspense>
       </div>
     );
   }
