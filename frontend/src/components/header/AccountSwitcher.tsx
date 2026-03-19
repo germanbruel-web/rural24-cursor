@@ -4,7 +4,8 @@
  * Elimina el segundo ChevronDown de UserMenu.
  */
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { useClickOutside } from '../../hooks/useClickOutside';
 import {
   Building2, ChevronDown, Check, Plus,
   Package, MessageSquare, User, LogOut, LayoutDashboard,
@@ -26,14 +27,7 @@ export const AccountSwitcher: React.FC<AccountSwitcherProps> = ({ onNavigate, co
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+  useClickOutside(ref, () => setOpen(false), open);
 
   if (!user) return null;
 

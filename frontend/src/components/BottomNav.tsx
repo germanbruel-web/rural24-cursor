@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useClickOutside } from '../hooks/useClickOutside';
 import { FileText, Heart, Plus, MessageCircle, Bell } from 'lucide-react';
 import { navigateTo } from '../hooks/useNavigate';
 import { useChatBadge } from '../hooks/useChatBadge';
@@ -57,16 +58,7 @@ export const BottomNav: React.FC = () => {
     return () => { ch.unsubscribe(); };
   }, [user]);
 
-  useEffect(() => {
-    if (!bellOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (bellPanelRef.current && !bellPanelRef.current.contains(e.target as Node)) {
-        setBellOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [bellOpen]);
+  useClickOutside(bellPanelRef, () => setBellOpen(false), bellOpen);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));

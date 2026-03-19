@@ -6,13 +6,14 @@
  * - Autenticado: Campanita | Chat overlay | AccountSwitcher
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { AccountSwitcher } from './AccountSwitcher';
 import { MessageSquare } from 'lucide-react';
 import { NotificationBell } from '../notifications/NotificationBell';
 import { ChatList } from '../chat/ChatList';
 import type { Page } from '../../../App';
+import { useClickOutside } from '../../hooks/useClickOutside';
 
 interface UserMenuProps {
   onNavigate: (page: Page) => void;
@@ -25,17 +26,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onNavigate, onShowAuthModal,
   const [showChat, setShowChat] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
 
-  // Cerrar chat al hacer click fuera
-  useEffect(() => {
-    if (!showChat) return;
-    const handler = (e: MouseEvent) => {
-      if (chatRef.current && !chatRef.current.contains(e.target as Node)) {
-        setShowChat(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showChat]);
+  useClickOutside(chatRef, () => setShowChat(false), showChat);
 
   if (!user) {
     return (

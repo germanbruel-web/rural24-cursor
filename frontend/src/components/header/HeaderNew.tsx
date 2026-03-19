@@ -19,6 +19,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useClickOutside } from '../../hooks/useClickOutside';
 import { PlusCircle, Clock, User, LogOut, Settings, Star, Search, ChevronDown, HelpCircle, Briefcase, Tag } from 'lucide-react';
 import { TopNav } from './TopNav';
 import { GlobalSearchBar } from '../GlobalSearchBar';
@@ -58,8 +59,6 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
 
   // Manejar búsqueda
   const handleSearch = (query: string) => {
-    console.log('Búsqueda:', query);
-    
     // La navegación ya la maneja GlobalSearchBar internamente
     // Solo trigger callback si existe
     if (onSearch) {
@@ -97,18 +96,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
     }
   };
 
-  // Cerrar dropdown mobile al hacer clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (mobileUserMenuRef.current && !mobileUserMenuRef.current.contains(event.target as Node)) {
-        setShowMobileUserMenu(false);
-      }
-    };
-    if (showMobileUserMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMobileUserMenu]);
+  useClickOutside(mobileUserMenuRef, () => setShowMobileUserMenu(false), showMobileUserMenu);
 
   return (
     <>
