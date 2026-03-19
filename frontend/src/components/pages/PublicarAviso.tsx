@@ -28,7 +28,6 @@ import {
   Sparkles,
   Loader,
 } from 'lucide-react';
-import { Building2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getCategories, getSubcategories, getFormForContext } from '../../services/v2/formsService';
 import type { Category, Subcategory, PriceConfig } from '../../types/v2';
@@ -41,8 +40,8 @@ import AuthModal from '../auth/AuthModal';
 import { adsApi } from '../../services/api';
 import { uploadsApi } from '../../services/api';
 import type { UploadedImage } from '../SimpleImageUploader/SimpleImageUploader';
-import { useEditMode } from './publicar-aviso/hooks/useEditMode';
-import { useWizardValidation } from './publicar-aviso/hooks/useWizardValidation';
+import { validateTitle, validateDescription } from '../../utils/contentValidator';
+import type { ValidationResult } from '../../utils/contentValidator';
 import { DraftManager, updateDraftURL, parseDraftURL, type DraftState } from '../../utils/draftManager';
 import { navigateTo } from '../../hooks/useNavigate';
 
@@ -56,9 +55,8 @@ import { AutoSaveIndicator } from '../molecules/AutoSaveIndicator';
 import { getWizardConfig, DEFAULT_STEPS, type WizardStep } from '../../services/v2/wizardConfigService';
 import { BlockRenderer } from '../wizard/BlockRenderer';
 import type { WizardBlockProps } from '../wizard/wizardTypes';
-import { ProfileGate } from '../dashboard/ProfileGate';
-import { getMyCompanies } from '../../services/empresaService';
 import { useAccount } from '../../contexts/AccountContext';
+import { CategorySelector } from './publicar-aviso/CategorySelector';
 
 // ====================================================================
 // WIZARD STEPS — icono map para config dinámica
@@ -82,14 +80,10 @@ export default function PublicarAviso() {
   // Modal de autenticación
   const [showAuthModal, setShowAuthModal] = useState(false);
   
-  // Categoría expandida (para accordion)
+  // Categoría expandida (para edit mode — pre-seleccionar acordeón)
   const [expandedCategory, setExpandedCategory] = useState<string>('');
-  // L2 expandida en Step 1 para mostrar hijos L3
+  // L2 expandida en edit mode — para pre-abrir el accordion del nivel L2
   const [expandedL2Sub, setExpandedL2Sub] = useState<string>('');
-  // Nivel de navegación drill-down en mobile (Step 1)
-  const [mobileNavLevel, setMobileNavLevel] = useState<1 | 2 | 3>(1);
-  // Dirección de animación para drill-down mobile
-  const [drillDirection, setDrillDirection] = useState<'forward' | 'back'>('forward');
   
   // Grupo de atributos expandido (Step 2 - solo uno abierto a la vez)
   const [expandedAttributeGroup, setExpandedAttributeGroup] = useState<string>('');
@@ -98,6 +92,8 @@ export default function PublicarAviso() {
   const [completedGroups, setCompletedGroups] = useState<Set<string>>(new Set());
 
   // Modo EDIT
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editAdId, setEditAdId] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
   const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -143,35 +139,48 @@ export default function PublicarAviso() {
   const [selectedDescIndex, setSelectedDescIndex] = useState<number | null>(null);
   const [generatingContent, setGeneratingContent] = useState(false);  // ✅ Loading generación
   
+  // Estados para validación anti-fraude en tiempo real
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [descriptionError, setDescriptionError] = useState<string | null>(null);
+  const [titleDebounceTimer, setTitleDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [descDebounceTimer, setDescDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  
   // Auto-save indicator
   const [lastSaved, setLastSaved] = useState<number | null>(null);
 
-  // Validación anti-fraude en tiempo real
-  const { titleError, descriptionError } = useWizardValidation(title, description);
-
-  const handleTitleChange = (value: string) => setTitle(value);
-  const handleDescriptionChange = (value: string) => setDescription(value);
-
-  // Modo EDIT — detección por hash + carga de datos
-  const { isEditMode, editAdId } = useEditMode({
-    profile,
-    setSelectedCategory,
-    setSelectedSubcategory,
-    setExpandedCategory,
-    setExpandedL2Sub,
-    setAttributeValues,
-    setProvince,
-    setLocality,
-    setUploadedImages,
-    setUploadedImagesRef: (v) => { uploadedImagesRef.current = v; },
-    setTitle,
-    setDescription,
-    setPrice,
-    setCurrency,
-    setPriceUnit,
-    setCurrentStep,
-    setLoading,
-  });
+  // ====================================================================
+  // VALIDACIÓN ANTI-FRAUDE EN TIEMPO REAL
+  // ====================================================================
+  
+  const handleTitleChange = (value: string) => {
+    setTitle(value);
+    
+    // Limpiar timer anterior
+    if (titleDebounceTimer) clearTimeout(titleDebounceTimer);
+    
+    // Validación con debounce de 400ms
+    const timer = setTimeout(() => {
+      const result = validateTitle(value);
+      setTitleError(result.isValid ? null : result.error || null);
+    }, 400);
+    
+    setTitleDebounceTimer(timer);
+  };
+  
+  const handleDescriptionChange = (value: string) => {
+    setDescription(value);
+    
+    // Limpiar timer anterior
+    if (descDebounceTimer) clearTimeout(descDebounceTimer);
+    
+    // Validación con debounce de 400ms
+    const timer = setTimeout(() => {
+      const result = validateDescription(value);
+      setDescriptionError(result.isValid ? null : result.error || null);
+    }, 400);
+    
+    setDescDebounceTimer(timer);
+  };
   
   // ====================================================================
   // GENERACIÓN DE CONTENIDO (TÍTULO + DESCRIPCIÓN)
@@ -315,7 +324,6 @@ export default function PublicarAviso() {
       setSelectedPageType('particular');
       setExpandedCategory('');
       setExpandedL2Sub('');
-      setMobileNavLevel(1);
       setShowProfileGate(false);
     },
   };
@@ -325,9 +333,23 @@ export default function PublicarAviso() {
   // ====================================================================
   useEffect(() => {
     loadCategories();
+    detectEditMode(); // ✅ Detectar modo edit al montar
     initializeOrRecoverDraft();
     cleanupOldDrafts();
+    
+    // Cargar provincias desde DB
     getProvinces().then(setProvinces);
+    
+    // Escuchar cambios en el hash para detectar modo edit
+    const handleHashChange = () => {
+      detectEditMode();
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
 
   /**
@@ -450,6 +472,115 @@ export default function PublicarAviso() {
     currency
   ]);
 
+  // Detectar si estamos en modo edición
+  async function detectEditMode() {
+    // Detectar desde hash: #/edit/:id
+    const hash = window.location.hash;
+    
+    const editMatch = hash.match(/^#\/edit\/([a-f0-9-]+)$/);
+    
+    let editId: string | null = null;
+    
+    if (editMatch) {
+      // Formato nuevo: #/edit/:id
+      editId = editMatch[1];
+    } else {
+      // Formato legacy: ?edit=:id
+      const hashParts = hash.split('?');
+      if (hashParts.length > 1) {
+        const urlParams = new URLSearchParams(hashParts[1]);
+        editId = urlParams.get('edit');
+        if (editId) {
+        }
+      }
+    }
+    
+    if (editId) {
+      setIsEditMode(true);
+      setEditAdId(editId);
+      await loadAdForEdit(editId);
+    } else {
+    }
+  }
+
+  // Cargar datos del aviso para editar
+  async function loadAdForEdit(adId: string) {
+    try {
+      setLoading(true);
+
+      const { data: ad, error } = await supabase
+        .from('ads')
+        .select('*')
+        .eq('id', adId)
+        .single();
+
+      if (error) throw error;
+
+      // Validar permisos: solo dueño o superadmin
+      if (ad.user_id !== profile?.id && profile?.role !== 'superadmin') {
+        notify.error('No tienes permiso para editar este aviso');
+        navigateTo('/my-ads');
+        return;
+      }
+
+      // Pre-llenar Step 1: Categorías
+      setSelectedCategory(ad.category_id || '');
+      setSelectedSubcategory(ad.subcategory_id || '');
+      // Abrir el acordeón de la categoría correcta
+      if (ad.category_id) setExpandedCategory(ad.category_id);
+
+      // Si la subcategoría es L3 (tiene parent_id), abrir también el acordeón L2
+      if (ad.subcategory_id) {
+        const { data: subData } = await supabase
+          .from('subcategories')
+          .select('id, parent_id')
+          .eq('id', ad.subcategory_id)
+          .single();
+        if (subData?.parent_id) {
+          setExpandedL2Sub(subData.parent_id);
+        }
+      }
+
+      // Pre-llenar Step 2: Atributos
+      if (ad.attributes) {
+        setAttributeValues(ad.attributes);
+      }
+
+      // Pre-llenar Step 3: Ubicación
+      setProvince(ad.province || '');
+      setLocality(ad.location || '');
+
+      // Pre-llenar Step 4: Fotos existentes (convertir a formato UploadedImage)
+      if (ad.images && ad.images.length > 0) {
+        const existingUploaded: UploadedImage[] = ad.images.map((img: any, index: number) => ({
+          id: `existing-${index}`,
+          file: null,
+          url: typeof img === 'string' ? img : img.url,
+          status: 'success' as const,
+          progress: 100
+        }));
+        setUploadedImages(existingUploaded);
+      }
+
+      // Pre-llenar Step 5: Información
+      setTitle(ad.title || '');
+      setDescription(ad.description || '');
+      setPrice(ad.price ? String(ad.price) : '');
+      setCurrency(ad.currency || 'ARS');
+      setPriceUnit((ad as any).price_unit || '');
+
+      // Avanzar al step 2 — la categoría ya está seleccionada
+      setCurrentStep(2);
+
+      notify.success('Aviso cargado para edición');
+    } catch (error: any) {
+      console.error('Error cargando aviso:', error);
+      notify.error('Error cargando aviso');
+      navigateTo('/my-ads');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (selectedCategory) {
@@ -1000,298 +1131,48 @@ export default function PublicarAviso() {
           <div>
             <div className="bg-white sm:bg-gray-100 rounded-none sm:rounded-lg shadow-none sm:shadow-xl border-0 sm:border-2 border-gray-200 sm:border-gray-300 overflow-hidden">
               <div className="p-3 sm:p-10 lg:p-12">
-                {/* STEP 1: CATEGORÍA — selector 3 columnas: L1 | L2 | L3 */}
+                {/* STEP 1: CATEGORÍA */}
                 {activeStepKey === 'categoria' && (
-                  showProfileGate ? (
-                    <ProfileGate
-                      subcategoryDisplayName={pendingSubcategoryName}
-                      onEmpresaCreated={(empresa) => {
-                        setShowProfileGate(false);
-                        setSelectedBusinessProfileId(empresa.id);
-                        setCurrentStep(2);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                    />
-                  ) : (() => {
-                    // Datos compartidos mobile + desktop
-                    const l2Subs = subcategories.filter(s => !s.parent_id);
-                    const childrenMap: Record<string, Subcategory[]> = {};
-                    subcategories.filter(s => s.parent_id).forEach(s => {
-                      if (!childrenMap[s.parent_id!]) childrenMap[s.parent_id!] = [];
-                      childrenMap[s.parent_id!].push(s);
-                    });
-                    const l3Subs = expandedL2Sub ? (childrenMap[expandedL2Sub] || []) : [];
-                    const showL3Col = l3Subs.length > 0;
-                    const selectedCat = categories.find(c => c.id === selectedCategory);
-                    const expandedL2Sub_data = l2Subs.find(s => s.id === expandedL2Sub);
-
-                    const handleSelectLeaf = async (leafSub: Subcategory, parentSlug?: string) => {
-                      const isServicioEmpresa = leafSub.slug === 'servicios' || leafSub.slug === 'empresas' || parentSlug === 'servicios' || parentSlug === 'empresas';
-                      setSelectedSubcategory(leafSub.id);
+                  <CategorySelector
+                    categories={categories}
+                    subcategories={subcategories}
+                    selectedCategory={selectedCategory}
+                    selectedSubcategory={selectedSubcategory}
+                    showProfileGate={showProfileGate}
+                    pendingSubcategoryName={pendingSubcategoryName}
+                    initialExpandedL2Sub={expandedL2Sub}
+                    onSelectCategory={(categoryId) => {
+                      setSelectedCategory(categoryId);
+                      setExpandedCategory(categoryId);
+                      setSelectedSubcategory('');
+                      setSelectedPageType('particular');
+                      setShowProfileGate(false);
+                    }}
+                    onSelectLeaf={(subcategory, isServicioEmpresa) => {
+                      setSelectedSubcategory(subcategory.id);
                       setSelectedPageType(isServicioEmpresa ? 'empresa' : 'particular');
-                      if (isServicioEmpresa) {
-                        const empresas = await getMyCompanies();
-                        if (empresas.length === 0) {
-                          setPendingSubcategoryName(leafSub.display_name);
-                          setShowProfileGate(true);
-                          return;
-                        }
-                      }
                       setTimeout(() => {
                         setCurrentStep(2);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }, 200);
-                    };
-
-                    // Fila reutilizable para mobile
-                    const MobileRow = ({ label, isActive, hasChildren, isSelected, isServicio, onClick }: {
-                      label: string; isActive?: boolean; hasChildren?: boolean;
-                      isSelected?: boolean; isServicio?: boolean; onClick: () => void;
-                    }) => (
-                      <button
-                        onClick={onClick}
-                        className={`w-full flex items-center gap-3 px-4 py-[14px] text-left transition-colors border-b border-gray-100 last:border-b-0 active:bg-gray-50 ${
-                          isActive ? 'bg-brand-50' : 'bg-white'
-                        }`}
-                      >
-                        {isServicio && <Building2 className="w-5 h-5 text-brand-500 flex-shrink-0" />}
-                        <span className={`flex-1 text-base font-medium ${isActive ? 'text-brand-800' : 'text-gray-800'}`}>
-                          {label}
-                        </span>
-                        {isSelected
-                          ? <Check className="w-5 h-5 text-brand-600 flex-shrink-0" />
-                          : <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-brand-500' : 'text-gray-300'}`} />
-                        }
-                      </button>
-                    );
-
-                    return (
-                      <div className="space-y-4 sm:space-y-6">
-
-                        {/* ── MOBILE: Drill-down navigation (< lg) ── */}
-                        <div className="lg:hidden">
-                          {/* Breadcrumb / volver */}
-                          {mobileNavLevel > 1 && (
-                            <button
-                              onClick={() => {
-                                setDrillDirection('back');
-                                if (mobileNavLevel === 2) {
-                                  setMobileNavLevel(1);
-                                  setSelectedCategory('');
-                                  setExpandedCategory('');
-                                  setSelectedSubcategory('');
-                                  setExpandedL2Sub('');
-                                } else {
-                                  setMobileNavLevel(2);
-                                  setExpandedL2Sub('');
-                                  setSelectedSubcategory('');
-                                }
-                              }}
-                              className="flex items-center gap-1 text-brand-600 text-sm font-medium mb-3 py-1"
-                            >
-                              <ChevronLeft className="w-4 h-4" />
-                              {mobileNavLevel === 2 ? 'Categorías' : selectedCat?.display_name}
-                            </button>
-                          )}
-
-                          {/* Título del nivel */}
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">
-                            {mobileNavLevel === 1 && 'Seleccioná una categoría'}
-                            {mobileNavLevel === 2 && selectedCat?.display_name}
-                            {mobileNavLevel === 3 && expandedL2Sub_data?.display_name}
-                          </p>
-
-                          {/* Lista animada — key fuerza remount en cada nivel */}
-                          <div
-                            key={`mob-${mobileNavLevel}-${drillDirection}`}
-                            className={`border border-gray-200 rounded-xl overflow-hidden divide-y-0 ${drillDirection === 'back' ? 'drill-enter-back' : 'drill-enter-forward'}`}
-                          >
-                            {/* NIVEL 1: Categorías */}
-                            {mobileNavLevel === 1 && categories.map((cat) => (
-                              <MobileRow
-                                key={cat.id}
-                                label={cat.display_name}
-                                isActive={selectedCategory === cat.id}
-                                hasChildren
-                                onClick={() => {
-                                  setDrillDirection('forward');
-                                  setSelectedCategory(cat.id);
-                                  setExpandedCategory(cat.id);
-                                  setSelectedSubcategory('');
-                                  setExpandedL2Sub('');
-                                  setMobileNavLevel(2);
-                                }}
-                              />
-                            ))}
-
-                            {/* NIVEL 2: Subcategorías L2 */}
-                            {mobileNavLevel === 2 && (
-                              l2Subs.length === 0
-                                ? <div className="p-4 text-sm text-gray-400 italic">Cargando...</div>
-                                : l2Subs.map((sub) => {
-                                    const hasChildren = (childrenMap[sub.id] || []).length > 0;
-                                    const isServicio = sub.slug === 'servicios' || sub.slug === 'empresas';
-                                    const isActive = hasChildren ? expandedL2Sub === sub.id : selectedSubcategory === sub.id;
-                                    return (
-                                      <MobileRow
-                                        key={sub.id}
-                                        label={sub.display_name}
-                                        isActive={isActive}
-                                        hasChildren={hasChildren}
-                                        isSelected={!hasChildren && selectedSubcategory === sub.id}
-                                        isServicio={isServicio}
-                                        onClick={() => {
-                                          if (hasChildren) {
-                                            setDrillDirection('forward');
-                                            setExpandedL2Sub(sub.id);
-                                            setSelectedSubcategory('');
-                                            setMobileNavLevel(3);
-                                          } else {
-                                            handleSelectLeaf(sub);
-                                          }
-                                        }}
-                                      />
-                                    );
-                                  })
-                            )}
-
-                            {/* NIVEL 3: Tipos L3 */}
-                            {mobileNavLevel === 3 && l3Subs.map((child) => {
-                              const parentSlug = expandedL2Sub_data?.slug;
-                              return (
-                                <MobileRow
-                                  key={child.id}
-                                  label={child.display_name}
-                                  isSelected={selectedSubcategory === child.id}
-                                  onClick={() => handleSelectLeaf(child, parentSlug)}
-                                />
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* ── DESKTOP: Miller columns (lg+) ── */}
-                        <div className="hidden lg:block">
-                          <div className="mb-4">
-                            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-1">¿Qué vas a publicar?</h2>
-                            <p className="text-sm lg:text-base text-gray-500">
-                              Seleccioná categoría → subcategoría{showL3Col ? ' → tipo' : ''}
-                            </p>
-                          </div>
-                          <div className={`grid gap-0 border border-gray-200 rounded-xl overflow-hidden ${showL3Col ? 'grid-cols-3' : selectedCategory ? 'grid-cols-2' : 'grid-cols-1'}`}>
-
-                            {/* COLUMNA 1 — L1 */}
-                            <div className="flex flex-col border-r border-gray-200 bg-gray-50">
-                              <div className="px-3 py-2 bg-gray-100 border-b border-gray-200">
-                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Categoría</p>
-                              </div>
-                              <div className="flex flex-col overflow-y-auto max-h-[420px]">
-                                {categories.map((cat) => {
-                                  const isSelected = selectedCategory === cat.id;
-                                  return (
-                                    <button
-                                      key={cat.id}
-                                      onClick={() => {
-                                        if (isSelected) {
-                                          setSelectedCategory(''); setSelectedSubcategory('');
-                                          setExpandedCategory(''); setExpandedL2Sub('');
-                                          setSelectedPageType('particular');
-                                        } else {
-                                          setSelectedCategory(cat.id); setExpandedCategory(cat.id);
-                                          setSelectedSubcategory(''); setExpandedL2Sub('');
-                                          setSelectedPageType('particular'); setShowProfileGate(false);
-                                        }
-                                      }}
-                                      className={`w-full px-4 py-3 text-left flex items-center justify-between transition-all border-b border-gray-100 last:border-b-0 ${
-                                        isSelected ? 'bg-brand-600 text-white font-semibold' : 'hover:bg-white text-gray-800 hover:text-brand-700'
-                                      }`}
-                                    >
-                                      <span className="text-sm font-medium">{cat.display_name}</span>
-                                      {isSelected && <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-80" />}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* COLUMNA 2 — L2 */}
-                            {selectedCategory && (
-                              <div className={`flex flex-col ${showL3Col ? 'border-r border-gray-200' : ''} bg-white`}>
-                                <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
-                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Subcategoría</p>
-                                </div>
-                                <div className="flex flex-col overflow-y-auto max-h-[420px]">
-                                  {l2Subs.length === 0 ? (
-                                    <div className="p-4 text-sm text-gray-400 italic">Cargando...</div>
-                                  ) : l2Subs.map((sub) => {
-                                    const hasChildren = (childrenMap[sub.id] || []).length > 0;
-                                    const isServicioEmpresa = sub.slug === 'servicios' || sub.slug === 'empresas';
-                                    const isActive = hasChildren ? expandedL2Sub === sub.id : selectedSubcategory === sub.id;
-                                    return (
-                                      <button
-                                        key={sub.id}
-                                        onClick={() => {
-                                          if (hasChildren) {
-                                            setExpandedL2Sub(isActive ? '' : sub.id);
-                                            setSelectedSubcategory('');
-                                          } else {
-                                            setExpandedL2Sub('');
-                                            handleSelectLeaf(sub);
-                                          }
-                                        }}
-                                        className={`w-full px-4 py-3 text-left flex items-center justify-between transition-all border-b border-gray-100 last:border-b-0 ${
-                                          isActive ? 'bg-brand-50 text-brand-800 font-semibold border-l-2 border-l-brand-500' : 'hover:bg-gray-50 text-gray-800 hover:text-brand-700'
-                                        }`}
-                                      >
-                                        <div className="flex items-center gap-2 min-w-0">
-                                          {isServicioEmpresa && <Building2 className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />}
-                                          <span className="text-sm truncate">{sub.display_name}</span>
-                                        </div>
-                                        {hasChildren
-                                          ? <ChevronRight className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />
-                                          : isActive && <Check className="w-3.5 h-3.5 text-brand-600 flex-shrink-0" />
-                                        }
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* COLUMNA 3 — L3 */}
-                            {showL3Col && (
-                              <div className="flex flex-col bg-white">
-                                <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
-                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                    {expandedL2Sub_data?.display_name ?? 'Tipo'}
-                                  </p>
-                                </div>
-                                <div className="flex flex-col overflow-y-auto max-h-[420px]">
-                                  {l3Subs.map((child) => {
-                                    const parentSlug = expandedL2Sub_data?.slug;
-                                    const isSelected = selectedSubcategory === child.id;
-                                    return (
-                                      <button
-                                        key={child.id}
-                                        onClick={() => handleSelectLeaf(child, parentSlug)}
-                                        className={`w-full px-4 py-3 text-left flex items-center justify-between transition-all border-b border-gray-100 last:border-b-0 ${
-                                          isSelected ? 'bg-brand-600 text-white font-semibold' : 'hover:bg-gray-50 text-gray-800 hover:text-brand-700'
-                                        }`}
-                                      >
-                                        <span className="text-sm">{child.display_name}</span>
-                                        {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                      </div>
-                    );
-                  })()
+                    }}
+                    onClearCategory={() => {
+                      setSelectedCategory('');
+                      setExpandedCategory('');
+                      setSelectedSubcategory('');
+                      setSelectedPageType('particular');
+                    }}
+                    onShowProfileGate={(subcategoryDisplayName) => {
+                      setPendingSubcategoryName(subcategoryDisplayName);
+                      setShowProfileGate(true);
+                    }}
+                    onProfileGateEmpresaCreated={(empresa) => {
+                      setShowProfileGate(false);
+                      setSelectedBusinessProfileId(empresa.id);
+                      setCurrentStep(2);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  />
                 )}
 
             {/* STEPS 2-5: renderizados por BlockRenderer según config de wizard_configs */}
