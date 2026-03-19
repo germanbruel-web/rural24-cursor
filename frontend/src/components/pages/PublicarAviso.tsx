@@ -41,8 +41,8 @@ import AuthModal from '../auth/AuthModal';
 import { adsApi } from '../../services/api';
 import { uploadsApi } from '../../services/api';
 import type { UploadedImage } from '../SimpleImageUploader/SimpleImageUploader';
-import { validateTitle, validateDescription } from '../../utils/contentValidator';
-import type { ValidationResult } from '../../utils/contentValidator';
+import { useEditMode } from './publicar-aviso/hooks/useEditMode';
+import { useWizardValidation } from './publicar-aviso/hooks/useWizardValidation';
 import { DraftManager, updateDraftURL, parseDraftURL, type DraftState } from '../../utils/draftManager';
 import { navigateTo } from '../../hooks/useNavigate';
 
@@ -98,8 +98,6 @@ export default function PublicarAviso() {
   const [completedGroups, setCompletedGroups] = useState<Set<string>>(new Set());
 
   // Modo EDIT
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editAdId, setEditAdId] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
   const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -145,48 +143,35 @@ export default function PublicarAviso() {
   const [selectedDescIndex, setSelectedDescIndex] = useState<number | null>(null);
   const [generatingContent, setGeneratingContent] = useState(false);  // ✅ Loading generación
   
-  // Estados para validación anti-fraude en tiempo real
-  const [titleError, setTitleError] = useState<string | null>(null);
-  const [descriptionError, setDescriptionError] = useState<string | null>(null);
-  const [titleDebounceTimer, setTitleDebounceTimer] = useState<NodeJS.Timeout | null>(null);
-  const [descDebounceTimer, setDescDebounceTimer] = useState<NodeJS.Timeout | null>(null);
-  
   // Auto-save indicator
   const [lastSaved, setLastSaved] = useState<number | null>(null);
 
-  // ====================================================================
-  // VALIDACIÓN ANTI-FRAUDE EN TIEMPO REAL
-  // ====================================================================
-  
-  const handleTitleChange = (value: string) => {
-    setTitle(value);
-    
-    // Limpiar timer anterior
-    if (titleDebounceTimer) clearTimeout(titleDebounceTimer);
-    
-    // Validación con debounce de 400ms
-    const timer = setTimeout(() => {
-      const result = validateTitle(value);
-      setTitleError(result.isValid ? null : result.error || null);
-    }, 400);
-    
-    setTitleDebounceTimer(timer);
-  };
-  
-  const handleDescriptionChange = (value: string) => {
-    setDescription(value);
-    
-    // Limpiar timer anterior
-    if (descDebounceTimer) clearTimeout(descDebounceTimer);
-    
-    // Validación con debounce de 400ms
-    const timer = setTimeout(() => {
-      const result = validateDescription(value);
-      setDescriptionError(result.isValid ? null : result.error || null);
-    }, 400);
-    
-    setDescDebounceTimer(timer);
-  };
+  // Validación anti-fraude en tiempo real
+  const { titleError, descriptionError } = useWizardValidation(title, description);
+
+  const handleTitleChange = (value: string) => setTitle(value);
+  const handleDescriptionChange = (value: string) => setDescription(value);
+
+  // Modo EDIT — detección por hash + carga de datos
+  const { isEditMode, editAdId } = useEditMode({
+    profile,
+    setSelectedCategory,
+    setSelectedSubcategory,
+    setExpandedCategory,
+    setExpandedL2Sub,
+    setAttributeValues,
+    setProvince,
+    setLocality,
+    setUploadedImages,
+    setUploadedImagesRef: (v) => { uploadedImagesRef.current = v; },
+    setTitle,
+    setDescription,
+    setPrice,
+    setCurrency,
+    setPriceUnit,
+    setCurrentStep,
+    setLoading,
+  });
   
   // ====================================================================
   // GENERACIÓN DE CONTENIDO (TÍTULO + DESCRIPCIÓN)
@@ -340,23 +325,9 @@ export default function PublicarAviso() {
   // ====================================================================
   useEffect(() => {
     loadCategories();
-    detectEditMode(); // ✅ Detectar modo edit al montar
     initializeOrRecoverDraft();
     cleanupOldDrafts();
-    
-    // Cargar provincias desde DB
     getProvinces().then(setProvinces);
-    
-    // Escuchar cambios en el hash para detectar modo edit
-    const handleHashChange = () => {
-      detectEditMode();
-    };
-    
-    window.addEventListener('hashchange', handleHashChange);
-    
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-    };
   }, []);
 
   /**
@@ -479,115 +450,6 @@ export default function PublicarAviso() {
     currency
   ]);
 
-  // Detectar si estamos en modo edición
-  async function detectEditMode() {
-    // Detectar desde hash: #/edit/:id
-    const hash = window.location.hash;
-    
-    const editMatch = hash.match(/^#\/edit\/([a-f0-9-]+)$/);
-    
-    let editId: string | null = null;
-    
-    if (editMatch) {
-      // Formato nuevo: #/edit/:id
-      editId = editMatch[1];
-    } else {
-      // Formato legacy: ?edit=:id
-      const hashParts = hash.split('?');
-      if (hashParts.length > 1) {
-        const urlParams = new URLSearchParams(hashParts[1]);
-        editId = urlParams.get('edit');
-        if (editId) {
-        }
-      }
-    }
-    
-    if (editId) {
-      setIsEditMode(true);
-      setEditAdId(editId);
-      await loadAdForEdit(editId);
-    } else {
-    }
-  }
-
-  // Cargar datos del aviso para editar
-  async function loadAdForEdit(adId: string) {
-    try {
-      setLoading(true);
-
-      const { data: ad, error } = await supabase
-        .from('ads')
-        .select('*')
-        .eq('id', adId)
-        .single();
-
-      if (error) throw error;
-
-      // Validar permisos: solo dueño o superadmin
-      if (ad.user_id !== profile?.id && profile?.role !== 'superadmin') {
-        notify.error('No tienes permiso para editar este aviso');
-        navigateTo('/my-ads');
-        return;
-      }
-
-      // Pre-llenar Step 1: Categorías
-      setSelectedCategory(ad.category_id || '');
-      setSelectedSubcategory(ad.subcategory_id || '');
-      // Abrir el acordeón de la categoría correcta
-      if (ad.category_id) setExpandedCategory(ad.category_id);
-
-      // Si la subcategoría es L3 (tiene parent_id), abrir también el acordeón L2
-      if (ad.subcategory_id) {
-        const { data: subData } = await supabase
-          .from('subcategories')
-          .select('id, parent_id')
-          .eq('id', ad.subcategory_id)
-          .single();
-        if (subData?.parent_id) {
-          setExpandedL2Sub(subData.parent_id);
-        }
-      }
-
-      // Pre-llenar Step 2: Atributos
-      if (ad.attributes) {
-        setAttributeValues(ad.attributes);
-      }
-
-      // Pre-llenar Step 3: Ubicación
-      setProvince(ad.province || '');
-      setLocality(ad.location || '');
-
-      // Pre-llenar Step 4: Fotos existentes (convertir a formato UploadedImage)
-      if (ad.images && ad.images.length > 0) {
-        const existingUploaded: UploadedImage[] = ad.images.map((img: any, index: number) => ({
-          id: `existing-${index}`,
-          file: null,
-          url: typeof img === 'string' ? img : img.url,
-          status: 'success' as const,
-          progress: 100
-        }));
-        setUploadedImages(existingUploaded);
-      }
-
-      // Pre-llenar Step 5: Información
-      setTitle(ad.title || '');
-      setDescription(ad.description || '');
-      setPrice(ad.price ? String(ad.price) : '');
-      setCurrency(ad.currency || 'ARS');
-      setPriceUnit((ad as any).price_unit || '');
-
-      // Avanzar al step 2 — la categoría ya está seleccionada
-      setCurrentStep(2);
-
-      notify.success('Aviso cargado para edición');
-    } catch (error: any) {
-      console.error('Error cargando aviso:', error);
-      notify.error('Error cargando aviso');
-      navigateTo('/my-ads');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   useEffect(() => {
     if (selectedCategory) {
