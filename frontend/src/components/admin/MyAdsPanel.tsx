@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   getMyAds,
   getUserAdLimit,
@@ -75,6 +75,9 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   const [superAdminView, setSuperAdminView] = useState<'mine' | 'clients'>('mine');
   
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused'>('active');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const PAGE_SIZE = 20;
+  const [currentPage, setCurrentPage] = useState(1);
   
   useEffect(() => {
     loadData();
@@ -252,10 +255,30 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   };
 
 
-  // Filter ads by status
-  const filteredAds = filterStatus === 'all' 
-    ? ads 
-    : ads.filter(ad => ad.status === filterStatus);
+  const availableCategories = useMemo(() => {
+    const seen = new Set<string>();
+    const cats: { id: string; name: string }[] = [];
+    for (const ad of ads) {
+      const key = ad.category_id || ad.category || '';
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        cats.push({ id: key, name: ad.category || key });
+      }
+    }
+    return cats.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  }, [ads]);
+
+  const filteredAds = useMemo(() => {
+    let result = ads;
+    if (filterStatus !== 'all') result = result.filter(ad => ad.status === filterStatus);
+    if (filterCategory !== 'all') result = result.filter(ad =>
+      (ad.category_id || ad.category) === filterCategory
+    );
+    return result;
+  }, [ads, filterStatus, filterCategory]);
+
+  const totalPages = Math.ceil(filteredAds.length / PAGE_SIZE);
+  const paginatedAds = filteredAds.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   // Stats
   const stats = {
@@ -384,6 +407,42 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
       )}
 
 
+      {/* Barra de filtros */}
+      {ads.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => { setFilterStatus('all'); setCurrentPage(1); }}
+            className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors ${filterStatus === 'all' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+          >
+            Todos
+          </button>
+          <button
+            onClick={() => { setFilterStatus('active'); setCurrentPage(1); }}
+            className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors ${filterStatus === 'active' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+          >
+            Activos
+          </button>
+          <button
+            onClick={() => { setFilterStatus('paused'); setCurrentPage(1); }}
+            className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors ${filterStatus === 'paused' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+          >
+            Pausados
+          </button>
+          {availableCategories.length > 1 && (
+            <select
+              value={filterCategory}
+              onChange={e => { setFilterCategory(e.target.value); setCurrentPage(1); }}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+            >
+              <option value="all">Todas las categorías</option>
+              {availableCategories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
       {/* Lista de avisos — rows horizontales */}
       {filteredAds.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
@@ -409,8 +468,8 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
           )}
         </div>
       ) : (
-        <div className="space-y-2">
-          {filteredAds.map((ad) => {
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {paginatedAds.map((ad) => {
             const adFeatureds = featuredMap[ad.id] || [];
             const isAdFeatured = adFeatureds.length > 0;
             const thumbnail = ad.images?.[0] || DEFAULT_PLACEHOLDER_IMAGE;
@@ -607,6 +666,28 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-4">
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            ← Anterior
+          </button>
+          <span className="text-sm text-gray-500 font-medium">
+            Página {currentPage} de {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Siguiente →
+          </button>
         </div>
       )}
 
