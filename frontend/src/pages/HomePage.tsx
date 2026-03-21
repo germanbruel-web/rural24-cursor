@@ -19,6 +19,7 @@ import { getHeroVIPBanners } from '../services/bannersCleanService';
 import { getSettingNumber } from '../services/v2/globalSettingsService';
 import { navigateTo } from '../hooks/useNavigate';
 import { CategoryQuickNav } from '../components/CategoryQuickNav';
+import { DynamicHomeSections } from '../components/sections/DynamicHomeSections';
 import type { Banner, BannerClean } from '../../types';
 
 interface HomePageProps {
@@ -90,6 +91,9 @@ export const HomePage: React.FC<HomePageProps> = ({
 
       {/* Widgets informativos: clima, precios, calendario, guías */}
       <HowItWorksSection onRegisterClick={onShowAuthModal} />
+
+      {/* Secciones dinámicas configuradas desde el admin (CMS-A) */}
+      <DynamicHomeSections />
 
       {/* 🌟 Avisos Destacados por Categoría */}
       {typeof featuredLimit === 'number' ? (

@@ -50,15 +50,26 @@ import { supabase } from '../../services/supabaseClient';
 
 ```
 frontend/src/
-  services/v2/          # Servicios del sistema v2 (forms, options, locations, wizard)
+  services/v2/          # Servicios del sistema v2 (forms, options, locations, wizard, homeSections)
   types/v2.ts           # Tipos TypeScript del sistema v2
   components/forms/     # DynamicFormLoader, DynamicFormV2Fields
   components/pages/     # PublicarAviso, AdDetail
-  components/admin/     # FieldsEditorDrawer, AttributesAdmin
+  components/admin/     # HomeSectionBuilder, BannersCleanPanel, FormBuilderAdmin, etc.
+  components/sections/  # DynamicHomeSections (CMS-A renderer)
+  components/banners/   # BannersVipHero, HeroVIPBanner
 
 supabase/migrations/    # Migraciones SQL (NUNCA editar las ya aplicadas)
 backend/app/api/        # API Routes Next.js (BFF)
+  home/composition/     # GET /api/home/composition — público, cache 60s (CMS-A)
+  uploads/              # POST /api/uploads — Cloudinary proxy con rate limit + honeypot
 ```
+
+## Cloudinary — estructura de carpetas (desde 2026-03-21)
+```
+UGC (ads de usuarios):  rural24/{dev|prod}/ugc/{YYYY}/{MM}
+CMS (banners, logos):   rural24/{dev|prod}/cms/{folder}
+```
+`buildFolder(folder)` en `backend/infrastructure/cloudinary.service.ts` aplica esto automáticamente.
 
 ## Restricciones
 

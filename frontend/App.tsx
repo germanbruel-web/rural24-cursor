@@ -67,6 +67,7 @@ const PaymentsAdminPanel = lazy(() => import("./src/components/admin/PaymentsAdm
 const SitemapSeoPanel = lazy(() => import("./src/components/admin/SitemapSeoPanel"));
 const SuperAdminCreditsConfig = lazy(() => import("./src/components/admin/SuperAdminCreditsConfig").then(m => ({ default: m.SuperAdminCreditsConfig })));
 const HeroCmsPanel = lazy(() => import("./src/components/admin/HeroCmsPanel"));
+const HomeSectionBuilder = lazy(() => import("./src/components/admin/HomeSectionBuilder"));
 
 // Dashboard Components (solo para usuarios autenticados)
 const MessagesPanel = lazy(() => import("./src/components/dashboard/MessagesPanel").then(m => ({ default: m.MessagesPanel })));
@@ -107,7 +108,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'servicios' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard' | 'editar-aviso';
+export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'servicios' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'home-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard' | 'editar-aviso';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -175,6 +176,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/deleted-ads') return 'deleted-ads';
     if (hash === '#/dashboard/sitemap-seo') return 'sitemap-seo';
     if (hash === '#/hero-cms') return 'hero-cms';
+    if (hash === '#/home-cms') return 'home-cms';
     if (hash === '#/payment-result') return 'payment-result';
     if (hash === '#/featured-checkout') return 'featured-checkout';
     if (hash === '#/profile') return 'profile';
@@ -222,6 +224,7 @@ const AppContent: React.FC = () => {
       'payments-admin': '#/payments-admin',
       'sitemap-seo': '#/dashboard/sitemap-seo',
       'hero-cms': '#/hero-cms',
+      'home-cms': '#/home-cms',
       'credits-config': '#/credits-config',
       'profile': '#/profile',
       'subscription': '#/subscription',
@@ -609,12 +612,12 @@ const AppContent: React.FC = () => {
   }
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'favorites', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'design-system', 'mis-empresas'].includes(currentPage);
+  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'favorites', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'design-system', 'mis-empresas'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
     // Esperar a que cargue el perfil antes de verificar permisos en páginas protegidas
-    const isProtectedPage = ['users', 'banners', 'coupons', 'credits-config', 'settings', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'design-system'].includes(currentPage);
+    const isProtectedPage = ['users', 'banners', 'coupons', 'credits-config', 'settings', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'design-system'].includes(currentPage);
     
     if (authLoading && isProtectedPage) {
       return (
@@ -683,6 +686,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'payments-admin' && canAccessPage('payments-admin', profile?.role) && <PaymentsAdminPanel />}
                 {currentPage === 'sitemap-seo' && canAccessPage('sitemap-seo', profile?.role) && <SitemapSeoPanel />}
                 {currentPage === 'hero-cms' && canAccessPage('hero-cms', profile?.role) && <HeroCmsPanel />}
+                {currentPage === 'home-cms' && canAccessPage('home-cms', profile?.role) && <HomeSectionBuilder />}
                 {currentPage === 'credits-config' && canAccessPage('credits-config', profile?.role) && <SuperAdminCreditsConfig />}
                 {currentPage === 'mis-empresas' && canAccessPage('mis-empresas', profile?.role) && <MisEmpresasPanel />}
                 {currentPage === 'dashboard' && <DashboardPanel />}
