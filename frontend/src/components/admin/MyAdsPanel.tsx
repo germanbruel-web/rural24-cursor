@@ -568,7 +568,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                       </button>
                     ) : (
                     <button
-                      onClick={() => navigateTo(`/edit/${ad.id}`)}
+                      onClick={() => navigateTo(`/editar/${ad.id}`)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors text-gray-500 hover:text-brand-600 hover:bg-brand-50"
                     >
                       <Edit className="w-3.5 h-3.5" />
