@@ -36,6 +36,23 @@ export interface CloudinaryUploadResult {
   bytes: number;
 }
 
+/** Construye la ruta de carpeta en Cloudinary con separación de entorno y fecha para UGC */
+function buildFolder(folder: string): string {
+  const env = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+
+  // Assets de sistema/CMS no necesitan organización por fecha
+  const isCms = ['banners', 'cms', 'system', 'categories', 'logos'].includes(folder);
+  if (isCms) {
+    return `rural24/${env}/cms/${folder}`;
+  }
+
+  // UGC (avisos de usuarios) → organizado por año/mes para facilitar limpieza
+  return `rural24/${env}/ugc/${year}/${month}`;
+}
+
 /**
  * Subir imagen a Cloudinary
  */
@@ -46,7 +63,7 @@ export async function uploadToCloudinary(
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: `rural24/${folder}`,
+        folder: buildFolder(folder),
         resource_type: 'image',
         allowed_formats: ['jpg', 'png', 'webp', 'heic', 'heif'],
         transformation: [

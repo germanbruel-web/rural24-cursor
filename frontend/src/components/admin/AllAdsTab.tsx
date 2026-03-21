@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
   ArrowDown,
@@ -22,6 +22,7 @@ import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
 import { QuickEditAdModal } from './QuickEditAdModal';
 import CreateFeaturedModal from './CreateFeaturedModal';
+import BulkVisibilityModal from './BulkVisibilityModal';
 
 interface Category {
   id: string;
@@ -54,7 +55,7 @@ interface AdRow {
   featured_status?: string;
   featured_placement?: string;
   featured_expires_at?: string;
-  views_count?: number;
+  views?: number;
 }
 
 const RECORDS_PER_PAGE = 20;
@@ -82,6 +83,8 @@ export default function AllAdsTab() {
   const [deleting, setDeleting] = useState(false);
   const [featuredModalAd, setFeaturedModalAd] = useState<AdRow | null>(null);
   const [viewingAd, setViewingAd] = useState<AdRow | null>(null);
+  const [showBulkVisibility, setShowBulkVisibility] = useState(false);
+  const [drawerStats, setDrawerStats] = useState<{ contactos: number; favoritos: number } | null>(null);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -122,7 +125,7 @@ export default function AllAdsTab() {
       let countQuery = supabase.from('ads').select('id', { count: 'exact', head: true });
       let query = supabase
         .from('ads')
-        .select('id, title, slug, price, currency, status, category_id, subcategory_id, created_at, updated_at, user_id, views_count')
+        .select('id, title, slug, price, currency, status, category_id, subcategory_id, created_at, updated_at, user_id, views')
         .order('created_at', { ascending: sortOrder === 'asc' });
 
       if (selectedCategory) {
@@ -207,6 +210,29 @@ export default function AllAdsTab() {
     }
   }, [selectedCategory, selectedSubcategory, statusFilter, titleFilter, sortOrder]);
 
+  // Auto-load on mount
+  const initialLoadDone = useRef(false);
+  useEffect(() => {
+    if (!initialLoadDone.current) {
+      initialLoadDone.current = true;
+      void handleSearch(1);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Load live stats when drawer opens
+  useEffect(() => {
+    if (!viewingAd) { setDrawerStats(null); return; }
+    const fetchStats = async () => {
+      const [{ count: contactos }, { count: favoritos }] = await Promise.all([
+        supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('ad_id', viewingAd.id),
+        supabase.from('user_favorites').select('id', { count: 'exact', head: true }).eq('ad_id', viewingAd.id),
+      ]);
+      setDrawerStats({ contactos: contactos ?? 0, favoritos: favoritos ?? 0 });
+    };
+    void fetchStats();
+  }, [viewingAd]);
+
   const totalPages = Math.ceil(totalRecords / RECORDS_PER_PAGE);
 
   const filteredSubcategories = useMemo(
@@ -214,10 +240,6 @@ export default function AllAdsTab() {
     [subcategories, selectedCategory]
   );
 
-  const handleViewAd = (ad: AdRow) => {
-    const identifier = ad.slug || ad.id;
-    window.open(`/#/ad/${identifier}`, '_blank');
-  };
 
   const confirmDelete = async () => {
     if (!deletingAd) return;
@@ -312,6 +334,16 @@ export default function AllAdsTab() {
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
             Buscar
           </button>
+
+          {ads.length > 0 && (
+            <button
+              onClick={() => setShowBulkVisibility(true)}
+              className="px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 rounded-lg text-sm inline-flex items-center gap-2"
+            >
+              <Eye className="w-4 h-4 text-gray-500" />
+              Visibilidad bulk
+            </button>
+          )}
         </div>
       </div>
 
@@ -418,7 +450,7 @@ export default function AllAdsTab() {
                         >
                           <Eye className="w-3.5 h-3.5" />
                           Vistas
-                          <span className="tabular-nums">{ad.views_count ?? 0}</span>
+                          <span className="tabular-nums">{ad.views ?? 0}</span>
                         </button>
                         <button
                           onClick={() => setDeletingAd(ad)}
@@ -494,9 +526,30 @@ export default function AllAdsTab() {
             <div className="flex-1 overflow-y-auto p-5 space-y-5">
               <p className="text-sm font-semibold text-gray-800 leading-snug">{viewingAd.title}</p>
 
-              <div className="bg-brand-50 rounded-2xl px-6 py-5 text-center">
-                <p className="text-5xl font-black tabular-nums text-brand-600">{viewingAd.views_count ?? 0}</p>
-                <p className="text-sm text-brand-700 font-medium mt-1">visitas totales</p>
+              {/* Metrics grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-brand-50 rounded-xl px-4 py-3 text-center">
+                  <p className="text-3xl font-black tabular-nums text-brand-600">{viewingAd.views ?? 0}</p>
+                  <p className="text-xs text-brand-700 font-medium mt-0.5">Vistas</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl px-4 py-3 text-center">
+                  <p className="text-3xl font-black tabular-nums text-gray-700">
+                    {drawerStats ? drawerStats.contactos : '—'}
+                  </p>
+                  <p className="text-xs text-gray-500 font-medium mt-0.5">Contactos</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl px-4 py-3 text-center">
+                  <p className="text-3xl font-black tabular-nums text-gray-700">
+                    {drawerStats ? drawerStats.favoritos : '—'}
+                  </p>
+                  <p className="text-xs text-gray-500 font-medium mt-0.5">Favoritos</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl px-4 py-3 text-center">
+                  <p className="text-sm font-bold text-gray-700 leading-tight">
+                    {new Date(viewingAd.updated_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </p>
+                  <p className="text-xs text-gray-500 font-medium mt-0.5">Últ. modificación</p>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -538,7 +591,7 @@ export default function AllAdsTab() {
               </div>
 
               <a
-                href={`/#/ad/${viewingAd.slug || viewingAd.id}`}
+                href={`${window.location.origin}/#/ad/${viewingAd.slug || viewingAd.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-brand-200 text-brand-600 text-sm font-semibold hover:bg-brand-50 transition-colors"
@@ -566,6 +619,22 @@ export default function AllAdsTab() {
             currency: featuredModalAd.currency,
             category_name: featuredModalAd.category_name || '',
             user_name: featuredModalAd.seller_name || 'Usuario',
+          }}
+        />
+      )}
+
+      {showBulkVisibility && (
+        <BulkVisibilityModal
+          isOpen={true}
+          onClose={() => setShowBulkVisibility(false)}
+          ads={ads.map((a) => ({ ...a, category: a.category_name })) as any}
+          featuredMap={ads.reduce<Record<string, any[]>>((acc, a) => {
+            if (a.featured_status) acc[a.id] = [{ status: a.featured_status, placement: a.featured_placement }];
+            return acc;
+          }, {})}
+          onApplied={() => {
+            setShowBulkVisibility(false);
+            void handleSearch(currentPage);
           }}
         />
       )}

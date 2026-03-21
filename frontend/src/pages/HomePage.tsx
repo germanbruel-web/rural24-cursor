@@ -18,6 +18,7 @@ import { SearchSEO } from '../components/SearchSEO';
 import { getHeroVIPBanners } from '../services/bannersCleanService';
 import { getSettingNumber } from '../services/v2/globalSettingsService';
 import { navigateTo } from '../hooks/useNavigate';
+import { CategoryQuickNav } from '../components/CategoryQuickNav';
 import type { Banner, BannerClean } from '../../types';
 
 interface HomePageProps {
@@ -83,6 +84,9 @@ export const HomePage: React.FC<HomePageProps> = ({
         }
       >
       </HeroWithCarousel>
+
+      {/* Navegación rápida por categoría — solo mobile, debajo del hero */}
+      <CategoryQuickNav />
 
       {/* Widgets informativos: clima, precios, calendario, guías */}
       <HowItWorksSection onRegisterClick={onShowAuthModal} />

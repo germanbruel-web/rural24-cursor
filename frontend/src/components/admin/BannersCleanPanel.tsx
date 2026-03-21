@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Plus,
   Edit2,
@@ -6,7 +6,11 @@ import {
   Play,
   Pause,
   Image as ImageIcon,
-  ExternalLink
+  ExternalLink,
+  AlertCircle,
+  Eye,
+  X,
+  Loader2
 } from 'lucide-react';
 import type { BannerClean, CreateBannerCleanInput, BannerPlacement } from '@/types';
 import {
@@ -37,6 +41,21 @@ interface BannerFormData {
   is_active: boolean;
 }
 
+interface Toast {
+  id: number;
+  type: 'error' | 'success';
+  message: string;
+}
+
+interface CategoryOption {
+  value: string;
+  label: string;
+}
+
+// ====================================
+// CONSTANTES
+// ====================================
+
 const INITIAL_FORM: BannerFormData = {
   placement: 'hero_vip',
   category: 'all',
@@ -51,11 +70,6 @@ const INITIAL_FORM: BannerFormData = {
   is_active: true
 };
 
-interface CategoryOption {
-  value: string;   // slug — lo que se guarda en banners_clean.category
-  label: string;   // display_name para mostrar en UI
-}
-
 const ALL_categories_OPTION: CategoryOption = { value: 'all', label: 'Todas las Categorías' };
 
 const PLACEMENTS = [
@@ -64,6 +78,164 @@ const PLACEMENTS = [
   { value: 'results_intercalated' as BannerPlacement, label: 'Intercalado Resultados', desc: 'Entre productos cada 8 cards (650x100)' },
   { value: 'results_below_filter' as BannerPlacement, label: 'Debajo del Filtro', desc: 'Sticky bajo filtros (280x250)' }
 ];
+
+// ====================================
+// HELPERS
+// ====================================
+
+/** Inserta transformación Cloudinary para miniatura 100x50 */
+function cloudinaryThumb(url: string): string {
+  return url.replace('/upload/', '/upload/w_100,h_50,c_fill,g_auto,f_auto/');
+}
+
+/** Primer URL de imagen disponible en el banner */
+function getBannerPreviewUrl(banner: BannerClean): string | null {
+  return banner.desktop_image_url || banner.carousel_image_url || banner.mobile_image_url || null;
+}
+
+/** Todas las URLs de imágenes del banner (para quick view) */
+function getBannerImages(banner: BannerClean): { label: string; url: string }[] {
+  const imgs: { label: string; url: string }[] = [];
+  if (banner.desktop_image_url) imgs.push({ label: 'Desktop', url: banner.desktop_image_url });
+  if (banner.mobile_image_url) imgs.push({ label: 'Mobile', url: banner.mobile_image_url });
+  if (banner.carousel_image_url) imgs.push({ label: 'Carousel', url: banner.carousel_image_url });
+  return imgs;
+}
+
+/** UTC ISO → valor para datetime-local (TZ local del browser) */
+function toLocalDatetimeInput(isoString: string | undefined): string {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  const offset = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offset).toISOString().slice(0, 16);
+}
+
+/** datetime-local value → UTC ISO para Supabase */
+function fromLocalDatetimeInput(localStr: string): string | undefined {
+  if (!localStr) return undefined;
+  return new Date(localStr).toISOString();
+}
+
+type ExpiryStatus = 'expired' | 'warning' | null;
+
+function getExpiryStatus(expires_at: string | undefined): ExpiryStatus {
+  if (!expires_at) return null;
+  const diffDays = (new Date(expires_at).getTime() - Date.now()) / 86_400_000;
+  if (diffDays < 0) return 'expired';
+  if (diffDays <= 7) return 'warning';
+  return null;
+}
+
+let toastCounter = 0;
+
+// ====================================
+// SUBCOMPONENTE: TOAST
+// ====================================
+
+function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: number) => void }) {
+  if (toasts.length === 0) return null;
+  return (
+    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2">
+      {toasts.map(t => (
+        <div
+          key={t.id}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-sm font-medium min-w-[260px] ${
+            t.type === 'error'
+              ? 'bg-red-600 text-white'
+              : 'bg-brand-600 text-white'
+          }`}
+        >
+          {t.type === 'error' && <AlertCircle className="w-4 h-4 shrink-0" />}
+          <span className="flex-1">{t.message}</span>
+          <button onClick={() => onDismiss(t.id)} className="shrink-0 opacity-75 hover:opacity-100">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ====================================
+// SUBCOMPONENTE: EXPIRY BADGE
+// ====================================
+
+function ExpiryBadge({ expires_at }: { expires_at: string | undefined }) {
+  const status = getExpiryStatus(expires_at);
+  if (!status) return null;
+  return (
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ml-1 ${
+      status === 'expired'
+        ? 'bg-red-100 text-red-700'
+        : 'bg-amber-100 text-amber-700'
+    }`}>
+      <AlertCircle className="w-3 h-3" />
+      {status === 'expired' ? 'Vencido' : 'Vence pronto'}
+    </span>
+  );
+}
+
+// ====================================
+// SUBCOMPONENTE: QUICK VIEW MODAL
+// ====================================
+
+function QuickViewModal({ banner, onClose }: { banner: BannerClean; onClose: () => void }) {
+  const images = getBannerImages(banner);
+  return (
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="border-b px-6 py-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">{banner.client_name}</h3>
+            <p className="text-sm text-gray-500">
+              {PLACEMENTS.find(p => p.value === banner.placement)?.label} — {banner.category}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-gray-500 hover:bg-gray-100 rounded transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          {images.length === 0 && (
+            <p className="text-gray-500 text-sm text-center">Sin imágenes cargadas</p>
+          )}
+          {images.map(img => (
+            <div key={img.label}>
+              <p className="text-xs font-medium text-gray-500 mb-2">{img.label}</p>
+              <img
+                src={img.url}
+                alt={img.label}
+                className="w-full rounded border object-contain max-h-60"
+              />
+            </div>
+          ))}
+          {banner.link_url && (
+            <div className="pt-2 border-t">
+              <a
+                href={banner.link_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-brand-600 hover:underline"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Ver destino del link
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ====================================
 // COMPONENTE PRINCIPAL
@@ -77,13 +249,39 @@ export default function BannersCleanPanel() {
   const [editingBanner, setEditingBanner] = useState<BannerClean | null>(null);
   const [formData, setFormData] = useState<BannerFormData>(INITIAL_FORM);
   const [categories, setCategories] = useState<CategoryOption[]>([ALL_categories_OPTION]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [previewBanner, setPreviewBanner] = useState<BannerClean | null>(null);
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   // Filtros
   const [filterPlacement, setFilterPlacement] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
-  // Cargar categorías desde DB (fuente de verdad — no hardcoded)
+  // ---- Toast helpers ----
+  const addToast = useCallback((type: Toast['type'], message: string) => {
+    const id = ++toastCounter;
+    setToasts(prev => [...prev, { id, type, message }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+  }, []);
+
+  const dismissToast = useCallback((id: number) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  // ---- Validación derivada ----
+  const isFormValid = useMemo(() => {
+    if (!formData.client_name.trim()) return false;
+    if (formData.placement === 'hero_vip') {
+      return !!(formData.desktop_image_url && formData.mobile_image_url);
+    }
+    if (formData.placement === 'category_carousel') {
+      return !!formData.carousel_image_url;
+    }
+    return !!formData.desktop_image_url;
+  }, [formData]);
+
+  // ---- Cargar categorías desde DB ----
   useEffect(() => {
     supabase
       .from('categories')
@@ -100,29 +298,18 @@ export default function BannersCleanPanel() {
       });
   }, []);
 
-  // Cargar banners
+  // ---- Cargar banners ----
   useEffect(() => {
     loadBanners();
   }, []);
 
-  // Aplicar filtros
+  // ---- Aplicar filtros ----
   useEffect(() => {
     let filtered = [...banners];
-
-    if (filterPlacement !== 'all') {
-      filtered = filtered.filter(b => b.placement === filterPlacement);
-    }
-
-    if (filterCategory !== 'all') {
-      filtered = filtered.filter(b => b.category === filterCategory);
-    }
-
-    if (filterStatus === 'active') {
-      filtered = filtered.filter(b => b.is_active);
-    } else if (filterStatus === 'paused') {
-      filtered = filtered.filter(b => !b.is_active);
-    }
-
+    if (filterPlacement !== 'all') filtered = filtered.filter(b => b.placement === filterPlacement);
+    if (filterCategory !== 'all') filtered = filtered.filter(b => b.category === filterCategory);
+    if (filterStatus === 'active') filtered = filtered.filter(b => b.is_active);
+    else if (filterStatus === 'paused') filtered = filtered.filter(b => !b.is_active);
     setFilteredBanners(filtered);
   }, [banners, filterPlacement, filterCategory, filterStatus]);
 
@@ -133,7 +320,7 @@ export default function BannersCleanPanel() {
       setBanners(data);
     } catch (error) {
       console.error('Error cargando banners:', error);
-      alert('Error cargando banners');
+      addToast('error', 'Error cargando banners');
     } finally {
       setLoading(false);
     }
@@ -147,7 +334,6 @@ export default function BannersCleanPanel() {
 
   const handleEdit = (banner: BannerClean) => {
     setEditingBanner(banner);
-    
     setFormData({
       placement: banner.placement,
       category: banner.category,
@@ -157,8 +343,8 @@ export default function BannersCleanPanel() {
       desktop_image_url: banner.desktop_image_url || '',
       mobile_image_url: banner.mobile_image_url || '',
       carousel_image_url: banner.carousel_image_url || '',
-      starts_at: banner.starts_at || '',
-      expires_at: banner.expires_at || '',
+      starts_at: toLocalDatetimeInput(banner.starts_at),
+      expires_at: toLocalDatetimeInput(banner.expires_at),
       is_active: banner.is_active
     });
     setShowModal(true);
@@ -166,13 +352,12 @@ export default function BannersCleanPanel() {
 
   const handleDelete = async (banner: BannerClean) => {
     if (!confirm(`¿Eliminar banner de "${banner.client_name}"?`)) return;
-
     try {
       await deleteBannerClean(banner.id);
       await loadBanners();
     } catch (error) {
       console.error('Error eliminando:', error);
-      alert('Error eliminando banner');
+      addToast('error', 'Error eliminando banner');
     }
   };
 
@@ -182,42 +367,15 @@ export default function BannersCleanPanel() {
       await loadBanners();
     } catch (error) {
       console.error('Error cambiando estado:', error);
-      alert('Error cambiando estado');
+      addToast('error', 'Error cambiando estado');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFormValid) return;
 
-    // Validaciones
-    if (!formData.client_name.trim()) {
-      alert('El nombre del cliente es requerido');
-      return;
-    }
-
-    // Validación según tipo de placement
-    if (formData.placement === 'hero_vip') {
-      if (!formData.desktop_image_url.trim() || !formData.mobile_image_url.trim()) {
-        alert('Hero VIP requiere imagen Desktop (1100x200) y Mobile (480x100)');
-        return;
-      }
-    } else if (formData.placement === 'category_carousel') {
-      if (!formData.carousel_image_url.trim()) {
-        alert('Carrusel requiere imagen (650x100)');
-        return;
-      }
-    } else if (formData.placement === 'results_intercalated') {
-      if (!formData.desktop_image_url.trim()) {
-        alert('Intercalado requiere imagen (650x100)');
-        return;
-      }
-    } else if (formData.placement === 'results_below_filter') {
-      if (!formData.desktop_image_url.trim()) {
-        alert('Debajo del Filtro requiere imagen (280x250)');
-        return;
-      }
-    }
-
+    setIsSaving(true);
     try {
       const input: CreateBannerCleanInput = {
         placement: formData.placement,
@@ -228,22 +386,26 @@ export default function BannersCleanPanel() {
         desktop_image_url: formData.desktop_image_url || undefined,
         mobile_image_url: formData.mobile_image_url || undefined,
         carousel_image_url: formData.carousel_image_url || undefined,
-        starts_at: formData.starts_at || undefined,
-        expires_at: formData.expires_at || undefined,
+        starts_at: fromLocalDatetimeInput(formData.starts_at),
+        expires_at: fromLocalDatetimeInput(formData.expires_at),
         is_active: formData.is_active
       };
 
       if (editingBanner) {
         await updateBannerClean(editingBanner.id, input);
+        addToast('success', 'Banner actualizado');
       } else {
         await createBannerClean(input);
+        addToast('success', 'Banner creado');
       }
 
       setShowModal(false);
       await loadBanners();
     } catch (error) {
       console.error('Error guardando:', error);
-      alert('Error guardando banner');
+      addToast('error', 'Error guardando banner');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -253,6 +415,8 @@ export default function BannersCleanPanel() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -263,19 +427,17 @@ export default function BannersCleanPanel() {
             </div>
             <button
               onClick={handleCreate}
-              className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-600 transition-colors"
+              className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
               Crear Banner
             </button>
           </div>
 
-          {/* Filtros */}
-          <div className="grid grid-cols-3 gap-4 mt-6">
+          {/* Filtros — responsive */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Banner
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Banner</label>
               <select
                 value={filterPlacement}
                 onChange={(e) => setFilterPlacement(e.target.value)}
@@ -287,11 +449,8 @@ export default function BannersCleanPanel() {
                 ))}
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Categoría
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
@@ -302,11 +461,8 @@ export default function BannersCleanPanel() {
                 ))}
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Estado
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -329,10 +485,7 @@ export default function BannersCleanPanel() {
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
             <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">No hay banners creados</p>
-            <button
-              onClick={handleCreate}
-              className="mt-4 text-brand-600 hover:underline"
-            >
+            <button onClick={handleCreate} className="mt-4 text-brand-600 hover:underline">
               Crear el primer banner
             </button>
           </div>
@@ -341,108 +494,154 @@ export default function BannersCleanPanel() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">ID</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Vista</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Tipo</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Categoría</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Cliente</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Imágenes</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Vencimiento</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Estado</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Stats</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filteredBanners.map(banner => (
-                  <tr key={banner.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {banner.id.slice(0, 8)}...
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        banner.placement === 'hero_vip' 
-                          ? 'bg-purple-100 text-purple-700' 
-                          : banner.placement === 'category_carousel'
-                          ? 'bg-blue-100 text-blue-700'
-                          : banner.placement === 'results_intercalated'
-                          ? 'bg-brand-100 text-brand-600'
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {PLACEMENTS.find(p => p.value === banner.placement)?.label || banner.placement}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {categories.find(c => c.value === banner.category)?.label || banner.category}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-                      {banner.client_name}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <div className="flex gap-1">
-                        {banner.desktop_image_url && (
-                          <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                            Desktop
-                          </span>
+                {filteredBanners.map(banner => {
+                  const thumbUrl = getBannerPreviewUrl(banner);
+                  return (
+                    <tr key={banner.id} className="hover:bg-gray-50">
+                      {/* Miniatura + Quick View */}
+                      <td className="px-4 py-3">
+                        {thumbUrl ? (
+                          <button
+                            onClick={() => setPreviewBanner(banner)}
+                            className="relative group block"
+                            title="Vista rápida"
+                          >
+                            <img
+                              src={cloudinaryThumb(thumbUrl)}
+                              alt="miniatura"
+                              className="w-[100px] h-[50px] object-cover rounded border"
+                            />
+                            <span className="absolute inset-0 bg-black/40 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Eye className="w-4 h-4 text-white" />
+                            </span>
+                          </button>
+                        ) : (
+                          <div className="w-[100px] h-[50px] bg-gray-100 rounded border flex items-center justify-center">
+                            <ImageIcon className="w-5 h-5 text-gray-400" />
+                          </div>
                         )}
-                        {banner.mobile_image_url && (
-                          <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                            Mobile
-                          </span>
+                      </td>
+
+                      <td className="px-4 py-3 text-sm">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          banner.placement === 'hero_vip'
+                            ? 'bg-purple-100 text-purple-700'
+                            : banner.placement === 'category_carousel'
+                            ? 'bg-blue-100 text-blue-700'
+                            : banner.placement === 'results_intercalated'
+                            ? 'bg-brand-100 text-brand-600'
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {PLACEMENTS.find(p => p.value === banner.placement)?.label || banner.placement}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {categories.find(c => c.value === banner.category)?.label || banner.category}
+                      </td>
+
+                      <td className="px-4 py-3 text-sm text-gray-900 font-medium">
+                        {banner.client_name}
+                        {banner.link_url && (
+                          <a
+                            href={banner.link_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-1.5 text-gray-400 hover:text-brand-600 inline-flex items-center"
+                            title="Ver sitio"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
                         )}
-                        {banner.carousel_image_url && (
-                          <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                            Carousel
+                      </td>
+
+                      {/* Vencimiento + badge */}
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {banner.expires_at ? (
+                          <span className="inline-flex items-center gap-1">
+                            {new Date(banner.expires_at).toLocaleDateString('es-AR')}
+                            <ExpiryBadge expires_at={banner.expires_at} />
                           </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        banner.is_active
-                          ? 'bg-brand-100 text-brand-600'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}>
-                        {banner.is_active ? 'Activo' : 'Pausado'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {banner.impressions || 0} imp / {banner.clicks || 0} clicks
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleEdit(banner)}
-                          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                          title="Editar"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleActive(banner)}
-                          className={`p-1.5 rounded transition-colors ${
-                            banner.is_active
-                              ? 'text-orange-600 hover:bg-orange-50'
-                              : 'text-brand-600 hover:bg-brand-50'
-                          }`}
-                          title={banner.is_active ? 'Pausar' : 'Activar'}
-                        >
-                          {banner.is_active ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(banner)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+
+                      <td className="px-4 py-3 text-sm">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          banner.is_active
+                            ? 'bg-brand-100 text-brand-600'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {banner.is_active ? 'Activo' : 'Pausado'}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {banner.impressions || 0} imp / {banner.clicks || 0} clicks
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setPreviewBanner(banner)}
+                            className="p-1.5 text-gray-500 hover:bg-gray-100 rounded transition-colors"
+                            title="Vista rápida"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(banner)}
+                            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                            title="Editar"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleToggleActive(banner)}
+                            className={`p-1.5 rounded transition-colors ${
+                              banner.is_active
+                                ? 'text-orange-600 hover:bg-orange-50'
+                                : 'text-brand-600 hover:bg-brand-50'
+                            }`}
+                            title={banner.is_active ? 'Pausar' : 'Activar'}
+                          >
+                            {banner.is_active ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(banner)}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
+
+      {/* Quick View Modal */}
+      {previewBanner && (
+        <QuickViewModal banner={previewBanner} onClose={() => setPreviewBanner(null)} />
+      )}
 
       {/* Modal Crear/Editar */}
       {showModal && (
@@ -465,7 +664,10 @@ export default function BannersCleanPanel() {
                   </label>
                   <div className="space-y-2">
                     {PLACEMENTS.map(place => (
-                      <label key={place.value} className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <label
+                        key={place.value}
+                        className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                      >
                         <input
                           type="radio"
                           name="placement"
@@ -485,9 +687,7 @@ export default function BannersCleanPanel() {
 
                 {/* Categoría */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Categoría *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Categoría *</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -503,7 +703,7 @@ export default function BannersCleanPanel() {
                 {/* Cliente */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre del Cliente
+                    Nombre del Cliente *
                   </label>
                   <input
                     type="text"
@@ -515,7 +715,7 @@ export default function BannersCleanPanel() {
                   />
                 </div>
 
-                {/* URL del banner (todos los tipos) */}
+                {/* Link */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Link (opcional)
@@ -534,7 +734,7 @@ export default function BannersCleanPanel() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
-                        title="Probar link"
+                        title="Ver en sitio"
                       >
                         <ExternalLink className="w-5 h-5" />
                       </a>
@@ -542,7 +742,7 @@ export default function BannersCleanPanel() {
                   </div>
                 </div>
 
-                {/* Imágenes según tipo - PROFESIONAL */}
+                {/* Imágenes según tipo */}
                 {formData.placement === 'hero_vip' ? (
                   <div className="space-y-4">
                     <ImageUploader
@@ -591,12 +791,10 @@ export default function BannersCleanPanel() {
                   />
                 ) : null}
 
-                {/* Fechas */}
+                {/* Fechas — con conversión TZ */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fecha Inicio
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
                     <input
                       type="datetime-local"
                       value={formData.starts_at}
@@ -605,9 +803,7 @@ export default function BannersCleanPanel() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fecha Expiración
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Fecha Expiración</label>
                     <input
                       type="datetime-local"
                       value={formData.expires_at}
@@ -636,14 +832,17 @@ export default function BannersCleanPanel() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  disabled={isSaving}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-600"
+                  disabled={!isFormValid || isSaving}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+                  {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                   {editingBanner ? 'Guardar Cambios' : 'Crear Banner'}
                 </button>
               </div>
