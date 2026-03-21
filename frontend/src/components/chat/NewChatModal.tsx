@@ -10,6 +10,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Loader2, MessageCircle } from 'lucide-react';
 import { getOrCreateChannel, sendMessage, type ChatChannel } from '../../services/chatService';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { useBodyOverflow } from '../../hooks/useBodyOverflow';
 
 interface NewChatModalProps {
   adId: string;
@@ -36,18 +38,13 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({
   const [error,   setError]   = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  useBodyOverflow(true);
+  useEscapeKey(onClose);
+
   useEffect(() => {
     textareaRef.current?.focus();
     textareaRef.current?.select();
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
   }, []);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +54,7 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({
 
     const result = await getOrCreateChannel(adId, sellerId);
 
-    if (!result.success) {
+    if (result.success === false) {
       setLoading(false);
       if (result.error === 'PLAN_LIMIT_REACHED') {
         onClose();

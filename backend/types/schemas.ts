@@ -135,7 +135,7 @@ export const AdCreateSchema = z.object({
 export const AdUpdateSchema = z.object({
   title: z.string().min(10).max(200).optional(),
   description: z.string().min(50).optional(),
-  price: z.number().positive().optional(),
+  price: z.number().nonnegative().optional().nullable(),
   currency: z.enum(['ARS', 'USD']).optional(),
   province: z.string().min(1).optional(),
   city: z.string().optional().nullable(),
@@ -144,7 +144,15 @@ export const AdUpdateSchema = z.object({
   images: z.array(AdImageSchema).optional(),
   contact_phone: z.string().optional().nullable(),
   contact_email: z.string().email().optional().nullable(),
-  status: z.enum(['draft', 'active', 'inactive']).optional(),
+  status: z.enum(['draft', 'active', 'paused', 'sold', 'deleted']).optional(),
+  subcategory_id: z.string().uuid().optional(),
+  brand_id: z.string().uuid().optional().nullable(),
+  model_id: z.string().uuid().optional().nullable(),
+  business_profile_id: z.string().uuid().optional().nullable(),
+  locality_id: z.string().uuid().optional().nullable(),
+  price_unit: z.string().max(30).optional().nullable(),
+  price_negotiable: z.boolean().optional(),
+  ad_type: z.enum(['product', 'service']).optional(),
 });
 
 // Schema for ad filters (query params)

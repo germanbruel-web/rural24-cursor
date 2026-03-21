@@ -3,24 +3,19 @@
  * más de 3 conversaciones activas como comprador.
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { X, Zap, Lock } from 'lucide-react';
 import { navigateTo } from '../../hooks/useNavigate';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { useBodyOverflow } from '../../hooks/useBodyOverflow';
 
 interface PlanLimitModalProps {
   onClose: () => void;
 }
 
 export const PlanLimitModal: React.FC<PlanLimitModalProps> = ({ onClose }) => {
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handler);
-    return () => {
-      document.body.style.overflow = '';
-      document.removeEventListener('keydown', handler);
-    };
-  }, [onClose]);
+  useBodyOverflow(true);
+  useEscapeKey(onClose);
 
   return (
     <>

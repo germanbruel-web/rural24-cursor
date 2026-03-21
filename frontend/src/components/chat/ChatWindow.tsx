@@ -11,6 +11,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, Send, ChevronLeft, Loader2, AlertTriangle } from 'lucide-react';
 import { useMessages } from '../../hooks/useMessages';
 import type { ChatChannel } from '../../services/chatService';
+import { formatMessageTime, formatMessageDate, hasSensitiveContent } from '../../utils/formatters';
 
 interface ChatWindowProps {
   channel: ChatChannel;
@@ -29,14 +30,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const messagesEndRef             = useRef<HTMLDivElement>(null);
   const inputRef                   = useRef<HTMLTextAreaElement>(null);
 
-  const SENSITIVE_RE = [
-    /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/,
-    /(\+?54[\s\-.]?)?(\(?\d{2,4}\)?)[\s\-.]?\d{4}[\s\-.]?\d{4}/,
-    /https?:\/\/\S+/i,
-    /\b(whatsapp|wsp|telegram|instagram|facebook|mercadolibre|mercadopago|tiktok|signal)\b/i,
-  ];
-
-  const hasSensitive = (text: string) => SENSITIVE_RE.some((re) => re.test(text));
 
   const isBuyer      = currentUserId === channel.buyer_id;
   const otherUser    = isBuyer ? channel.seller : channel.buyer;
@@ -55,7 +48,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-    setSensitiveWarning(hasSensitive(e.target.value));
+    setSensitiveWarning(hasSensitiveContent(e.target.value));
   };
 
   const handleSend = async () => {
@@ -72,12 +65,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       handleSend();
     }
   };
-
-  const formatTime = (iso: string) =>
-    new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
 
   // Agrupar mensajes por día
   const grouped = messages.reduce<{ date: string; msgs: typeof messages }[]>((acc, msg) => {
@@ -155,7 +142,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 <div className="flex items-center gap-2 my-3">
                   <div className="flex-1 h-px bg-gray-200" />
                   <span className="text-[10px] text-gray-400 font-medium px-2">
-                    {formatDate(date + 'T00:00:00')}
+                    {formatMessageDate(date + 'T00:00:00')}
                   </span>
                   <div className="flex-1 h-px bg-gray-200" />
                 </div>
@@ -179,7 +166,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                       >
                         <p className="whitespace-pre-wrap break-words">{msg.message}</p>
                         <p className={`text-[10px] mt-0.5 text-right ${isOwn ? 'text-white/60' : 'text-gray-400'}`}>
-                          {formatTime(msg.created_at)}
+                          {formatMessageTime(msg.created_at)}
                           {isOptimistic && ' · enviando'}
                         </p>
                       </div>

@@ -84,6 +84,7 @@ const ContactoPage = lazy(() => import("./src/components/pages/ContactoPage").th
 const ServiciosPage = lazy(() => import("./src/components/pages/ServiciosPage").then(m => ({ default: m.ServiciosPage })));
 const FavoritesPanel = lazy(() => import("./src/components/favorites/FavoritesPanel").then(m => ({ default: m.FavoritesPanel })));
 const PublicarAviso = lazy(() => import("./src/components/pages/PublicarAviso"));
+const EditarAviso = lazy(() => import("./src/components/pages/EditarAviso"));
 const ExampleMigratedPage = lazy(() => import("./src/components/pages/ExampleMigratedPage").then(m => ({ default: m.ExampleMigratedPage })));
 
 // Empresa Components (Servicios Rurales B2B)
@@ -91,7 +92,6 @@ const CompanyProfilePage = lazy(() => import("./src/components/empresa/CompanyPr
 const EmpresaPublicPage = lazy(() => import("./src/components/pages/EmpresaPublicPage").then(m => ({ default: m.EmpresaPublicPage })));
 
 // Dev/Test Pages (solo desarrollo - bloqueadas en producción)
-const TestDynamicForm = import.meta.env.DEV ? lazy(() => import("./src/pages/TestDynamicForm").then(m => ({ default: m.TestDynamicForm }))) : null;
 const APITestPage = import.meta.env.DEV ? lazy(() => import("./src/pages/APITest")) : null;
 const DiagnosticsPage = import.meta.env.DEV ? lazy(() => import("./src/pages/DiagnosticsPage").then(m => ({ default: m.DiagnosticsPage }))) : null;
 const DesignSystemShowcaseSimple = lazy(() => import("./src/components/DesignSystemShowcaseSimple").then(m => ({ default: m.DesignSystemShowcaseSimple })));
@@ -107,7 +107,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'servicios' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard';
+export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'servicios' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard' | 'editar-aviso';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -148,9 +148,10 @@ const AppContent: React.FC = () => {
     if (hash === '#/precios-rural24' || hash === '#/pricing' || hash === '#/planes') return 'pricing';
     if (hash === '#/test-form') return 'test-form';
     // Wizard de publicación
-    if (hash === '#/publicar' || hash === '#/publicar-v3' || hash === '#/publicar-aviso' || 
-        hash.startsWith('#/publicar-v3?') || hash.startsWith('#/publicar-aviso?') || 
+    if (hash === '#/publicar' || hash === '#/publicar-v3' || hash === '#/publicar-aviso' ||
+        hash.startsWith('#/publicar-v3?') || hash.startsWith('#/publicar-aviso?') ||
         hash.startsWith('#/publicar?')) return 'publicar-v3';
+    if (hash.startsWith('#/editar/')) return 'editar-aviso';
     if (hash.startsWith('#/edit/')) return 'publicar-v3';
     if (hash.startsWith('#/ad/')) return 'ad-detail';
     if (hash.startsWith('#/empresa/')) return 'company-profile';
@@ -325,7 +326,13 @@ const AppContent: React.FC = () => {
       else if (hash === '#/publicar-v2' || hash.startsWith('#/publicar-v2?')) {
         navigateToPage('publicar-v2');
       }
-      // Routing para editar aviso
+      // Routing para editar aviso — nueva página single-page
+      else if (hash.startsWith('#/editar/')) {
+        const adId = hash.replace('#/editar/', '');
+        setSelectedAdId(adId);
+        navigateToPage('editar-aviso');
+      }
+      // Routing para editar aviso (wizard legacy)
       else if (hash.startsWith('#/edit/')) {
         const adId = hash.replace('#/edit/', '');
         console.log('✏️ Navegando a editar aviso:', adId);
@@ -789,6 +796,19 @@ const AppContent: React.FC = () => {
     );
   }
 
+  // Página editar aviso — single-page con secciones colapsables
+  if (currentPage === 'editar-aviso' && selectedAdId) {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <EditarAviso
+          adId={selectedAdId}
+          isSuperadmin={profile?.role === 'superadmin'}
+          onBack={() => window.history.back()}
+        />
+      </Suspense>
+    );
+  }
+
   // Nuevo formulario de publicar/editar aviso (mobile-first)
   if (currentPage === 'publicar-v3') {
     return (
@@ -810,30 +830,6 @@ const AppContent: React.FC = () => {
           onClose={() => setShowAuthModal(false)}
           initialView={authModalView}
         />
-      </div>
-    );
-  }
-
-  // Página de prueba: Formulario Dinámico (solo dev)
-  if (currentPage === 'test-form') {
-    if (!import.meta.env.DEV || !TestDynamicForm) {
-      navigateToPage('home');
-      return null;
-    }
-    return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <AppHeader 
-          onNavigate={(page) => {
-            navigateToPage(page);
-            if (page === 'home') {
-              handleBackToHome();
-            }
-          }}
-          onSearch={handleSearch}
-        />
-        <Suspense fallback={<LoadingFallback />}>
-          <TestDynamicForm />
-        </Suspense>
       </div>
     );
   }
