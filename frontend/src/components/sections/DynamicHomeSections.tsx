@@ -10,9 +10,7 @@ import { getHomeComposition } from '@/services/v2/homeSectionsService';
 import type { HomeSection } from '@/services/v2/homeSectionsService';
 import { supabase } from '@/services/supabaseClient';
 import { navigateTo } from '@/hooks/useNavigate';
-
-// Lazy-import ProductCard (ya existe en el proyecto)
-import ProductCard from '@/components/ProductCard';
+import { ProductCard } from '../organisms/ProductCard';
 
 // ---- Tipos de sección ----
 
@@ -118,8 +116,17 @@ function AdGridSection({ section }: SectionProps) {
           {ads.map(ad => (
             <ProductCard
               key={ad.id}
-              ad={ad as any}
-              onClick={() => navigateTo(`/ad/${ad.slug || ad.id}`)}
+              product={{
+                ...ad,
+                category: '',
+                location: '',
+                imageUrl: ad.images?.[0] || '',
+                sourceUrl: '',
+                isSponsored: false,
+              }}
+              variant="featured"
+              showLocation={false}
+              onViewDetail={() => navigateTo(`/ad/${ad.slug || ad.id}`)}
             />
           ))}
         </div>
