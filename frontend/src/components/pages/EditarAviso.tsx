@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, ArrowLeft, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ChevronDown, ChevronUp, ArrowLeft, X, AlertTriangle } from 'lucide-react';
+import { hasSensitiveContent, scanAttributesForSensitive } from '../../utils/formatters';
 import { useEditarAviso } from '../../hooks/useEditarAviso';
 import { SimpleImageUploader } from '../SimpleImageUploader/SimpleImageUploader';
 import { DynamicFormLoader } from '../forms/DynamicFormLoader';
@@ -57,6 +58,19 @@ function Section({
 
 export default function EditarAviso({ adId, isSuperadmin = false, onBack }: EditarAvisoProps) {
   const state = useEditarAviso(adId);
+
+  // Validación de contenido sensible (tiempo real)
+  const titleSensitive    = useMemo(() => hasSensitiveContent(state.title), [state.title]);
+  const descSensitive     = useMemo(() => hasSensitiveContent(state.description), [state.description]);
+  const attrSensitive     = useMemo(() => scanAttributesForSensitive(state.attributeValues), [state.attributeValues]);
+  const hasSensitiveAny   = titleSensitive || descSensitive || attrSensitive;
+
+  function handleBack() {
+    if (state.hasChanges) {
+      if (!window.confirm('Tenés cambios sin guardar. ¿Querés salir de todas formas?')) return;
+    }
+    (onBack || (() => window.history.back()))();
+  }
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -209,7 +223,8 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
   const saveButton = (
     <button
       onClick={state.handleSave}
-      disabled={!state.hasChanges || state.saving}
+      disabled={!state.hasChanges || state.saving || hasSensitiveAny}
+      title={hasSensitiveAny ? 'Hay datos de contacto en los campos' : undefined}
       className="px-4 py-2 rounded-lg text-sm font-semibold bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
     >
       {state.saving ? 'Guardando...' : 'Guardar'}
@@ -250,7 +265,13 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
 
   const sectionDetalles = (
     <Section title="Detalles" open={openSections.detalles} onToggle={() => toggleSection('detalles')}>
-      <div className="pt-2">
+      <div className="pt-2 space-y-2">
+        {attrSensitive && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700">
+            <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+            Uno o más campos tienen datos de contacto. Removelos antes de guardar.
+          </div>
+        )}
         {state.subcategoryId ? (
           <DynamicFormLoader
             subcategoryId={state.subcategoryId}
@@ -316,8 +337,14 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
             value={state.title}
             onChange={e => state.setTitle(e.target.value)}
             maxLength={200}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${titleSensitive ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-brand-500'}`}
           />
+          {titleSensitive && (
+            <p className="flex items-center gap-1 text-xs text-red-600 mt-1">
+              <AlertTriangle className="w-3 h-3 shrink-0" />
+              No podés incluir datos de contacto (teléfono, email, links o redes).
+            </p>
+          )}
         </div>
 
         <div>
@@ -330,8 +357,14 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
             onChange={e => state.setDescription(e.target.value)}
             maxLength={2000}
             rows={5}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+            className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-none ${descSensitive ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-brand-500'}`}
           />
+          {descSensitive && (
+            <p className="flex items-center gap-1 text-xs text-red-600 mt-1">
+              <AlertTriangle className="w-3 h-3 shrink-0" />
+              No podés incluir datos de contacto (teléfono, email, links o redes).
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -405,7 +438,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
         <header className="sticky top-0 z-40 bg-white border-b border-gray-200 h-14 flex items-center px-4 gap-3">
           <button
             type="button"
-            onClick={onBack || (() => window.history.back())}
+            onClick={handleBack}
             className="flex items-center gap-1 text-gray-600 hover:text-brand-600 transition-colors shrink-0"
           >
             <ArrowLeft className="w-5 h-5" />

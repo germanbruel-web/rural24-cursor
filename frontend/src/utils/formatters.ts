@@ -1,3 +1,19 @@
+export const SENSITIVE_RE = [
+  /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/,
+  /(\+?54[\s\-.]?)?(\(?\d{2,4}\)?)[\s\-.]?\d{4}[\s\-.]?\d{4}/,
+  /https?:\/\/\S+/i,
+  /\b(whatsapp|wsp|telegram|instagram|facebook|mercadolibre|mercadopago|tiktok|signal)\b/i,
+];
+
+export const hasSensitiveContent = (text: string) =>
+  SENSITIVE_RE.some((re) => re.test(text));
+
+export function scanAttributesForSensitive(values: Record<string, unknown>): boolean {
+  return Object.values(values).some(
+    (v) => typeof v === 'string' && hasSensitiveContent(v),
+  );
+}
+
 export function formatMessageTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 }

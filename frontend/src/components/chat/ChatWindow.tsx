@@ -11,7 +11,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, Send, ChevronLeft, Loader2, AlertTriangle } from 'lucide-react';
 import { useMessages } from '../../hooks/useMessages';
 import type { ChatChannel } from '../../services/chatService';
-import { formatMessageTime, formatMessageDate } from '../../utils/formatters';
+import { formatMessageTime, formatMessageDate, hasSensitiveContent } from '../../utils/formatters';
 
 interface ChatWindowProps {
   channel: ChatChannel;
@@ -30,14 +30,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const messagesEndRef             = useRef<HTMLDivElement>(null);
   const inputRef                   = useRef<HTMLTextAreaElement>(null);
 
-  const SENSITIVE_RE = [
-    /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/,
-    /(\+?54[\s\-.]?)?(\(?\d{2,4}\)?)[\s\-.]?\d{4}[\s\-.]?\d{4}/,
-    /https?:\/\/\S+/i,
-    /\b(whatsapp|wsp|telegram|instagram|facebook|mercadolibre|mercadopago|tiktok|signal)\b/i,
-  ];
-
-  const hasSensitive = (text: string) => SENSITIVE_RE.some((re) => re.test(text));
 
   const isBuyer      = currentUserId === channel.buyer_id;
   const otherUser    = isBuyer ? channel.seller : channel.buyer;
@@ -56,7 +48,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-    setSensitiveWarning(hasSensitive(e.target.value));
+    setSensitiveWarning(hasSensitiveContent(e.target.value));
   };
 
   const handleSend = async () => {
