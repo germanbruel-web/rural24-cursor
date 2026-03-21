@@ -120,10 +120,9 @@ function AdGridSection({ section }: SectionProps) {
                 ...ad,
                 category: '',
                 location: '',
-                imageUrl: ad.images?.[0] || '',
                 sourceUrl: '',
                 isSponsored: false,
-              }}
+              } as any}
               variant="featured"
               showLocation={false}
               onViewDetail={() => navigateTo(`/ad/${ad.slug || ad.id}`)}

@@ -165,7 +165,8 @@ const VARIANT_CONFIG: Record<ImageVariant, { width: number; ar?: string; crop: s
  * getImageVariant(url, 'original')   → 1920px, sin crop, c_limit
  */
 export function getImageVariant(url: string, variant: ImageVariant): string {
-  if (!url?.includes('cloudinary.com')) return url;
+  if (typeof url !== 'string') return '';
+  if (!url.includes('cloudinary.com')) return url;
 
   const config = VARIANT_CONFIG[variant];
   const parts = [`f_auto`, `q_auto`, `w_${config.width}`, `c_${config.crop}`];
