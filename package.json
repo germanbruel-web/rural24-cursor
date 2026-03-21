@@ -32,6 +32,9 @@
     "db:purge-demo": "node scripts/db-purge-demo.mjs",
     "db:seed-demo": "node scripts/db-seed-demo.mjs",
     "db:set-superadmin": "node scripts/db-set-superadmin.mjs",
+    "db:dump:dev": "node scripts/db-dump-dev.mjs",
+    "db:dump:formwizard": "node scripts/db-dump-formwizard.mjs",
+    "db:apply:formwizard": "node scripts/db-apply-formwizard.mjs",
     "publish:prod": "node scripts/publish-prod.mjs"
   },
   "devDependencies": {
