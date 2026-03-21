@@ -116,39 +116,39 @@ export async function GET(request: NextRequest) {
     if (categoryId) {
       const { data: cat } = await supabase
         .from('categories')
-        .select('id, name, slug')
+        .select('id, name, display_name, slug')
         .eq('id', categoryId)
         .single();
-      categoryInfo = cat;
+      if (cat) categoryInfo = { ...cat, name: (cat as any).display_name || cat.name };
     } else if (categorySlug) {
       // Intentar búsqueda exacta primero
       let { data: cat } = await supabase
         .from('categories')
-        .select('id, name, slug')
+        .select('id, name, display_name, slug')
         .eq('slug', categorySlug)
         .single();
-      
+
       // Si no encuentra, buscar case-insensitive
       if (!cat) {
         const { data: catIlike } = await supabase
           .from('categories')
-          .select('id, name, slug')
+          .select('id, name, display_name, slug')
           .ilike('slug', categorySlug)
           .single();
         cat = catIlike;
       }
-      
+
       // Si aún no encuentra, buscar por nombre similar
       if (!cat) {
         const { data: catByName } = await supabase
           .from('categories')
-          .select('id, name, slug')
+          .select('id, name, display_name, slug')
           .ilike('name', `%${categorySlug.replace(/-/g, '%')}%`)
           .single();
         cat = catByName;
       }
-      
-      categoryInfo = cat;
+
+      if (cat) categoryInfo = { ...cat, name: (cat as any).display_name || cat.name };
     }
 
     // ================================================================
@@ -159,28 +159,28 @@ export async function GET(request: NextRequest) {
     if (subcategoryId) {
       const { data: sub } = await supabase
         .from('subcategories')
-        .select('id, name, slug, category_id')
+        .select('id, name, display_name, slug, category_id')
         .eq('id', subcategoryId)
         .single();
-      subcategoryInfo = sub;
-      
+      if (sub) subcategoryInfo = { ...sub, name: (sub as any).display_name || sub.name };
+
       // Si no teníamos categoría, obtenerla
       if (!categoryInfo && sub?.category_id) {
         const { data: cat } = await supabase
           .from('categories')
-          .select('id, name, slug')
+          .select('id, name, display_name, slug')
           .eq('id', sub.category_id)
           .single();
-        categoryInfo = cat;
+        if (cat) categoryInfo = { ...cat, name: (cat as any).display_name || cat.name };
       }
     } else if (subcategorySlug && categoryInfo) {
       const { data: sub } = await supabase
         .from('subcategories')
-        .select('id, name, slug')
+        .select('id, name, display_name, slug')
         .eq('slug', subcategorySlug)
         .eq('category_id', categoryInfo.id)
         .single();
-      subcategoryInfo = sub;
+      if (sub) subcategoryInfo = { ...sub, name: (sub as any).display_name || sub.name };
     }
 
     // ================================================================
@@ -222,7 +222,7 @@ export async function GET(request: NextRequest) {
       // Obtener todas las subcategorías de esta categoría
       const { data: allSubs } = await supabase
         .from('subcategories')
-        .select('id, name, slug')
+        .select('id, name, display_name, slug')
         .eq('category_id', categoryInfo.id)
         .eq('is_active', true)
         .order('sort_order');
@@ -244,7 +244,7 @@ export async function GET(request: NextRequest) {
 
       subcategoriesWithCount = (allSubs || []).map(sub => ({
         id: sub.id,
-        name: sub.name,
+        name: (sub as any).display_name || sub.name,
         slug: sub.slug || sub.name.toLowerCase().replace(/\s+/g, '-'),
         count: subCounts.get(sub.id) || 0,
       }));

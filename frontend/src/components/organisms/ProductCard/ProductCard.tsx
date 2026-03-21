@@ -160,39 +160,45 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
       {/* Contenido */}
       <div className={cn(
         'flex flex-col',
-        isFeatured ? 'p-5 gap-3' : 'p-4 gap-2'
+        isFeatured ? 'p-3 sm:p-5 gap-2 sm:gap-3' : 'p-3 gap-1.5'
       )}>
         {/* Label: Subcategoría · Marca · Modelo */}
         {cardLabel && (
-          <div className={cn(
-            'flex items-center gap-1.5 text-gray-600',
-            isFeatured ? 'text-xs' : 'text-[11px]'
-          )}>
-            <Tag size={isFeatured ? 12 : 10} className="text-gray-400 flex-shrink-0" />
+          <div className="flex items-center gap-1 text-[10px] sm:text-xs text-gray-600">
+            <Tag size={10} className="text-gray-400 flex-shrink-0" />
             <span className="font-medium truncate">{cardLabel}</span>
           </div>
         )}
 
-        {/* Título */}
+        {/* Título — siempre 2 líneas reservadas */}
         <h3 className={cn(
           'font-bold text-gray-900 dark:text-white line-clamp-2',
           'group-hover:text-brand-600 transition-colors',
-          isFeatured ? 'text-base leading-tight min-h-[2.5rem]' : 'text-sm leading-snug min-h-[2rem]'
+          isFeatured
+            ? 'text-sm sm:text-base leading-tight min-h-[2.5rem] sm:min-h-[3rem]'
+            : 'text-sm leading-snug min-h-[2.5rem]'
         )}>
           {product.title}
         </h3>
 
-        {/* Precio destacado */}
+        {/* Precio — mobile: texto neutro / sm+: bloque con estilo */}
         <div>
+          {/* Mobile */}
+          <p className="sm:hidden text-xs font-semibold text-gray-700">
+            {formatPrice(product.price, product.currency)}
+            {product.price_unit && product.price && product.price > 0 && (
+              <span className="text-[10px] text-gray-400 font-normal ml-1">
+                /{product.price_unit.replace(/-/g, ' ')}
+              </span>
+            )}
+          </p>
+          {/* Desktop */}
           <div className={cn(
-            'inline-block bg-gradient-to-r from-brand-50 to-emerald-50',
+            'hidden sm:inline-block bg-gradient-to-r from-brand-50 to-emerald-50',
             'border-l-4 border-brand-600 rounded-lg',
             isFeatured ? 'px-3 py-1.5' : 'px-2.5 py-1'
           )}>
-            <p className={cn(
-              'font-black text-brand-600',
-              isFeatured ? 'text-base' : 'text-sm'
-            )}>
+            <p className={cn('font-black text-brand-600', isFeatured ? 'text-base' : 'text-sm')}>
               {formatPrice(product.price, product.currency)}
             </p>
             {product.price_unit && product.price && product.price > 0 && (
@@ -203,20 +209,12 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
           </div>
         </div>
 
-        {/* Footer: ubicación + compartir */}
-        <div className={cn('flex items-center justify-between gap-1 mt-auto', isFeatured ? 'text-xs' : 'text-[11px]')}>
-          {showLocation && (product.location || product.province) ? (
-            <div className="flex items-center gap-1.5 text-gray-500 min-w-0">
-              <MapPin size={isFeatured ? 14 : 12} className="flex-shrink-0 text-gray-400" />
-              <span className="truncate">
-                {(() => {
-                  const parts: string[] = [];
-                  if (product.location && product.location !== 'Sin ubicación') parts.push(product.location);
-                  if (showProvince && product.province) parts.push(product.province);
-                  if (parts.length === 0 && product.province) parts.push(product.province);
-                  return parts.join(', ') || 'Sin ubicación';
-                })()}
-              </span>
+        {/* Footer: solo provincia + compartir */}
+        <div className={cn('flex items-center justify-between gap-1 mt-auto text-[10px] sm:text-xs')}>
+          {showLocation && product.province ? (
+            <div className="flex items-center gap-1 text-gray-400 min-w-0">
+              <MapPin size={10} className="flex-shrink-0" />
+              <span className="truncate">{product.province}</span>
             </div>
           ) : <div />}
 
@@ -226,7 +224,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
               aria-label="Compartir aviso"
               className="flex-shrink-0 p-1 text-gray-400 hover:text-brand-600 transition-colors rounded"
             >
-              <Share2 size={isFeatured ? 14 : 12} strokeWidth={2} />
+              <Share2 size={12} strokeWidth={2} />
             </button>
           )}
         </div>

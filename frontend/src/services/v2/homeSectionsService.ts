@@ -5,7 +5,7 @@
 
 import { supabase } from '../supabaseClient';
 
-export type SectionType = 'featured_grid' | 'category_carousel' | 'ad_list' | 'banner' | 'stats';
+export type SectionType = 'featured_grid' | 'category_carousel' | 'ad_list' | 'banner' | 'stats' | 'cta_cards' | 'category_section';
 
 export interface HomeSection {
   id: string;

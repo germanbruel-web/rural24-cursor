@@ -20,7 +20,7 @@ const CACHE_TTL_MS = 60 * 1000; // 60 segundos de caché
  * normalizeForComparison("MAQUINARIAS AGRÍCOLAS") // "maquinariasagricolas"
  * normalizeForComparison("maquinarias-agricolas") // "maquinariasagricolas"
  */
-function normalizeForComparison(text: string): string {
+export function normalizeForComparison(text: string): string {
   return text
     .toLowerCase()
     .normalize('NFD')                    // Separa acentos (é → e + ´)

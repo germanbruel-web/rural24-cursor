@@ -8,8 +8,10 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Edit2, Trash2, Play, Pause, GripVertical,
   LayoutGrid, List, BarChart2, Image as ImageIcon, Rows,
-  ChevronUp, ChevronDown, Loader2, X, AlertCircle
+  ChevronUp, ChevronDown, Loader2, X, AlertCircle,
+  Upload, ExternalLink, ChevronRight
 } from 'lucide-react';
+import { uploadsApi } from '@/services/api/uploads';
 import type { HomeSection, SectionType, CreateHomeSectionInput } from '@/services/v2/homeSectionsService';
 import {
   getAllHomeSections,
@@ -29,6 +31,8 @@ const SECTION_TYPES: { value: SectionType; label: string; desc: string; icon: Re
   { value: 'ad_list',            label: 'Lista de Avisos',   desc: 'Listado filtrado de avisos (por categoría/estado)',    icon: <List className="w-4 h-4" /> },
   { value: 'banner',             label: 'Banner',            desc: 'Banner publicitario desde banners_clean',              icon: <ImageIcon className="w-4 h-4" /> },
   { value: 'stats',              label: 'Estadísticas',      desc: 'Contadores de la plataforma (avisos, usuarios, etc.)', icon: <BarChart2 className="w-4 h-4" /> },
+  { value: 'cta_cards',          label: 'Cards CTA',         desc: 'Cards editoriales con imagen, texto y filtro hacia resultados de búsqueda', icon: <LayoutGrid className="w-4 h-4" /> },
+  { value: 'category_section',   label: 'Sección Categoría', desc: 'Sección completa: destacados + índice taxonómico con conteo de avisos',       icon: <List className="w-4 h-4" /> },
 ];
 
 const TYPE_COLORS: Record<SectionType, string> = {
@@ -37,6 +41,8 @@ const TYPE_COLORS: Record<SectionType, string> = {
   ad_list:           'bg-brand-100 text-brand-700',
   banner:            'bg-amber-100 text-amber-700',
   stats:             'bg-gray-100 text-gray-700',
+  cta_cards:         'bg-green-100 text-green-700',
+  category_section:  'bg-teal-100 text-teal-700',
 };
 
 const INITIAL_FORM: CreateHomeSectionInput = {
@@ -49,7 +55,7 @@ const INITIAL_FORM: CreateHomeSectionInput = {
   is_active: true,
 };
 
-interface CategoryOption { value: string; label: string }
+interface TaxOption { value: string; label: string }
 
 // ---- Toast inline ----
 
@@ -121,6 +127,482 @@ function JsonEditor({
   );
 }
 
+// ---- cta_cards: tipos y constantes ----
+
+interface CardConfig {
+  id: string;
+  image_url: string;
+  label: string;
+  title: string;
+  subtitle: string;
+  cta_label: string;
+  filters: Record<string, string>;
+}
+
+const ARGENTINA_PROVINCES = [
+  '', 'Buenos Aires', 'CABA', 'Catamarca', 'Chaco', 'Chubut', 'Córdoba',
+  'Corrientes', 'Entre Ríos', 'Formosa', 'Jujuy', 'La Pampa', 'La Rioja',
+  'Mendoza', 'Misiones', 'Neuquén', 'Río Negro', 'Salta', 'San Juan',
+  'San Luis', 'Santa Cruz', 'Santa Fe', 'Santiago del Estero',
+  'Tierra del Fuego', 'Tucumán',
+];
+
+// ---- CardImageUploader ----
+
+function CardImageUploader({
+  url,
+  onChange,
+}: {
+  url: string;
+  onChange: (u: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleFile = async (file: File) => {
+    setError('');
+    setUploading(true);
+    try {
+      const result = await uploadsApi.uploadImage(file, 'banners');
+      onChange(result.url);
+    } catch (e: any) {
+      setError(e?.message ?? 'Error al subir imagen');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) void handleFile(file);
+    e.target.value = '';
+  };
+
+  if (url) {
+    return (
+      <div className="relative">
+        <img src={url} alt="" className="w-full h-36 object-cover rounded-lg border border-gray-200" />
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-red-50 border border-gray-200"
+        >
+          <X className="w-4 h-4 text-red-500" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <label className="relative flex flex-col items-center justify-center h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-brand-400 hover:bg-brand-50 transition-colors">
+        {uploading ? (
+          <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
+        ) : (
+          <>
+            <Upload className="w-6 h-6 text-gray-400 mb-1" />
+            <span className="text-xs text-gray-500">Subir imagen</span>
+          </>
+        )}
+        <input
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          disabled={uploading}
+          onChange={handleInputChange}
+        />
+      </label>
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  );
+}
+
+// ---- CardFilterBuilder ----
+
+function CardFilterBuilder({
+  filters,
+  onChange,
+  categories,
+}: {
+  filters: Record<string, string>;
+  onChange: (f: Record<string, string>) => void;
+  categories: TaxOption[];
+}) {
+  const [subcategories, setSubcategories] = useState<TaxOption[]>([]);
+  const [subSubcategories, setSubSubcategories] = useState<TaxOption[]>([]);
+  const [catId, setCatId] = useState<string | null>(null);
+
+  const cat = filters.cat ?? '';
+  const sub = filters.sub ?? '';
+  const subsub = filters.subsub ?? '';
+  const prov = filters.prov ?? '';
+
+  const handleCatChange = async (val: string) => {
+    setSubcategories([]);
+    setSubSubcategories([]);
+    setCatId(null);
+    onChange({ cat: val, sub: '', subsub: '', prov });
+    if (!val) return;
+    const { data: catRow } = await supabase.from('categories').select('id').eq('slug', val).single();
+    if (!catRow?.id) return;
+    setCatId(catRow.id);
+    const { data: subs } = await supabase
+      .from('subcategories')
+      .select('slug, display_name')
+      .eq('category_id', catRow.id)
+      .is('parent_id', null)
+      .eq('is_active', true)
+      .order('sort_order');
+    if (subs?.length) {
+      setSubcategories([
+        { value: '', label: 'Todas las subcategorías' },
+        ...subs.map((s: any) => ({ value: s.slug, label: s.display_name })),
+      ]);
+    }
+  };
+
+  const handleSubChange = async (val: string) => {
+    setSubSubcategories([]);
+    onChange({ cat, sub: val, subsub: '', prov });
+    if (!val) return;
+    let q = supabase.from('subcategories').select('id').eq('slug', val).is('parent_id', null);
+    if (catId) q = q.eq('category_id', catId);
+    const { data: subcat } = await q.maybeSingle();
+    if (!subcat?.id) return;
+    const { data: subsubs } = await supabase
+      .from('subcategories')
+      .select('slug, display_name')
+      .eq('parent_id', subcat.id)
+      .eq('is_active', true)
+      .order('sort_order');
+    if (subsubs?.length) {
+      setSubSubcategories([
+        { value: '', label: 'Todas las sub-subcategorías' },
+        ...subsubs.map((s: any) => ({ value: s.slug, label: s.display_name })),
+      ]);
+    }
+  };
+
+  const buildPreviewUrl = () => {
+    const params: string[] = [];
+    if (cat) params.push(`cat=${encodeURIComponent(cat)}`);
+    if (sub) params.push(`sub=${encodeURIComponent(sub)}`);
+    if (subsub) params.push(`subsub=${encodeURIComponent(subsub)}`);
+    if (prov) params.push(`prov=${encodeURIComponent(prov)}`);
+    const qs = params.length ? '?' + params.join('&') : '';
+    return `${window.location.origin}/#/search${qs}`;
+  };
+
+  return (
+    <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+      <p className="text-xs font-semibold text-gray-600">Filtros del destino</p>
+
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">Categoría</label>
+        <select
+          value={cat}
+          onChange={e => void handleCatChange(e.target.value)}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+        >
+          {categories.map(c => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {subcategories.length > 1 && (
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Subcategoría</label>
+          <select
+            value={sub}
+            onChange={e => void handleSubChange(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          >
+            {subcategories.map(c => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {subSubcategories.length > 1 && (
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Sub-subcategoría</label>
+          <select
+            value={subsub}
+            onChange={e => onChange({ cat, sub, subsub: e.target.value, prov })}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          >
+            {subSubcategories.map(c => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">Provincia</label>
+        <select
+          value={prov}
+          onChange={e => onChange({ cat, sub, subsub, prov: e.target.value })}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+        >
+          <option value="">Todas las provincias</option>
+          {ARGENTINA_PROVINCES.filter(p => p !== '').map(p => (
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="pt-1 border-t border-gray-200">
+        <p className="text-xs text-gray-500 mb-1">URL generada</p>
+        <code className="block text-xs bg-brand-50 text-brand-700 rounded px-2 py-1.5 break-all">
+          {buildPreviewUrl()}
+        </code>
+        <a
+          href={buildPreviewUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1.5 inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700"
+        >
+          <ExternalLink className="w-3 h-3" />
+          Probar
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ---- CardEditorItem ----
+
+function CardEditorItem({
+  card,
+  isExpanded,
+  onToggle,
+  onChange,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
+  categories,
+}: {
+  card: CardConfig;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onChange: (patch: Partial<CardConfig>) => void;
+  onRemove: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  isFirst: boolean;
+  isLast: boolean;
+  categories: TaxOption[];
+}) {
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden">
+      {/* Collapsed header */}
+      <div className="flex items-center gap-3 px-3 py-2 bg-white">
+        {card.image_url ? (
+          <img src={card.image_url} alt="" className="w-10 h-10 rounded object-cover shrink-0" />
+        ) : (
+          <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center shrink-0">
+            <ImageIcon className="w-4 h-4 text-gray-300" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          {card.label && (
+            <p className="text-[10px] font-bold uppercase tracking-wider text-brand-600 leading-none mb-0.5">
+              {card.label}
+            </p>
+          )}
+          <p className="text-sm font-medium text-gray-800 truncate">
+            {card.title || <span className="text-gray-400 italic font-normal">Sin título</span>}
+          </p>
+        </div>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            type="button"
+            onClick={onMoveUp}
+            disabled={isFirst}
+            className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onMoveDown}
+            disabled={isLast}
+            className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30"
+          >
+            <ChevronDown className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="p-1 text-red-400 hover:text-red-600"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onToggle}
+            className="p-1 text-gray-400 hover:text-gray-700"
+          >
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded editor */}
+      {isExpanded && (
+        <div className="px-3 pb-4 pt-2 border-t border-gray-100 space-y-3 bg-gray-50">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Imagen</label>
+            <CardImageUploader
+              url={card.image_url}
+              onChange={url => onChange({ image_url: url })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Etiqueta <span className="text-gray-400">(ej: INMOBILIARIA RURAL)</span>
+            </label>
+            <input
+              type="text"
+              value={card.label}
+              onChange={e => onChange({ label: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              placeholder="ej: INMOBILIARIA RURAL"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Título <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={card.title}
+              onChange={e => onChange({ title: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              placeholder="ej: Campos y chacras en todo el país"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Subtítulo <span className="text-gray-400">(opcional)</span>
+            </label>
+            <input
+              type="text"
+              value={card.subtitle}
+              onChange={e => onChange({ subtitle: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              placeholder="ej: Propiedades rurales con todo el potencial"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Texto del botón CTA</label>
+            <input
+              type="text"
+              value={card.cta_label}
+              onChange={e => onChange({ cta_label: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              placeholder="Ver todos"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Destino del card</label>
+            <CardFilterBuilder
+              filters={card.filters}
+              onChange={f => onChange({ filters: f })}
+              categories={categories}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- CardBuilder ----
+
+function CardBuilder({
+  cards,
+  onChange,
+  categories,
+}: {
+  cards: CardConfig[];
+  onChange: (c: CardConfig[]) => void;
+  categories: TaxOption[];
+}) {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  const toggle = (id: string) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const addCard = () => {
+    const newCard: CardConfig = {
+      id: crypto.randomUUID(),
+      image_url: '',
+      label: '',
+      title: '',
+      subtitle: '',
+      cta_label: 'Ver todos',
+      filters: {},
+    };
+    const updated = [...cards, newCard];
+    onChange(updated);
+    setExpanded(prev => ({ ...prev, [newCard.id]: true }));
+  };
+
+  const updateCard = (id: string, patch: Partial<CardConfig>) => {
+    onChange(cards.map(c => c.id === id ? { ...c, ...patch } : c));
+  };
+
+  const removeCard = (id: string) => {
+    onChange(cards.filter(c => c.id !== id));
+  };
+
+  const moveCard = (idx: number, dir: -1 | 1) => {
+    const next = [...cards];
+    const target = idx + dir;
+    if (target < 0 || target >= next.length) return;
+    [next[idx], next[target]] = [next[target], next[idx]];
+    onChange(next);
+  };
+
+  return (
+    <div className="space-y-2">
+      {cards.map((card, idx) => (
+        <CardEditorItem
+          key={card.id}
+          card={card}
+          isExpanded={!!expanded[card.id]}
+          onToggle={() => toggle(card.id)}
+          onChange={patch => updateCard(card.id, patch)}
+          onRemove={() => removeCard(card.id)}
+          onMoveUp={() => moveCard(idx, -1)}
+          onMoveDown={() => moveCard(idx, 1)}
+          isFirst={idx === 0}
+          isLast={idx === cards.length - 1}
+          categories={categories}
+        />
+      ))}
+      <button
+        type="button"
+        onClick={addCard}
+        className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg py-3 text-sm text-gray-500 hover:border-brand-400 hover:text-brand-600 transition-colors"
+      >
+        <Plus className="w-4 h-4" />
+        Agregar card
+      </button>
+    </div>
+  );
+}
+
 // ---- Componente principal ----
 
 export default function HomeSectionBuilder() {
@@ -130,7 +612,10 @@ export default function HomeSectionBuilder() {
   const [editing, setEditing] = useState<HomeSection | null>(null);
   const [form, setForm] = useState<CreateHomeSectionInput>(INITIAL_FORM);
   const [isSaving, setIsSaving] = useState(false);
-  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [categories, setCategories] = useState<TaxOption[]>([]);
+  const [subcategories, setSubcategories] = useState<TaxOption[]>([]);
+  const [subSubcategories, setSubSubcategories] = useState<TaxOption[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const { toasts, add: addToast, dismiss } = useToasts();
 
   // Cargar categorías para el selector de query_filter.category_slug
@@ -165,13 +650,18 @@ export default function HomeSectionBuilder() {
 
   const openCreate = () => {
     setEditing(null);
+    setSubcategories([]);
+    setSubSubcategories([]);
+    setSelectedCategoryId(null);
     setForm({ ...INITIAL_FORM, sort_order: (sections.length + 1) * 10 });
     setShowModal(true);
   };
 
-  const openEdit = (s: HomeSection) => {
+  const openEdit = async (s: HomeSection) => {
     setEditing(s);
-    setForm({
+    setSubcategories([]);
+    setSubSubcategories([]);
+    const newForm = {
       type:            s.type,
       title:           s.title,
       query_filter:    s.query_filter,
@@ -179,8 +669,47 @@ export default function HomeSectionBuilder() {
       active_schedule: s.active_schedule,
       sort_order:      s.sort_order,
       is_active:       s.is_active,
-    });
+    };
+    setForm(newForm);
     setShowModal(true);
+
+    // Precargar subcategorías si hay filtros guardados
+    const catSlug = s.query_filter?.category_slug as string | undefined;
+    const subSlug = s.query_filter?.subcategory_slug as string | undefined;
+    if (catSlug) {
+      const { data: cat } = await supabase.from('categories').select('id').eq('slug', catSlug).single();
+      if (cat?.id) {
+        setSelectedCategoryId(cat.id);
+        const { data: subs } = await supabase
+          .from('subcategories')
+          .select('slug, display_name')
+          .eq('category_id', cat.id)
+          .is('parent_id', null)
+          .order('sort_order');
+        setSubcategories([
+          { value: '', label: 'Todas las subcategorías' },
+          ...(subs ?? []).map((s: any) => ({ value: s.slug, label: s.display_name })),
+        ]);
+        if (subSlug) {
+          const { data: subcat } = await supabase
+            .from('subcategories').select('id')
+            .eq('slug', subSlug).eq('category_id', cat.id).is('parent_id', null).maybeSingle();
+          if (subcat?.id) {
+            const { data: subsubs } = await supabase
+              .from('subcategories')
+              .select('slug, display_name')
+              .eq('parent_id', subcat.id)
+              .order('sort_order');
+            if (subsubs && subsubs.length > 0) {
+              setSubSubcategories([
+                { value: '', label: 'Todas las sub-subcategorías' },
+                ...subsubs.map((s: any) => ({ value: s.slug, label: s.display_name })),
+              ]);
+            }
+          }
+        }
+      }
+    }
   };
 
   const handleDelete = async (s: HomeSection) => {
@@ -240,10 +769,84 @@ export default function HomeSectionBuilder() {
     }
   };
 
-  // Helper: leer/escribir category_slug dentro de query_filter
+  // Helpers: leer/escribir fields dentro de query_filter
   const queryCategorySlug = (form.query_filter?.category_slug as string) ?? '';
-  const setQueryCategorySlug = (val: string) =>
-    setForm(f => ({ ...f, query_filter: { ...f.query_filter, category_slug: val || undefined } }));
+  const querySubcategorySlug = (form.query_filter?.subcategory_slug as string) ?? '';
+  const querySubSubcategorySlug = (form.query_filter?.sub_subcategory_slug as string) ?? '';
+
+  const setQueryCategorySlug = async (val: string) => {
+    setSubcategories([]);
+    setSubSubcategories([]);
+    setSelectedCategoryId(null);
+    setForm(f => ({
+      ...f,
+      query_filter: {
+        ...f.query_filter,
+        category_slug: val || undefined,
+        subcategory_slug: undefined,
+        sub_subcategory_slug: undefined,
+      },
+    }));
+    if (!val) return;
+    const { data: cat } = await supabase.from('categories').select('id').eq('slug', val).single();
+    if (!cat?.id) return;
+    setSelectedCategoryId(cat.id);
+    const { data: subs } = await supabase
+      .from('subcategories')
+      .select('slug, display_name')
+      .eq('category_id', cat.id)
+      .is('parent_id', null)
+      .eq('is_active', true)
+      .order('sort_order');
+    if (subs && subs.length > 0) {
+      setSubcategories([
+        { value: '', label: 'Todas las subcategorías' },
+        ...subs.map((s: any) => ({ value: s.slug, label: s.display_name })),
+      ]);
+    }
+  };
+
+  const setQuerySubcategorySlug = async (val: string) => {
+    setSubSubcategories([]);
+    setForm(f => ({
+      ...f,
+      query_filter: {
+        ...f.query_filter,
+        subcategory_slug: val || undefined,
+        sub_subcategory_slug: undefined,
+      },
+    }));
+    if (!val) return;
+    // Scope el lookup por category_id para evitar colisiones de slug entre categorías
+    let q = supabase.from('subcategories').select('id').eq('slug', val).is('parent_id', null);
+    if (selectedCategoryId) q = q.eq('category_id', selectedCategoryId);
+    const { data: subcat } = await q.maybeSingle();
+    if (!subcat?.id) return;
+    const { data: subsubs } = await supabase
+      .from('subcategories')
+      .select('slug, display_name')
+      .eq('parent_id', subcat.id)
+      .eq('is_active', true)
+      .order('sort_order');
+    if (subsubs && subsubs.length > 0) {
+      setSubSubcategories([
+        { value: '', label: 'Todas las sub-subcategorías' },
+        ...subsubs.map((s: any) => ({ value: s.slug, label: s.display_name })),
+      ]);
+    }
+  };
+
+  const setQuerySubSubcategorySlug = (val: string) =>
+    setForm(f => ({ ...f, query_filter: { ...f.query_filter, sub_subcategory_slug: val || undefined } }));
+
+  // Filtro de atributo (L4 efectivo: ads.attributes @> {field: value})
+  const attrFilter = (form.query_filter?.attribute_filter ?? {}) as Record<string, string>;
+  const attrField  = Object.keys(attrFilter)[0] ?? '';
+  const attrValue  = attrField ? (attrFilter[attrField] ?? '') : '';
+  const setAttrFilter = (field: string, value: string) => {
+    const af = field && value ? { [field]: value } : undefined;
+    setForm(f => ({ ...f, query_filter: { ...f.query_filter, attribute_filter: af } }));
+  };
 
   const queryLimit = (form.query_filter?.limit as number) ?? 8;
   const setQueryLimit = (val: number) =>
@@ -253,9 +856,20 @@ export default function HomeSectionBuilder() {
   const setQueryFeaturedOnly = (val: boolean) =>
     setForm(f => ({ ...f, query_filter: { ...f.query_filter, featured_only: val || undefined } }));
 
-  const displayColumns = (form.display_config?.columns as number) ?? 4;
-  const setDisplayColumns = (val: number) =>
-    setForm(f => ({ ...f, display_config: { ...f.display_config, columns: val } }));
+  const displayColumns     = (form.display_config?.columns as number) ?? 4;
+  const displayBgColor     = (form.display_config?.bg_color as string) ?? 'white';
+  const displayTitleSize   = (form.display_config?.title_size as string) ?? 'xl';
+  const displayTitleColor  = (form.display_config?.title_color as string) ?? 'gray-900';
+  const displaySubtitle    = (form.display_config?.subtitle as string) ?? '';
+  const displaySubColor    = (form.display_config?.subtitle_color as string) ?? 'gray-500';
+  const displayShowMore    = !!(form.display_config?.show_more);
+  const displayShowMoreLabel = (form.display_config?.show_more_label as string) ?? 'Ver más';
+  const displayShowMoreAuto  = !!(form.display_config?.show_more_auto);
+  const displayShowMoreUrl   = (form.display_config?.show_more_url as string) ?? '';
+
+  const setDC = (patch: Record<string, unknown>) =>
+    setForm(f => ({ ...f, display_config: { ...f.display_config, ...patch } }));
+  const setDisplayColumns = (val: number) => setDC({ columns: val });
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -336,11 +950,25 @@ export default function HomeSectionBuilder() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 text-sm truncate">{s.title}</p>
                       <p className="text-xs text-gray-500 truncate">
-                        {s.query_filter?.category_slug
-                          ? `Cat: ${s.query_filter.category_slug}`
-                          : 'Todas las categorías'}
-                        {s.query_filter?.limit ? ` · Límite: ${s.query_filter.limit}` : ''}
-                        {s.query_filter?.featured_only ? ' · Solo destacados' : ''}
+                        {s.type === 'cta_cards' ? (
+                          `${((s.display_config?.cards as any[]) ?? []).length} cards`
+                        ) : s.type === 'category_section' ? (
+                          <>
+                            {s.query_filter?.category_slug ?? 'Sin categoría'}
+                            {s.query_filter?.limit ? ` · ${s.query_filter.limit} avisos` : ''}
+                            {s.display_config?.show_taxonomy_index ? ' · índice taxonómico' : ''}
+                          </>
+                        ) : (
+                          <>
+                            {s.query_filter?.category_slug
+                              ? `Cat: ${s.query_filter.category_slug}`
+                              : 'Todas las categorías'}
+                            {s.query_filter?.subcategory_slug ? ` › ${s.query_filter.subcategory_slug}` : ''}
+                            {s.query_filter?.sub_subcategory_slug ? ` › ${s.query_filter.sub_subcategory_slug}` : ''}
+                            {s.query_filter?.limit ? ` · Límite: ${s.query_filter.limit}` : ''}
+                            {s.query_filter?.featured_only ? ' · Solo destacados' : ''}
+                          </>
+                        )}
                       </p>
                     </div>
 
@@ -435,26 +1063,63 @@ export default function HomeSectionBuilder() {
                   />
                 </div>
 
-                {/* Filtros básicos (section types que usan avisos) */}
-                {['featured_grid', 'category_carousel', 'ad_list'].includes(form.type) && (
+                {/* Banner — placement */}
+                {form.type === 'banner' && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Configuración del banner</h3>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Placement (fuente desde Gestor de Banners)</label>
+                      <select
+                        value={(form.query_filter?.banner_placement as string) ?? ''}
+                        onChange={e => setForm(f => ({ ...f, query_filter: { ...f.query_filter, banner_placement: e.target.value || undefined } }))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      >
+                        <option value="">Seleccionar placement...</option>
+                        <option value="hero_vip">Hero VIP (desktop 1100×200 + mobile 480×100)</option>
+                        <option value="category_carousel">Carrusel Categorías (650×100)</option>
+                        <option value="results_intercalated">Intercalado Resultados (650×100)</option>
+                        <option value="results_below_filter">Debajo del Filtro (280×250)</option>
+                      </select>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Se muestra el primer banner activo con ese placement en Gestor de Banners.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Cards builder — solo para cta_cards */}
+                {form.type === 'cta_cards' && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Cards</h3>
+                    <CardBuilder
+                      cards={(form.display_config?.cards as CardConfig[]) ?? []}
+                      onChange={cards => setDC({ cards })}
+                      categories={categories}
+                    />
+                  </div>
+                )}
+
+                {/* Sección Categoría — config específica */}
+                {form.type === 'category_section' && (
                   <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Filtros de contenido</h3>
+                    <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Configuración de categoría</h3>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Categoría (L1) *</label>
+                      <select
+                        value={queryCategorySlug}
+                        onChange={e => setQueryCategorySlug(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      >
+                        {categories.map(c => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
+                      </select>
+                    </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Categoría</label>
-                        <select
-                          value={queryCategorySlug}
-                          onChange={e => setQueryCategorySlug(e.target.value)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                        >
-                          {categories.map(c => (
-                            <option key={c.value} value={c.value}>{c.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Límite de avisos</label>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Avisos destacados a mostrar</label>
                         <input
                           type="number"
                           min={1}
@@ -464,6 +1129,172 @@ export default function HomeSectionBuilder() {
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                         />
                       </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Columnas</label>
+                        <select
+                          value={displayColumns}
+                          onChange={e => setDisplayColumns(Number(e.target.value))}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        >
+                          {[2, 3, 4, 5, 6].map(n => (
+                            <option key={n} value={n}>{n} columnas</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={queryFeaturedOnly}
+                        onChange={e => setQueryFeaturedOnly(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className="text-gray-700">Solo avisos destacados</span>
+                    </label>
+
+                    <div className="space-y-3 pt-1 border-t border-gray-100">
+                      <p className="text-xs font-semibold text-gray-600">Banner publicitario de la sección</p>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">Placement (desde Gestor de Banners)</label>
+                        <select
+                          value={(form.query_filter?.banner_placement as string) ?? ''}
+                          onChange={e => setForm(f => ({ ...f, query_filter: { ...f.query_filter, banner_placement: e.target.value || undefined } }))}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        >
+                          <option value="">Sin banner</option>
+                          <option value="hero_vip">Hero VIP (desktop 1100×200 + mobile 480×100)</option>
+                          <option value="category_carousel">Carrusel Categorías (650×100)</option>
+                          <option value="results_intercalated">Intercalado Resultados (650×100)</option>
+                          <option value="results_below_filter">Debajo del Filtro (280×250)</option>
+                        </select>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Se muestra el primer banner activo de ese placement que coincida con la categoría seleccionada.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-1 border-t border-gray-100">
+                      <p className="text-xs font-semibold text-gray-600">Índice de subcategorías</p>
+
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={!!(form.display_config?.show_taxonomy_index)}
+                          onChange={e => setDC({ show_taxonomy_index: e.target.checked || undefined })}
+                          className="rounded"
+                        />
+                        <span className="text-gray-700">Mostrar índice de subcategorías al pie</span>
+                      </label>
+
+                      {!!(form.display_config?.show_taxonomy_index) && (
+                        <label className="ml-6 flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={!!(form.display_config?.show_only_with_ads)}
+                            onChange={e => setDC({ show_only_with_ads: e.target.checked || undefined })}
+                            className="rounded"
+                          />
+                          <span className="text-gray-700">Ocultar subcategorías sin avisos</span>
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Filtros básicos (section types que usan avisos) */}
+                {['featured_grid', 'category_carousel', 'ad_list'].includes(form.type) && (
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Filtros de contenido</h3>
+
+                    {/* Taxonomía en cascada */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Categoría (L1)</label>
+                      <select
+                        value={queryCategorySlug}
+                        onChange={e => setQueryCategorySlug(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      >
+                        {categories.map(c => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {subcategories.length > 1 && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Subcategoría (L2)</label>
+                        <select
+                          value={querySubcategorySlug}
+                          onChange={e => setQuerySubcategorySlug(e.target.value)}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        >
+                          {subcategories.map(c => (
+                            <option key={c.value} value={c.value}>{c.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {subSubcategories.length > 1 && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Sub-subcategoría (L3)</label>
+                        <select
+                          value={querySubSubcategorySlug}
+                          onChange={e => setQuerySubSubcategorySlug(e.target.value)}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        >
+                          {subSubcategories.map(c => (
+                            <option key={c.value} value={c.value}>{c.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Filtro L4: atributo (razas, marcas, tipos, etc.) */}
+                    {(queryCategorySlug) && (
+                      <div className="space-y-2 pt-1 border-t border-gray-100">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs font-semibold text-gray-600">Filtro de atributo (Raza / Marca / Tipo / etc.)</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Campo (slug del atributo)</label>
+                            <input
+                              type="text"
+                              value={attrField}
+                              onChange={e => setAttrFilter(e.target.value, attrValue)}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono"
+                              placeholder="ej: raza"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Valor</label>
+                            <input
+                              type="text"
+                              value={attrValue}
+                              onChange={e => setAttrFilter(attrField, e.target.value)}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                              placeholder="ej: angus"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-400">
+                          El slug del campo se ve en Admin › Formularios. El valor debe coincidir exactamente con lo ingresado en el aviso.
+                        </p>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Límite de avisos</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={queryLimit}
+                        onChange={e => setQueryLimit(Number(e.target.value))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      />
                     </div>
 
                     {form.type !== 'category_carousel' && (
@@ -480,22 +1311,26 @@ export default function HomeSectionBuilder() {
                   </div>
                 )}
 
-                {/* Display config básico */}
-                <div className="space-y-3">
+                {/* Display config */}
+                <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Configuración visual</h3>
+
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Columnas</label>
-                      <select
-                        value={displayColumns}
-                        onChange={e => setDisplayColumns(Number(e.target.value))}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                      >
-                        {[2, 3, 4, 5, 6].map(n => (
-                          <option key={n} value={n}>{n} columnas</option>
-                        ))}
-                      </select>
-                    </div>
+                    {/* Columnas — solo para tipos de avisos (category_section tiene su propio selector arriba) */}
+                    {['featured_grid', 'category_carousel', 'ad_list'].includes(form.type) && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Columnas</label>
+                        <select
+                          value={displayColumns}
+                          onChange={e => setDisplayColumns(Number(e.target.value))}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        >
+                          {[2, 3, 4, 5, 6].map(n => (
+                            <option key={n} value={n}>{n} columnas</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Orden</label>
                       <input
@@ -508,8 +1343,140 @@ export default function HomeSectionBuilder() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Fondo de sección</label>
+                      <select
+                        value={displayBgColor}
+                        onChange={e => setDC({ bg_color: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      >
+                        <option value="white">Blanco</option>
+                        <option value="gray-50">Gris claro</option>
+                        <option value="brand-50">Brand claro</option>
+                        <option value="brand-600">Brand (azul/verde)</option>
+                        <option value="gray-900">Oscuro</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Tamaño de título</label>
+                      <select
+                        value={displayTitleSize}
+                        onChange={e => setDC({ title_size: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      >
+                        <option value="sm">Pequeño</option>
+                        <option value="md">Mediano</option>
+                        <option value="lg">Grande</option>
+                        <option value="xl">Extra grande</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Color de título</label>
+                      <select
+                        value={displayTitleColor}
+                        onChange={e => setDC({ title_color: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      >
+                        <option value="gray-900">Oscuro</option>
+                        <option value="brand-600">Brand</option>
+                        <option value="white">Blanco (para fondos oscuros)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Color de subtítulo</label>
+                      <select
+                        value={displaySubColor}
+                        onChange={e => setDC({ subtitle_color: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      >
+                        <option value="gray-500">Gris</option>
+                        <option value="gray-300">Gris claro</option>
+                        <option value="white">Blanco</option>
+                        <option value="brand-600">Brand</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Subtítulo / leyenda</label>
+                    <input
+                      type="text"
+                      value={displaySubtitle}
+                      onChange={e => setDC({ subtitle: e.target.value || undefined })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      placeholder="Ej: Los mejores animales seleccionados esta semana"
+                    />
+                  </div>
+
+                  {/* Botón Ver más */}
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={displayShowMore}
+                        onChange={e => setDC({ show_more: e.target.checked || undefined })}
+                        className="rounded"
+                      />
+                      <span className="text-gray-700 font-medium">Mostrar botón "Ver más"</span>
+                    </label>
+
+                    {displayShowMore && (
+                      <div className="ml-6 space-y-3 border-l-2 border-gray-100 pl-4">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Etiqueta del botón</label>
+                          <input
+                            type="text"
+                            value={displayShowMoreLabel}
+                            onChange={e => setDC({ show_more_label: e.target.value || undefined })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                            placeholder="Ver más"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-2">Destino del botón</label>
+                          <div className="space-y-2">
+                            <label className="flex items-center gap-2 text-sm cursor-pointer">
+                              <input
+                                type="radio"
+                                name="show_more_mode"
+                                checked={displayShowMoreAuto}
+                                onChange={() => setDC({ show_more_auto: true, show_more_url: undefined })}
+                              />
+                              <span className="text-gray-700">Automático (buscar por categoría/subcategoría seleccionada)</span>
+                            </label>
+                            <label className="flex items-center gap-2 text-sm cursor-pointer">
+                              <input
+                                type="radio"
+                                name="show_more_mode"
+                                checked={!displayShowMoreAuto}
+                                onChange={() => setDC({ show_more_auto: undefined })}
+                              />
+                              <span className="text-gray-700">URL manual</span>
+                            </label>
+                          </div>
+                        </div>
+                        {!displayShowMoreAuto && (
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">URL destino</label>
+                            <input
+                              type="text"
+                              value={displayShowMoreUrl}
+                              onChange={e => setDC({ show_more_url: e.target.value || undefined })}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono"
+                              placeholder="#/search?cat=hacienda"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   {/* JSON avanzado colapsable */}
-                  <details className="mt-2">
+                  <details>
                     <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 select-none">
                       Configuración avanzada (JSON)
                     </summary>
