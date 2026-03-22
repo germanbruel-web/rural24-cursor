@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Upload, X, AlertCircle, Loader, Star } from 'lucide-react';
+import { Upload, X, AlertCircle, Loader, Star, CheckCircle } from 'lucide-react';
 import { uploadsApi } from '../../services/api';
 import { notify } from '../../utils/notifications';
 import { useImageValidation } from '../../hooks/useImageValidation';
