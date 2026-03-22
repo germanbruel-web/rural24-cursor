@@ -116,6 +116,7 @@ function buildAutoUrl(section: HomeSection): string {
 function useAds(section: HomeSection) {
   const [ads, setAds] = useState<AdItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [featuredFallback, setFeaturedFallback] = useState(false);
   const countdownEnabled = React.useContext(CountdownEnabledCtx);
 
   const limit             = (section.query_filter?.limit as number) ?? 8;
@@ -164,30 +165,32 @@ function useAds(section: HomeSection) {
 
         if (featuredOnly) {
           if (resolvedCategoryId) {
-            // RPC con deduplicación por usuario (mismo sistema que FeaturedAdsSection)
             const { data: rpcData, error: rpcErr } = await supabase.rpc(
               'get_featured_for_homepage',
               { p_category_id: resolvedCategoryId, p_limit: limit }
             );
             if (!rpcErr && rpcData?.length > 0) {
+              // Hay destacados activos → mostrar solo esos
               query = query.in('id', rpcData.map((f: any) => f.ad_id));
             } else if (!rpcErr) {
-              setAds([]); setLoading(false); return;
+              // Sin destacados activos → fallback a avisos regulares de la misma categoría
+              setFeaturedFallback(true);
+              // query ya tiene .eq('category_id', resolvedCategoryId) — continúa sin filtro featured
             } else {
-              // Fallback: query directa
+              // RPC falló → fallback directo a featured_ads table
               const { data: fIds } = await supabase
                 .from('featured_ads').select('ad_id').eq('status', 'active').eq('placement', 'homepage');
               const ids = (fIds ?? []).map((f: any) => f.ad_id);
               if (ids.length > 0) query = query.in('id', ids);
-              else { setAds([]); setLoading(false); return; }
+              else setFeaturedFallback(true); // sin datos, mostrar regulares
             }
           } else {
-            // Sin categoría: query directa a homepage
+            // Sin categoría: fallback directo
             const { data: fIds } = await supabase
               .from('featured_ads').select('ad_id').eq('status', 'active').eq('placement', 'homepage');
             const ids = (fIds ?? []).map((f: any) => f.ad_id);
             if (ids.length > 0) query = query.in('id', ids);
-            else { setAds([]); setLoading(false); return; }
+            else setFeaturedFallback(true);
           }
         }
 
@@ -229,7 +232,7 @@ function useAds(section: HomeSection) {
     void load();
   }, [section.id, countdownEnabled]);
 
-  return { ads, loading };
+  return { ads, loading, featuredFallback };
 }
 
 // ---- Sub-componente: header de sección (estética bold) ----
@@ -312,7 +315,7 @@ function adToProduct(ad: AdItem): Product {
 // ---- Section: Grid de Avisos (featured_grid, ad_list) ----
 
 function AdGridSection({ section }: SectionProps) {
-  const { ads, loading } = useAds(section);
+  const { ads, loading, featuredFallback } = useAds(section);
   const featuredOnly = !!(section.query_filter?.featured_only);
   const columns = (dc(section).columns as number) ?? 4;
 
@@ -350,7 +353,7 @@ function AdGridSection({ section }: SectionProps) {
     <section className={`py-8 ${bg} border-t ${bord}`}>
       <div className="max-w-[1440px] mx-auto px-2 sm:px-4">
         <SectionHeader section={section} />
-        <AdsSubLabel count={ads.length} featured={featuredOnly} />
+        <AdsSubLabel count={ads.length} featured={featuredOnly && !featuredFallback} />
         <div className={`grid ${colClass} gap-2 sm:gap-4`}>
           {ads.map(ad => (
             <ProductCard
@@ -374,7 +377,7 @@ const CAROUSEL_EASING = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 const CAROUSEL_DURATION = 380; // ms
 
 function CarouselSection({ section }: SectionProps) {
-  const { ads, loading } = useAds(section);
+  const { ads, loading, featuredFallback } = useAds(section);
   const featuredOnly = !!(section.query_filter?.featured_only);
   const trackRef   = useRef<HTMLDivElement>(null);
   const wrapRef    = useRef<HTMLDivElement>(null);
@@ -515,7 +518,7 @@ function CarouselSection({ section }: SectionProps) {
             </div>
           }
         />
-        <AdsSubLabel count={ads.length} featured={featuredOnly} />
+        <AdsSubLabel count={ads.length} featured={featuredOnly && !featuredFallback} />
 
         {/* Contenedor con overflow hidden — el track se mueve con transform */}
         <div ref={wrapRef} className="overflow-hidden">
@@ -785,22 +788,23 @@ function CategorySectionRenderer({ section }: SectionProps) {
           .limit(featuredLimit);
 
         if (featuredOnly) {
-          // RPC con deduplicación por usuario — mismo sistema que FeaturedAdsSection legacy
           const { data: rpcData, error: rpcErr } = await supabase.rpc(
             'get_featured_for_homepage',
             { p_category_id: cat.id, p_limit: featuredLimit }
           );
           if (!rpcErr && rpcData?.length > 0) {
+            // Hay destacados activos → filtrar solo esos
             adsQuery = adsQuery.in('id', rpcData.map((f: any) => f.ad_id));
           } else if (!rpcErr) {
-            setFeaturedAds([]); setLoading(false); return;
+            // Sin destacados activos → fallback a avisos regulares de la misma categoría
+            // adsQuery ya tiene .eq('category_id', cat.id) — continúa sin filtro featured
           } else {
-            // Fallback: query directa
+            // RPC falló → fallback directo a featured_ads table
             const { data: fIds } = await supabase
               .from('featured_ads').select('ad_id').eq('status', 'active').eq('placement', 'homepage');
             const ids = (fIds ?? []).map((f: any) => f.ad_id);
             if (ids.length > 0) adsQuery = adsQuery.in('id', ids);
-            else { setFeaturedAds([]); }
+            // Si tampoco hay en fallback → continúa sin filtro (muestra regulares)
           }
         }
 
