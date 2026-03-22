@@ -13,35 +13,37 @@ interface ImageData {
   hasError: boolean;
 }
 
+const isValidUrl = (s: string) => s.startsWith('http://') || s.startsWith('https://');
+
 export const useProductImage = (product: Product): string => {
   return useMemo(() => {
     // 1. imageUrl directo (ya procesado)
-    if (product.imageUrl && product.imageUrl !== LOCAL_PLACEHOLDER_IMAGE) {
+    if (product.imageUrl && product.imageUrl !== LOCAL_PLACEHOLDER_IMAGE && isValidUrl(product.imageUrl)) {
       return product.imageUrl;
     }
-    
+
     // 2. imageUrls array
     if (product.imageUrls?.length > 0) {
       const first = product.imageUrls[0];
-      if (typeof first === 'string' && first) return first;
-      if (typeof first === 'object' && first && 'url' in first) return (first as any).url;
+      if (typeof first === 'string' && isValidUrl(first)) return first;
+      if (typeof first === 'object' && first && 'url' in first && isValidUrl((first as any).url)) return (first as any).url;
     }
     
     // 3. image_urls array
     if (product.image_urls?.length > 0) {
       const first = product.image_urls[0];
-      if (typeof first === 'string' && first) return first;
-      if (typeof first === 'object' && first && 'url' in first) return (first as any).url;
+      if (typeof first === 'string' && isValidUrl(first)) return first;
+      if (typeof first === 'object' && first && 'url' in first && isValidUrl((first as any).url)) return (first as any).url;
     }
-    
+
     // 4. images array (MEJORADO: prioriza isPrimary y sortOrder)
     if ((product as any).images?.length > 0) {
       const images = (product as any).images;
-      
+
       // 4a. Si hay objetos con metadatos (formato completo)
       if (typeof images[0] === 'object' && images[0] !== null) {
         // Buscar imagen con isPrimary = true
-        const primaryImage = images.find((img: any) => img.isPrimary === true);
+        const primaryImage = images.find((img: any) => img.isPrimary === true && isValidUrl(img.url ?? ''));
         if (primaryImage?.url) return primaryImage.url;
         
         // Si no hay isPrimary, ordenar por sortOrder y tomar el primero
@@ -51,13 +53,13 @@ export const useProductImage = (product: Product): string => {
           return orderA - orderB;
         });
         
-        const firstSorted = sortedImages[0];
+        const firstSorted = sortedImages.find((img: any) => isValidUrl(img.url ?? ''));
         if (firstSorted?.url) return firstSorted.url;
       }
-      
+
       // 4b. Formato simple (string[])
-      const first = images[0];
-      if (typeof first === 'string' && first) return first;
+      const first = images.find((img: any) => typeof img === 'string' && isValidUrl(img));
+      if (first) return first;
     }
     
     // 5. Fallback a placeholder por categoría (o genérico si no está en cache)
