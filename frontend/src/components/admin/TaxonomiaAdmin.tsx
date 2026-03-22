@@ -21,6 +21,7 @@ import {
   ArrowRight,
   LayoutGrid,
   Trash2,
+  ImageIcon,
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import type { Category, Subcategory } from '../../types/v2';
@@ -400,6 +401,10 @@ export const TaxonomiaAdmin: React.FC = () => {
   const [editingCatId, setEditingCatId] = useState<string | null>(null);
   const [editCatValue, setEditCatValue] = useState('');
 
+  // Edit category icon
+  const [editingCatIconId, setEditingCatIconId] = useState<string | null>(null);
+  const [editCatIconValue, setEditCatIconValue] = useState('');
+
   useEffect(() => {
     loadCategories();
   }, []);
@@ -626,6 +631,20 @@ export const TaxonomiaAdmin: React.FC = () => {
     setShowNewCat(false);
   }
 
+  // ── Edit category icon ───────────────────────────────────
+  async function saveCatIcon(cat: TaxCategory) {
+    const { error } = await supabase
+      .from('categories')
+      .update({ icon: editCatIconValue.trim() || null })
+      .eq('id', cat.id);
+    if (!error) {
+      setCategories(prev => prev.map(c =>
+        c.id === cat.id ? { ...c, icon: editCatIconValue.trim() || undefined } : c
+      ));
+    }
+    setEditingCatIconId(null);
+  }
+
   // ── Edit category name ───────────────────────────────────
   async function saveCatEdit(cat: TaxCategory) {
     if (!editCatValue.trim()) return;
@@ -711,6 +730,13 @@ export const TaxonomiaAdmin: React.FC = () => {
                     : <Folder className="w-4 h-4 flex-shrink-0 text-gray-400" />
                   }
 
+                  {/* Ícono actual */}
+                  {cat.icon && editingCatIconId !== cat.id && (
+                    cat.icon.startsWith('http')
+                      ? <img src={cat.icon} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
+                      : <span className="text-base leading-none flex-shrink-0">{cat.icon}</span>
+                  )}
+
                   {editingCatId === cat.id ? (
                     <input
                       autoFocus
@@ -723,6 +749,20 @@ export const TaxonomiaAdmin: React.FC = () => {
                         if (e.key === 'Escape') setEditingCatId(null);
                       }}
                       className="flex-1 min-w-0 px-1 py-0.5 text-sm bg-white text-gray-900 border border-brand-400 rounded focus:outline-none"
+                    />
+                  ) : editingCatIconId === cat.id ? (
+                    <input
+                      autoFocus
+                      value={editCatIconValue}
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => setEditCatIconValue(e.target.value)}
+                      onKeyDown={e => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter') saveCatIcon(cat);
+                        if (e.key === 'Escape') setEditingCatIconId(null);
+                      }}
+                      className="flex-1 min-w-0 px-1 py-0.5 text-sm bg-white text-gray-900 border border-amber-400 rounded focus:outline-none"
+                      placeholder="🐄 emoji o URL"
                     />
                   ) : (
                     <span className={`flex-1 text-sm font-medium truncate ${!cat.is_active ? 'opacity-40' : ''}`}>
@@ -743,6 +783,13 @@ export const TaxonomiaAdmin: React.FC = () => {
                           title="Editar nombre"
                         >
                           <Edit2 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); setEditingCatIconId(cat.id); setEditCatIconValue(cat.icon || ''); }}
+                          className="p-0.5 hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Editar ícono (emoji o URL)"
+                        >
+                          <ImageIcon className="w-3 h-3" />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); toggleCatFilter(cat); }}

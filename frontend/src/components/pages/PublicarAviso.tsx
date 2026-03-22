@@ -669,8 +669,8 @@ export default function PublicarAviso() {
                     };
 
                     // Fila reutilizable para mobile
-                    const MobileRow = ({ label, isActive, hasChildren, isSelected, isServicio, onClick }: {
-                      label: string; isActive?: boolean; hasChildren?: boolean;
+                    const MobileRow = ({ label, icon, isActive, hasChildren, isSelected, isServicio, onClick }: {
+                      label: string; icon?: string | null; isActive?: boolean; hasChildren?: boolean;
                       isSelected?: boolean; isServicio?: boolean; onClick: () => void;
                     }) => (
                       <button
@@ -679,7 +679,16 @@ export default function PublicarAviso() {
                           isActive ? 'bg-brand-50' : 'bg-white'
                         }`}
                       >
-                        {isServicio && <Building2 className="w-5 h-5 text-brand-500 flex-shrink-0" />}
+                        {/* Ícono de categoría — URL (img) o emoji (span) */}
+                        {icon ? (
+                          icon.startsWith('http') ? (
+                            <img src={icon} alt="" className="w-6 h-6 object-contain flex-shrink-0" />
+                          ) : (
+                            <span className="text-xl leading-none flex-shrink-0">{icon}</span>
+                          )
+                        ) : isServicio ? (
+                          <Building2 className="w-5 h-5 text-brand-500 flex-shrink-0" />
+                        ) : null}
                         <span className={`flex-1 text-base font-medium ${isActive ? 'text-brand-800' : 'text-gray-800'}`}>
                           {label}
                         </span>
@@ -736,6 +745,7 @@ export default function PublicarAviso() {
                               <MobileRow
                                 key={cat.id}
                                 label={cat.display_name}
+                                icon={cat.icon}
                                 isActive={selectedCategory === cat.id}
                                 hasChildren
                                 onClick={() => {
@@ -827,11 +837,18 @@ export default function PublicarAviso() {
                                           setSelectedPageType('particular'); setShowProfileGate(false);
                                         }
                                       }}
-                                      className={`w-full px-4 py-3 text-left flex items-center justify-between transition-all border-b border-gray-100 last:border-b-0 ${
+                                      className={`w-full px-4 py-3 text-left flex items-center gap-2 justify-between transition-all border-b border-gray-100 last:border-b-0 ${
                                         isSelected ? 'bg-brand-600 text-white font-semibold' : 'hover:bg-white text-gray-800 hover:text-brand-700'
                                       }`}
                                     >
-                                      <span className="text-sm font-medium">{cat.display_name}</span>
+                                      <span className="flex items-center gap-2">
+                                        {cat.icon && (
+                                          cat.icon.startsWith('http')
+                                            ? <img src={cat.icon} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
+                                            : <span className="text-base leading-none">{cat.icon}</span>
+                                        )}
+                                        <span className="text-sm font-medium">{cat.display_name}</span>
+                                      </span>
                                       {isSelected && <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-80" />}
                                     </button>
                                   );
@@ -966,30 +983,25 @@ export default function PublicarAviso() {
   </div>
 
     {/* Actions */}
-    <div className="bg-gray-50 border-t-2 border-gray-200">
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-6 flex items-center justify-between gap-3">
-            {/* Back */}
-            {currentStep > 1 && (
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => {
-                  goBack();
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
+    <div className="bg-white border-t border-gray-100">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-3">
+
+            {/* Back — siempre con texto, mismo alto que Continuar */}
+            {currentStep > 1 ? (
+              <button
+                type="button"
+                onClick={() => { goBack(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                 disabled={submitting}
-                leftIcon={<ChevronLeft className="w-5 h-5" />}
-                className="min-w-[56px] sm:min-w-[100px]"
+                className="flex items-center gap-1.5 px-4 py-3 rounded-full border border-gray-300 bg-white text-gray-700 font-semibold text-sm hover:border-brand-600 hover:text-brand-600 transition-colors disabled:opacity-50 shrink-0"
               >
-                <span className="hidden sm:inline">Atrás</span>
-              </Button>
-            )}
+                <ChevronLeft className="w-4 h-4" />
+                Atrás
+              </button>
+            ) : <div />}
 
             {/* Next / Submit */}
-            <Button
-              variant="primary"
-              size="lg"
-              fullWidth={activeStepKey === 'categoria' || currentStep > 1}
+            <button
+              type="button"
               onClick={() => {
                 if (activeStepKey === 'revision') {
                   handleSubmit({
@@ -1022,18 +1034,23 @@ export default function PublicarAviso() {
                 }
               }}
               disabled={submitting}
-              loading={submitting}
-              leftIcon={activeStepKey === 'revision' ? <CheckCircle2 className="w-6 h-6" /> : undefined}
-              rightIcon={activeStepKey !== 'revision' ? <ChevronRight className="w-5 h-5" /> : undefined}
-              className={`text-base font-bold tracking-wide ${activeStepKey === 'categoria' ? 'ml-auto' : ''}`}
+              className={`flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm tracking-wide transition-colors disabled:opacity-50 ${activeStepKey === 'categoria' ? 'ml-auto' : 'flex-1'}`}
             >
+              {submitting ? (
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              ) : activeStepKey === 'revision' ? (
+                <CheckCircle2 className="w-4 h-4" />
+              ) : null}
               {submitting
                 ? (isEditMode ? 'Actualizando...' : 'Publicando...')
                 : activeStepKey === 'revision'
-                  ? (isEditMode ? 'ACTUALIZAR AVISO' : 'PUBLICAR AVISO')
+                  ? (isEditMode ? 'Actualizar Aviso' : 'Publicar Aviso')
                   : 'Continuar'
               }
-            </Button>
+            </button>
       </div>
     </div>
 
