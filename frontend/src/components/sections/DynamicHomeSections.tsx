@@ -187,9 +187,15 @@ function useAds(section: HomeSection) {
         }
 
         // Filtro de atributo L4: ads.attributes @> { field: value }
+        // Solo aplica entradas donde el valor es non-empty (evita filtros parciales guardados)
         const attrFilter = section.query_filter?.attribute_filter as Record<string, string> | undefined;
-        if (attrFilter && Object.keys(attrFilter).length > 0) {
-          query = query.contains('attributes', attrFilter);
+        if (attrFilter) {
+          const validAttr = Object.fromEntries(
+            Object.entries(attrFilter).filter(([, v]) => v !== '')
+          );
+          if (Object.keys(validAttr).length > 0) {
+            query = query.contains('attributes', validAttr);
+          }
         }
 
         const { data } = await query.order('created_at', { ascending: false });

@@ -840,12 +840,20 @@ export default function HomeSectionBuilder() {
     setForm(f => ({ ...f, query_filter: { ...f.query_filter, sub_subcategory_slug: val || undefined } }));
 
   // Filtro de atributo (L4 efectivo: ads.attributes @> {field: value})
+  // Permite estado parcial (campo sin valor) para que el input no se resetee en cada keystroke
   const attrFilter = (form.query_filter?.attribute_filter ?? {}) as Record<string, string>;
   const attrField  = Object.keys(attrFilter)[0] ?? '';
   const attrValue  = attrField ? (attrFilter[attrField] ?? '') : '';
   const setAttrFilter = (field: string, value: string) => {
-    const af = field && value ? { [field]: value } : undefined;
-    setForm(f => ({ ...f, query_filter: { ...f.query_filter, attribute_filter: af } }));
+    if (!field && !value) {
+      // Ambos vacíos → limpiar
+      setForm(f => ({ ...f, query_filter: { ...f.query_filter, attribute_filter: undefined } }));
+    } else {
+      // Permite parcial: campo con valor vacío es válido mientras el usuario escribe
+      const af: Record<string, string> = {};
+      if (field) af[field] = value;
+      setForm(f => ({ ...f, query_filter: { ...f.query_filter, attribute_filter: af } }));
+    }
   };
 
   const queryLimit = (form.query_filter?.limit as number) ?? 8;
