@@ -137,11 +137,14 @@ export const getProductLabel = (product: Product): string => {
       const raza = attrs.raza || attrs.breed || attrs.razabovinos;
       if (raza) parts.push(String(raza));
     } else {
-      // Maquinaria, Insumos, Repuestos, Inmobiliaria, etc.: Marca + Modelo
+      // Maquinaria, Insumos, Repuestos, etc.: Marca · Modelo · Año
       const marca = attrs.marca || attrs.brand || product.brand;
       if (marca) parts.push(String(marca));
       const modelo = attrs.modelo || attrs.model;
       if (modelo) parts.push(String(modelo));
+      // Año solo si hay marca (contextualiza mejor que solo el número)
+      const ano = attrs.ano || attrs.año || attrs.year;
+      if (ano && marca) parts.push(String(ano));
     }
   }
 
