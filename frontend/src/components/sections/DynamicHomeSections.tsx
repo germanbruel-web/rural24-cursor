@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BarChart2, Image as ImageIcon, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { getImageVariant } from '@/utils/imageOptimizer';
+import type { Product } from '../../../types';
 import { getHomeComposition } from '@/services/v2/homeSectionsService';
 import type { HomeSection } from '@/services/v2/homeSectionsService';
 import { supabase } from '@/services/supabaseClient';
@@ -257,14 +258,27 @@ function AdsSubLabel({ count, featured = false }: { count: number; featured?: bo
 
 // ---- Helper: AdItem → product prop de ProductCard ----
 
-function adToProduct(ad: AdItem) {
+function adToProduct(ad: AdItem): Product {
+  const firstImage = ad.images?.[0];
+  const imageUrl = typeof firstImage === 'string' ? firstImage : ((firstImage as any)?.url ?? '');
   return {
-    ...ad,
-    category: '',
+    id: ad.id,
+    title: ad.title,
+    slug: ad.slug,
+    description: '',
+    price: ad.price ?? undefined,
+    currency: ad.currency,
+    price_unit: ad.price_unit,
     location: [ad.city, ad.province].filter(Boolean).join(', '),
+    province: ad.province,
+    imageUrl,
+    images: ad.images as Product['images'],
     sourceUrl: '',
+    category: '',
     isSponsored: false,
-  } as any;
+    ad_type: ad.ad_type as Product['ad_type'],
+    attributes: ad.attributes,
+  };
 }
 
 // ---- Section: Grid de Avisos (featured_grid, ad_list) ----
@@ -997,8 +1011,9 @@ function CategorySectionRenderer({ section }: SectionProps) {
 // ---- Section: Banner (conectado a banners_clean) ----
 
 function BannerSection({ section }: SectionProps) {
-  const [banner, setBanner] = useState<Record<string, any> | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [banners, setBanners] = useState<Record<string, any>[]>([]);
+  const [idx, setIdx]         = useState(0);
+  const [loaded, setLoaded]   = useState(false);
 
   const placement = (section.query_filter?.banner_placement as string) ?? '';
   const bg   = sectionBg(section);
@@ -1012,12 +1027,18 @@ function BannerSection({ section }: SectionProps) {
       .eq('placement', placement)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
-      .limit(1)
       .then(({ data }) => {
-        setBanner(data?.[0] ?? null);
+        setBanners(data ?? []);
         setLoaded(true);
       });
   }, [placement]);
+
+  // Autoplay
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const t = setInterval(() => setIdx(i => (i + 1) % banners.length), 4000);
+    return () => clearInterval(t);
+  }, [banners.length]);
 
   // Sin placement configurado → placeholder para admin
   if (!placement) {
@@ -1033,47 +1054,52 @@ function BannerSection({ section }: SectionProps) {
     );
   }
 
-  // Cargando o sin banner activo
-  if (!loaded || !banner) return null;
+  if (!loaded || banners.length === 0) return null;
 
-  const desktopUrl = banner.desktop_image_url as string | undefined;
-  const mobileUrl  = (banner.mobile_image_url as string | undefined) || desktopUrl;
-  if (!desktopUrl && !mobileUrl) return null;
+  const b = banners[idx];
+  const dims = BANNER_DIMS[placement];
+  const desktopSrc = (b.desktop_image_url || b.carousel_image_url || b.mobile_image_url) as string | undefined;
+  const mobileSrc  = (b.mobile_image_url  || b.carousel_image_url || b.desktop_image_url) as string | undefined;
+  if (!desktopSrc && !mobileSrc) return null;
 
-  const linkUrl    = banner.link_url as string | undefined;
-  const linkTarget = (banner.link_target as string) || '_blank';
+  const imgStyleD = dims ? { aspectRatio: `${dims.dw}/${dims.dh}`, maxWidth: `${dims.dw}px` } : undefined;
+  const imgStyleM = dims ? { aspectRatio: `${dims.mw}/${dims.mh}` } : undefined;
 
-  const Inner = () => (
-    <>
-      {desktopUrl && (
-        <img
-          src={desktopUrl}
-          alt={banner.client_name || section.title}
-          className="w-full object-cover hidden sm:block rounded-xl"
-          loading="lazy"
+  const Bullets = () => banners.length > 1 ? (
+    <div className="flex gap-1 mt-[3px] justify-center">
+      {banners.map((_, i) => (
+        <button key={i} onClick={() => setIdx(i)} aria-label={`Banner ${i + 1}`}
+          className={`h-[3px] rounded-full transition-all duration-300 ${i === idx ? 'bg-brand-600 w-6' : 'bg-gray-300 w-4'}`}
         />
-      )}
-      {mobileUrl && (
-        <img
-          src={mobileUrl}
-          alt={banner.client_name || section.title}
-          className="w-full object-cover sm:hidden rounded-xl"
-          loading="lazy"
-        />
-      )}
-    </>
-  );
+      ))}
+    </div>
+  ) : null;
+
+  const ImgDesktop = desktopSrc ? (
+    <img src={desktopSrc} alt={b.client_name || section.title}
+      className="w-full object-cover rounded-xl hidden sm:block" style={imgStyleD} loading="lazy" />
+  ) : null;
+  const ImgMobile = mobileSrc ? (
+    <img src={mobileSrc} alt={b.client_name || section.title}
+      className="w-full object-cover rounded-xl sm:hidden" style={imgStyleM} loading="lazy" />
+  ) : null;
+
+  const linkUrl    = b.link_url as string | undefined;
+  const linkTarget = (b.link_target as string) || '_blank';
 
   return (
     <section className={`py-4 ${bg} border-t ${bord}`}>
       <div className="max-w-[1440px] mx-auto px-2 sm:px-4">
-        {linkUrl ? (
-          <a href={linkUrl} target={linkTarget} rel="noopener noreferrer" className="block">
-            <Inner />
-          </a>
-        ) : (
-          <div><Inner /></div>
-        )}
+        <div className="mx-auto" style={dims ? { maxWidth: `${dims.dw}px` } : undefined}>
+          {linkUrl ? (
+            <a href={linkUrl} target={linkTarget} rel="noopener noreferrer" className="block">
+              {ImgDesktop}{ImgMobile}
+            </a>
+          ) : (
+            <div>{ImgDesktop}{ImgMobile}</div>
+          )}
+          <Bullets />
+        </div>
       </div>
     </section>
   );

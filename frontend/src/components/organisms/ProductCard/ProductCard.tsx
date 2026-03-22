@@ -111,6 +111,13 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         {/* Gradient overlay en hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
+        {/* Badge ad_type — top-left */}
+        {product.ad_type === 'company' && (
+          <span className="absolute top-2 left-2 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white bg-brand-600/90 backdrop-blur-sm rounded">
+            Servicio
+          </span>
+        )}
+
         {/* Favorito — top-right */}
         {product.id && (
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
