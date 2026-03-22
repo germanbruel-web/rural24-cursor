@@ -1,0 +1,56 @@
+{
+  "name": "RURAL24 | El futuro del campo",
+  "short_name": "Rural24",
+  "description": "Clasificados agropecuarios de Argentina. Comprá y vendé ganado, maquinaria, insumos e inmuebles rurales.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#138A2C",
+  "orientation": "portrait-primary",
+  "lang": "es-AR",
+  "icons": [
+    {
+      "src": "/images/Apprural/web/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/Apprural/web/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/images/Apprural/web/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/Apprural/web/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-desktop.webp",
+      "sizes": "1280x720",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Rural24 — Clasificados agropecuarios"
+    },
+    {
+      "src": "/screenshot-mobile.webp",
+      "sizes": "390x844",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Rural24 en móvil"
+    }
+  ],
+  "categories": ["shopping", "lifestyle", "business"],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

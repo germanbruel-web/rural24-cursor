@@ -820,7 +820,16 @@ function CategorySectionRenderer({ section }: SectionProps) {
               const l3sOfL2 = (l3s ?? []).filter((l: any) => l.parent_id === l2.id);
 
               if (l3sOfL2.length > 0) {
-                // Mostrar L3s agrupadas bajo este L2
+                // L2 con hijos: entrada "todos" que incluye avisos directos en L2 + todos sus L3s
+                const l2DirectCount = countMap.get(l2.id) ?? 0;
+                const l3Total = l3sOfL2.reduce((sum: number, l3: any) => sum + (countMap.get(l3.id) ?? 0), 0);
+                links.push({
+                  slug: l2.slug,
+                  label: l2.display_name,
+                  count: l2DirectCount + l3Total,
+                  level: 2,
+                });
+                // L3 hijos debajo
                 for (const l3 of l3sOfL2) {
                   links.push({
                     slug: l3.slug,

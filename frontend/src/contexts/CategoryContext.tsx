@@ -8,7 +8,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { categoryCache, cacheKeys } from '../utils/categoryCache';
 
 const isDev = import.meta.env.DEV;
-import { 
+import {
   getCategories,
   getMaquinariasSubcategories,
   getMaquinariasBrands,
@@ -19,6 +19,7 @@ import {
   getInsumosSubcategories,
   getInsumosBrands
 } from '../services/catalogService';
+import { supabase } from '../services/supabaseClient';
 
 // =====================================================
 // TIPOS
@@ -194,9 +195,15 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const subs = await getInsumosSubcategories();
       data = subs.map(s => ({ ...s, category_id: categoryId }));
     } else {
-      // Fallback a tablas viejas para otras categorías
-      isDev && console.warn(`⚠️ Categoría ${categoryName} aún usa tablas legacy`);
-      data = [] as Subcategory[];
+      // Fallback genérico: leer directamente de tabla subcategories (L2 raíz, sin parent)
+      const { data: rows } = await supabase
+        .from('subcategories')
+        .select('id, name, display_name, category_id, sort_order, is_active')
+        .eq('category_id', categoryId)
+        .is('parent_id', null)
+        .eq('is_active', true)
+        .order('sort_order');
+      data = (rows ?? []) as Subcategory[];
     }
     
     // Guardar en estado y caché
