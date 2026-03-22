@@ -5,9 +5,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Settings, Save, RefreshCw, AlertCircle, CheckCircle, Info, CreditCard, Sliders,
-  Star, Mail, BarChart3, Image, Megaphone, HelpCircle
+  Star, Mail, BarChart3, Image, Megaphone, HelpCircle, LayoutGrid
 } from 'lucide-react';
 import {
   getAllSettings,
@@ -78,6 +78,12 @@ const CATEGORY_INFO: Record<string, {
     description: 'Activar o desactivar metodos de pago',
     color: 'green'
   },
+  cards: {
+    icon: <LayoutGrid className="w-5 h-5" />,
+    label: 'Funciones Cards',
+    description: 'Funcionalidades visuales en las tarjetas de avisos',
+    color: 'purple'
+  },
 };
 
 // Explicaciones detalladas por setting key
@@ -93,6 +99,8 @@ const SETTING_HELP: Record<string, string> = {
   featured_payments_enabled: 'Interruptor global para checkout de destacados.',
   mercadopago_enabled: 'Habilita checkout con MercadoPago para destacados.',
   mercadopago_sandbox_mode: 'Usa entorno Sandbox de MercadoPago (staging).',
+  card_countdown_enabled: 'Muestra una cuenta regresiva en la esquina superior izquierda de la tarjeta cuando un aviso destacado está próximo a vencer. Solo visible si quedan menos horas de las configuradas en el umbral.',
+  card_countdown_threshold_hours: 'Cantidad de horas antes del vencimiento a partir de las cuales se activa el countdown en la tarjeta. Por defecto: 48 (2 días). El badge desaparece automáticamente al vencer.',
 };
 
 const PAYMENT_DEFAULT_SETTINGS: Array<Omit<GlobalSetting, 'id' | 'updated_at'>> = [

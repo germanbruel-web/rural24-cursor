@@ -36,7 +36,11 @@ interface AdItem {
   ad_type?: string;
   attributes?: Record<string, unknown>;
   status: string;
+  featured_expires_at?: string;
 }
+
+// Contexto para habilitar countdown de vencimiento de destacados
+const CountdownEnabledCtx = React.createContext(false);
 
 // ---- Helpers: display_config → clases CSS ----
 
@@ -112,6 +116,7 @@ function buildAutoUrl(section: HomeSection): string {
 function useAds(section: HomeSection) {
   const [ads, setAds] = useState<AdItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const countdownEnabled = React.useContext(CountdownEnabledCtx);
 
   const limit             = (section.query_filter?.limit as number) ?? 8;
   const categorySlug      = section.query_filter?.category_slug as string | undefined;
@@ -199,7 +204,22 @@ function useAds(section: HomeSection) {
         }
 
         const { data } = await query.order('created_at', { ascending: false });
-        setAds((data ?? []) as AdItem[]);
+        const adsData = (data ?? []) as AdItem[];
+
+        // Enriquecer con expires_at de featured_ads (solo si countdown habilitado)
+        if (countdownEnabled && adsData.length > 0) {
+          const adIds = adsData.map(a => a.id);
+          const { data: fa } = await supabase
+            .from('featured_ads')
+            .select('ad_id, expires_at')
+            .in('ad_id', adIds)
+            .eq('status', 'active');
+          const expiresMap: Record<string, string> = {};
+          (fa ?? []).forEach((f: any) => { if (f.expires_at) expiresMap[f.ad_id] = f.expires_at; });
+          setAds(adsData.map(a => ({ ...a, featured_expires_at: expiresMap[a.id] })));
+        } else {
+          setAds(adsData);
+        }
       } catch (e) {
         console.error('[DynamicHomeSections] Error cargando avisos:', e);
       } finally {
@@ -284,6 +304,7 @@ function adToProduct(ad: AdItem): Product {
     isSponsored: false,
     ad_type: ad.ad_type as Product['ad_type'],
     attributes: ad.attributes,
+    featured_expires_at: ad.featured_expires_at,
   };
 }
 
@@ -706,6 +727,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
   const [banners, setBanners] = useState<Record<string, any>[]>([]);
   const [bannerIdx, setBannerIdx] = useState(0);
   const [loading, setLoading] = useState(true);
+  const countdownEnabled = React.useContext(CountdownEnabledCtx);
 
   const categorySlug    = section.query_filter?.category_slug as string | undefined;
   const bannerPlacement = section.query_filter?.banner_placement as string | undefined;
@@ -781,8 +803,23 @@ function CategorySectionRenderer({ section }: SectionProps) {
           }
         }
 
-        const { data: ads } = await adsQuery.order('created_at', { ascending: false });
-        setFeaturedAds((ads ?? []) as AdItem[]);
+        const { data: adsRaw } = await adsQuery.order('created_at', { ascending: false });
+        const adsArr = (adsRaw ?? []) as AdItem[];
+
+        // Enriquecer con expires_at si countdown habilitado
+        if (countdownEnabled && adsArr.length > 0) {
+          const adIds = adsArr.map(a => a.id);
+          const { data: fa } = await supabase
+            .from('featured_ads')
+            .select('ad_id, expires_at')
+            .in('ad_id', adIds)
+            .eq('status', 'active');
+          const expiresMap: Record<string, string> = {};
+          (fa ?? []).forEach((f: any) => { if (f.expires_at) expiresMap[f.ad_id] = f.expires_at; });
+          setFeaturedAds(adsArr.map(a => ({ ...a, featured_expires_at: expiresMap[a.id] })));
+        } else {
+          setFeaturedAds(adsArr);
+        }
 
         // 3. Índice taxonómico
         if (showTaxIndex) {
@@ -1194,24 +1231,35 @@ function HomeSectionsSkeleton() {
 export function DynamicHomeSections() {
   const [sections, setSections] = useState<HomeSection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [countdownEnabled, setCountdownEnabled] = useState(false);
 
   useEffect(() => {
     getHomeComposition()
       .then(setSections)
       .catch(e => console.error('[DynamicHomeSections] Error:', e))
       .finally(() => setLoading(false));
+
+    // Cargar setting de countdown desde global_settings
+    supabase
+      .from('global_settings')
+      .select('value')
+      .eq('key', 'card_countdown_enabled')
+      .single()
+      .then(({ data }) => {
+        if (data) setCountdownEnabled(data.value !== false && data.value !== 'false');
+      });
   }, []);
 
   if (loading) return <HomeSectionsSkeleton />;
   if (sections.length === 0) return null;
 
   return (
-    <>
+    <CountdownEnabledCtx.Provider value={countdownEnabled}>
       {sections.map(section => (
         <SectionErrorBoundary key={section.id} sectionId={section.id}>
           <SectionRenderer section={section} />
         </SectionErrorBoundary>
       ))}
-    </>
+    </CountdownEnabledCtx.Provider>
   );
 }

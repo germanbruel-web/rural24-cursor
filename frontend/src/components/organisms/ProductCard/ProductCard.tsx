@@ -4,7 +4,7 @@
  * Variantes: featured (homepage) y compact (resultados)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Tag, Share2 } from 'lucide-react';
 import type { Product } from '../../../../types';
 import { Card } from '../../molecules/Card';
@@ -16,6 +16,34 @@ import { navigateTo } from '../../../hooks/useNavigate';
 import { getImageVariant } from '../../../utils/imageOptimizer';
 import { FavoriteButton } from '../../favorites/FavoriteButton';
 import { ShareModal } from '../../molecules/ShareModal/ShareModal';
+// ---- Countdown badge: muestra tiempo restante hasta vencimiento del destacado ----
+const THRESHOLD_MS = 48 * 60 * 60 * 1000; // 48 horas
+
+function CountdownBadge({ expiresAt }: { expiresAt: string }) {
+  const [label, setLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    const update = () => {
+      const diff = new Date(expiresAt).getTime() - Date.now();
+      if (diff <= 0 || diff > THRESHOLD_MS) { setLabel(null); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setLabel(`${h}h ${m}m ${s}s`);
+    };
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [expiresAt]);
+
+  if (!label) return null;
+  return (
+    <span className="px-1.5 py-0.5 text-[9px] font-mono font-semibold text-white bg-black/60 backdrop-blur-sm rounded leading-none">
+      {label}
+    </span>
+  );
+}
+
 interface ProductCardProps {
   product: Product;
   variant?: 'featured' | 'compact';
@@ -111,11 +139,18 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         {/* Gradient overlay en hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* Badge ad_type — top-left */}
-        {product.ad_type === 'company' && (
-          <span className="absolute top-2 left-2 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white bg-brand-600/90 backdrop-blur-sm rounded">
-            Servicio
-          </span>
+        {/* Badges top-left: countdown + ad_type */}
+        {(product.featured_expires_at || product.ad_type === 'company') && (
+          <div className="absolute top-2 left-2 flex flex-col gap-1">
+            {product.featured_expires_at && (
+              <CountdownBadge expiresAt={product.featured_expires_at} />
+            )}
+            {product.ad_type === 'company' && (
+              <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white bg-brand-600/90 backdrop-blur-sm rounded leading-none">
+                Servicio
+              </span>
+            )}
+          </div>
         )}
 
         {/* Favorito — top-right */}
