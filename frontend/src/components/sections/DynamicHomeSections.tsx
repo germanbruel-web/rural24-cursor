@@ -146,12 +146,12 @@ function useAds(section: HomeSection) {
 
         if (subcategorySlug) {
           let subQ = supabase.from('subcategories').select('id').eq('slug', subcategorySlug).is('parent_id', null);
-          const { data: subcat } = await subQ.single();
+          const { data: subcat } = await subQ.maybeSingle();
           if (subcat?.id) {
             if (subSubSlug) {
               const { data: subsubcat } = await supabase
                 .from('subcategories').select('id')
-                .eq('slug', subSubSlug).eq('parent_id', subcat.id).single();
+                .eq('slug', subSubSlug).eq('parent_id', subcat.id).maybeSingle();
               if (subsubcat?.id) query = query.eq('subcategory_id', subsubcat.id);
             } else {
               const { data: children } = await supabase
@@ -227,7 +227,7 @@ function useAds(section: HomeSection) {
       }
     };
     void load();
-  }, [section.id]);
+  }, [section.id, countdownEnabled]);
 
   return { ads, loading };
 }
@@ -904,7 +904,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
     };
 
     void load();
-  }, [section.id]);
+  }, [section.id, countdownEnabled]);
 
   const colClass = ({
     2: 'grid-cols-2',
