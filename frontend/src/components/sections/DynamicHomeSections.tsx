@@ -129,7 +129,7 @@ function useAds(section: HomeSection) {
       try {
         let query = supabase
           .from('ads')
-          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status')
+          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, subcategories(display_name)')
           .eq('status', 'active')
           .limit(limit);
 
@@ -301,6 +301,7 @@ function adToProduct(ad: AdItem): Product {
     images: ad.images as Product['images'],
     sourceUrl: '',
     category: '',
+    subcategory: (ad as any).subcategories?.display_name,
     isSponsored: false,
     ad_type: ad.ad_type as Product['ad_type'],
     attributes: ad.attributes,
@@ -778,7 +779,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
         // 2. Avisos destacados
         let adsQuery = supabase
           .from('ads')
-          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status')
+          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, subcategories(display_name)')
           .eq('status', 'active')
           .eq('category_id', cat.id)
           .limit(featuredLimit);

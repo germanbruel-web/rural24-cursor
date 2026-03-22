@@ -129,17 +129,19 @@ export const getProductLabel = (product: Product): string => {
       }
     }
   } else {
-    // Fallback para categorías sin config: usar marca
+    // Fallback para categorías sin config específica
     if (product.category?.toLowerCase().includes('ganader')) {
-      // Ganadería sin config específica: buscar raza legacy
+      // Ganadería sin config: buscar raza legacy
       const raza = attrs.raza || attrs.breed || attrs.razabovinos;
       if (raza) parts.push(String(raza));
     } else {
-      // Maquinarias y otros: Marca
-      const marca = attrs.marca || product.brand;
+      // Maquinaria, Insumos, Repuestos, Inmobiliaria, etc.: Marca + Modelo
+      const marca = attrs.marca || attrs.brand || product.brand;
       if (marca) parts.push(String(marca));
+      const modelo = attrs.modelo || attrs.model;
+      if (modelo) parts.push(String(modelo));
     }
   }
-  
+
   return parts.join(' · ') || product.category || '';
 };

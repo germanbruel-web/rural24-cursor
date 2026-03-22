@@ -139,17 +139,10 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         {/* Gradient overlay en hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* Badges top-left: countdown + ad_type */}
-        {(product.featured_expires_at || product.ad_type === 'company') && (
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
-            {product.featured_expires_at && (
-              <CountdownBadge expiresAt={product.featured_expires_at} />
-            )}
-            {product.ad_type === 'company' && (
-              <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white bg-brand-600/90 backdrop-blur-sm rounded leading-none">
-                Servicio
-              </span>
-            )}
+        {/* Badge countdown — top-left */}
+        {product.featured_expires_at && (
+          <div className="absolute top-2 left-2">
+            <CountdownBadge expiresAt={product.featured_expires_at} />
           </div>
         )}
 
