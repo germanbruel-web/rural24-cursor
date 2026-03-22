@@ -816,8 +816,8 @@ const AppContent: React.FC = () => {
   // Nuevo formulario de publicar/editar aviso (mobile-first)
   if (currentPage === 'publicar-v3') {
     return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <AppHeader 
+      <div className="flex flex-col min-h-screen bg-white sm:bg-gray-50">
+        <AppHeader
           onNavigate={(page) => {
             navigateToPage(page);
             if (page === 'home') {
@@ -825,6 +825,7 @@ const AppContent: React.FC = () => {
             }
           }}
           onSearch={handleSearch}
+          hideSearch
         />
         <Suspense fallback={<LoadingFallback />}>
           <PublicarAviso />

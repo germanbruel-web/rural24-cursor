@@ -15,13 +15,15 @@ import type { Page } from '../../App';
 interface AppHeaderProps {
   onNavigate: (page: Page) => void;
   onSearch?: (query: string) => void;
+  hideSearch?: boolean;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ onNavigate, onSearch }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ onNavigate, onSearch, hideSearch }) => {
   return (
-    <HeaderNew 
-      onNavigate={onNavigate} 
+    <HeaderNew
+      onNavigate={onNavigate}
       onSearch={onSearch}
+      hideSearch={hideSearch}
     />
   );
 };

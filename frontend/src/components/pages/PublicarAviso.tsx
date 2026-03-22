@@ -464,7 +464,7 @@ export default function PublicarAviso() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
+    <div className="bg-white sm:bg-gray-50 pb-20">
       {/* Header Mobile Compacto - Solo 1 sticky element */}
       <div className={`lg:hidden border-b sticky top-0 z-30 ${
         isEditMode
@@ -581,7 +581,7 @@ export default function PublicarAviso() {
                         isCompleted
                           ? 'bg-brand-600 text-white'
                           : isActive
-                          ? 'bg-brand-600 text-white scale-110 shadow-lg shadow-brand-200'
+                          ? 'bg-brand-600 text-white scale-110'
                           : 'bg-gray-200 text-gray-500'
                       }`}
                     >
@@ -620,11 +620,11 @@ export default function PublicarAviso() {
       </div>
 
       {/* Content */}
-      <div className="max-w-[1400px] mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-gray-50">
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Layout: Full width sin preview lateral */}
         <div className="max-w-4xl mx-auto">
           <div>
-            <div className="bg-white sm:bg-gray-100 rounded-none sm:rounded-lg shadow-none sm:shadow-xl border-0 sm:border-2 border-gray-200 sm:border-gray-300 overflow-hidden">
+            <div className="bg-white rounded-none sm:rounded-lg overflow-hidden">
               <div className="p-3 sm:p-10 lg:p-12">
                 {/* STEP 1: CATEGORÍA — selector 3 columnas: L1 | L2 | L3 */}
                 {activeStepKey === 'categoria' && (

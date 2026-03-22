@@ -33,9 +33,10 @@ import type { Page } from '../../../App';
 interface HeaderNewProps {
   onNavigate: (page: Page) => void;
   onSearch?: (query: string, location?: string) => void;
+  hideSearch?: boolean;
 }
 
-export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) => {
+export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch, hideSearch = false }) => {
   const { user, profile, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login');
@@ -128,12 +129,14 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
             </button>
 
             {/* BUSCADOR - Centro (Desktop) */}
-            <div className="hidden md:flex flex-1 justify-center max-w-4xl mx-4">
-              <GlobalSearchBar
-                onSearch={handleSearch}
-                placeholder="Tractores, semillas, campos en venta..."
-              />
-            </div>
+            {!hideSearch && (
+              <div className="hidden md:flex flex-1 justify-center max-w-4xl mx-4">
+                <GlobalSearchBar
+                  onSearch={handleSearch}
+                  placeholder="Tractores, semillas, campos en venta..."
+                />
+              </div>
+            )}
 
             {/* Derecha */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
@@ -292,12 +295,14 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch }) =>
           </div>
 
           {/* ROW 3 - SUBNAV: Buscador Mobile - Full width */}
-          <div className="md:hidden pb-2">
-            <GlobalSearchBar
-              onSearch={handleSearch}
-              placeholder="Tractores, campos, semillas..."
-            />
-          </div>
+          {!hideSearch && (
+            <div className="md:hidden pb-2">
+              <GlobalSearchBar
+                onSearch={handleSearch}
+                placeholder="Tractores, campos, semillas..."
+              />
+            </div>
+          )}
         </div>
       </header>
 
