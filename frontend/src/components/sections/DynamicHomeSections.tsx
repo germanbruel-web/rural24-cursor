@@ -1231,7 +1231,7 @@ function HomeSectionsSkeleton() {
 export function DynamicHomeSections() {
   const [sections, setSections] = useState<HomeSection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [countdownEnabled, setCountdownEnabled] = useState(false);
+  const [countdownEnabled, setCountdownEnabled] = useState(true); // default ON; setting solo puede desactivarlo
 
   useEffect(() => {
     getHomeComposition()
