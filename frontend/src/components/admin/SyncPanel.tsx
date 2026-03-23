@@ -175,7 +175,9 @@ export default function SyncPanel() {
   // Acciones
   const [pushResult,        setPushResult]        = useState<ActionResult>({ state: 'idle' });
   const [migrateDevResult,  setMigrateDevResult]  = useState<ActionResult>({ state: 'idle' });
+  const [markDevResult,     setMarkDevResult]     = useState<ActionResult>({ state: 'idle' });
   const [migrateProdResult, setMigrateProdResult] = useState<ActionResult>({ state: 'idle' });
+  const [markProdResult,    setMarkProdResult]    = useState<ActionResult>({ state: 'idle' });
   const [configResult,      setConfigResult]      = useState<ActionResult>({ state: 'idle' });
   const [prResult,          setPrResult]          = useState<ActionResult>({ state: 'idle' });
   const [deployResult,      setDeployResult]      = useState<ActionResult>({ state: 'idle' });
@@ -221,15 +223,33 @@ export default function SyncPanel() {
     setMigrateDevResult({ state: 'loading' });
     try {
       const json = await callSyncAction('/api/admin/sync/migrate', { target: 'dev' });
+      const applied = (json.applied as Array<{ filename: string; ok: boolean; error?: string }>) ?? [];
       if (json.success) {
-        const applied = (json.applied as Array<{ filename: string }>) ?? [];
         setMigrateDevResult({ state: 'ok', message: `${applied.length} migración(es) aplicada(s) en DEV` });
         await load();
       } else {
-        setMigrateDevResult({ state: 'error', message: String(json.error ?? 'Error') });
+        const failed = applied.find(r => !r.ok);
+        setMigrateDevResult({ state: 'error', message: failed?.error ?? String(json.error ?? 'Error desconocido') });
       }
     } catch (err) {
       setMigrateDevResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
+    }
+  };
+
+  const handleMarkDev = async () => {
+    if (!window.confirm('¿Marcar TODAS las migraciones pendientes como aplicadas en DEV?\n\nUsá esto si la DB ya tiene el schema pero no está registrado en el tracking.\nNO ejecuta ningún SQL.')) return;
+    setMarkDevResult({ state: 'loading' });
+    try {
+      const json = await callSyncAction('/api/admin/sync/mark', { target: 'dev' });
+      if (json.success) {
+        const marked = (json.marked as string[]) ?? [];
+        setMarkDevResult({ state: 'ok', message: `${marked.length} migración(es) marcadas como aplicadas en DEV` });
+        await load();
+      } else {
+        setMarkDevResult({ state: 'error', message: String(json.error ?? 'Error') });
+      }
+    } catch (err) {
+      setMarkDevResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
     }
   };
 
@@ -238,15 +258,33 @@ export default function SyncPanel() {
     setMigrateProdResult({ state: 'loading' });
     try {
       const json = await callSyncAction('/api/admin/sync/migrate', { target: 'prod' });
+      const applied = (json.applied as Array<{ filename: string; ok: boolean; error?: string }>) ?? [];
       if (json.success) {
-        const applied = (json.applied as Array<{ filename: string }>) ?? [];
         setMigrateProdResult({ state: 'ok', message: `${applied.length} migración(es) aplicada(s) en PROD` });
         await load();
       } else {
-        setMigrateProdResult({ state: 'error', message: String(json.error ?? 'Error') });
+        const failed = applied.find(r => !r.ok);
+        setMigrateProdResult({ state: 'error', message: failed?.error ?? String(json.error ?? 'Error desconocido') });
       }
     } catch (err) {
       setMigrateProdResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
+    }
+  };
+
+  const handleMarkProd = async () => {
+    if (!window.confirm('¿Marcar TODAS las migraciones pendientes como aplicadas en PROD?\n\nNO ejecuta ningún SQL.')) return;
+    setMarkProdResult({ state: 'loading' });
+    try {
+      const json = await callSyncAction('/api/admin/sync/mark', { target: 'prod' });
+      if (json.success) {
+        const marked = (json.marked as string[]) ?? [];
+        setMarkProdResult({ state: 'ok', message: `${marked.length} migración(es) marcadas en PROD` });
+        await load();
+      } else {
+        setMarkProdResult({ state: 'error', message: String(json.error ?? 'Error') });
+      }
+    } catch (err) {
+      setMarkProdResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
     }
   };
 
@@ -393,12 +431,17 @@ export default function SyncPanel() {
                     {showLocalMigrations ? 'Ocultar' : 'Ver pendientes'}
                   </button>
                   {showLocalMigrations && <MigrationList files={status.local.migrations.pending} />}
-                  <div className="mt-3">
+                  <div className="mt-3 flex flex-col gap-2">
                     <ActionButton
                       label="Aplicar migraciones en DEV"
                       result={migrateDevResult}
                       onClick={handleMigrateDev}
                       destructive
+                    />
+                    <ActionButton
+                      label="Marcar como aplicadas (sin ejecutar SQL)"
+                      result={markDevResult}
+                      onClick={handleMarkDev}
                     />
                   </div>
                 </>
@@ -462,12 +505,17 @@ export default function SyncPanel() {
                     {showProdMigrations ? 'Ocultar' : 'Ver pendientes'}
                   </button>
                   {showProdMigrations && <MigrationList files={status.prod.migrations.pending} />}
-                  <div className="mt-3">
+                  <div className="mt-3 flex flex-col gap-2">
                     <ActionButton
                       label="Aplicar migraciones en PROD"
                       result={migrateProdResult}
                       onClick={handleMigrateProd}
                       destructive
+                    />
+                    <ActionButton
+                      label="Marcar como aplicadas (sin ejecutar SQL)"
+                      result={markProdResult}
+                      onClick={handleMarkProd}
                     />
                   </div>
                 </>
