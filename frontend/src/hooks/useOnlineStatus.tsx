@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { logger } from '../utils/logger';
 
 export function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -11,13 +12,13 @@ export function useOnlineStatus() {
 
   useEffect(() => {
     const handleOnline = () => {
-      console.log('✅ Conexión restaurada');
+      logger.log('[useOnlineStatus] Conexión restaurada');
       setIsOnline(true);
       setShowOfflineNotice(false);
     };
 
     const handleOffline = () => {
-      console.log('🚫 Sin conexión a internet');
+      logger.log('[useOnlineStatus] Sin conexión a internet');
       setIsOnline(false);
       setShowOfflineNotice(true);
     };

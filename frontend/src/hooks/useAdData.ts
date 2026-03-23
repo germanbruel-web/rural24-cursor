@@ -6,6 +6,7 @@ import { getOptionListItemsForSelect } from '../services/v2/optionListsService';
 import type { CompleteFormV2 } from '../types/v2';
 import type { Product } from '../../types';
 import type { Ad, OptionLabels } from '../components/pages/ad-detail/types';
+import { logger } from '../utils/logger';
 
 export function useAdData(adId: string) {
   const [ad, setAd] = useState<Ad | null>(null);
@@ -66,7 +67,7 @@ export function useAdData(adId: string) {
         seller: sellerResult.data ?? null,
       });
     } catch (err) {
-      console.error('Error al cargar aviso:', err);
+      logger.error('[useAdData] Error al cargar aviso:', err);
     } finally {
       setLoading(false);
     }
@@ -106,7 +107,7 @@ export function useAdData(adId: string) {
 
       setSellerOtherAds(products);
     } catch (err) {
-      console.error('Error cargando otros avisos del vendedor:', err);
+      logger.error('[useAdData] Error cargando otros avisos del vendedor:', err);
     } finally {
       setLoadingOtherAds(false);
     }

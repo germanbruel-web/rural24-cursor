@@ -1,7 +1,6 @@
 import { supabase } from './supabaseClient';
 import { categoryCache, cacheKeys } from '../utils/categoryCache';
-
-const isDev = import.meta.env.DEV;
+import { logger } from '../utils/logger';
 
 // =====================================================
 // CATALOG MASTER - NUEVO SISTEMA CON CACHÉ
@@ -20,24 +19,24 @@ export const getCategoryIcons = async (): Promise<CategoryIcon[]> => {
   const cached = categoryCache.get(cacheKey);
   
   if (cached) {
-    isDev && console.log('✅ Iconos desde caché');
+    logger.debug('[categoriesService] Iconos desde caché');
     return cached;
   }
 
-  isDev && console.log('🔍 Cargando iconos desde BD...');
+  logger.debug('[categoriesService] Cargando iconos...');
   const { data, error } = await supabase
     .from('category_icons')
     .select('id, name, url_light, url_dark')
     .order('name');
   
   if (error) {
-    console.error('❌ Error cargando iconos:', error);
+    logger.error('[categoriesService] Error cargando iconos:', error);
     return []; // No lanzar error, usar fallback
   }
   
   // Guardar en caché por 1 hora
   categoryCache.set(cacheKey, data, 1000 * 60 * 60);
-  isDev && console.log('✅ Iconos cargados:', data?.length || 0);
+  logger.debug('[categoriesService] Iconos cargados:', data?.length || 0);
   return data || [];
 };
 
@@ -47,11 +46,11 @@ export const getCategories = async () => {
   const cached = categoryCache.get(cacheKey);
   
   if (cached) {
-    isDev && console.log('✅ Categorías desde caché');
+    logger.debug('[categoriesService] Categorías desde caché');
     return cached;
   }
 
-  isDev && console.log('🔍 Cargando categorías desde BD...');
+  logger.debug('[categoriesService] Cargando categorías...');
   const { data, error } = await supabase
     .from('categories')
     .select('*')
@@ -59,13 +58,13 @@ export const getCategories = async () => {
     .order('sort_order');
   
   if (error) {
-    console.error('❌ Error cargando categorías:', error);
+    logger.error('[categoriesService] Error cargando categorías:', error);
     throw error;
   }
   
   // Guardar en caché por 30 minutos
   categoryCache.set(cacheKey, data, 1000 * 60 * 30);
-  isDev && console.log('✅ Categorías cargadas:', data?.length || 0);
+  logger.debug('[categoriesService] Categorías cargadas:', data?.length || 0);
   return data || [];
 };
 
@@ -75,11 +74,11 @@ export const getSubcategories = async (categoryId: string) => {
   const cached = categoryCache.get(cacheKey);
   
   if (cached) {
-    isDev && console.log('✅ Subcategorías desde caché');
+    logger.debug('[categoriesService] Subcategorías desde caché');
     return cached;
   }
 
-  isDev && console.log('🔍 Cargando subcategorías para categoría:', categoryId);
+  logger.debug('[categoriesService] Cargando subcategorías para:', categoryId);
   const { data, error } = await supabase
     .from('subcategories')
     .select('*')
@@ -88,13 +87,13 @@ export const getSubcategories = async (categoryId: string) => {
     .order('sort_order');
   
   if (error) {
-    console.error('❌ Error cargando subcategorías:', error);
+    logger.error('[categoriesService] Error cargando subcategorías:', error);
     throw error;
   }
   
   // Guardar en caché por 20 minutos
   categoryCache.set(cacheKey, data, 1000 * 60 * 20);
-  isDev && console.log('✅ Subcategorías cargadas:', data?.length || 0);
+  logger.debug('[categoriesService] Subcategorías cargadas:', data?.length || 0);
   return data || [];
 };
 
@@ -110,7 +109,7 @@ export const getCategoryTypes = async (subcategoryId: string) => {
     .order('sort_order');
 
   if (error) {
-    console.error('❌ Error cargando tipos de categoría:', error);
+    logger.error('[categoriesService] Error cargando tipos:', error);
     throw error;
   }
   return data || [];
@@ -170,11 +169,11 @@ export const getBrandsBySubcategory = async (subcategoryId: string) => {
   const cached = categoryCache.get(cacheKey);
   
   if (cached) {
-    isDev && console.log('✅ Marcas desde caché');
+    logger.debug('[categoriesService] Marcas desde caché');
     return cached;
   }
 
-  isDev && console.log('🔍 Cargando marcas para subcategoría:', subcategoryId);
+  logger.debug('[categoriesService] Cargando marcas para subcategoría:', subcategoryId);
   
   try {
     // Intentar con subcategory_brands (tabla M2M)
@@ -197,11 +196,11 @@ export const getBrandsBySubcategory = async (subcategoryId: string) => {
       
       // Guardar en caché por 20 minutos
       categoryCache.set(cacheKey, brands, 1000 * 60 * 20);
-      isDev && console.log('✅ Marcas cargadas desde M2M:', brands.length);
+      logger.debug('[categoriesService] Marcas M2M cargadas:', brands.length);
       return brands;
     }
     
-    console.warn('⚠️ Tabla subcategory_brands no disponible, cargando todas las marcas');
+    logger.warn('[categoriesService] subcategory_brands no disponible, fallback todas las marcas');
     
     // Fallback: cargar todas las marcas activas
     const { data: allBrands, error: brandError } = await supabase
@@ -211,18 +210,18 @@ export const getBrandsBySubcategory = async (subcategoryId: string) => {
       .order('display_name');
     
     if (brandError) {
-      console.error('❌ Error cargando marcas:', brandError);
+      logger.error('[categoriesService] Error cargando marcas:', brandError);
       throw brandError;
     }
     
     const brands = allBrands || [];
     // Guardar en caché por 20 minutos
     categoryCache.set(cacheKey, brands, 1000 * 60 * 20);
-    isDev && console.log('✅ Marcas cargadas (todas):', brands.length);
+    logger.debug('[categoriesService] Marcas cargadas (todas):', brands.length);
     return brands;
     
   } catch (error) {
-    console.error('❌ Error en getBrandsBySubcategory:', error);
+    logger.error('[categoriesService] Error en getBrandsBySubcategory:', error);
     // Retornar array vacío en caso de error
     return [];
   }
@@ -235,11 +234,11 @@ export const getModels = async (brandId: string) => {
   const cached = categoryCache.get(cacheKey);
   
   if (cached) {
-    isDev && console.log('✅ Modelos desde caché');
+    logger.debug('[categoriesService] Modelos desde caché');
     return cached;
   }
 
-  isDev && console.log('🔍 Cargando modelos para marca:', brandId);
+  logger.debug('[categoriesService] Cargando modelos para marca:', brandId);
   const { data, error } = await supabase
     .from('models')
     .select('*')
@@ -248,13 +247,13 @@ export const getModels = async (brandId: string) => {
     .order('display_name');
   
   if (error) {
-    console.error('❌ Error cargando modelos:', error);
+    logger.error('[categoriesService] Error cargando modelos:', error);
     throw error;
   }
   
   // Guardar en caché por 20 minutos
   categoryCache.set(cacheKey, data, 1000 * 60 * 20);
-  isDev && console.log('✅ Modelos cargados:', data?.length || 0);
+  logger.debug('[categoriesService] Modelos cargados:', data?.length || 0);
   return data || [];
 };
 

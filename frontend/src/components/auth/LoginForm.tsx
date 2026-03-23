@@ -7,6 +7,7 @@ import { FormField } from '../molecules/FormField';
 import { socialAuthService } from '../../services/socialAuthService';
 import { setJustLoggedIn } from '../../utils/profileCompleteness';
 import { useSiteSetting } from '../../hooks/useSiteSetting';
+import { useBrowserStorage } from '../../hooks/useBrowserStorage';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -24,18 +25,13 @@ export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSw
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'google' | 'facebook' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lastLoginShown, setLastLoginShown] = useBrowserStorage('last_login_shown', '');
 
-  // Mostrar mensaje de verificación al iniciar sesión
+  // Mostrar mensaje de verificación una sola vez por cuenta
   useEffect(() => {
-    if (user && user.email_confirmed_at) {
-      const lastLogin = localStorage.getItem('last_login_shown');
-      const currentLogin = user.id;
-      
-      // Solo mostrar el mensaje una vez por sesión
-      if (lastLogin !== currentLogin) {
-        notify.success('Tu cuenta ha sido verificada. Una cuenta verificada demuestra más confianza frente al mercado de agronegocios.');
-        localStorage.setItem('last_login_shown', currentLogin);
-      }
+    if (user && user.email_confirmed_at && lastLoginShown !== user.id) {
+      notify.success('Tu cuenta ha sido verificada. Una cuenta verificada demuestra más confianza frente al mercado de agronegocios.');
+      setLastLoginShown(user.id);
     }
   }, [user]);
 

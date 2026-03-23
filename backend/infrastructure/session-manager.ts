@@ -14,6 +14,7 @@
 
 // @ts-ignore - Instalar con: npm install jsonwebtoken @types/jsonwebtoken
 import * as jwt from 'jsonwebtoken';
+import { logger } from '../lib/logger';
 
 export interface SessionData {
   userId: string;
@@ -38,7 +39,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
   throw new Error('🚨 JWT_SECRET no configurado en producción. Definir en variables de entorno.');
 } else if (!JWT_SECRET) {
-  console.warn('⚠️ JWT_SECRET no configurado — usando valor inseguro solo para desarrollo');
+  logger.warn('⚠️ JWT_SECRET no configurado — usando valor inseguro solo para desarrollo');
 }
 
 const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'dev-only-insecure-secret-do-not-use-in-prod';
@@ -67,7 +68,7 @@ export async function verifySession(token: string): Promise<SessionData | null> 
     const decoded = jwt.verify(token, EFFECTIVE_JWT_SECRET) as SessionData;
     return decoded;
   } catch (error) {
-    console.error('[Session] JWT verification failed:', error);
+    logger.error('[Session] JWT verification failed:', error);
     return null;
   }
 }
@@ -229,7 +230,7 @@ export class SessionManager {
     if (this.store && session.jti) {
       const exists = await this.store.exists(session.jti);
       if (!exists) {
-        console.warn(`[SessionManager] Token ${session.jti} was revoked`);
+        logger.warn(`[SessionManager] Token ${session.jti} was revoked`);
         return null;
       }
     }
@@ -239,7 +240,7 @@ export class SessionManager {
 
   async revoke(token: string): Promise<void> {
     if (!this.store) {
-      console.warn('[SessionManager] Cannot revoke: no session store configured');
+      logger.warn('[SessionManager] Cannot revoke: no session store configured');
       return;
     }
 
@@ -251,7 +252,7 @@ export class SessionManager {
 
   async revokeAllUserSessions(userId: string): Promise<void> {
     if (!this.store) {
-      console.warn('[SessionManager] Cannot revoke: no session store configured');
+      logger.warn('[SessionManager] Cannot revoke: no session store configured');
       return;
     }
 
@@ -298,21 +299,21 @@ export function createSessionManager(config?: {
   redis?: any;
 }): SessionManager {
   if (!config || config.type === 'stateless') {
-    console.log('[Sessions] Using stateless JWT (no revocation)');
+    logger.log('[Sessions] Using stateless JWT (no revocation)');
     return new SessionManager();
   }
 
   if (config.type === 'redis' && config.redis) {
-    console.log('[Sessions] Using Redis-backed sessions');
+    logger.log('[Sessions] Using Redis-backed sessions');
     return new SessionManager(new RedisSessionStore(config.redis));
   }
 
   if (config.type === 'database' && config.prisma) {
-    console.log('[Sessions] Using DB-backed sessions');
+    logger.log('[Sessions] Using DB-backed sessions');
     return new SessionManager(new DatabaseSessionStore(config.prisma));
   }
 
-  console.warn('[Sessions] Invalid config, falling back to stateless');
+  logger.warn('[Sessions] Invalid config, falling back to stateless');
   return new SessionManager();
 }
 
@@ -331,7 +332,7 @@ export function initSessionManager(config?: Parameters<typeof createSessionManag
 
 export function getSessionManager(): SessionManager {
   if (!globalSessionManager) {
-    console.warn('[Sessions] Manager not initialized, creating stateless default');
+    logger.warn('[Sessions] Manager not initialized, creating stateless default');
     globalSessionManager = new SessionManager();
   }
   return globalSessionManager;

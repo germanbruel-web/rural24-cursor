@@ -6,6 +6,7 @@ import { getProducts } from "../services/getProducts";
 import type { FilterOptions } from "../../types";
 import { PROVINCES } from "../constants/locations";
 import { ALL_CATEGORIES, ALL_SUBCATEGORIES } from "../constants/categories";
+import { logger } from "../utils/logger";
 
 export function useProducts() {
   const [products, setProducts] = useState([]);
@@ -24,7 +25,7 @@ export function useProducts() {
       setProducts(data);
       loaded.current = true;
     } catch (err) {
-      console.error('❌ Error loading products:', err);
+      logger.error('[useProducts] Error loading products:', err);
       setError(err instanceof Error ? err : new Error('Unknown error'));
       setProducts([]);
     } finally {

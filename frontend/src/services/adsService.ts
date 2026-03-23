@@ -3,17 +3,16 @@ import { supabase } from './supabaseClient';
 import type { Ad, CreateAdInput, UpdateAdInput } from '../../types';
 import type { Product } from '../../types';
 import { DEFAULT_PLACEHOLDER_IMAGE } from '../constants/defaultImages';
+import { logger } from '../utils/logger';
 
 /**
  * Transformar Ad (de Supabase) a Product (para UI)
  * Normaliza campos de imágenes y asegura compatibilidad
  */
 export function transformAdToProduct(ad: Ad): Product {
-  console.log('🔍 [transformAdToProduct] INPUT:', { 
-    id: ad.id, 
+  logger.debug('[transformAdToProduct] INPUT:', {
+    id: ad.id,
     title: ad.title?.substring(0, 30),
-    images: ad.images,
-    image_urls: ad.image_urls,
     imagesType: Array.isArray(ad.images) ? 'array' : typeof ad.images,
     imagesLength: Array.isArray(ad.images) ? ad.images.length : 'N/A'
   });
@@ -24,7 +23,6 @@ export function transformAdToProduct(ad: Ad): Product {
 
   // Prioridad: images > image_urls > imageUrl directo
   if (ad.images && ad.images.length > 0) {
-    console.log('🖼️ [transformAdToProduct] Procesando ad.images:', ad.images);
     // Si images es array de objetos {url, path}, extraer URLs
     imageUrls = ad.images
       .map(img => {
@@ -34,17 +32,12 @@ export function transformAdToProduct(ad: Ad): Product {
       })
       .filter(Boolean) as string[];
     imageUrl = imageUrls[0] || imageUrl;
-    console.log('✅ [transformAdToProduct] Extraídas de images:', { imageUrl, imageUrlsCount: imageUrls.length });
   } else if (ad.image_urls && ad.image_urls.length > 0) {
-    console.log('🖼️ [transformAdToProduct] Procesando ad.image_urls:', ad.image_urls);
     imageUrls = ad.image_urls.filter(Boolean);
     imageUrl = imageUrls[0] || imageUrl;
-    console.log('✅ [transformAdToProduct] Extraídas de image_urls:', { imageUrl, imageUrlsCount: imageUrls.length });
   } else {
-    console.warn('⚠️ [transformAdToProduct] SIN IMÁGENES - Usando placeholder:', DEFAULT_PLACEHOLDER_IMAGE);
+    logger.debug('[transformAdToProduct] SIN IMÁGENES - usando placeholder');
   }
-
-  console.log('🎯 [transformAdToProduct] OUTPUT:', { imageUrl, imageUrlsCount: imageUrls.length });
 
   // Extraer nombre de categoría si es objeto con name
   let categoryName = ad.category || 'Sin categoría';

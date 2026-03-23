@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { getLocalitiesByProvince, type Locality } from '../../../services/v2/locationsService';
 import { Card } from '../../molecules/Card';
 import type { WizardBlockProps } from '../wizardTypes';
+import { formStyles } from '../../../constants/styles';
 
-const inp = 'w-full px-4 py-3 text-base bg-white border-2 border-gray-300 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder:text-gray-400';
-const lbl = 'block text-sm font-semibold text-gray-700 mb-2';
+const inp = formStyles.input;
+const lbl = formStyles.label;
 
 interface Props extends Pick<WizardBlockProps,
   'province' | 'setProvince' | 'locality' | 'setLocality' | 'provinces'

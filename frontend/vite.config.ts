@@ -111,32 +111,52 @@ export default defineConfig(({ mode }) => {
         navigateFallbackDenylist: [/\/api\//],
         runtimeCaching: [
           {
-            // Cloudinary — CacheFirst 30 días
+            // Cloudinary — CacheFirst 30 días (URLs inmutables por hash)
             urlPattern: /res\.cloudinary\.com/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'cloudinary-images',
-              expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 60 * 60 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },
           {
-            // BFF Next.js API — NetworkFirst con 5s timeout
+            // Supabase Auth — NetworkOnly (NUNCA cachear tokens/sesiones)
+            urlPattern: /\.supabase\.co\/auth\//,
+            handler: 'NetworkOnly',
+          },
+          {
+            // Supabase Realtime — NetworkOnly (WebSocket, no tiene sentido cachear)
+            urlPattern: /\.supabase\.co\/realtime\//,
+            handler: 'NetworkOnly',
+          },
+          {
+            // Supabase Storage (imágenes UGC) — CacheFirst 7 días
+            urlPattern: /\.supabase\.co\/storage\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'supabase-storage',
+              expiration: { maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Supabase REST (datos) — NetworkFirst 5s timeout, cache 5min
+            urlPattern: /\.supabase\.co\/rest\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-rest',
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 60, maxAgeSeconds: 5 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // BFF Next.js API — NetworkFirst 5s timeout, cache 5min
             urlPattern: /\/api\//,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'api-cache',
-              networkTimeoutSeconds: 5,
-              expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            // Supabase REST/Auth — NetworkFirst
-            urlPattern: /\.supabase\.co/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-cache',
+              cacheName: 'bff-api',
               networkTimeoutSeconds: 5,
               expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
               cacheableResponse: { statuses: [0, 200] },

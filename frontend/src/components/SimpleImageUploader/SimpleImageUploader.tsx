@@ -20,11 +20,12 @@ import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useS
 import { SortableContext, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-// Imagen predeterminada del sistema - Cloudinary oficial
+// Imagen predeterminada: se usa defaultImageUrl prop (placeholder por categoría).
+// Esta constante es el último recurso si no hay prop.
 const DEFAULT_IMAGE = {
-  url: 'https://res.cloudinary.com/ruralcloudinary/image/upload/v1767898923/htimuq3ijur4jjtapf1w.jpg',
-  path: 'htimuq3ijur4jjtapf1w',
-  fallback: 'https://via.placeholder.com/800x600/10b981/ffffff?text=Imagen+Predeterminada'
+  url: 'https://via.placeholder.com/800x600/10b981/ffffff?text=Rural24',
+  path: '',
+  fallback: 'https://via.placeholder.com/800x600/10b981/ffffff?text=Rural24'
 };
 
 export interface UploadedImage {

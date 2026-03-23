@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
 import { X, Megaphone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrowserStorage } from '../hooks/useBrowserStorage';
 
 interface RegisterBannerProps {
   onRegisterClick: () => void;
@@ -8,20 +8,11 @@ interface RegisterBannerProps {
 
 export const RegisterBanner: React.FC<RegisterBannerProps> = ({ onRegisterClick }) => {
   const { user } = useAuth();
-  const [isVisible, setIsVisible] = useState(true);
+  const [dismissed, setDismissed] = useBrowserStorage('register-banner-dismissed', false);
 
-  useEffect(() => {
-    const dismissed = localStorage.getItem('register-banner-dismissed');
-    if (dismissed === 'true') setIsVisible(false);
-  }, []);
+  const handleDismiss = () => setDismissed(true);
 
-  const handleDismiss = () => {
-    setIsVisible(false);
-    localStorage.setItem('register-banner-dismissed', 'true');
-  };
-
-  // No mostrar si el usuario está logueado o si fue cerrado
-  if (!isVisible || user) return null;
+  if (dismissed || user) return null;
 
   return (
     <div className="bg-brand-50 border-b-2 border-brand-200 py-3 px-4 relative animate-slideDown">

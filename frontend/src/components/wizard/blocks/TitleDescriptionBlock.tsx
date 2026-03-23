@@ -4,12 +4,13 @@ import { AutofillButton } from '../../forms/AutofillButton';
 import InfoBox from '../../molecules/InfoBox/InfoBox';
 import type { WizardBlockProps } from '../wizardTypes';
 import type { WizardBlockConfig } from '../../../services/v2/wizardConfigService';
+import { formStyles } from '../../../constants/styles';
 
-const inp = 'w-full px-4 py-3 text-base bg-white border-2 border-gray-300 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder:text-gray-400';
-const inpErr = 'w-full px-4 py-3 text-base bg-white border-2 border-red-500 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder:text-gray-400';
-const lbl = 'block text-sm font-semibold text-gray-700 mb-2';
-const hlp = 'mt-1.5 text-sm text-gray-500';
-const errTxt = 'mt-1.5 text-sm text-red-600 flex items-center gap-1';
+const inp = formStyles.input;
+const inpErr = formStyles.inputError;
+const lbl = formStyles.label;
+const hlp = formStyles.help;
+const errTxt = formStyles.errorText;
 
 interface Props extends Pick<WizardBlockProps,
   'title' | 'description' | 'titleError' | 'descriptionError' |

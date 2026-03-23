@@ -9,6 +9,8 @@
  * - Privacy-first (datos anonimizados)
  */
 
+import { logger } from '../utils/logger';
+
 interface SearchEvent {
   query: string;
   timestamp: number;
@@ -171,7 +173,7 @@ class SearchAnalyticsService {
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
     } catch (error) {
-      console.warn('Error guardando analytics:', error);
+      logger.warn('[searchAnalytics] Error guardando:', error);
     }
   }
 
@@ -180,7 +182,7 @@ class SearchAnalyticsService {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.warn('Error cargando analytics:', error);
+      logger.warn('[searchAnalytics] Error cargando:', error);
       return [];
     }
   }

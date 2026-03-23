@@ -3,6 +3,7 @@ import { supabase } from '../services/supabaseClient';
 import type { User, Session } from '@supabase/supabase-js';
 import type { UserRole } from '../types/v2';
 import { useDevMode } from './DevModeContext';
+import { logger } from '../utils/logger';
 
 interface UserProfile {
   id: string;
@@ -97,8 +98,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserProfile = async (userId: string) => {
     try {
-      console.log('📥 Cargando perfil para usuario:', userId);
-      
       const { data, error } = await supabase
         .from('users')
         .select('*, subscription_plans(name, display_name)')
@@ -106,29 +105,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) {
-        console.error('❌ Error loading profile:', error);
-        // Si no existe perfil, crear uno por defecto
+        logger.error('[AuthContext] Error loading profile:', error.message);
         if (error.code === 'PGRST116') {
-          console.log('⚠️ Perfil no encontrado, creando uno por defecto...');
+          logger.warn('[AuthContext] Perfil no encontrado, creando por defecto...');
           await createDefaultProfile(userId);
         }
       } else {
-        // Extraer el nombre del plan del JOIN
         const planData = data.subscription_plans as { name: string; display_name: string } | null;
         const profileWithPlan = {
           ...data,
           plan_name: planData?.display_name || planData?.name || 'Free',
-          subscription_plans: undefined // Limpiar el objeto anidado
+          subscription_plans: undefined,
         };
-        console.log('✅ Perfil cargado completo:', JSON.stringify(profileWithPlan, null, 2));
-        console.log('📝 full_name:', data.full_name);
-        console.log('📝 email:', data.email);
-        console.log('📝 role:', data.role);
-        console.log('📝 plan_name:', profileWithPlan.plan_name);
+        logger.debug('[AuthContext] Perfil cargado — role:', data.role, '| plan:', profileWithPlan.plan_name);
         setProfile(profileWithPlan);
       }
     } catch (error) {
-      console.error('❌ Error loading profile:', error);
+      logger.error('[AuthContext] Error loading profile:', error);
     } finally {
       setLoading(false);
     }
@@ -166,7 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(data);
       }
     } catch (error) {
-      console.error('Error creating default profile:', error);
+      logger.error('[AuthContext] Error creating default profile:', error);
     }
   };
 
@@ -184,7 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName?: string, userType: string = 'particular', phone?: string, mobile?: string, province?: string, location?: string) => {
     try {
-      console.log('🔐 Iniciando registro:', { email, fullName, userType, phone, mobile, province, location });
+      logger.debug('[AuthContext] signUp:', { userType, province });
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -198,15 +191,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error('❌ Error en auth.signUp:', error);
+        logger.error('[AuthContext] Error en auth.signUp:', error.message);
         return { error, data: null };
       }
 
       if (data.user) {
-        console.log('✅ Usuario creado en auth:', data.user.id);
-        
-        // Crear perfil de usuario con phone, mobile, province y location
-        const { data: profileData, error: profileError } = await supabase.from('users').insert({
+        const { error: profileError } = await supabase.from('users').insert({
           id: data.user.id,
           email,
           full_name: fullName,
@@ -220,39 +210,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }).select().single();
 
         if (profileError) {
-          console.error('Error creando perfil en users:', profileError);
-        } else {
-          console.log('Perfil creado en users:', profileData);
+          logger.error('[AuthContext] Error creando perfil en users:', profileError.message);
         }
       }
 
       return { error, data };
     } catch (error) {
-      console.error('❌ Error en signUp:', error);
+      logger.error('[AuthContext] Error en signUp:', error);
       return { error: error as Error, data: null };
     }
   };
 
   const signOut = async () => {
     try {
-      console.log('🚪 Cerrando sesión...');
-      
-      // Limpiar DevMode si está activo
       if (isDevMode) {
-        console.log('🔧 Desactivando DevMode...');
         localStorage.removeItem('devMode');
         localStorage.removeItem('devUser');
-        window.location.reload(); // Recargar para limpiar contextos
+        window.location.reload();
         return;
       }
-      
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
       setProfile(null);
-      console.log('✅ Sesión cerrada correctamente');
     } catch (error) {
-      console.error('❌ Error al cerrar sesión:', error);
+      logger.error('[AuthContext] Error al cerrar sesión:', error);
       throw error;
     }
   };
@@ -282,13 +264,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateProfile = async (updates: Partial<UserProfile>) => {
     try {
       if (!user?.id) {
-        console.error('❌ Usuario no autenticado');
         return { error: new Error('Usuario no autenticado') };
       }
 
-      console.log('📝 Actualizando usuario:', user.id, updates);
-
-      // Actualizar en la tabla users
       const { error, data } = await supabase
         .from('users')
         .update({
@@ -304,19 +282,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) {
-        console.error('❌ Error actualizando usuario:', error);
+        logger.error('[AuthContext] Error actualizando usuario:', error.message);
         return { error };
       }
 
       if (data) {
-        console.log('✅ Usuario actualizado:', data);
-        // Actualizar el estado local del profile
         setProfile(prev => prev ? { ...prev, ...data } : null);
       }
 
       return { error: null };
     } catch (error) {
-      console.error('❌ Error en updateProfile:', error);
+      logger.error('[AuthContext] Error en updateProfile:', error);
       return { error: error as Error };
     }
   };
@@ -332,16 +308,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updated_at: new Date().toISOString(),
   } : profile;
 
-  // DEBUG: Log para ver qué profile se está usando
   useEffect(() => {
-    console.log('👤 AuthContext - Estado efectivo:', {
+    logger.debug('[AuthContext] Estado efectivo:', {
       isDevMode,
-      hasDevUser: !!devUser,
-      devUserName: devUser?.full_name,
-      hasRealProfile: !!profile,
-      realProfileName: profile?.full_name,
-      effectiveName: effectiveProfile?.full_name,
-      effectiveEmail: effectiveProfile?.email
+      role: effectiveProfile?.role,
+      hasProfile: !!effectiveProfile,
     });
   }, [isDevMode, devUser, profile, effectiveProfile]);
 

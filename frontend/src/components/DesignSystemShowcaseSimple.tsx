@@ -67,16 +67,16 @@ export function DesignSystemShowcaseSimple() {
 
   return (
     <div className={darkMode ? 'dark' : ''}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-        
+      <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
+
         {/* Header Sticky con Dark Mode Toggle */}
-        <header className="sticky top-0 z-50 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <header className="sticky top-0 z-50 bg-white/90 dark:bg-black/95 backdrop-blur-lg border-b border-gray-200 dark:border-neutral-700 shadow-sm">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-brand-600 dark:text-green-400">
                 Design System Rural24
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-neutral-400">
                 Componentes atómicos y moleculares con CVA + Tailwind
               </p>
             </div>
@@ -96,123 +96,176 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN 1: PALETA DE COLORES ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Paleta de Colores</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">Colores semánticos y tokens del sistema</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">Colores semánticos y tokens del sistema</p>
             
             {/* Brand Colors */}
             <div className="mb-8">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">🎨 Brand (Verde Principal)</h3>
+              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">🎨 Brand (Verde Principal)</h3>
               <div className="grid grid-cols-5 md:grid-cols-11 gap-3">
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-50 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">50</p>
+                  <div className="h-20 rounded-lg bg-brand-50 border border-gray-300 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">50</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-100 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">100</p>
+                  <div className="h-20 rounded-lg bg-brand-100 border border-gray-300 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">100</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-200 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">200</p>
+                  <div className="h-20 rounded-lg bg-brand-200 border border-gray-300 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">200</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-300 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">300</p>
+                  <div className="h-20 rounded-lg bg-brand-300 border border-gray-300 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">300</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-400 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">400</p>
+                  <div className="h-20 rounded-lg bg-brand-400 border border-gray-300 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">400</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-500 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400 font-bold">500</p>
+                  <div className="h-20 rounded-lg bg-brand-500 border border-gray-300 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400 font-bold">500</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-600 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">600</p>
+                  <div className="h-20 rounded-lg bg-brand-600 border border-gray-300 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">600</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-700 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">700</p>
+                  <div className="h-20 rounded-lg bg-brand-700 border border-gray-300 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">700</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-800 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">800</p>
+                  <div className="h-20 rounded-lg bg-brand-800 border border-gray-300 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">800</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-900 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">900</p>
+                  <div className="h-20 rounded-lg bg-brand-900 border border-gray-300 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">900</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-20 rounded-lg bg-brand-950 border border-gray-300 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">950</p>
+                  <div className="h-20 rounded-lg bg-brand-950 border border-gray-300 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">950</p>
                 </div>
               </div>
             </div>
 
             {/* Paleta Secundaria (Naturaleza) */}
             <div className="mb-8">
-              <h3 className="text-xl font-semibold mb-1 text-gray-800 dark:text-gray-200">Paleta Secundaria</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Tokens utilitarios — uso: <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">bg-nature-crop</code>, <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">text-nature-air</code></p>
+              <h3 className="text-xl font-semibold mb-1 text-gray-800 dark:text-neutral-200">Paleta Secundaria</h3>
+              <p className="text-sm text-gray-500 dark:text-neutral-400 mb-4">Tokens utilitarios — uso: <code className="text-xs bg-gray-100 dark:bg-neutral-700 px-1 rounded">bg-nature-crop</code>, <code className="text-xs bg-gray-100 dark:bg-neutral-700 px-1 rounded">text-nature-air</code></p>
               <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
                 <div className="space-y-2">
-                  <div className="h-16 rounded-lg bg-nature-crop border border-gray-200 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">crop</p>
+                  <div className="h-16 rounded-lg bg-nature-crop border border-gray-200 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">crop</p>
                   <p className="text-[10px] text-center text-gray-400">#6CCF67</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-16 rounded-lg bg-nature-meadow border border-gray-200 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">meadow</p>
+                  <div className="h-16 rounded-lg bg-nature-meadow border border-gray-200 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">meadow</p>
                   <p className="text-[10px] text-center text-gray-400">#4FA54D</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-16 rounded-lg bg-nature-leaf border border-gray-200 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">leaf</p>
+                  <div className="h-16 rounded-lg bg-nature-leaf border border-gray-200 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">leaf</p>
                   <p className="text-[10px] text-center text-gray-400">#4CAF50</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-16 rounded-lg bg-nature-harvest border border-gray-200 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">harvest</p>
+                  <div className="h-16 rounded-lg bg-nature-harvest border border-gray-200 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">harvest</p>
                   <p className="text-[10px] text-center text-gray-400">#F2C94C</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-16 rounded-lg bg-nature-compost border border-gray-200 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">compost</p>
+                  <div className="h-16 rounded-lg bg-nature-compost border border-gray-200 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">compost</p>
                   <p className="text-[10px] text-center text-gray-400">#3C2A18</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-16 rounded-lg bg-nature-farm border border-gray-200 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">farm</p>
+                  <div className="h-16 rounded-lg bg-nature-farm border border-gray-200 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">farm</p>
                   <p className="text-[10px] text-center text-gray-400">#6A4E30</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-16 rounded-lg bg-nature-air border border-gray-200 dark:border-gray-700"></div>
-                  <p className="text-xs text-center text-gray-600 dark:text-gray-400">air</p>
+                  <div className="h-16 rounded-lg bg-nature-air border border-gray-200 dark:border-neutral-700"></div>
+                  <p className="text-xs text-center text-gray-600 dark:text-neutral-400">air</p>
                   <p className="text-[10px] text-center text-gray-400">#F6F9F3</p>
                 </div>
               </div>
             </div>
 
+            {/* Gama de Negros y Grises */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold mb-1 text-gray-800 dark:text-neutral-200">Gama de Negros y Grises</h3>
+              <p className="text-sm text-gray-500 dark:text-neutral-400 mb-4">
+                Tokens <code className="text-xs bg-gray-100 dark:bg-neutral-700 px-1 rounded">neutral-*</code> — escala completa del sistema. <code className="text-xs bg-gray-100 dark:bg-neutral-700 px-1 rounded">neutral-950</code> = negro puro en dark mode.
+              </p>
+              {/* Barra de gradiente continuo */}
+              <div
+                className="h-8 rounded-lg mb-4 border border-gray-200 dark:border-neutral-700"
+                style={{ background: 'linear-gradient(to right, #FFFFFF, #000000)' }}
+              />
+
+              {/* 11 pasos uniformes: cada paso = 255/10 = 25.5 */}
+              <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(11, minmax(0, 1fr))' }}>
+                {[
+                  { label: 'white', hex: '#FFFFFF', v: 255 },
+                  { label: '100',   hex: '#E6E6E6', v: 230 },
+                  { label: '200',   hex: '#CCCCCC', v: 204 },
+                  { label: '300',   hex: '#B3B3B3', v: 179 },
+                  { label: '400',   hex: '#999999', v: 153 },
+                  { label: '500',   hex: '#808080', v: 128 },
+                  { label: '600',   hex: '#666666', v: 102 },
+                  { label: '700',   hex: '#4D4D4D', v:  77 },
+                  { label: '800',   hex: '#333333', v:  51 },
+                  { label: '900',   hex: '#1A1A1A', v:  26 },
+                  { label: 'black', hex: '#000000', v:   0 },
+                ].map(({ label, hex, v }) => {
+                  const isEdge = label === 'black' || label === 'white';
+                  const isDark  = label === 'black' || label === '950';
+                  const textColor = v < 128 ? '#FFFFFF' : '#000000';
+                  return (
+                    <div key={label} className="space-y-1.5">
+                      <div
+                        className={`h-14 rounded-lg flex items-end justify-center pb-1 ${isEdge ? 'ring-2 ring-brand-500 ring-offset-1' : ''}`}
+                        style={{ backgroundColor: hex }}
+                      >
+                        <span className="text-[8px] font-mono opacity-60" style={{ color: textColor }}>
+                          {Math.round((1 - v / 255) * 100)}%
+                        </span>
+                      </div>
+                      <p className={`text-[10px] text-center font-semibold ${isDark || isEdge ? 'text-brand-600' : 'text-gray-500 dark:text-neutral-400'}`}>
+                        {label}
+                      </p>
+                      <p className="text-[9px] text-center text-gray-400 font-mono">{hex}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-400 mt-3">
+                Grises puros (R=G=B), pasos uniformes de 21 puntos. Token <code className="text-[10px] bg-gray-100 dark:bg-neutral-700 px-1 rounded">neutral-950</code> = negro canónico del design system.
+              </p>
+            </div>
+
             {/* Semantic Colors */}
             <div className="grid md:grid-cols-4 gap-6">
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+              <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
                 <div className="h-16 rounded-lg bg-brand-400 mb-4 shadow-sm"></div>
                 <p className="font-semibold text-gray-900 dark:text-white">Success</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Operaciones exitosas</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400">Operaciones exitosas</p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+              <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
                 <div className="h-16 rounded-lg bg-yellow-500 mb-4 shadow-sm"></div>
                 <p className="font-semibold text-gray-900 dark:text-white">Warning</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Advertencias</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400">Advertencias</p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+              <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
                 <div className="h-16 rounded-lg bg-red-500 mb-4 shadow-sm"></div>
                 <p className="font-semibold text-gray-900 dark:text-white">Error</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Errores críticos</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400">Errores críticos</p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+              <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
                 <div className="h-16 rounded-lg bg-blue-500 mb-4 shadow-sm"></div>
                 <p className="font-semibold text-gray-900 dark:text-white">Info</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Información</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400">Información</p>
               </div>
             </div>
           </section>
@@ -220,9 +273,9 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN 2: TIPOGRAFÍA ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Tipografía</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">Sistema tipográfico con Lato</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">Sistema tipográfico con Lato</p>
             
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 space-y-6">
+            <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 space-y-6">
               <div>
                 <h1 className="text-gray-900 dark:text-white">Heading 1 - Display (4xl/bold)</h1>
                 <code className="text-xs text-gray-500">text-4xl font-bold</code>
@@ -248,11 +301,11 @@ export function DesignSystemShowcaseSimple() {
                 <code className="text-xs text-gray-500">text-base</code>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Paragraph Small - Notas y descripciones</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400">Paragraph Small - Notas y descripciones</p>
                 <code className="text-xs text-gray-500">text-sm</code>
               </div>
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-500">Paragraph Extra Small - Metadata</p>
+                <p className="text-xs text-gray-500 dark:text-neutral-500">Paragraph Extra Small - Metadata</p>
                 <code className="text-xs text-gray-500">text-xs</code>
               </div>
             </div>
@@ -261,11 +314,11 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN 3: BOTONES ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Botones</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">7 variantes × 5 tamaños con estados</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">7 variantes × 5 tamaños con estados</p>
             
             {/* Variantes */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Variantes</h3>
+            <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Variantes</h3>
               <div className="flex flex-wrap gap-4">
                 <Button variant="primary">Primary</Button>
                 <Button variant="secondary">Secondary</Button>
@@ -278,8 +331,8 @@ export function DesignSystemShowcaseSimple() {
             </div>
 
             {/* Tamaños */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Tamaños</h3>
+            <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Tamaños</h3>
               <div className="flex flex-wrap items-end gap-4">
                 <Button size="sm" variant="primary">Small</Button>
                 <Button size="md" variant="primary">Medium</Button>
@@ -289,8 +342,8 @@ export function DesignSystemShowcaseSimple() {
             </div>
 
             {/* Con Iconos */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Con Iconos</h3>
+            <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Con Iconos</h3>
               <div className="flex flex-wrap gap-4">
                 <Button variant="primary" leftIcon={<Save size={16} />}>Guardar</Button>
                 <Button variant="danger" leftIcon={<Trash2 size={16} />}>Eliminar</Button>
@@ -301,8 +354,8 @@ export function DesignSystemShowcaseSimple() {
             </div>
 
             {/* Estados */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Estados</h3>
+            <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Estados</h3>
               <div className="flex flex-wrap gap-4">
                 <Button variant="primary">Normal</Button>
                 <Button variant="primary" loading>Cargando...</Button>
@@ -314,12 +367,12 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN 4: INPUTS ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Inputs</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">3 variantes × 3 tamaños × 3 estados con validación</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">3 variantes × 3 tamaños × 3 estados con validación</p>
             
             <div className="grid md:grid-cols-2 gap-8">
               {/* Variantes */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Variantes</h3>
+              <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Variantes</h3>
                 <div className="space-y-4">
                   <Input variant="outlined" placeholder="Outlined (default)" />
                   <Input variant="filled" placeholder="Filled" />
@@ -328,8 +381,8 @@ export function DesignSystemShowcaseSimple() {
               </div>
 
               {/* Tamaños */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Tamaños</h3>
+              <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Tamaños</h3>
                 <div className="space-y-4">
                   <Input size="sm" placeholder="Small" />
                   <Input size="md" placeholder="Medium (default)" />
@@ -338,8 +391,8 @@ export function DesignSystemShowcaseSimple() {
               </div>
 
               {/* Con Iconos */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Con Iconos</h3>
+              <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Con Iconos</h3>
                 <div className="space-y-4">
                   <Input leftIcon={<Search size={18} />} placeholder="Buscar..." />
                   <Input leftIcon={<Mail size={18} />} type="email" placeholder="Email" />
@@ -349,8 +402,8 @@ export function DesignSystemShowcaseSimple() {
               </div>
 
               {/* Estados de Validación */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Validación</h3>
+              <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Validación</h3>
                 <div className="space-y-4">
                   <Input placeholder="Estado normal" helperText="Texto de ayuda" />
                   <Input status="error" error="Este campo es requerido" placeholder="Con error" />
@@ -363,9 +416,9 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN 5: LABELS ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Labels</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">Etiquetas accesibles para formularios</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">Etiquetas accesibles para formularios</p>
             
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
               <div className="space-y-6 max-w-md">
                 <div>
                   <Label size="sm">Label Small</Label>
@@ -394,12 +447,12 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN 6: BADGES ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Badges</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">7 variantes con dots, iconos y removibles</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">7 variantes con dots, iconos y removibles</p>
             
             <div className="space-y-6">
               {/* Variantes */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Variantes</h3>
+              <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Variantes</h3>
                 <div className="flex flex-wrap gap-3">
                   <Badge variant="primary">Primary</Badge>
                   <Badge variant="secondary">Secondary</Badge>
@@ -412,8 +465,8 @@ export function DesignSystemShowcaseSimple() {
               </div>
 
               {/* Tamaños */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Tamaños</h3>
+              <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Tamaños</h3>
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge size="sm" variant="primary">Small</Badge>
                   <Badge size="md" variant="primary">Medium</Badge>
@@ -422,8 +475,8 @@ export function DesignSystemShowcaseSimple() {
               </div>
 
               {/* Con Dots */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Con Dots</h3>
+              <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Con Dots</h3>
                 <div className="flex flex-wrap gap-3">
                   <Badge variant="success" dot>Activo</Badge>
                   <Badge variant="warning" dot>Pendiente</Badge>
@@ -433,8 +486,8 @@ export function DesignSystemShowcaseSimple() {
               </div>
 
               {/* Con Iconos */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Con Iconos</h3>
+              <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Con Iconos</h3>
                 <div className="flex flex-wrap gap-3">
                   <Badge variant="primary" leftIcon={<Star size={14} />}>Destacado</Badge>
                   <Badge variant="success" leftIcon={<CheckCircle size={14} />}>Verificado</Badge>
@@ -445,8 +498,8 @@ export function DesignSystemShowcaseSimple() {
               </div>
 
               {/* Removibles */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Removibles</h3>
+              <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-neutral-200">Removibles</h3>
                 <div className="flex flex-wrap gap-3">
                   <Badge variant="primary" onRemove={() => alert('Removido!')}>JavaScript</Badge>
                   <Badge variant="secondary" onRemove={() => alert('Removido!')}>TypeScript</Badge>
@@ -460,12 +513,12 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN 7: FORM FIELDS ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">FormFields (Moléculas)</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">Composición de Label + Input para formularios DRY</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">Composición de Label + Input para formularios DRY</p>
             
             <div className="grid md:grid-cols-2 gap-8">
               {/* Formulario de Login */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-6 text-gray-800 dark:text-gray-200">Ejemplo: Login</h3>
+              <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+                <h3 className="text-xl font-semibold mb-6 text-gray-800 dark:text-neutral-200">Ejemplo: Login</h3>
                 <div className="space-y-4">
                   <FormField
                     label="Email"
@@ -488,8 +541,8 @@ export function DesignSystemShowcaseSimple() {
               </div>
 
               {/* Formulario de Registro */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-6 text-gray-800 dark:text-gray-200">Ejemplo: Registro</h3>
+              <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+                <h3 className="text-xl font-semibold mb-6 text-gray-800 dark:text-neutral-200">Ejemplo: Registro</h3>
                 <div className="space-y-4">
                   <FormField
                     label="Nombre completo"
@@ -524,212 +577,212 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN 8: ICONOS LUCIDE (120+ iconos) ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Biblioteca de Iconos Lucide</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">120+ iconos SVG organizados por categorías</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">120+ iconos SVG organizados por categorías</p>
             
             {/* Acciones Comunes */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">⚡ Acciones Comunes</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">⚡ Acciones Comunes</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><Save size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Save</span></div>
-                <div className="flex flex-col items-center gap-2"><Trash2 size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Trash</span></div>
-                <div className="flex flex-col items-center gap-2"><Download size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Download</span></div>
-                <div className="flex flex-col items-center gap-2"><Upload size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Upload</span></div>
-                <div className="flex flex-col items-center gap-2"><Send size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Send</span></div>
-                <div className="flex flex-col items-center gap-2"><Plus size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Plus</span></div>
-                <div className="flex flex-col items-center gap-2"><Edit size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Edit</span></div>
-                <div className="flex flex-col items-center gap-2"><Eye size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Eye</span></div>
-                <div className="flex flex-col items-center gap-2"><EyeOff size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">EyeOff</span></div>
-                <div className="flex flex-col items-center gap-2"><Copy size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Copy</span></div>
-                <div className="flex flex-col items-center gap-2"><Scissors size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Scissors</span></div>
-                <div className="flex flex-col items-center gap-2"><Clipboard size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Clipboard</span></div>
-                <div className="flex flex-col items-center gap-2"><RefreshCw size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Refresh</span></div>
-                <div className="flex flex-col items-center gap-2"><RotateCw size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">RotateCw</span></div>
-                <div className="flex flex-col items-center gap-2"><RotateCcw size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">RotateCcw</span></div>
-                <div className="flex flex-col items-center gap-2"><Undo2 size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Undo</span></div>
-                <div className="flex flex-col items-center gap-2"><Redo2 size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Redo</span></div>
-                <div className="flex flex-col items-center gap-2"><ZoomIn size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">ZoomIn</span></div>
-                <div className="flex flex-col items-center gap-2"><ZoomOut size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">ZoomOut</span></div>
-                <div className="flex flex-col items-center gap-2"><Search size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Search</span></div>
+                <div className="flex flex-col items-center gap-2"><Save size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Save</span></div>
+                <div className="flex flex-col items-center gap-2"><Trash2 size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Trash</span></div>
+                <div className="flex flex-col items-center gap-2"><Download size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Download</span></div>
+                <div className="flex flex-col items-center gap-2"><Upload size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Upload</span></div>
+                <div className="flex flex-col items-center gap-2"><Send size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Send</span></div>
+                <div className="flex flex-col items-center gap-2"><Plus size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Plus</span></div>
+                <div className="flex flex-col items-center gap-2"><Edit size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Edit</span></div>
+                <div className="flex flex-col items-center gap-2"><Eye size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Eye</span></div>
+                <div className="flex flex-col items-center gap-2"><EyeOff size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">EyeOff</span></div>
+                <div className="flex flex-col items-center gap-2"><Copy size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Copy</span></div>
+                <div className="flex flex-col items-center gap-2"><Scissors size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Scissors</span></div>
+                <div className="flex flex-col items-center gap-2"><Clipboard size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Clipboard</span></div>
+                <div className="flex flex-col items-center gap-2"><RefreshCw size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Refresh</span></div>
+                <div className="flex flex-col items-center gap-2"><RotateCw size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">RotateCw</span></div>
+                <div className="flex flex-col items-center gap-2"><RotateCcw size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">RotateCcw</span></div>
+                <div className="flex flex-col items-center gap-2"><Undo2 size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Undo</span></div>
+                <div className="flex flex-col items-center gap-2"><Redo2 size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Redo</span></div>
+                <div className="flex flex-col items-center gap-2"><ZoomIn size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">ZoomIn</span></div>
+                <div className="flex flex-col items-center gap-2"><ZoomOut size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">ZoomOut</span></div>
+                <div className="flex flex-col items-center gap-2"><Search size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Search</span></div>
               </div>
             </div>
 
             {/* Estados y Alertas */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">🚦 Estados y Alertas</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">🚦 Estados y Alertas</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
                 <div className="flex flex-col items-center gap-2"><CheckCircle size={20} className="text-brand-600 dark:text-green-400" /><span className="text-xs text-center">Check</span></div>
                 <div className="flex flex-col items-center gap-2"><XCircle size={20} className="text-red-600 dark:text-red-400" /><span className="text-xs text-center">X</span></div>
                 <div className="flex flex-col items-center gap-2"><AlertCircle size={20} className="text-red-600 dark:text-red-400" /><span className="text-xs text-center">Alert</span></div>
                 <div className="flex flex-col items-center gap-2"><AlertTriangle size={20} className="text-yellow-600 dark:text-yellow-400" /><span className="text-xs text-center">Warning</span></div>
                 <div className="flex flex-col items-center gap-2"><Info size={20} className="text-blue-600 dark:text-blue-400" /><span className="text-xs text-center">Info</span></div>
-                <div className="flex flex-col items-center gap-2"><HelpCircle size={20} className="text-gray-600 dark:text-gray-400" /><span className="text-xs text-center">Help</span></div>
-                <div className="flex flex-col items-center gap-2"><Moon size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Moon</span></div>
+                <div className="flex flex-col items-center gap-2"><HelpCircle size={20} className="text-gray-600 dark:text-neutral-400" /><span className="text-xs text-center">Help</span></div>
+                <div className="flex flex-col items-center gap-2"><Moon size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Moon</span></div>
                 <div className="flex flex-col items-center gap-2"><Sun size={20} className="text-yellow-500" /><span className="text-xs text-center">Sun</span></div>
               </div>
             </div>
 
             {/* Usuarios */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">👥 Usuarios y Permisos</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">👥 Usuarios y Permisos</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><User size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">User</span></div>
-                <div className="flex flex-col items-center gap-2"><Users size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Users</span></div>
-                <div className="flex flex-col items-center gap-2"><UserPlus size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Add</span></div>
-                <div className="flex flex-col items-center gap-2"><UserMinus size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Remove</span></div>
+                <div className="flex flex-col items-center gap-2"><User size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">User</span></div>
+                <div className="flex flex-col items-center gap-2"><Users size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Users</span></div>
+                <div className="flex flex-col items-center gap-2"><UserPlus size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Add</span></div>
+                <div className="flex flex-col items-center gap-2"><UserMinus size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Remove</span></div>
                 <div className="flex flex-col items-center gap-2"><UserCheck size={20} className="text-brand-600" /><span className="text-xs text-center">Verified</span></div>
                 <div className="flex flex-col items-center gap-2"><UserX size={20} className="text-red-600" /><span className="text-xs text-center">Blocked</span></div>
-                <div className="flex flex-col items-center gap-2"><Shield size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Shield</span></div>
+                <div className="flex flex-col items-center gap-2"><Shield size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Shield</span></div>
                 <div className="flex flex-col items-center gap-2"><ShieldCheck size={20} className="text-brand-600" /><span className="text-xs text-center">Protected</span></div>
               </div>
             </div>
 
             {/* Comunicación */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">💬 Comunicación</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">💬 Comunicación</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><Mail size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Mail</span></div>
-                <div className="flex flex-col items-center gap-2"><Inbox size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Inbox</span></div>
-                <div className="flex flex-col items-center gap-2"><Phone size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Phone</span></div>
-                <div className="flex flex-col items-center gap-2"><MessageCircle size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Message</span></div>
-                <div className="flex flex-col items-center gap-2"><MessageSquare size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Chat</span></div>
-                <div className="flex flex-col items-center gap-2"><Bell size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Bell</span></div>
-                <div className="flex flex-col items-center gap-2"><BellOff size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Muted</span></div>
+                <div className="flex flex-col items-center gap-2"><Mail size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Mail</span></div>
+                <div className="flex flex-col items-center gap-2"><Inbox size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Inbox</span></div>
+                <div className="flex flex-col items-center gap-2"><Phone size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Phone</span></div>
+                <div className="flex flex-col items-center gap-2"><MessageCircle size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Message</span></div>
+                <div className="flex flex-col items-center gap-2"><MessageSquare size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Chat</span></div>
+                <div className="flex flex-col items-center gap-2"><Bell size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Bell</span></div>
+                <div className="flex flex-col items-center gap-2"><BellOff size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Muted</span></div>
               </div>
             </div>
 
             {/* Archivos y Carpetas */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">📁 Archivos y Carpetas</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">📁 Archivos y Carpetas</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><File size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">File</span></div>
-                <div className="flex flex-col items-center gap-2"><FileText size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Document</span></div>
-                <div className="flex flex-col items-center gap-2"><Folder size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Folder</span></div>
-                <div className="flex flex-col items-center gap-2"><FolderOpen size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Open</span></div>
-                <div className="flex flex-col items-center gap-2"><Image size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Image</span></div>
-                <div className="flex flex-col items-center gap-2"><Video size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Video</span></div>
-                <div className="flex flex-col items-center gap-2"><Music size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Music</span></div>
+                <div className="flex flex-col items-center gap-2"><File size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">File</span></div>
+                <div className="flex flex-col items-center gap-2"><FileText size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Document</span></div>
+                <div className="flex flex-col items-center gap-2"><Folder size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Folder</span></div>
+                <div className="flex flex-col items-center gap-2"><FolderOpen size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Open</span></div>
+                <div className="flex flex-col items-center gap-2"><Image size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Image</span></div>
+                <div className="flex flex-col items-center gap-2"><Video size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Video</span></div>
+                <div className="flex flex-col items-center gap-2"><Music size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Music</span></div>
               </div>
             </div>
 
             {/* Navegación */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">🧭 Navegación</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">🧭 Navegación</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><Home size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Home</span></div>
-                <div className="flex flex-col items-center gap-2"><Menu size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Menu</span></div>
-                <div className="flex flex-col items-center gap-2"><X size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Close</span></div>
-                <div className="flex flex-col items-center gap-2"><ChevronRight size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Right</span></div>
-                <div className="flex flex-col items-center gap-2"><ChevronLeft size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Left</span></div>
-                <div className="flex flex-col items-center gap-2"><ChevronUp size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Up</span></div>
-                <div className="flex flex-col items-center gap-2"><ChevronDown size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Down</span></div>
-                <div className="flex flex-col items-center gap-2"><ArrowRight size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Arrow→</span></div>
-                <div className="flex flex-col items-center gap-2"><ArrowLeft size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Arrow←</span></div>
+                <div className="flex flex-col items-center gap-2"><Home size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Home</span></div>
+                <div className="flex flex-col items-center gap-2"><Menu size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Menu</span></div>
+                <div className="flex flex-col items-center gap-2"><X size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Close</span></div>
+                <div className="flex flex-col items-center gap-2"><ChevronRight size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Right</span></div>
+                <div className="flex flex-col items-center gap-2"><ChevronLeft size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Left</span></div>
+                <div className="flex flex-col items-center gap-2"><ChevronUp size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Up</span></div>
+                <div className="flex flex-col items-center gap-2"><ChevronDown size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Down</span></div>
+                <div className="flex flex-col items-center gap-2"><ArrowRight size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Arrow→</span></div>
+                <div className="flex flex-col items-center gap-2"><ArrowLeft size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Arrow←</span></div>
               </div>
             </div>
 
             {/* Comercio */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">🛒 E-Commerce</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">🛒 E-Commerce</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><ShoppingCart size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Cart</span></div>
-                <div className="flex flex-col items-center gap-2"><ShoppingBag size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Bag</span></div>
-                <div className="flex flex-col items-center gap-2"><Store size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Store</span></div>
-                <div className="flex flex-col items-center gap-2"><Package size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Package</span></div>
-                <div className="flex flex-col items-center gap-2"><Truck size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Delivery</span></div>
+                <div className="flex flex-col items-center gap-2"><ShoppingCart size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Cart</span></div>
+                <div className="flex flex-col items-center gap-2"><ShoppingBag size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Bag</span></div>
+                <div className="flex flex-col items-center gap-2"><Store size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Store</span></div>
+                <div className="flex flex-col items-center gap-2"><Package size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Package</span></div>
+                <div className="flex flex-col items-center gap-2"><Truck size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Delivery</span></div>
                 <div className="flex flex-col items-center gap-2"><DollarSign size={20} className="text-brand-600" /><span className="text-xs text-center">Price</span></div>
-                <div className="flex flex-col items-center gap-2"><CreditCard size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Payment</span></div>
+                <div className="flex flex-col items-center gap-2"><CreditCard size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Payment</span></div>
               </div>
             </div>
 
             {/* Herramientas */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">🔧 Herramientas</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">🔧 Herramientas</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><Settings size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Settings</span></div>
-                <div className="flex flex-col items-center gap-2"><Wrench size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Wrench</span></div>
-                <div className="flex flex-col items-center gap-2"><Hammer size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Hammer</span></div>
-                <div className="flex flex-col items-center gap-2"><Sliders size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Sliders</span></div>
-                <div className="flex flex-col items-center gap-2"><Filter size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Filter</span></div>
-                <div className="flex flex-col items-center gap-2"><Lock size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Lock</span></div>
-                <div className="flex flex-col items-center gap-2"><Unlock size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Unlock</span></div>
-                <div className="flex flex-col items-center gap-2"><Key size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Key</span></div>
+                <div className="flex flex-col items-center gap-2"><Settings size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Settings</span></div>
+                <div className="flex flex-col items-center gap-2"><Wrench size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Wrench</span></div>
+                <div className="flex flex-col items-center gap-2"><Hammer size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Hammer</span></div>
+                <div className="flex flex-col items-center gap-2"><Sliders size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Sliders</span></div>
+                <div className="flex flex-col items-center gap-2"><Filter size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Filter</span></div>
+                <div className="flex flex-col items-center gap-2"><Lock size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Lock</span></div>
+                <div className="flex flex-col items-center gap-2"><Unlock size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Unlock</span></div>
+                <div className="flex flex-col items-center gap-2"><Key size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Key</span></div>
               </div>
             </div>
 
             {/* Tiempo */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">⏰ Tiempo y Calendario</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">⏰ Tiempo y Calendario</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><Clock size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Clock</span></div>
-                <div className="flex flex-col items-center gap-2"><Calendar size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Calendar</span></div>
-                <div className="flex flex-col items-center gap-2"><CalendarDays size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Days</span></div>
-                <div className="flex flex-col items-center gap-2"><Timer size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Timer</span></div>
-                <div className="flex flex-col items-center gap-2"><Hourglass size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Hourglass</span></div>
-                <div className="flex flex-col items-center gap-2"><Watch size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Watch</span></div>
+                <div className="flex flex-col items-center gap-2"><Clock size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Clock</span></div>
+                <div className="flex flex-col items-center gap-2"><Calendar size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Calendar</span></div>
+                <div className="flex flex-col items-center gap-2"><CalendarDays size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Days</span></div>
+                <div className="flex flex-col items-center gap-2"><Timer size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Timer</span></div>
+                <div className="flex flex-col items-center gap-2"><Hourglass size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Hourglass</span></div>
+                <div className="flex flex-col items-center gap-2"><Watch size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Watch</span></div>
               </div>
             </div>
 
             {/* Medios */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">🎬 Medios y Audio</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">🎬 Medios y Audio</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><Camera size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Camera</span></div>
-                <div className="flex flex-col items-center gap-2"><Mic size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Mic</span></div>
-                <div className="flex flex-col items-center gap-2"><MicOff size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">MicOff</span></div>
-                <div className="flex flex-col items-center gap-2"><Volume2 size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Volume</span></div>
-                <div className="flex flex-col items-center gap-2"><VolumeX size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Mute</span></div>
-                <div className="flex flex-col items-center gap-2"><Play size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Play</span></div>
-                <div className="flex flex-col items-center gap-2"><Pause size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Pause</span></div>
-                <div className="flex flex-col items-center gap-2"><SkipForward size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Forward</span></div>
-                <div className="flex flex-col items-center gap-2"><SkipBack size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Back</span></div>
+                <div className="flex flex-col items-center gap-2"><Camera size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Camera</span></div>
+                <div className="flex flex-col items-center gap-2"><Mic size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Mic</span></div>
+                <div className="flex flex-col items-center gap-2"><MicOff size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">MicOff</span></div>
+                <div className="flex flex-col items-center gap-2"><Volume2 size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Volume</span></div>
+                <div className="flex flex-col items-center gap-2"><VolumeX size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Mute</span></div>
+                <div className="flex flex-col items-center gap-2"><Play size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Play</span></div>
+                <div className="flex flex-col items-center gap-2"><Pause size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Pause</span></div>
+                <div className="flex flex-col items-center gap-2"><SkipForward size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Forward</span></div>
+                <div className="flex flex-col items-center gap-2"><SkipBack size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Back</span></div>
               </div>
             </div>
 
             {/* Mapas */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">🗺️ Mapas y Ubicación</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">🗺️ Mapas y Ubicación</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
                 <div className="flex flex-col items-center gap-2"><MapPin size={20} className="text-red-600" /><span className="text-xs text-center">Pin</span></div>
-                <div className="flex flex-col items-center gap-2"><Map size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Map</span></div>
-                <div className="flex flex-col items-center gap-2"><Navigation size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Navigate</span></div>
-                <div className="flex flex-col items-center gap-2"><Compass size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Compass</span></div>
+                <div className="flex flex-col items-center gap-2"><Map size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Map</span></div>
+                <div className="flex flex-col items-center gap-2"><Navigation size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Navigate</span></div>
+                <div className="flex flex-col items-center gap-2"><Compass size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Compass</span></div>
                 <div className="flex flex-col items-center gap-2"><Globe size={20} className="text-blue-600" /><span className="text-xs text-center">Globe</span></div>
-                <div className="flex flex-col items-center gap-2"><Warehouse size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Warehouse</span></div>
+                <div className="flex flex-col items-center gap-2"><Warehouse size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Warehouse</span></div>
               </div>
             </div>
 
             {/* Social */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">❤️ Social y Reacciones</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">❤️ Social y Reacciones</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><Share2 size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Share</span></div>
+                <div className="flex flex-col items-center gap-2"><Share2 size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Share</span></div>
                 <div className="flex flex-col items-center gap-2"><ThumbsUp size={20} className="text-blue-600" /><span className="text-xs text-center">Like</span></div>
                 <div className="flex flex-col items-center gap-2"><ThumbsDown size={20} className="text-red-600" /><span className="text-xs text-center">Dislike</span></div>
                 <div className="flex flex-col items-center gap-2"><Heart size={20} className="text-red-500" /><span className="text-xs text-center">Love</span></div>
                 <div className="flex flex-col items-center gap-2"><Star size={20} className="text-yellow-500" /><span className="text-xs text-center">Star</span></div>
-                <div className="flex flex-col items-center gap-2"><Bookmark size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Save</span></div>
-                <div className="flex flex-col items-center gap-2"><Flag size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Flag</span></div>
+                <div className="flex flex-col items-center gap-2"><Bookmark size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Save</span></div>
+                <div className="flex flex-col items-center gap-2"><Flag size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Flag</span></div>
               </div>
             </div>
 
             {/* Texto */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">📝 Formato de Texto</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">📝 Formato de Texto</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><Bold size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Bold</span></div>
-                <div className="flex flex-col items-center gap-2"><Italic size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Italic</span></div>
-                <div className="flex flex-col items-center gap-2"><Underline size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Underline</span></div>
-                <div className="flex flex-col items-center gap-2"><AlignLeft size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Left</span></div>
-                <div className="flex flex-col items-center gap-2"><AlignCenter size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Center</span></div>
-                <div className="flex flex-col items-center gap-2"><AlignRight size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Right</span></div>
-                <div className="flex flex-col items-center gap-2"><List size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">List</span></div>
-                <div className="flex flex-col items-center gap-2"><ListOrdered size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Ordered</span></div>
+                <div className="flex flex-col items-center gap-2"><Bold size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Bold</span></div>
+                <div className="flex flex-col items-center gap-2"><Italic size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Italic</span></div>
+                <div className="flex flex-col items-center gap-2"><Underline size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Underline</span></div>
+                <div className="flex flex-col items-center gap-2"><AlignLeft size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Left</span></div>
+                <div className="flex flex-col items-center gap-2"><AlignCenter size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Center</span></div>
+                <div className="flex flex-col items-center gap-2"><AlignRight size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Right</span></div>
+                <div className="flex flex-col items-center gap-2"><List size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">List</span></div>
+                <div className="flex flex-col items-center gap-2"><ListOrdered size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Ordered</span></div>
               </div>
             </div>
 
             {/* Clima */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">🌤️ Clima</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">🌤️ Clima</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
                 <div className="flex flex-col items-center gap-2"><Sun size={20} className="text-yellow-500" /><span className="text-xs text-center">Sunny</span></div>
                 <div className="flex flex-col items-center gap-2"><Cloud size={20} className="text-gray-500" /><span className="text-xs text-center">Cloudy</span></div>
@@ -741,46 +794,46 @@ export function DesignSystemShowcaseSimple() {
             </div>
 
             {/* Dispositivos */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">💻 Dispositivos</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">💻 Dispositivos</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><Monitor size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Monitor</span></div>
-                <div className="flex flex-col items-center gap-2"><Laptop size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Laptop</span></div>
-                <div className="flex flex-col items-center gap-2"><Smartphone size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Phone</span></div>
-                <div className="flex flex-col items-center gap-2"><Tablet size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Tablet</span></div>
-                <div className="flex flex-col items-center gap-2"><Printer size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Printer</span></div>
-                <div className="flex flex-col items-center gap-2"><Wifi size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">WiFi</span></div>
-                <div className="flex flex-col items-center gap-2"><WifiOff size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">No WiFi</span></div>
+                <div className="flex flex-col items-center gap-2"><Monitor size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Monitor</span></div>
+                <div className="flex flex-col items-center gap-2"><Laptop size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Laptop</span></div>
+                <div className="flex flex-col items-center gap-2"><Smartphone size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Phone</span></div>
+                <div className="flex flex-col items-center gap-2"><Tablet size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Tablet</span></div>
+                <div className="flex flex-col items-center gap-2"><Printer size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Printer</span></div>
+                <div className="flex flex-col items-center gap-2"><Wifi size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">WiFi</span></div>
+                <div className="flex flex-col items-center gap-2"><WifiOff size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">No WiFi</span></div>
               </div>
             </div>
 
             {/* Datos y Gráficos */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">📊 Datos y Analytics</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">📊 Datos y Analytics</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
                 <div className="flex flex-col items-center gap-2"><TrendingUp size={20} className="text-brand-600" /><span className="text-xs text-center">Up</span></div>
                 <div className="flex flex-col items-center gap-2"><TrendingDown size={20} className="text-red-600" /><span className="text-xs text-center">Down</span></div>
-                <div className="flex flex-col items-center gap-2"><BarChart size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Bar</span></div>
-                <div className="flex flex-col items-center gap-2"><PieChart size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Pie</span></div>
-                <div className="flex flex-col items-center gap-2"><Activity size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Activity</span></div>
-                <div className="flex flex-col items-center gap-2"><Database size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Database</span></div>
+                <div className="flex flex-col items-center gap-2"><BarChart size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Bar</span></div>
+                <div className="flex flex-col items-center gap-2"><PieChart size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Pie</span></div>
+                <div className="flex flex-col items-center gap-2"><Activity size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Activity</span></div>
+                <div className="flex flex-col items-center gap-2"><Database size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Database</span></div>
               </div>
             </div>
 
             {/* Misceláneos */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">✨ Misceláneos</h3>
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">✨ Misceláneos</h3>
               <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-4">
-                <div className="flex flex-col items-center gap-2"><Tag size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Tag</span></div>
-                <div className="flex flex-col items-center gap-2"><Hash size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Hash</span></div>
-                <div className="flex flex-col items-center gap-2"><AtSign size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">At</span></div>
-                <div className="flex flex-col items-center gap-2"><Percent size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Percent</span></div>
+                <div className="flex flex-col items-center gap-2"><Tag size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Tag</span></div>
+                <div className="flex flex-col items-center gap-2"><Hash size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Hash</span></div>
+                <div className="flex flex-col items-center gap-2"><AtSign size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">At</span></div>
+                <div className="flex flex-col items-center gap-2"><Percent size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Percent</span></div>
                 <div className="flex flex-col items-center gap-2"><Award size={20} className="text-yellow-600" /><span className="text-xs text-center">Award</span></div>
-                <div className="flex flex-col items-center gap-2"><Gift size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Gift</span></div>
+                <div className="flex flex-col items-center gap-2"><Gift size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Gift</span></div>
                 <div className="flex flex-col items-center gap-2"><Zap size={20} className="text-yellow-500" /><span className="text-xs text-center">Zap</span></div>
-                <div className="flex flex-col items-center gap-2"><Power size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Power</span></div>
+                <div className="flex flex-col items-center gap-2"><Power size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Power</span></div>
                 <div className="flex flex-col items-center gap-2"><Link size={20} className="text-blue-600" /><span className="text-xs text-center">Link</span></div>
-                <div className="flex flex-col items-center gap-2"><Paperclip size={20} className="text-gray-700 dark:text-gray-300" /><span className="text-xs text-center">Attach</span></div>
+                <div className="flex flex-col items-center gap-2"><Paperclip size={20} className="text-gray-700 dark:text-neutral-300" /><span className="text-xs text-center">Attach</span></div>
               </div>
             </div>
           </section>
@@ -788,12 +841,12 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN NUEVA: CHECKBOX ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Checkbox</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">Componente atómico para selección múltiple</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">Componente atómico para selección múltiple</p>
             
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 space-y-8">
+            <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 space-y-8">
               {/* Variants */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Variantes</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">Variantes</h3>
                 <div className="flex flex-wrap gap-6">
                   <Checkbox label="Primary Checkbox" variant="primary" />
                   <Checkbox label="Secondary Checkbox" variant="secondary" />
@@ -802,7 +855,7 @@ export function DesignSystemShowcaseSimple() {
 
               {/* Sizes */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Tamaños</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">Tamaños</h3>
                 <div className="flex flex-wrap items-center gap-6">
                   <Checkbox label="Small" size="sm" />
                   <Checkbox label="Medium" size="md" />
@@ -812,7 +865,7 @@ export function DesignSystemShowcaseSimple() {
 
               {/* States */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Estados</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">Estados</h3>
                 <div className="space-y-4">
                   <Checkbox 
                     label="Con helper text" 
@@ -840,12 +893,12 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN NUEVA: RADIO ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Radio</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">Componente atómico para selección única</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">Componente atómico para selección única</p>
             
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 space-y-8">
+            <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 space-y-8">
               {/* Variants */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Variantes</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">Variantes</h3>
                 <div className="flex flex-wrap gap-6">
                   <Radio label="Primary Option" name="demo1" variant="primary" />
                   <Radio label="Secondary Option" name="demo1" variant="secondary" />
@@ -854,7 +907,7 @@ export function DesignSystemShowcaseSimple() {
 
               {/* Sizes */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Tamaños</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">Tamaños</h3>
                 <div className="flex flex-wrap items-center gap-6">
                   <Radio label="Small" name="demo2" size="sm" />
                   <Radio label="Medium" name="demo2" size="md" />
@@ -864,7 +917,7 @@ export function DesignSystemShowcaseSimple() {
 
               {/* Group Example */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Grupo Controlado</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">Grupo Controlado</h3>
                 <div className="space-y-3">
                   <Radio 
                     label="Opción 1" 
@@ -896,12 +949,12 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN NUEVA: SWITCH ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Switch</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">Componente atómico para toggle on/off</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">Componente atómico para toggle on/off</p>
             
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 space-y-8">
+            <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 space-y-8">
               {/* Variants */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Variantes</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">Variantes</h3>
                 <div className="flex flex-wrap gap-6">
                   <Switch label="Primary Switch" variant="primary" />
                   <Switch label="Secondary Switch" variant="secondary" />
@@ -910,7 +963,7 @@ export function DesignSystemShowcaseSimple() {
 
               {/* Sizes */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Tamaños</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">Tamaños</h3>
                 <div className="flex flex-wrap items-center gap-6">
                   <Switch label="Small" size="sm" />
                   <Switch label="Medium" size="md" />
@@ -920,7 +973,7 @@ export function DesignSystemShowcaseSimple() {
 
               {/* States */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Estados</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">Estados</h3>
                 <div className="space-y-4">
                   <Switch 
                     label="Con helper text" 
@@ -949,17 +1002,17 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN: CARD (ProductCard) ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Card</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">
               ProductCard — Componente de producción. Card clickeable completa, sin botón "Ver Detalle". 
-              Variantes: <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs">featured</code> (homepage) y <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs">compact</code> (resultados).
+              Variantes: <code className="bg-gray-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-xs">featured</code> (homepage) y <code className="bg-gray-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-xs">compact</code> (resultados).
             </p>
             
             <div className="space-y-10">
 
               {/* ── Variante Featured: Grid 4 columnas ── */}
               <div>
-                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-gray-200">Variante Featured</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Imagen 16/9 · Card clickeable · Hover lift + border brand · Badge contextual sobre imagen</p>
+                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-neutral-200">Variante Featured</h3>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mb-4">Imagen 16/9 · Card clickeable · Hover lift + border brand · Badge contextual sobre imagen</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   
                   {/* Card Featured 1 */}
@@ -1082,8 +1135,8 @@ export function DesignSystemShowcaseSimple() {
 
               {/* ── Variante Compact: Grid más denso ── */}
               <div>
-                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-gray-200">Variante Compact</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Imagen 4/3 · Padding y font más chicos · Usada en resultados de búsqueda</p>
+                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-neutral-200">Variante Compact</h3>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mb-4">Imagen 4/3 · Padding y font más chicos · Usada en resultados de búsqueda</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                   
                   {/* Compact 1 */}
@@ -1230,8 +1283,8 @@ export function DesignSystemShowcaseSimple() {
 
               {/* ── Avisos Destacados: Barra en Resultados ── */}
               <div>
-                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-gray-200">Avisos Destacados — Barra en Resultados</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Contenedor <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">bg-brand-50/70</code> con borde <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">brand-100</code> · Máx 5 cards compact · Header con Megaphone icon</p>
+                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-neutral-200">Avisos Destacados — Barra en Resultados</h3>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mb-4">Contenedor <code className="bg-gray-100 dark:bg-neutral-800 px-1 rounded">bg-brand-50/70</code> con borde <code className="bg-gray-100 dark:bg-neutral-800 px-1 rounded">brand-100</code> · Máx 5 cards compact · Header con Megaphone icon</p>
                 
                 {/* Replica exacta del UserFeaturedAdsBar */}
                 <div className="mb-6">
@@ -1395,7 +1448,7 @@ export function DesignSystemShowcaseSimple() {
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Card variant="ghost" padding="sm">
                     <h4 className="font-semibold text-xs text-gray-900 dark:text-white mb-2">Contenedor</h4>
-                    <div className="space-y-1 text-[11px] text-gray-600 dark:text-gray-400">
+                    <div className="space-y-1 text-[11px] text-gray-600 dark:text-neutral-400">
                       <p><span className="font-mono text-brand-600">bg-brand-50/70</span> fondo</p>
                       <p><span className="font-mono text-brand-600">border-brand-100</span> borde</p>
                       <p><span className="font-mono text-brand-600">rounded-xl</span> esquinas</p>
@@ -1404,7 +1457,7 @@ export function DesignSystemShowcaseSimple() {
                   </Card>
                   <Card variant="ghost" padding="sm">
                     <h4 className="font-semibold text-xs text-gray-900 dark:text-white mb-2">Header</h4>
-                    <div className="space-y-1 text-[11px] text-gray-600 dark:text-gray-400">
+                    <div className="space-y-1 text-[11px] text-gray-600 dark:text-neutral-400">
                       <p><span className="font-mono text-brand-600">Megaphone</span> icon 16px</p>
                       <p><span className="font-mono text-brand-600">text-brand-700</span> título</p>
                       <p><span className="font-mono text-brand-600">uppercase tracking-wide</span></p>
@@ -1413,7 +1466,7 @@ export function DesignSystemShowcaseSimple() {
                   </Card>
                   <Card variant="ghost" padding="sm">
                     <h4 className="font-semibold text-xs text-gray-900 dark:text-white mb-2">Grid</h4>
-                    <div className="space-y-1 text-[11px] text-gray-600 dark:text-gray-400">
+                    <div className="space-y-1 text-[11px] text-gray-600 dark:text-neutral-400">
                       <p><span className="font-mono text-brand-600">grid-cols-2</span> mobile</p>
                       <p><span className="font-mono text-brand-600">sm:grid-cols-3</span> tablet</p>
                       <p><span className="font-mono text-brand-600">lg:grid-cols-5</span> desktop</p>
@@ -1425,13 +1478,13 @@ export function DesignSystemShowcaseSimple() {
 
               {/* ── Anatomía: Explicación visual ── */}
               <div>
-                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-gray-200">Anatomía del ProductCard</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Estructura interna y tokens usados en producción</p>
+                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-neutral-200">Anatomía del ProductCard</h3>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mb-4">Estructura interna y tokens usados en producción</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   {/* Card anatomía */}
                   <Card variant="outlined" padding="none" className="overflow-hidden">
-                    <div className="relative w-full overflow-hidden aspect-[16/9] bg-gray-100 dark:bg-gray-800 flex items-center justify-center border-b border-dashed border-gray-300 dark:border-gray-600">
+                    <div className="relative w-full overflow-hidden aspect-[16/9] bg-gray-100 dark:bg-neutral-800 flex items-center justify-center border-b border-dashed border-gray-300 dark:border-neutral-600">
                       <div className="text-center">
                         <p className="text-sm font-mono text-gray-500">aspect-[16/9] | aspect-[4/3]</p>
                         <p className="text-[10px] text-gray-400 mt-1">Imagen lazy + gradient overlay en hover</p>
@@ -1473,8 +1526,8 @@ export function DesignSystemShowcaseSimple() {
                     </Card>
                     <Card variant="ghost" padding="md">
                       <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-3">Comportamiento</h4>
-                      <div className="space-y-2 text-xs text-gray-600 dark:text-gray-400">
-                        <p>• Card completa clickeable → navega a <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">/ad/{'{slug}'}</code></p>
+                      <div className="space-y-2 text-xs text-gray-600 dark:text-neutral-400">
+                        <p>• Card completa clickeable → navega a <code className="bg-gray-100 dark:bg-neutral-800 px-1 rounded">/ad/{'{slug}'}</code></p>
                         <p>• Sin botón "Ver Detalle" — toda la superficie es el CTA</p>
                         <p>• Badge contextual: ganadería muestra edad, otros Nuevo/Usado</p>
                         <p>• Precio: se muestra "Consultar" si no hay precio</p>
@@ -1487,24 +1540,24 @@ export function DesignSystemShowcaseSimple() {
 
               {/* ── Card molecule: Variantes base ── */}
               <div>
-                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-gray-200">Card Molecule — Variantes base</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Contenedor genérico CVA con 4 variantes + sub-componentes (Header, Body, Footer)</p>
+                <h3 className="text-lg font-semibold mb-1 text-gray-800 dark:text-neutral-200">Card Molecule — Variantes base</h3>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mb-4">Contenedor genérico CVA con 4 variantes + sub-componentes (Header, Body, Footer)</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card variant="default">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">Default</h4>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">shadow-md · hover:shadow-lg</p>
+                    <p className="text-gray-600 dark:text-neutral-400 text-xs">shadow-md · hover:shadow-lg</p>
                   </Card>
                   <Card variant="outlined">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">Outlined</h4>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">borde · sin shadow</p>
+                    <p className="text-gray-600 dark:text-neutral-400 text-xs">borde · sin shadow</p>
                   </Card>
                   <Card variant="elevated">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">Elevated</h4>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">shadow-lg · hover:shadow-xl</p>
+                    <p className="text-gray-600 dark:text-neutral-400 text-xs">shadow-lg · hover:shadow-xl</p>
                   </Card>
                   <Card variant="ghost">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">Ghost</h4>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">transparente · hover bg</p>
+                    <p className="text-gray-600 dark:text-neutral-400 text-xs">transparente · hover bg</p>
                   </Card>
                 </div>
               </div>
@@ -1515,11 +1568,11 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN NUEVA: MODAL ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Modal</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">Componente molecular para diálogos y overlays</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">Componente molecular para diálogos y overlays</p>
             
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 space-y-6">
+            <div className="bg-white dark:bg-neutral-800 p-8 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Demo Interactiva</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">Demo Interactiva</h3>
                 <Button 
                   variant="primary" 
                   onClick={() => setIsModalOpen(true)}
@@ -1530,8 +1583,8 @@ export function DesignSystemShowcaseSimple() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Características</h3>
-                <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-neutral-200">Características</h3>
+                <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-neutral-400">
                   <li>Cierre con tecla ESC</li>
                   <li>Cierre al hacer click en el overlay (configurable)</li>
                   <li>Bloqueo de scroll del body</li>
@@ -1586,17 +1639,17 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN: CATEGORY BADGES ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">CategoryBadge</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-gray-600 dark:text-neutral-400 mb-6">
               Pills de categoría para cards de avisos. Modificar colores en{' '}
               <code className="text-brand-600 text-sm">atoms/CategoryBadge/CategoryBadge.tsx</code> —{' '}
               mapa <code className="text-brand-600 text-sm">CATEGORY_BADGE_STYLES</code>.
             </p>
-            <div className="flex flex-wrap gap-3 items-center p-6 bg-gray-100 dark:bg-gray-800 rounded-xl">
+            <div className="flex flex-wrap gap-3 items-center p-6 bg-gray-100 dark:bg-neutral-800 rounded-xl">
               {Object.keys(CATEGORY_BADGE_STYLES).map((slug) => (
                 <CategoryBadge key={slug} slug={slug} />
               ))}
             </div>
-            <div className="mt-4 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="mt-4 p-4 bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-700">
               <p className="text-xs text-gray-500 mb-3 font-mono">{'// Uso en ProductCard:'}</p>
               <pre className="text-xs text-brand-600 font-mono">{`<CategoryBadge slug={product.category} />`}</pre>
             </div>
@@ -1605,18 +1658,18 @@ export function DesignSystemShowcaseSimple() {
           {/* ========== SECCIÓN 6: ICONOS ========== */}
           <section>
             <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Biblioteca de Iconos</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">Todos los iconos disponibles de Lucide React</p>
+            <p className="text-gray-600 dark:text-neutral-400 mb-8">Todos los iconos disponibles de Lucide React</p>
             
             {/* Aquí irían todas las categorías de iconos que ya existen en el archivo */}
             {/* Por brevedad, omitimos el contenido que ya existe */}
           </section>
 
           {/* Footer */}
-          <footer className="text-center py-8 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-gray-600 dark:text-gray-400">
+          <footer className="text-center py-8 border-t border-gray-200 dark:border-neutral-700">
+            <p className="text-gray-600 dark:text-neutral-400">
               🎨 Design System Rural24 - Atomic Design + CVA + Tailwind CSS
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+            <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">
               Ver documentación completa en Storybook: <code className="text-brand-600 dark:text-green-400">npm run storybook</code>
             </p>
           </footer>

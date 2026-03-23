@@ -27,3 +27,6 @@ export * from './currency';
 
 // Cards
 export { getCardLabel, hasCardLabel } from './cardLabelHelpers';
+
+// Logger
+export { logger } from './logger';

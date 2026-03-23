@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import type { WizardBlockProps } from '../wizardTypes';
 import type { WizardBlockConfig } from '../../../services/v2/wizardConfigService';
 import { getOptionListItemsByName } from '../../../services/v2/optionListsService';
+import { formStyles } from '../../../constants/styles';
 
-const inp = 'w-full px-4 py-3 text-base bg-white border-2 border-gray-300 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder:text-gray-400';
-const lbl = 'block text-sm font-semibold text-gray-700 mb-2';
-const hlp = 'mt-1.5 text-sm text-gray-500';
+const inp = formStyles.input;
+const lbl = formStyles.label;
+const hlp = formStyles.help;
 
 function cleanPrice(v: string) { return v.replace(/[^\d]/g, ''); }
 function formatDisplay(v: string) {
