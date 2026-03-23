@@ -1,11 +1,14 @@
 /**
  * POST /api/admin/sync/config
  * Clona las tablas de configuración de DEV → PROD.
- * Replica la lógica de scripts/db-clone-config.mjs — todo en una sola transacción.
+ * Replica la lógica de scripts/db-clone-config.mjs — commit por tabla para evitar timeout.
  * Solo superadmin.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+// Necesario en Next.js para rutas que pueden tardar más de 10s
+export const maxDuration = 300;
 import pkg from 'pg';
 import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 import { logger } from '@/lib/logger';
@@ -115,21 +118,30 @@ export async function POST(request: NextRequest) {
     try {
       await Promise.all([devClient.connect(), prodClient.connect()]);
 
-      // Todo en una sola transacción en PROD — todo o nada
-      await prodClient.query('BEGIN');
+      // SET statement_timeout para evitar queries colgadas
+      await Promise.all([
+        devClient.query("SET statement_timeout = '60s'"),
+        prodClient.query("SET statement_timeout = '60s'"),
+      ]);
 
+      // Commit por tabla (no una sola transacción gigante que timeout)
       const results: { table: string; rows: number }[] = [];
       for (const table of TABLES) {
-        const r = await cloneTable(devClient, prodClient, table);
-        results.push(r);
-        logger.log(`[sync/config] ${table}: ${r.rows} filas`);
+        await prodClient.query('BEGIN');
+        try {
+          const r = await cloneTable(devClient, prodClient, table);
+          await prodClient.query('COMMIT');
+          results.push(r);
+          logger.log(`[sync/config] ${table}: ${r.rows} filas`);
+        } catch (err) {
+          await prodClient.query('ROLLBACK').catch(() => {});
+          throw err;
+        }
       }
 
-      await prodClient.query('COMMIT');
       return NextResponse.json({ success: true, results });
 
     } catch (err: unknown) {
-      await prodClient.query('ROLLBACK').catch(() => {});
       const message = err instanceof Error ? err.message : 'Error desconocido';
       logger.error('[sync/config] Error:', err);
       return NextResponse.json({ success: false, error: message }, { status: 500 });

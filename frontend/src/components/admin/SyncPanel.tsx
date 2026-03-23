@@ -65,15 +65,28 @@ async function fetchStatus(): Promise<SyncStatus> {
 
 async function callSyncAction(
   path: string,
-  body: Record<string, unknown> = {}
+  body: Record<string, unknown> = {},
+  timeoutMs = 120_000
 ): Promise<{ success: boolean; [k: string]: unknown }> {
   const token = await getAuthToken();
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  return res.json().catch(() => ({ success: false, error: `HTTP ${res.status}` }));
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    return res.json().catch(() => ({ success: false, error: `HTTP ${res.status}` }));
+  } catch (err) {
+    if ((err as { name?: string }).name === 'AbortError') {
+      return { success: false, error: 'Timeout: la operación tardó demasiado' };
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
@@ -292,7 +305,7 @@ export default function SyncPanel() {
     if (!window.confirm('¿Clonar configuración de DEV a PROD?\nSobreescribirá global_settings, global_config, subcategorías y option_lists en PROD.')) return;
     setConfigResult({ state: 'loading' });
     try {
-      const json = await callSyncAction('/api/admin/sync/config');
+      const json = await callSyncAction('/api/admin/sync/config', {}, 270_000);
       if (json.success) {
         const results = (json.results as Array<{ table: string; rows: number }>) ?? [];
         const summary = results.map(r => `${r.table}(${r.rows})`).join(', ');
