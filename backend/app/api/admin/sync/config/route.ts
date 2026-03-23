@@ -1,7 +1,7 @@
 /**
  * POST /api/admin/sync/config
- * Clona las tablas de configuración de DEV a PROD.
- * Tablas: global_settings, global_config, subcategories, option_lists, option_list_items
+ * Clona las tablas de configuración de DEV → PROD.
+ * Replica la lógica de scripts/db-clone-config.mjs — todo en una sola transacción.
  * Solo superadmin.
  */
 
@@ -12,43 +12,46 @@ import { logger } from '@/lib/logger';
 
 const { Client } = pkg;
 
-// Tablas a clonar y su orden (respeta FKs)
-const CLONE_TABLES = [
-  'global_settings',
-  'global_config',
-  'option_lists',
-  'option_list_items',
+// Mismo orden que db-clone-config.mjs (respeta FKs entre tablas)
+const TABLES = [
+  'categories', 'subcategories',
+  'site_settings', 'global_settings', 'global_config', 'banners', 'banners_clean',
+  'option_lists', 'option_list_items',
+  'form_templates_v2', 'form_fields_v2',
+  'wizard_configs',
 ];
 
-// Subcategorías requieren ordenamiento topológico (self-ref FK parent_id)
-const SELF_REF_TABLE = 'subcategories';
+const NULLIFY_COLS = ['updated_by', 'created_by', 'modified_by'];
+const DEV_REF  = 'lmkuecdvxtenrikjomol';
+const PROD_REF = 'ufrzkjuylhvdkrvbjdyh';
 
 interface Row { [key: string]: unknown }
 
-function getDbClient(url: string) {
-  return new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
+function replaceStorageRefs(val: unknown): unknown {
+  if (typeof val === 'string') return val.split(DEV_REF).join(PROD_REF);
+  if (val !== null && typeof val === 'object') {
+    return JSON.parse(JSON.stringify(val).split(DEV_REF).join(PROD_REF));
+  }
+  return val;
 }
 
-/** Ordena filas con parent_id self-referencial (padre antes que hijo) */
-function topologicalSort(rows: Row[]): Row[] {
+function topoSort(rows: Row[]): Row[] {
   const ordered: Row[] = [];
   const remaining = [...rows];
-  const insertedIds = new Set<unknown>();
+  const inserted = new Set<unknown>();
   let prevSize = -1;
-
   while (remaining.length > 0 && remaining.length !== prevSize) {
     prevSize = remaining.length;
     for (let i = remaining.length - 1; i >= 0; i--) {
       const row = remaining[i];
-      if (!row['parent_id'] || insertedIds.has(row['parent_id'])) {
+      if (!row['parent_id'] || inserted.has(row['parent_id'])) {
         ordered.push(row);
-        insertedIds.add(row['id']);
+        inserted.add(row['id']);
         remaining.splice(i, 1);
       }
     }
   }
-  // Filas huérfanas (por si acaso)
-  ordered.push(...remaining);
+  if (remaining.length > 0) ordered.push(...remaining);
   return ordered;
 }
 
@@ -57,30 +60,38 @@ async function cloneTable(
   prodClient: InstanceType<typeof Client>,
   tableName: string
 ): Promise<{ table: string; rows: number }> {
-  const { rows } = await devClient.query<Row>(`SELECT * FROM public."${tableName}"`);
-  if (rows.length === 0) {
-    await prodClient.query(`TRUNCATE TABLE public."${tableName}" CASCADE`);
-    return { table: tableName, rows: 0 };
-  }
+  const result = await devClient.query(`SELECT * FROM public."${tableName}"`);
+  const rows = result.rows as Row[];
 
-  const rowsToInsert = tableName === SELF_REF_TABLE ? topologicalSort(rows) : rows;
+  await prodClient.query(`TRUNCATE TABLE public."${tableName}" RESTART IDENTITY CASCADE`);
+
+  if (rows.length === 0) return { table: tableName, rows: 0 };
+
+  // Detectar columnas JSON/JSONB por OID
+  const jsonCols = new Set<string>(
+    result.fields
+      .filter((f: { dataTypeID: number }) => f.dataTypeID === 3802 || f.dataTypeID === 114)
+      .map((f: { name: string }) => f.name)
+  );
+
+  const rowsToInsert = tableName === 'subcategories' ? topoSort(rows) : rows;
   const columns = Object.keys(rowsToInsert[0]);
   const colList = columns.map(c => `"${c}"`).join(', ');
 
-  await prodClient.query('BEGIN');
-  try {
-    await prodClient.query(`TRUNCATE TABLE public."${tableName}" CASCADE`);
-    for (const row of rowsToInsert) {
-      const values = columns.map((_, i) => `$${i + 1}`).join(', ');
-      await prodClient.query(
-        `INSERT INTO public."${tableName}" (${colList}) VALUES (${values})`,
-        columns.map(c => row[c])
-      );
-    }
-    await prodClient.query('COMMIT');
-  } catch (err) {
-    await prodClient.query('ROLLBACK').catch(() => {});
-    throw err;
+  for (const row of rowsToInsert) {
+    const values = columns.map(col => {
+      if (NULLIFY_COLS.includes(col)) return null;
+      const val = replaceStorageRefs(row[col]);
+      if (jsonCols.has(col) && val !== null) {
+        return typeof val === 'string' ? val : JSON.stringify(val);
+      }
+      return val;
+    });
+    const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
+    await prodClient.query(
+      `INSERT INTO public."${tableName}" (${colList}) VALUES (${placeholders})`,
+      values
+    );
   }
 
   return { table: tableName, rows: rowsToInsert.length };
@@ -98,38 +109,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json().catch(() => ({}));
-    // tables opcional: array de tablas a clonar. Vacío = todas.
-    const requestedTables: string[] = Array.isArray(body.tables) ? body.tables : [];
-    const tablesToClone = requestedTables.length > 0
-      ? [...CLONE_TABLES, SELF_REF_TABLE].filter(t => requestedTables.includes(t))
-      : [...CLONE_TABLES, SELF_REF_TABLE];
-
-    const devClient  = getDbClient(devUrl);
-    const prodClient = getDbClient(prodUrl);
+    const devClient  = new Client({ connectionString: devUrl,  ssl: { rejectUnauthorized: false } });
+    const prodClient = new Client({ connectionString: prodUrl, ssl: { rejectUnauthorized: false } });
 
     try {
       await Promise.all([devClient.connect(), prodClient.connect()]);
 
-      const results: { table: string; rows: number; ok: boolean; error?: string }[] = [];
+      // Todo en una sola transacción en PROD — todo o nada
+      await prodClient.query('BEGIN');
 
-      for (const table of tablesToClone) {
-        try {
-          const result = await cloneTable(devClient, prodClient, table);
-          results.push({ ...result, ok: true });
-          logger.log(`[sync/config] Clonada: ${table} (${result.rows} filas)`);
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : String(err);
-          results.push({ table, rows: 0, ok: false, error: msg });
-          logger.error(`[sync/config] Error en ${table}:`, msg);
-          break;
-        }
+      const results: { table: string; rows: number }[] = [];
+      for (const table of TABLES) {
+        const r = await cloneTable(devClient, prodClient, table);
+        results.push(r);
+        logger.log(`[sync/config] ${table}: ${r.rows} filas`);
       }
 
-      const allOk = results.every(r => r.ok);
-      return NextResponse.json({ success: allOk, results });
+      await prodClient.query('COMMIT');
+      return NextResponse.json({ success: true, results });
 
     } catch (err: unknown) {
+      await prodClient.query('ROLLBACK').catch(() => {});
       const message = err instanceof Error ? err.message : 'Error desconocido';
       logger.error('[sync/config] Error:', err);
       return NextResponse.json({ success: false, error: message }, { status: 500 });
