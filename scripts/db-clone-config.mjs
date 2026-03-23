@@ -66,7 +66,7 @@ const TABLES = [
   // Taxonomía — base de todo (TRUNCATE CASCADE limpia las FK dependientes)
   'categories', 'subcategories',
   // Config general
-  'site_settings', 'global_config', 'banners', 'banners_clean',
+  'site_settings', 'global_settings', 'global_config', 'banners', 'banners_clean',
   // Catálogos de opciones
   'option_lists', 'option_list_items',
   // Formularios dinámicos
@@ -121,7 +121,32 @@ async function cloneTable(devClient, prodClient, tableName) {
   const columns = Object.keys(rows[0]);
   const colList = columns.map(c => `"${c}"`).join(', ');
 
-  for (const row of rows) {
+  // Para tablas con FK self-referencial (parent_id), insertar en múltiples pasadas
+  // nivel por nivel hasta que no queden filas sin insertar
+  const isSelfRef = tableName === 'subcategories';
+  const rowsToInsert = isSelfRef
+    ? (() => {
+        const ordered = [];
+        const remaining = [...rows];
+        const inserted = new Set();
+        let prevSize = -1;
+        while (remaining.length > 0 && remaining.length !== prevSize) {
+          prevSize = remaining.length;
+          for (let i = remaining.length - 1; i >= 0; i--) {
+            const row = remaining[i];
+            if (!row.parent_id || inserted.has(row.parent_id)) {
+              ordered.push(row);
+              inserted.add(row.id);
+              remaining.splice(i, 1);
+            }
+          }
+        }
+        if (remaining.length > 0) ordered.push(...remaining); // fallback
+        return ordered;
+      })()
+    : rows;
+
+  for (const row of rowsToInsert) {
     const processedValues = columns.map(col => {
       if (NULLIFY_COLS.includes(col)) return null;
       const val = replaceStorageRefs(row[col]);
@@ -167,6 +192,8 @@ async function main() {
 
     // Transacción en PROD: todo o nada
     await prodClient.query('BEGIN');
+    // Diferir FK constraints para manejar self-referencias (ej: subcategories.parent_id)
+    await prodClient.query('SET CONSTRAINTS ALL DEFERRED');
 
     for (const table of TABLES) {
       await cloneTable(devClient, prodClient, table);
