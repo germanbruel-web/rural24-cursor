@@ -1,9 +1,6 @@
 /**
  * SyncPanel — Panel de sincronización DEV → PROD
  * Solo visible en DEV (import.meta.env.DEV) y para superadmin.
- *
- * Sync-A: solo visualización de estado (sin acciones destructivas).
- * Sync-B (próximo): botones de acción (migrar, clonar config, push git, deploy).
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -22,7 +19,7 @@ interface CommitInfo {
 interface SyncStatus {
   hasPending: boolean;
   commits: {
-    count: number;       // -1 = git no disponible en servidor
+    count: number;
     list: CommitInfo[];
   };
   migrations: {
@@ -35,6 +32,13 @@ interface SyncStatus {
     tables: { name: string; inSync: boolean }[];
   };
   timestamp: string;
+}
+
+type ActionState = 'idle' | 'loading' | 'ok' | 'error';
+
+interface ActionResult {
+  state: ActionState;
+  message?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -56,6 +60,23 @@ async function fetchStatus(): Promise<SyncStatus> {
   return json as SyncStatus;
 }
 
+async function callSyncAction(
+  path: string,
+  body: Record<string, unknown> = {}
+): Promise<{ success: boolean; [k: string]: unknown }> {
+  const token = await getAuthToken();
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json().catch(() => ({ success: false, error: `HTTP ${res.status}` }));
+  return json;
+}
+
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
 
 function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
@@ -70,6 +91,45 @@ function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
       <span className={`w-1.5 h-1.5 rounded-full ${ok ? 'bg-green-500' : 'bg-red-500'}`} />
       {label}
     </span>
+  );
+}
+
+function ActionButton({
+  label,
+  result,
+  onClick,
+  destructive = false,
+}: {
+  label: string;
+  result: ActionResult;
+  onClick: () => void;
+  destructive?: boolean;
+}) {
+  const isLoading = result.state === 'loading';
+  return (
+    <div className="flex items-center gap-3 flex-wrap">
+      <button
+        onClick={onClick}
+        disabled={isLoading}
+        className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+          destructive
+            ? 'bg-red-600 hover:bg-red-700 text-white'
+            : 'bg-brand-500 hover:bg-brand-600 text-white'
+        }`}
+      >
+        {isLoading ? 'Ejecutando...' : label}
+      </button>
+      {result.state === 'ok' && (
+        <span className="text-xs text-green-700 font-medium">
+          ✓ {result.message || 'Completado'}
+        </span>
+      )}
+      {result.state === 'error' && (
+        <span className="text-xs text-red-700 font-medium">
+          ✗ {result.message || 'Error'}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -104,8 +164,14 @@ export default function SyncPanel() {
   const [status, setStatus]   = useState<SyncStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
-  const [showCommits, setShowCommits]     = useState(false);
+  const [showCommits, setShowCommits]       = useState(false);
   const [showMigrations, setShowMigrations] = useState(false);
+
+  // Acciones
+  const [migrateResult, setMigrateResult] = useState<ActionResult>({ state: 'idle' });
+  const [configResult,  setConfigResult]  = useState<ActionResult>({ state: 'idle' });
+  const [prResult,      setPrResult]      = useState<ActionResult>({ state: 'idle' });
+  const [deployResult,  setDeployResult]  = useState<ActionResult>({ state: 'idle' });
 
   const load = useCallback(async () => {
     try {
@@ -125,7 +191,75 @@ export default function SyncPanel() {
     return () => clearInterval(interval);
   }, [load]);
 
-  // ── Header banner ────────────────────────────────────────────────────────────
+  // ── Handlers de acción ───────────────────────────────────────────────────────
+
+  const handleMigrate = async () => {
+    if (!window.confirm('¿Aplicar todas las migraciones pendientes en PROD?')) return;
+    setMigrateResult({ state: 'loading' });
+    try {
+      const json = await callSyncAction('/api/admin/sync/migrate');
+      if (json.success) {
+        const applied = (json.applied as Array<{ filename: string }>) ?? [];
+        setMigrateResult({ state: 'ok', message: `${applied.length} migración(es) aplicada(s)` });
+        await load();
+      } else {
+        setMigrateResult({ state: 'error', message: String(json.error ?? 'Error') });
+      }
+    } catch (err) {
+      setMigrateResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
+    }
+  };
+
+  const handleCloneConfig = async () => {
+    if (!window.confirm('¿Clonar configuración de DEV a PROD? Esto sobreescribirá global_settings, global_config, subcategorias y option_lists en PROD.')) return;
+    setConfigResult({ state: 'loading' });
+    try {
+      const json = await callSyncAction('/api/admin/sync/config');
+      if (json.success) {
+        const results = (json.results as Array<{ table: string; rows: number }>) ?? [];
+        const summary = results.map(r => `${r.table}(${r.rows})`).join(', ');
+        setConfigResult({ state: 'ok', message: summary });
+        await load();
+      } else {
+        setConfigResult({ state: 'error', message: String(json.error ?? 'Error') });
+      }
+    } catch (err) {
+      setConfigResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
+    }
+  };
+
+  const handleCreatePR = async () => {
+    if (!window.confirm('¿Crear PR main → prod en GitHub?')) return;
+    setPrResult({ state: 'loading' });
+    try {
+      const json = await callSyncAction('/api/admin/sync/git-push', { merge: false });
+      if (json.success) {
+        const pr = json.pr as { number: number; url: string };
+        setPrResult({ state: 'ok', message: `PR #${pr.number} creado` });
+      } else {
+        setPrResult({ state: 'error', message: String(json.error ?? 'Error') });
+      }
+    } catch (err) {
+      setPrResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
+    }
+  };
+
+  const handleDeploy = async () => {
+    if (!window.confirm('¿Disparar deploy en Render PROD (frontend + backend)?')) return;
+    setDeployResult({ state: 'loading' });
+    try {
+      const json = await callSyncAction('/api/admin/sync/deploy');
+      if (json.success) {
+        setDeployResult({ state: 'ok', message: 'Deploy iniciado en Render' });
+      } else {
+        setDeployResult({ state: 'error', message: String(json.error ?? 'Error') });
+      }
+    } catch (err) {
+      setDeployResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
+    }
+  };
+
+  // ── Render ───────────────────────────────────────────────────────────────────
 
   const allSynced = status && !status.hasPending;
 
@@ -204,12 +338,12 @@ export default function SyncPanel() {
                 </p>
                 <button
                   onClick={() => setShowCommits(v => !v)}
-                  className="text-xs text-brand-600 hover:underline"
+                  className="text-xs text-brand-600 hover:underline mb-3"
                 >
                   {showCommits ? 'Ocultar lista' : 'Ver commits'}
                 </button>
                 {showCommits && (
-                  <ul className="mt-2 space-y-1 max-h-48 overflow-y-auto">
+                  <ul className="mt-2 space-y-1 max-h-48 overflow-y-auto mb-3">
                     {status.commits.list.map(c => (
                       <li key={c.sha} className="text-xs font-mono text-gray-700">
                         <span className="text-gray-400">{c.sha}</span>
@@ -221,7 +355,21 @@ export default function SyncPanel() {
                 )}
               </>
             )}
-            {/* Sync-B: botón "Crear PR main→prod" irá aquí */}
+            <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+              <ActionButton
+                label="Crear PR main → prod"
+                result={prResult}
+                onClick={handleCreatePR}
+              />
+              {prResult.state === 'ok' && (
+                <ActionButton
+                  label="Deploy PROD (Render)"
+                  result={deployResult}
+                  onClick={handleDeploy}
+                  destructive
+                />
+              )}
+            </div>
           </SectionCard>
 
           {/* ── Sección: Migraciones DB ── */}
@@ -242,12 +390,12 @@ export default function SyncPanel() {
               <>
                 <button
                   onClick={() => setShowMigrations(v => !v)}
-                  className="text-xs text-brand-600 hover:underline"
+                  className="text-xs text-brand-600 hover:underline mb-3"
                 >
                   {showMigrations ? 'Ocultar' : 'Ver pendientes'}
                 </button>
                 {showMigrations && (
-                  <ul className="mt-2 space-y-1">
+                  <ul className="mt-2 space-y-1 mb-3">
                     {status.migrations.pending.map(f => (
                       <li key={f} className="text-xs font-mono text-red-700 bg-red-100 px-2 py-1 rounded">
                         {f}
@@ -255,9 +403,16 @@ export default function SyncPanel() {
                     ))}
                   </ul>
                 )}
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <ActionButton
+                    label="Aplicar migraciones pendientes en PROD"
+                    result={migrateResult}
+                    onClick={handleMigrate}
+                    destructive
+                  />
+                </div>
               </>
             )}
-            {/* Sync-B: botón "Aplicar migraciones" irá aquí */}
           </SectionCard>
 
           {/* ── Sección: Config DB ── */}
@@ -266,7 +421,7 @@ export default function SyncPanel() {
             icon="⚙️"
             ok={status.config.synced}
           >
-            <div className="space-y-1">
+            <div className="space-y-1 mb-3">
               {status.config.tables.map(t => (
                 <div key={t.name} className="flex items-center gap-2 text-sm">
                   <span>{t.inSync ? '✅' : '❌'}</span>
@@ -277,8 +432,28 @@ export default function SyncPanel() {
                 </div>
               ))}
             </div>
-            {/* Sync-B: botón "Sincronizar config" irá aquí */}
+            {!status.config.synced && (
+              <div className="pt-3 border-t border-gray-200">
+                <ActionButton
+                  label="Clonar config DEV → PROD"
+                  result={configResult}
+                  onClick={handleCloneConfig}
+                  destructive
+                />
+              </div>
+            )}
           </SectionCard>
+
+          {/* ── Deploy independiente ── */}
+          <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-4">
+            <h3 className="font-bold text-gray-800 mb-3">Deploy manual</h3>
+            <ActionButton
+              label="Deploy PROD (frontend + backend)"
+              result={deployResult}
+              onClick={handleDeploy}
+              destructive
+            />
+          </div>
 
           {/* Footer info */}
           <p className="text-xs text-gray-400 text-center">

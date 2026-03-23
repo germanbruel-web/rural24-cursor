@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSiteSetting } from '../../hooks/useSiteSetting';
 import { getMenuItems } from '../../utils/rolePermissions';
 import { navigateTo } from '../../hooks/useNavigate';
+import { supabase } from '../../services/supabaseClient';
 import {
   LayoutDashboard,
   Package,
@@ -60,6 +61,35 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const headerLogo = useSiteSetting('header_logo', '/images/logos/rural24-dark.webp');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [syncPending, setSyncPending] = useState(false);
+
+  // Badge de sync — solo en DEV para superadmin
+  useEffect(() => {
+    if (!import.meta.env.DEV || profile?.role !== 'superadmin') return;
+
+    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    let cancelled = false;
+
+    const check = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) return;
+        const res = await fetch(`${API_BASE}/api/admin/sync/status`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!cancelled) setSyncPending(!!json.hasPending);
+      } catch {
+        // silencioso — el badge es informativo
+      }
+    };
+
+    check();
+    const interval = setInterval(check, 60_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [profile?.role]);
 
   // Obtener ítems del menú filtrados por rol
   const allowedMenuItems = getMenuItems(profile?.role);
@@ -98,6 +128,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     icon: iconMap[item.id] || null,
     onClick: () => onNavigate(item.id),
     divider: item.divider,
+    badge: item.id === 'sync-panel' && syncPending ? '!' : undefined,
   }));
 
   const renderMenuItem = (item: MenuItem) => {

@@ -63,7 +63,7 @@ async function getMigrationStatus(prodClient: InstanceType<typeof Client>) {
   const { rows } = await prodClient.query<{ filename: string }>(
     'SELECT filename FROM public._rural24_migrations ORDER BY filename'
   );
-  const appliedSet = new Set(rows.map(r => r.filename));
+  const appliedSet = new Set(rows.map((r: { filename: string }) => r.filename));
 
   const allFiles = readdirSync(MIGRATIONS_DIR)
     .filter(f => f.endsWith('.sql'))
