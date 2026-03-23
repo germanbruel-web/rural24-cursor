@@ -6,7 +6,7 @@
  * Etapa 2: DEV   → PROD (migraciones pendientes en PROD, config, deploy)
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../services/supabaseClient';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -173,6 +173,7 @@ export default function SyncPanel() {
   const [showProdMigrations,   setShowProdMigrations]   = useState(false);
 
   // Acciones
+  const [pushResult,        setPushResult]        = useState<ActionResult>({ state: 'idle' });
   const [migrateDevResult,  setMigrateDevResult]  = useState<ActionResult>({ state: 'idle' });
   const [migrateProdResult, setMigrateProdResult] = useState<ActionResult>({ state: 'idle' });
   const [configResult,      setConfigResult]      = useState<ActionResult>({ state: 'idle' });
@@ -198,6 +199,22 @@ export default function SyncPanel() {
   }, [load]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
+
+  const handlePushOriginMain = async () => {
+    if (!window.confirm('¿Ejecutar git push origin main?\nSubirá todos los commits locales a GitHub y disparará el redeploy en Render DEV.')) return;
+    setPushResult({ state: 'loading' });
+    try {
+      const json = await callSyncAction('/api/admin/sync/local-push');
+      if (json.success) {
+        setPushResult({ state: 'ok', message: 'Push a origin/main exitoso — Render DEV redeploya automáticamente' });
+        await load();
+      } else {
+        setPushResult({ state: 'error', message: String(json.error ?? 'Error') });
+      }
+    } catch (err) {
+      setPushResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
+    }
+  };
 
   const handleMigrateDev = async () => {
     if (!window.confirm('¿Aplicar todas las migraciones pendientes en DEV?')) return;
@@ -340,9 +357,13 @@ export default function SyncPanel() {
                     {showLocalCommits ? 'Ocultar' : 'Ver commits'}
                   </button>
                   {showLocalCommits && <CommitList list={status.local.unpushedCommits.list} />}
-                  <p className="text-xs text-gray-500 mt-2">
-                    Ejecutá <code className="bg-gray-100 px-1 rounded">git push origin main</code> para subir a Render DEV.
-                  </p>
+                  <div className="mt-3">
+                    <ActionButton
+                      label="git push origin main"
+                      result={pushResult}
+                      onClick={handlePushOriginMain}
+                    />
+                  </div>
                 </>
               )}
               {status.local.unpushedCommits.count === -1 && (
