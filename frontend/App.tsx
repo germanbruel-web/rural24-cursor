@@ -95,6 +95,7 @@ const EmpresaPublicPage = lazy(() => import("./src/components/pages/EmpresaPubli
 // Dev/Test Pages (solo desarrollo - bloqueadas en producción)
 const APITestPage = import.meta.env.DEV ? lazy(() => import("./src/pages/APITest")) : null;
 const DiagnosticsPage = import.meta.env.DEV ? lazy(() => import("./src/pages/DiagnosticsPage").then(m => ({ default: m.DiagnosticsPage }))) : null;
+const SyncPanel = import.meta.env.DEV ? lazy(() => import("./src/components/admin/SyncPanel")) : null;
 const DesignSystemShowcaseSimple = lazy(() => import("./src/components/DesignSystemShowcaseSimple").then(m => ({ default: m.DesignSystemShowcaseSimple })));
 const PaymentResultPage = lazy(() => import("./src/pages/PaymentResultPage"));
 const FeaturedCheckoutPage = lazy(() => import("./src/pages/FeaturedCheckoutPage"));
@@ -108,7 +109,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'servicios' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'home-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard' | 'editar-aviso';
+export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'servicios' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'home-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard' | 'editar-aviso' | 'sync-panel';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -143,6 +144,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/contacto-rural24') return 'contact';
     if (hash === '#/design-showcase') return 'design-showcase';
     if (hash === '#/design-system') return 'design-system';
+    if (import.meta.env.DEV && hash === '#/sync-panel') return 'sync-panel';
     if (hash === '#/example-migration') return 'example-migration';
     if (hash === '#/api-test') return 'api-test';
     if (hash === '#/diagnostics') return 'diagnostics';
@@ -225,6 +227,7 @@ const AppContent: React.FC = () => {
       'sitemap-seo': '#/dashboard/sitemap-seo',
       'hero-cms': '#/hero-cms',
       'home-cms': '#/home-cms',
+      'sync-panel': '#/sync-panel',
       'credits-config': '#/credits-config',
       'profile': '#/profile',
       'subscription': '#/subscription',
@@ -612,7 +615,7 @@ const AppContent: React.FC = () => {
   }
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'favorites', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'design-system', 'mis-empresas'].includes(currentPage);
+  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'favorites', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'design-system', 'mis-empresas', 'sync-panel'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
@@ -691,6 +694,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'mis-empresas' && canAccessPage('mis-empresas', profile?.role) && <MisEmpresasPanel />}
                 {currentPage === 'dashboard' && <DashboardPanel />}
                 {currentPage === 'design-system' && canAccessPage('design-system', profile?.role) && <DesignSystemShowcaseSimple />}
+                {import.meta.env.DEV && currentPage === 'sync-panel' && canAccessPage('sync-panel', profile?.role) && SyncPanel && <SyncPanel />}
                 {currentPage === 'settings' && (
                   <div className="bg-white rounded-lg shadow p-6">
                     <h2 className="text-2xl font-bold mb-4">Configuración</h2>

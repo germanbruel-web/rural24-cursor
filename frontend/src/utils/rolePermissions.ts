@@ -51,6 +51,9 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   'hero-cms': ['superadmin'],
   'home-cms': ['superadmin'],
   'design-system': ['superadmin'],
+
+  // Solo SuperAdmin — Solo DEV (oculto en PROD por import.meta.env.DEV en App.tsx)
+  'sync-panel': ['superadmin'],
 };
 
 /**
@@ -240,6 +243,13 @@ export const MENU_STRUCTURE: MenuItem[] = [
   {
     id: 'design-system',
     label: 'Design System R24',
+    allowedRoles: ['superadmin'],
+  },
+
+  // Solo DEV — se oculta en PROD desde App.tsx con import.meta.env.DEV
+  {
+    id: 'sync-panel',
+    label: '🔄 Sync DEV→PROD',
     allowedRoles: ['superadmin'],
   },
 ];
