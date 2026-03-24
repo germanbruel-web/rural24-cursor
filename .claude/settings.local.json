@@ -4,7 +4,8 @@
       "Bash(powershell.exe:*)",
       "Bash(npx tsc --noEmit)",
       "Bash(node db-run-migrations.mjs prod 20260314)",
-      "Bash(node scripts/db-run-migrations.mjs prod 20260314000005 20260314000006)"
+      "Bash(node scripts/db-run-migrations.mjs prod 20260314000005 20260314000006)",
+      "Bash(grep -r \"BannerManager\\\\|BannersAdmin\" /c/Users/German/rural24-cursor/frontend/src --include=*.tsx --include=*.ts)"
     ]
   }
 }

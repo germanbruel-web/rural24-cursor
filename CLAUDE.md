@@ -73,10 +73,10 @@ Esta regla aplica también a agentes/subagentes delegados: deben reportar al Orq
 ## FUENTE DE VERDAD DB
 
 ```
-database/RURAL24_SCHEMA_DEV_2026-03-16.sql
+database/RURAL24_SCHEMA_DEV_2026-03-23.sql
 ```
-Dump real de DEV generado 2026-03-16. Consultar SIEMPRE antes de crear tablas, columnas o RPCs.
-Schema anterior disponible en `database/RURAL24_SCHEMA_DEV_2026-03-15.sql`.
+Dump real de DEV generado 2026-03-23. Consultar SIEMPRE antes de crear tablas, columnas o RPCs.
+Schema anterior disponible en `database/RURAL24_SCHEMA_DEV_2026-03-21.sql`.
 Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
 
 ---

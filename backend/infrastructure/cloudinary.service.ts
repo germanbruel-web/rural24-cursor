@@ -1,9 +1,20 @@
 /**
  * Cloudinary Service - Infrastructure Layer
- * Maneja interacción directa con Cloudinary API
+ * Maneja interacción directa con Cloudinary API.
+ *
+ * Estructura de carpetas:
+ *   rural24/app/{sub}                    — assets estáticos (sin env prefix)
+ *   rural24/{env}/cms/{folder}           — contenido CMS
+ *   rural24/{env}/ugc/{entity}/{YYYY}/{MM} — UGC por entidad y mes
  */
 
 import { v2 as cloudinary } from 'cloudinary';
+import {
+  MEDIA_ROOTS,
+  CMS_FOLDERS,
+  APP_FOLDERS,
+  type MediaEntity,
+} from '@/lib/media-config';
 
 // Validar variables de entorno al cargar el módulo
 const CLOUDINARY_CONFIG = {
@@ -12,63 +23,96 @@ const CLOUDINARY_CONFIG = {
   api_secret: process.env.CLOUDINARY_API_SECRET,
 };
 
-// Log de configuración (sin exponer secrets completos)
 console.log('[CLOUDINARY CONFIG]', {
   cloud_name: CLOUDINARY_CONFIG.cloud_name || 'MISSING',
   api_key: CLOUDINARY_CONFIG.api_key ? `${CLOUDINARY_CONFIG.api_key.substring(0, 6)}...` : 'MISSING',
-  api_secret: CLOUDINARY_CONFIG.api_secret ? '***' : 'MISSING'
+  api_secret: CLOUDINARY_CONFIG.api_secret ? '***' : 'MISSING',
 });
 
-// Validación crítica
 if (!CLOUDINARY_CONFIG.cloud_name || !CLOUDINARY_CONFIG.api_key || !CLOUDINARY_CONFIG.api_secret) {
   throw new Error('CLOUDINARY CREDENTIALS NOT CONFIGURED! Check .env.local file');
 }
 
-// Configurar singleton
 cloudinary.config(CLOUDINARY_CONFIG);
+
+// ─── Tipos ────────────────────────────────────────────────────────────────────
 
 export interface CloudinaryUploadResult {
   url: string;
-  path: string;
+  /** public_id completo (incluye la ruta de carpeta) */
+  public_id: string;
+  version: number;
   width: number;
   height: number;
   format: string;
   bytes: number;
 }
 
-/** Construye la ruta de carpeta en Cloudinary con separación de entorno y fecha para UGC */
-function buildFolder(folder: string): string {
-  const env = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Construye la ruta de carpeta en Cloudinary según el tipo de contenido.
+ *
+ * @param folder  - Nombre de carpeta o entity ('ads' | 'users' | 'banners' | 'app-icons' …)
+ * @param entity  - Entity UGC explícita (override de folder para UGC)
+ */
+export function buildFolder(folder: string, entity?: MediaEntity): string {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
 
-  // Assets de sistema/CMS no necesitan organización por fecha
-  const isCms = ['banners', 'cms', 'system', 'categories', 'logos'].includes(folder);
-  if (isCms) {
-    return `rural24/${env}/cms/${folder}`;
+  // 1. Assets estáticos — compartidos entre entornos
+  if ((APP_FOLDERS as readonly string[]).includes(folder)) {
+    const sub = folder.replace('app-', '');
+    return `${MEDIA_ROOTS.app}/${sub}`;
   }
 
-  // UGC (avisos de usuarios) → organizado por año/mes para facilitar limpieza
-  return `rural24/${env}/ugc/${year}/${month}`;
+  // 2. CMS — separado por entorno
+  if ((CMS_FOLDERS as readonly string[]).includes(folder)) {
+    return `${MEDIA_ROOTS.cms}/${folder}`;
+  }
+
+  // 3. UGC — organizado por entity / año / mes
+  const resolvedEntity: string = entity ?? folder;
+  return `${MEDIA_ROOTS.ugc}/${resolvedEntity}/${year}/${month}`;
 }
 
 /**
- * Subir imagen a Cloudinary
+ * Genera un public_id único para la imagen.
+ * Formato: {userId}_{timestamp36}  (sin el folder — Cloudinary lo prefija)
+ */
+function buildPublicId(userId?: string): string {
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).substring(2, 7);
+  return userId ? `${userId}_${ts}_${rand}` : `${ts}_${rand}`;
+}
+
+// ─── Upload ───────────────────────────────────────────────────────────────────
+
+/**
+ * Subir imagen a Cloudinary.
+ *
+ * @param buffer  - Contenido binario del archivo
+ * @param folder  - Destino lógico ('ads' | 'banners' | 'app-icons' …)
+ * @param entity  - Entity UGC explícita cuando folder no la refleja
+ * @param userId  - ID del usuario que sube (incluido en el public_id)
  */
 export async function uploadToCloudinary(
   buffer: Buffer,
-  folder: string = 'ads'
+  folder: string = 'ads',
+  entity?: MediaEntity,
+  userId?: string,
 ): Promise<CloudinaryUploadResult> {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: buildFolder(folder),
+        folder: buildFolder(folder, entity),
+        public_id: buildPublicId(userId),
         resource_type: 'image',
-        allowed_formats: ['jpg', 'png', 'webp', 'heic', 'heif'],
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'svg'],
         transformation: [
-          { quality: 'auto:good', fetch_format: 'auto' }
-        ]
+          { quality: 'auto:good', fetch_format: 'auto' },
+        ],
       },
       (error, result) => {
         if (error) {
@@ -76,25 +120,25 @@ export async function uploadToCloudinary(
         } else if (result) {
           resolve({
             url: result.secure_url,
-            path: result.public_id,
+            public_id: result.public_id,
+            version: result.version,
             width: result.width,
             height: result.height,
             format: result.format,
-            bytes: result.bytes
+            bytes: result.bytes,
           });
         } else {
           reject(new Error('Upload failed without error'));
         }
-      }
+      },
     );
 
     uploadStream.end(buffer);
   });
 }
 
-/**
- * Borrar imagen de Cloudinary (hard delete)
- */
+// ─── Delete ───────────────────────────────────────────────────────────────────
+
 export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
   try {
     const result = await cloudinary.uploader.destroy(publicId);
@@ -105,30 +149,26 @@ export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
   }
 }
 
-/**
- * Borrar múltiples imágenes (batch)
- */
 export async function deleteManyFromCloudinary(publicIds: string[]): Promise<{
   success: number;
   failed: number;
   errors: string[];
 }> {
   const results = await Promise.allSettled(
-    publicIds.map(id => deleteFromCloudinary(id))
+    publicIds.map((id) => deleteFromCloudinary(id)),
   );
 
-  const success = results.filter(r => r.status === 'fulfilled' && r.value).length;
+  const success = results.filter((r) => r.status === 'fulfilled' && r.value).length;
   const failed = results.length - success;
   const errors = results
-    .filter(r => r.status === 'rejected')
+    .filter((r) => r.status === 'rejected')
     .map((r: any) => r.reason?.message || 'Unknown error');
 
   return { success, failed, errors };
 }
 
-/**
- * Verificar si existe imagen en Cloudinary
- */
+// ─── Utils ────────────────────────────────────────────────────────────────────
+
 export async function checkImageExists(publicId: string): Promise<boolean> {
   try {
     await cloudinary.api.resource(publicId);
@@ -138,9 +178,6 @@ export async function checkImageExists(publicId: string): Promise<boolean> {
   }
 }
 
-/**
- * Obtener stats de uso de Cloudinary
- */
 export async function getCloudinaryUsage(): Promise<{
   credits_used: number;
   credits_limit: number;
@@ -153,7 +190,7 @@ export async function getCloudinaryUsage(): Promise<{
       credits_used: usage.credits.usage,
       credits_limit: usage.credits.limit,
       transformations: usage.transformations.usage,
-      bandwidth_mb: usage.bandwidth.usage / (1024 * 1024)
+      bandwidth_mb: usage.bandwidth.usage / (1024 * 1024),
     };
   } catch (error) {
     console.error('[Cloudinary] Error getting usage:', error);

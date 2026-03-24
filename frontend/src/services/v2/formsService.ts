@@ -888,30 +888,41 @@ export async function deleteSubcategory(id: string, force: boolean = false) {
  */
 export async function deleteCategory(id: string, force: boolean = false) {
   try {
-    // Si force=true, eliminar avisos de todas las subcategorías primero
-    if (force) {
-      // Obtener subcategorías
-      const { data: subs } = await supabase
+    // Obtener subcategorías
+    const { data: subs } = await supabase
+      .from('subcategories')
+      .select('id')
+      .eq('category_id', id);
+
+    const subIds = subs?.map(s => s.id) || [];
+
+    if (force && subIds.length > 0) {
+      // 1. Eliminar avisos asociados a las subcategorías
+      const { error: adsError } = await supabase
+        .from('ads')
+        .delete()
+        .in('subcategory_id', subIds);
+
+      if (adsError) throw new Error('Error al eliminar avisos: ' + adsError.message);
+
+      // 2. Eliminar tipos de cada subcategoría
+      const { error: typesError } = await supabase
+        .from('category_types')
+        .delete()
+        .in('subcategory_id', subIds);
+
+      if (typesError) throw new Error('Error al eliminar tipos: ' + typesError.message);
+
+      // 3. Eliminar las subcategorías
+      const { error: subsError } = await supabase
         .from('subcategories')
-        .select('id')
+        .delete()
         .eq('category_id', id);
 
-      const subIds = subs?.map(s => s.id) || [];
-
-      if (subIds.length > 0) {
-        // Eliminar avisos de esas subcategorías
-        const { error: adsError } = await supabase
-          .from('ads')
-          .delete()
-          .in('subcategory_id', subIds);
-
-        if (adsError) {
-          console.error('❌ Error deleting related ads:', adsError);
-          throw new Error('Error al eliminar avisos relacionados: ' + adsError.message);
-        }
-      }
+      if (subsError) throw new Error('Error al eliminar subcategorías: ' + subsError.message);
     }
 
+    // 4. Eliminar la categoría
     const { error } = await supabase
       .from('categories')
       .delete()
@@ -919,9 +930,8 @@ export async function deleteCategory(id: string, force: boolean = false) {
 
     if (error) {
       if (error.message.includes('foreign key constraint')) {
-        throw new Error('No se puede eliminar: hay avisos publicados en subcategorías de esta categoría. Use "Forzar eliminación" para eliminar todo.');
+        throw new Error('Tiene subcategorías con avisos activos. Use "Forzar eliminación".');
       }
-      console.error('❌ Error deleting category:', error);
       throw error;
     }
 

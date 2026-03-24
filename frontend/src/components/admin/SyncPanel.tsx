@@ -26,6 +26,7 @@ interface SyncStatus {
   hasPending: boolean;
   local: {
     hasPending: boolean;
+    dirtyFiles: { count: number; files: string[] };
     unpushedCommits: { count: number; list: CommitInfo[] };
     migrations: MigrationsStatus;
   };
@@ -47,7 +48,7 @@ interface ActionResult { state: ActionState; message?: string }
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function getAuthToken(): Promise<string> {
-  const { data: { session } } = await supabase.auth.refreshSession();
+  const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   if (!token) throw new Error('No hay sesión activa');
   return token;
@@ -175,17 +176,21 @@ function MigrationList({ files }: { files: string[] }) {
 // ─── Panel principal ──────────────────────────────────────────────────────────
 
 export default function SyncPanel() {
-  const [status, setStatus]   = useState<SyncStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
+  const [status,     setStatus]     = useState<SyncStatus | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
 
   // Toggles
+  const [showDirtyFiles,       setShowDirtyFiles]       = useState(false);
   const [showLocalCommits,     setShowLocalCommits]     = useState(false);
   const [showLocalMigrations,  setShowLocalMigrations]  = useState(false);
   const [showProdCommits,      setShowProdCommits]      = useState(false);
   const [showProdMigrations,   setShowProdMigrations]   = useState(false);
 
   // Acciones
+  const [commitMsg,         setCommitMsg]         = useState('');
+  const [commitResult,      setCommitResult]      = useState<ActionResult>({ state: 'idle' });
   const [pushResult,        setPushResult]        = useState<ActionResult>({ state: 'idle' });
   const [migrateDevResult,  setMigrateDevResult]  = useState<ActionResult>({ state: 'idle' });
   const [markDevResult,     setMarkDevResult]     = useState<ActionResult>({ state: 'idle' });
@@ -195,7 +200,8 @@ export default function SyncPanel() {
   const [prResult,          setPrResult]          = useState<ActionResult>({ state: 'idle' });
   const [deployResult,      setDeployResult]      = useState<ActionResult>({ state: 'idle' });
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (manual = false) => {
+    if (manual) setRefreshing(true);
     try {
       setError(null);
       const data = await fetchStatus();
@@ -204,6 +210,7 @@ export default function SyncPanel() {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -214,6 +221,27 @@ export default function SyncPanel() {
   }, [load]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
+
+  const handleCommit = async () => {
+    const msg = commitMsg.trim();
+    if (!msg) return;
+    setCommitResult({ state: 'loading' });
+    try {
+      const token = await getAuthToken();
+      const res = await fetch(`${API_BASE}/api/admin/sync/git-commit`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      setCommitResult({ state: 'ok', message: 'Commit creado ✓' });
+      setCommitMsg('');
+      setTimeout(() => { load(true); setCommitResult({ state: 'idle' }); }, 1500);
+    } catch (err: any) {
+      setCommitResult({ state: 'error', message: err.message });
+    }
+  };
 
   const handlePushOriginMain = async () => {
     if (!window.confirm('¿Ejecutar git push origin main?\nSubirá todos los commits locales a GitHub y disparará el redeploy en Render DEV.')) return;
@@ -325,8 +353,12 @@ export default function SyncPanel() {
     try {
       const json = await callSyncAction('/api/admin/sync/git-push', { merge: false });
       if (json.success) {
-        const pr = json.pr as { number: number; url: string };
-        setPrResult({ state: 'ok', message: `PR #${pr.number} creado` });
+        if (json.alreadyInSync) {
+          setPrResult({ state: 'ok', message: 'main y prod ya están sincronizados' });
+        } else {
+          const pr = json.pr as { number: number; url: string };
+          setPrResult({ state: 'ok', message: `PR #${pr.number} creado` });
+        }
       } else {
         setPrResult({ state: 'error', message: String(json.error ?? 'Error') });
       }
@@ -361,7 +393,9 @@ export default function SyncPanel() {
         <p className="text-sm text-gray-500 mt-1">
           Última actualización: {status ? new Date(status.timestamp).toLocaleTimeString('es-AR') : '—'}
           {' · '}
-          <button onClick={load} className="text-brand-500 hover:underline text-sm">Actualizar</button>
+          <button onClick={() => load(true)} className="text-brand-500 hover:underline text-sm">
+            {refreshing ? 'Actualizando...' : 'Actualizar'}
+          </button>
         </p>
       </div>
 
@@ -394,6 +428,10 @@ export default function SyncPanel() {
                 <span className="font-semibold text-sm text-gray-700">Código (Git)</span>
                 {status.local.unpushedCommits.count === -1 ? (
                   <span className="text-xs text-gray-400">git no disponible</span>
+                ) : status.local.dirtyFiles?.count > 0 ? (
+                  <span className="text-xs text-orange-600 font-medium">
+                    {status.local.dirtyFiles.count} archivos sin commitear
+                  </span>
                 ) : status.local.unpushedCommits.count === 0 ? (
                   <span className="text-xs text-green-600 font-medium">Pusheado ✓</span>
                 ) : (
@@ -402,6 +440,46 @@ export default function SyncPanel() {
                   </span>
                 )}
               </div>
+              {status.local.dirtyFiles?.count > 0 && (
+                <div className="mt-2 space-y-2">
+                  <button
+                    onClick={() => setShowDirtyFiles(v => !v)}
+                    className="text-xs text-brand-600 hover:underline"
+                  >
+                    {showDirtyFiles ? 'Ocultar archivos' : `Ver ${status.local.dirtyFiles.count} archivos`}
+                  </button>
+                  {showDirtyFiles && (
+                    <ul className="text-xs text-gray-600 bg-gray-50 rounded p-2 space-y-0.5 max-h-40 overflow-y-auto font-mono">
+                      {status.local.dirtyFiles.files.map(f => (
+                        <li key={f} className="truncate">{f}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      type="text"
+                      value={commitMsg}
+                      onChange={e => setCommitMsg(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleCommit()}
+                      placeholder="Mensaje de commit..."
+                      className="flex-1 text-xs border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    />
+                    <button
+                      onClick={handleCommit}
+                      disabled={!commitMsg.trim() || commitResult.state === 'loading'}
+                      className="text-xs px-3 py-1.5 rounded bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {commitResult.state === 'loading' ? 'Commiteando...' : 'Commitear'}
+                    </button>
+                  </div>
+                  {commitResult.state === 'ok' && (
+                    <p className="text-xs text-green-600">{commitResult.message}</p>
+                  )}
+                  {commitResult.state === 'error' && (
+                    <p className="text-xs text-red-600">{commitResult.message}</p>
+                  )}
+                </div>
+              )}
               {status.local.unpushedCommits.count > 0 && (
                 <>
                   <button onClick={() => setShowLocalCommits(v => !v)} className="text-xs text-brand-600 hover:underline">
@@ -557,12 +635,27 @@ export default function SyncPanel() {
                 ))}
               </div>
               {!status.prod.config.synced && (
-                <ActionButton
-                  label="Clonar config DEV → PROD"
-                  result={configResult}
-                  onClick={handleCloneConfig}
-                  destructive
-                />
+                <div className="flex flex-col gap-2">
+                  <ActionButton
+                    label="Clonar config DEV → PROD"
+                    result={configResult}
+                    onClick={handleCloneConfig}
+                    destructive
+                  />
+                  <button
+                    onClick={async () => {
+                      const token = await getAuthToken();
+                      const r = await fetch(`${API_BASE}/api/admin/sync/config-debug`, { headers: { Authorization: `Bearer ${token}` } });
+                      const data = await r.json();
+                      const diffs = data.diff?.filter((d: { match: boolean }) => !d.match) ?? [];
+                      console.log('[config-debug] Filas diferentes:', JSON.stringify(diffs, null, 2));
+                      alert(`${diffs.length} fila(s) diferente(s) en global_settings.\nRevisá la consola (F12) para ver el detalle.`);
+                    }}
+                    className="text-xs text-gray-500 hover:text-brand-600 underline text-left"
+                  >
+                    Ver diferencias en consola (debug)
+                  </button>
+                </div>
               )}
             </div>
 

@@ -20,7 +20,8 @@ import {
   checkCategoryDependencies
 } from '../../services/v2/formsService';
 import type { Category, Subcategory, CategoryType } from '../../types/v2';
-import { ChevronRight, ChevronDown, Plus, Edit2, Trash2, FolderTree, Folder, FileText, AlertTriangle } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, Edit2, Trash2, Folder, FileText, AlertTriangle, Upload, Palette, X } from 'lucide-react';
+import { uploadsApi } from '../../services/api/uploads';
 
 type ItemType = 'category' | 'subcategory' | 'type';
 
@@ -36,6 +37,43 @@ interface DeleteModalState {
   isLoading: boolean;
 }
 
+// ── Helpers para icon con color embebido (formato "url|#hexcolor") ─────────────
+function parseIcon(icon?: string): { url: string; color: string } {
+  if (!icon?.startsWith('http')) return { url: '', color: '#84cc16' };
+  const [url, color] = icon.split('|');
+  return { url, color: color ?? '#84cc16' };
+}
+
+function buildIconValue(url: string, color: string): string {
+  return `${url}|${color}`;
+}
+
+// Genera CSS filter para colorear un SVG negro al color hex dado
+function hexToFilter(hex: string): string {
+  // Filtros pre-calculados para los colores más comunes
+  const filters: Record<string, string> = {
+    '#84cc16': 'brightness(0) saturate(100%) invert(71%) sepia(59%) saturate(456%) hue-rotate(42deg) brightness(103%) contrast(97%)',
+    '#6b7280': 'brightness(0) saturate(100%) invert(46%) sepia(8%) saturate(500%) hue-rotate(179deg) brightness(95%) contrast(89%)',
+    '#1d4ed8': 'brightness(0) saturate(100%) invert(26%) sepia(89%) saturate(1500%) hue-rotate(213deg) brightness(92%) contrast(98%)',
+    '#dc2626': 'brightness(0) saturate(100%) invert(22%) sepia(97%) saturate(1300%) hue-rotate(350deg) brightness(95%) contrast(98%)',
+    '#f59e0b': 'brightness(0) saturate(100%) invert(74%) sepia(68%) saturate(550%) hue-rotate(359deg) brightness(101%) contrast(97%)',
+    '#7c3aed': 'brightness(0) saturate(100%) invert(28%) sepia(82%) saturate(1200%) hue-rotate(251deg) brightness(90%) contrast(97%)',
+    '#000000': 'brightness(0)',
+    '#ffffff': 'brightness(0) invert(1)',
+  };
+  return filters[hex.toLowerCase()] ?? filters['#84cc16'];
+}
+
+const ICON_COLOR_PRESETS = [
+  { hex: '#84cc16', label: 'Verde (brand)' },
+  { hex: '#6b7280', label: 'Gris' },
+  { hex: '#1d4ed8', label: 'Azul' },
+  { hex: '#dc2626', label: 'Rojo' },
+  { hex: '#f59e0b', label: 'Amarillo' },
+  { hex: '#7c3aed', label: 'Violeta' },
+  { hex: '#000000', label: 'Negro' },
+];
+
 export const CategoriasAdmin: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -43,6 +81,8 @@ export const CategoriasAdmin: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [expandedSubcategories, setExpandedSubcategories] = useState<Set<string>>(new Set());
+  const [uploadingIcon, setUploadingIcon] = useState<string | null>(null);
+  const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null); // category id
 
   // Delete modal state
   const [deleteModal, setDeleteModal] = useState<DeleteModalState>({
@@ -94,6 +134,41 @@ export const CategoriasAdmin: React.FC = () => {
       alert('Error al cargar los datos');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleIconUpload = async (category: Category, file: File) => {
+    setUploadingIcon(category.id);
+    try {
+      const { url } = await uploadsApi.uploadImage(file, 'app-icons');
+      const { color } = parseIcon(category.icon);
+      await updateCategory(category.id, { icon: buildIconValue(url, color) });
+      await loadData();
+    } catch (err) {
+      alert('Error al subir ícono: ' + (err instanceof Error ? err.message : 'Error'));
+    } finally {
+      setUploadingIcon(null);
+    }
+  };
+
+  const handleIconColorChange = async (category: Category, color: string) => {
+    const { url } = parseIcon(category.icon);
+    if (!url) return;
+    try {
+      await updateCategory(category.id, { icon: buildIconValue(url, color) });
+      setColorPickerOpen(null);
+      await loadData();
+    } catch (err) {
+      alert('Error al actualizar color');
+    }
+  };
+
+  const handleIconDelete = async (category: Category) => {
+    try {
+      await updateCategory(category.id, { icon: '' });
+      await loadData();
+    } catch (err) {
+      alert('Error al eliminar ícono');
     }
   };
 
@@ -378,14 +453,104 @@ export const CategoriasAdmin: React.FC = () => {
                           <div className="w-4" />
                         )}
                       </button>
-                      <FolderTree className="w-5 h-5 text-blue-600" />
+                      {/* ── Slot de ícono ───────────────────────────── */}
+                      {(() => {
+                        const { url: iconUrl, color: iconColor } = parseIcon(category.icon);
+                        return (
+                          <div className="relative group/icon shrink-0">
+                            <input
+                              id={`icon-${category.id}`}
+                              type="file"
+                              accept=".svg,image/svg+xml"
+                              className="hidden"
+                              disabled={uploadingIcon === category.id}
+                              onChange={e => {
+                                const file = e.target.files?.[0];
+                                if (file) handleIconUpload(category, file);
+                                e.target.value = '';
+                              }}
+                            />
+
+                            {uploadingIcon === category.id ? (
+                              /* Estado cargando */
+                              <div className="w-10 h-10 rounded-lg border-2 border-brand-300 bg-brand-50 flex items-center justify-center">
+                                <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                              </div>
+                            ) : iconUrl ? (
+                              /* Estado con ícono — overlay en hover */
+                              <div className="relative w-10 h-10 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center">
+                                <img
+                                  src={iconUrl}
+                                  alt=""
+                                  className="w-6 h-6 object-contain"
+                                  style={{ filter: hexToFilter(iconColor) }}
+                                />
+                                {/* Overlay de acciones */}
+                                <div className="absolute inset-0 rounded-lg bg-black/70 opacity-0 group-hover/icon:opacity-100 transition-opacity flex items-center justify-center gap-0.5">
+                                  <button
+                                    onClick={() => setColorPickerOpen(colorPickerOpen === category.id ? null : category.id)}
+                                    className="p-1 text-white hover:text-yellow-300 transition-colors"
+                                    title="Color"
+                                  >
+                                    <Palette className="w-3 h-3" />
+                                  </button>
+                                  <label
+                                    htmlFor={`icon-${category.id}`}
+                                    className="p-1 text-white hover:text-brand-300 transition-colors cursor-pointer"
+                                    title="Reemplazar SVG"
+                                  >
+                                    <Upload className="w-3 h-3" />
+                                  </label>
+                                  <button
+                                    onClick={() => handleIconDelete(category)}
+                                    className="p-1 text-white hover:text-red-400 transition-colors"
+                                    title="Eliminar ícono"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                                {/* Color picker dropdown */}
+                                {colorPickerOpen === category.id && (
+                                  <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setColorPickerOpen(null)} />
+                                    <div className="absolute left-0 top-11 z-20 bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex gap-1.5">
+                                      {ICON_COLOR_PRESETS.map(preset => (
+                                        <button
+                                          key={preset.hex}
+                                          onClick={() => handleIconColorChange(category, preset.hex)}
+                                          className="w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform"
+                                          style={{
+                                            backgroundColor: preset.hex,
+                                            borderColor: iconColor === preset.hex ? '#374151' : 'transparent',
+                                            outline: iconColor === preset.hex ? '2px solid #d1d5db' : 'none',
+                                          }}
+                                          title={preset.label}
+                                        />
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            ) : (
+                              /* Estado vacío — click para subir */
+                              <label
+                                htmlFor={`icon-${category.id}`}
+                                className="w-10 h-10 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-brand-400 hover:bg-brand-50 transition-colors"
+                                title="Subir ícono SVG"
+                              >
+                                <Upload className="w-4 h-4 text-gray-400 group-hover/icon:text-brand-500" />
+                              </label>
+                            )}
+                          </div>
+                        );
+                      })()}
                       <span className="font-semibold text-gray-900 flex-1">
                         {category.display_name}
                       </span>
                       <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                         {category.name}
                       </span>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 items-center">
                         <button
                           onClick={() => handleNew('subcategory', category.id)}
                           className="p-1.5 text-brand-600 hover:bg-brand-50 rounded transition"

@@ -24,8 +24,38 @@ import {
   ImageIcon,
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
+import { uploadsApi } from '../../services/api/uploads';
 import type { Category, Subcategory } from '../../types/v2';
 import { notify } from '../../utils/notifications';
+
+// ── Helpers ícono SVG (formato "url|#hexcolor") ──────────────
+function parseIcon(icon?: string | null): { url: string; color: string } {
+  if (!icon?.startsWith('http')) return { url: '', color: '#84cc16' };
+  const [url, color] = icon.split('|');
+  return { url, color: color ?? '#84cc16' };
+}
+function buildIconValue(url: string, color: string): string { return `${url}|${color}`; }
+function hexToFilter(hex: string): string {
+  const map: Record<string, string> = {
+    '#84cc16': 'brightness(0) saturate(100%) invert(71%) sepia(59%) saturate(456%) hue-rotate(42deg) brightness(103%) contrast(97%)',
+    '#6b7280': 'brightness(0) saturate(100%) invert(46%) sepia(8%) saturate(500%) hue-rotate(179deg) brightness(95%) contrast(89%)',
+    '#1d4ed8': 'brightness(0) saturate(100%) invert(26%) sepia(89%) saturate(1500%) hue-rotate(213deg) brightness(92%) contrast(98%)',
+    '#dc2626': 'brightness(0) saturate(100%) invert(22%) sepia(97%) saturate(1300%) hue-rotate(350deg) brightness(95%) contrast(98%)',
+    '#f59e0b': 'brightness(0) saturate(100%) invert(74%) sepia(68%) saturate(550%) hue-rotate(359deg) brightness(101%) contrast(97%)',
+    '#7c3aed': 'brightness(0) saturate(100%) invert(28%) sepia(82%) saturate(1200%) hue-rotate(251deg) brightness(90%) contrast(97%)',
+    '#000000': 'brightness(0)',
+  };
+  return map[hex.toLowerCase()] ?? map['#84cc16'];
+}
+const ICON_COLORS = [
+  { hex: '#84cc16', label: 'Verde' },
+  { hex: '#6b7280', label: 'Gris' },
+  { hex: '#1d4ed8', label: 'Azul' },
+  { hex: '#dc2626', label: 'Rojo' },
+  { hex: '#f59e0b', label: 'Amarillo' },
+  { hex: '#7c3aed', label: 'Violeta' },
+  { hex: '#000000', label: 'Negro' },
+];
 
 // ============================================================
 // TYPES
@@ -401,9 +431,9 @@ export const TaxonomiaAdmin: React.FC = () => {
   const [editingCatId, setEditingCatId] = useState<string | null>(null);
   const [editCatValue, setEditCatValue] = useState('');
 
-  // Edit category icon
-  const [editingCatIconId, setEditingCatIconId] = useState<string | null>(null);
-  const [editCatIconValue, setEditCatIconValue] = useState('');
+  // Icon upload / color picker
+  const [uploadingCatIconId, setUploadingCatIconId] = useState<string | null>(null);
+  const [colorPickerCatId, setColorPickerCatId] = useState<string | null>(null);
 
   useEffect(() => {
     loadCategories();
@@ -495,6 +525,39 @@ export const TaxonomiaAdmin: React.FC = () => {
       ));
     }
     setEditingId(null);
+  }
+
+  // ── Delete category ──────────────────────────────────────
+  async function deleteCategory(cat: TaxCategory) {
+    const tieneHijos = allSubs.some(s => s.category_id === cat.id);
+    if (tieneHijos) {
+      const ok = window.confirm(
+        `"${cat.display_name}" tiene subcategorías.\n\n¿Eliminar TODO (subcategorías, tipos y avisos incluidos)?`
+      );
+      if (!ok) return;
+
+      // Obtener IDs de subcategorías
+      const subIds = allSubs.filter(s => s.category_id === cat.id).map(s => s.id);
+
+      // Eliminar avisos
+      await supabase.from('ads').delete().in('subcategory_id', subIds);
+      // Eliminar tipos
+      await supabase.from('category_types').delete().in('subcategory_id', subIds);
+      // Eliminar subcategorías
+      await supabase.from('subcategories').delete().eq('category_id', cat.id);
+    } else {
+      if (!window.confirm(`¿Eliminar la categoría "${cat.display_name}"?`)) return;
+    }
+
+    const { error } = await supabase.from('categories').delete().eq('id', cat.id);
+    if (!error) {
+      setCategories(prev => prev.filter(c => c.id !== cat.id));
+      setAllSubs(prev => prev.filter(s => s.category_id !== cat.id));
+      if (selectedCatId === cat.id) setSelectedCatId(null);
+      notify.success(`"${cat.display_name}" eliminada`);
+    } else {
+      notify.error('Error al eliminar: ' + error.message);
+    }
   }
 
   // ── Delete subcategory ───────────────────────────────────
@@ -631,18 +694,41 @@ export const TaxonomiaAdmin: React.FC = () => {
     setShowNewCat(false);
   }
 
-  // ── Edit category icon ───────────────────────────────────
-  async function saveCatIcon(cat: TaxCategory) {
-    const { error } = await supabase
-      .from('categories')
-      .update({ icon: editCatIconValue.trim() || null })
-      .eq('id', cat.id);
-    if (!error) {
-      setCategories(prev => prev.map(c =>
-        c.id === cat.id ? { ...c, icon: editCatIconValue.trim() || undefined } : c
-      ));
+  // ── Icon: upload SVG ─────────────────────────────────────
+  async function uploadCatIcon(cat: TaxCategory, file: File) {
+    setUploadingCatIconId(cat.id);
+    try {
+      const { url } = await uploadsApi.uploadImage(file, 'app-icons');
+      const { color } = parseIcon(cat.icon);
+      const iconValue = buildIconValue(url, color);
+      const { error } = await supabase.from('categories').update({ icon: iconValue }).eq('id', cat.id);
+      if (!error) {
+        setCategories(prev => prev.map(c => c.id === cat.id ? { ...c, icon: iconValue } : c));
+        notify.success('Ícono subido');
+      }
+    } catch (err: any) {
+      notify.error('Error al subir: ' + err.message);
+    } finally {
+      setUploadingCatIconId(null);
     }
-    setEditingCatIconId(null);
+  }
+
+  // ── Icon: cambiar color ───────────────────────────────────
+  async function changeCatIconColor(cat: TaxCategory, color: string) {
+    const { url } = parseIcon(cat.icon);
+    if (!url) return;
+    const iconValue = buildIconValue(url, color);
+    const { error } = await supabase.from('categories').update({ icon: iconValue }).eq('id', cat.id);
+    if (!error) {
+      setCategories(prev => prev.map(c => c.id === cat.id ? { ...c, icon: iconValue } : c));
+    }
+    setColorPickerCatId(null);
+  }
+
+  // ── Icon: eliminar ────────────────────────────────────────
+  async function deleteCatIcon(cat: TaxCategory) {
+    const { error } = await supabase.from('categories').update({ icon: null }).eq('id', cat.id);
+    if (!error) setCategories(prev => prev.map(c => c.id === cat.id ? { ...c, icon: undefined } : c));
   }
 
   // ── Edit category name ───────────────────────────────────
@@ -730,12 +816,17 @@ export const TaxonomiaAdmin: React.FC = () => {
                     : <Folder className="w-4 h-4 flex-shrink-0 text-gray-400" />
                   }
 
-                  {/* Ícono actual */}
-                  {cat.icon && editingCatIconId !== cat.id && (
-                    cat.icon.startsWith('http')
-                      ? <img src={cat.icon} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
-                      : <span className="text-base leading-none flex-shrink-0">{cat.icon}</span>
-                  )}
+                  {/* Ícono SVG */}
+                  {(() => {
+                    const { url: iUrl, color: iColor } = parseIcon(cat.icon);
+                    if (uploadingCatIconId === cat.id) {
+                      return <div className="w-4 h-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin flex-shrink-0" />;
+                    }
+                    if (iUrl) {
+                      return <img src={iUrl} alt="" className="w-4 h-4 object-contain flex-shrink-0" style={{ filter: hexToFilter(iColor) }} />;
+                    }
+                    return null;
+                  })()}
 
                   {editingCatId === cat.id ? (
                     <input
@@ -749,20 +840,6 @@ export const TaxonomiaAdmin: React.FC = () => {
                         if (e.key === 'Escape') setEditingCatId(null);
                       }}
                       className="flex-1 min-w-0 px-1 py-0.5 text-sm bg-white text-gray-900 border border-brand-400 rounded focus:outline-none"
-                    />
-                  ) : editingCatIconId === cat.id ? (
-                    <input
-                      autoFocus
-                      value={editCatIconValue}
-                      onClick={e => e.stopPropagation()}
-                      onChange={e => setEditCatIconValue(e.target.value)}
-                      onKeyDown={e => {
-                        e.stopPropagation();
-                        if (e.key === 'Enter') saveCatIcon(cat);
-                        if (e.key === 'Escape') setEditingCatIconId(null);
-                      }}
-                      className="flex-1 min-w-0 px-1 py-0.5 text-sm bg-white text-gray-900 border border-amber-400 rounded focus:outline-none"
-                      placeholder="🐄 emoji o URL"
                     />
                   ) : (
                     <span className={`flex-1 text-sm font-medium truncate ${!cat.is_active ? 'opacity-40' : ''}`}>
@@ -784,13 +861,61 @@ export const TaxonomiaAdmin: React.FC = () => {
                         >
                           <Edit2 className="w-3 h-3" />
                         </button>
-                        <button
-                          onClick={e => { e.stopPropagation(); setEditingCatIconId(cat.id); setEditCatIconValue(cat.icon || ''); }}
-                          className="p-0.5 hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Editar ícono (emoji o URL)"
+                        {/* Upload SVG */}
+                        <label
+                          onClick={e => e.stopPropagation()}
+                          className="p-0.5 hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                          title="Subir ícono SVG"
                         >
                           <ImageIcon className="w-3 h-3" />
-                        </button>
+                          <input
+                            type="file"
+                            accept=".svg,image/svg+xml"
+                            className="hidden"
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file) uploadCatIcon(cat, file);
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                        {/* Color picker — solo si hay SVG */}
+                        {parseIcon(cat.icon).url && (
+                          <div className="relative" onClick={e => e.stopPropagation()}>
+                            <button
+                              onClick={() => setColorPickerCatId(colorPickerCatId === cat.id ? null : cat.id)}
+                              className="w-3.5 h-3.5 rounded-full border border-white/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                              style={{ backgroundColor: parseIcon(cat.icon).color }}
+                              title="Color del ícono"
+                            />
+                            {colorPickerCatId === cat.id && (
+                              <>
+                                <div className="fixed inset-0 z-10" onClick={() => setColorPickerCatId(null)} />
+                                <div className="absolute right-0 top-5 z-20 bg-white border border-gray-200 rounded-lg shadow-xl p-1.5 flex gap-1">
+                                  {ICON_COLORS.map(p => (
+                                    <button
+                                      key={p.hex}
+                                      onClick={() => changeCatIconColor(cat, p.hex)}
+                                      className="w-5 h-5 rounded-full border-2 hover:scale-110 transition-transform"
+                                      style={{
+                                        backgroundColor: p.hex,
+                                        borderColor: parseIcon(cat.icon).color === p.hex ? '#374151' : 'transparent',
+                                      }}
+                                      title={p.label}
+                                    />
+                                  ))}
+                                  <button
+                                    onClick={() => { deleteCatIcon(cat); setColorPickerCatId(null); }}
+                                    className="w-5 h-5 rounded flex items-center justify-center hover:bg-red-100 transition-colors"
+                                    title="Quitar ícono"
+                                  >
+                                    <X className="w-3 h-3 text-red-500" />
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                         <button
                           onClick={e => { e.stopPropagation(); toggleCatFilter(cat); }}
                           className="p-0.5 hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 transition-opacity"
@@ -807,6 +932,13 @@ export const TaxonomiaAdmin: React.FC = () => {
                             ? <Check className="w-3 h-3 text-green-300" />
                             : <X className="w-3 h-3 text-red-300" />
                           }
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); deleteCategory(cat); }}
+                          className="p-0.5 hover:bg-red-500/40 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Eliminar categoría"
+                        >
+                          <Trash2 className="w-3 h-3 text-red-300 hover:text-white" />
                         </button>
                       </>
                     )}

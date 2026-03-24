@@ -60,18 +60,15 @@ export function useAdSubmit() {
       }
 
       const finalImages = currentImages
-        .filter(img => {
-          const isSuccess = img.status === 'success';
-          if (!isSuccess) {}
-          return isSuccess;
-        })
+        .filter(img => img.status === 'success')
         .map(img => {
-          if (!img.url || !img.path) {
-            console.error('[useAdSubmit] Imagen sin url o path:', img);
-          }
           return {
             url: img.url,
-            path: img.path,
+            public_id: img.public_id || img.path,  // nuevo campo; fallback a path legacy
+            version: img.version,
+            format: img.format,
+            width: img.width,
+            height: img.height,
             sortOrder: img.sortOrder ?? 999,
             isPrimary: img.isPrimary ?? false,
           };

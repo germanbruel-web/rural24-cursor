@@ -27,6 +27,7 @@ const ALLOWED_MIME_TYPES = [
   'image/avif',  // Modern format (better compression)
   'image/heic',  // iOS photos
   'image/heif',  // iOS photos
+  'image/svg+xml', // SVG para íconos de categorías (solo app-icons folder)
 ];
 
 // Tipos bloqueados explícitamente
@@ -153,7 +154,7 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     // 7. UPLOAD A CLOUDINARY (acepta cualquier aspect ratio)
-    const result = await uploadToCloudinary(buffer, folder);
+    const result = await uploadToCloudinary(buffer, folder, undefined, _user.id);
 
     // 9. REGISTRAR UPLOAD EXITOSO (para rate limiting)
     rateLimiter.record(clientIP);
@@ -163,11 +164,12 @@ export async function POST(request: NextRequest) {
 
     const responseData = {
       url: result.url,
-      path: result.path,
+      public_id: result.public_id,
+      version: result.version,
       format: result.format,
       width: result.width,
       height: result.height,
-      bytes: result.bytes
+      bytes: result.bytes,
     };
 
     logger.debug(`[Uploads] Response:`, responseData);

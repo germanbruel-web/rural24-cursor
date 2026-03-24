@@ -66,7 +66,10 @@ const TABLES = [
   // Taxonomía — base de todo (TRUNCATE CASCADE limpia las FK dependientes)
   'categories', 'subcategories',
   // Config general
-  'site_settings', 'global_settings', 'global_config', 'banners', 'banners_clean',
+  'site_settings', 'global_settings', 'global_config',
+  // CMS Homepage
+  'cms_hero_images', 'hero_images', 'home_sections',
+  'banners', 'banners_clean',
   // Catálogos de opciones
   'option_lists', 'option_list_items',
   // Formularios dinámicos

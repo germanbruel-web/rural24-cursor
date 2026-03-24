@@ -79,7 +79,14 @@ export type CategoriesResponseDTO = z.infer<typeof CategoriesResponseSchema>;
 // Schema for AdImage
 export const AdImageSchema = z.object({
   url: z.string().url(),
-  path: z.string(),
+  /** public_id de Cloudinary — campo canónico desde 2026-03-24 */
+  public_id: z.string().optional(),
+  /** @deprecated Usar public_id. Mantenido para avisos subidos antes del 2026-03-24 */
+  path: z.string().optional(),
+  version: z.number().optional(),
+  format: z.string().optional(),
+  width: z.number().optional(),
+  height: z.number().optional(),
   sortOrder: z.number().optional(),
   isPrimary: z.boolean().optional(),
 });

@@ -39,6 +39,27 @@ import { usePublicarWizardState } from './publicar-aviso/hooks/usePublicarWizard
 import { useAdSubmit } from './publicar-aviso/hooks/useAdSubmit';
 
 // ====================================================================
+// HELPERS — íconos de categoría (formato "url|#hexcolor")
+// ====================================================================
+function parseIcon(icon?: string | null): { url: string; color: string } {
+  if (!icon?.startsWith('http')) return { url: '', color: '#84cc16' };
+  const [url, color] = icon.split('|');
+  return { url, color: color ?? '#84cc16' };
+}
+function hexToFilter(hex: string): string {
+  const map: Record<string, string> = {
+    '#84cc16': 'brightness(0) saturate(100%) invert(71%) sepia(59%) saturate(456%) hue-rotate(42deg) brightness(103%) contrast(97%)',
+    '#6b7280': 'brightness(0) saturate(100%) invert(46%) sepia(8%) saturate(500%) hue-rotate(179deg) brightness(95%) contrast(89%)',
+    '#1d4ed8': 'brightness(0) saturate(100%) invert(26%) sepia(89%) saturate(1500%) hue-rotate(213deg) brightness(92%) contrast(98%)',
+    '#dc2626': 'brightness(0) saturate(100%) invert(22%) sepia(97%) saturate(1300%) hue-rotate(350deg) brightness(95%) contrast(98%)',
+    '#f59e0b': 'brightness(0) saturate(100%) invert(74%) sepia(68%) saturate(550%) hue-rotate(359deg) brightness(101%) contrast(97%)',
+    '#7c3aed': 'brightness(0) saturate(100%) invert(28%) sepia(82%) saturate(1200%) hue-rotate(251deg) brightness(90%) contrast(97%)',
+    '#000000': 'brightness(0)',
+  };
+  return map[hex.toLowerCase()] ?? map['#84cc16'];
+}
+
+// ====================================================================
 // WIZARD STEPS — icono map para config dinámica
 // ====================================================================
 const STEP_ICON_MAP: Record<string, React.FC<any>> = {
@@ -439,26 +460,42 @@ export default function PublicarAviso() {
   // RENDER
   // ====================================================================
 
-  function WizardBreadcrumb({ segments, onChangeCat }: { segments: string[]; onChangeCat?: () => void }) {
+  function WizardBreadcrumb({ segments, categoryIcon, onChangeCat }: {
+    segments: string[];
+    categoryIcon?: string | null;
+    onChangeCat?: () => void;
+  }) {
     if (segments.length === 0) return null;
+    const { url: iconUrl, color: iconColor } = parseIcon(categoryIcon);
     return (
-      <div className="flex items-center gap-1 flex-wrap">
-        {segments.map((seg, i) => (
-          <React.Fragment key={i}>
-            {i > 0 && <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />}
-            <span className={`text-xs sm:text-base ${i === segments.length - 1 ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
-              {seg}
-            </span>
-          </React.Fragment>
-        ))}
-        {onChangeCat && (
-          <button
-            onClick={onChangeCat}
-            className="ml-1 text-xs sm:text-sm text-brand-600 hover:underline font-medium flex-shrink-0"
-          >
-            Cambiar
-          </button>
+      <div className="flex items-center gap-2">
+        {/* Ícono grande standalone */}
+        {iconUrl && (
+          <img
+            src={iconUrl}
+            alt=""
+            className="w-9 h-9 object-contain flex-shrink-0"
+            style={{ filter: hexToFilter(iconColor) }}
+          />
         )}
+        <div className="flex items-center gap-1 flex-wrap min-w-0">
+          {segments.map((seg, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />}
+              <span className={`text-xs sm:text-base ${i === segments.length - 1 ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
+                {seg}
+              </span>
+            </React.Fragment>
+          ))}
+          {onChangeCat && (
+            <button
+              onClick={onChangeCat}
+              className="ml-1 text-xs sm:text-sm text-brand-600 hover:underline font-medium flex-shrink-0"
+            >
+              Cambiar
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -501,6 +538,7 @@ export default function PublicarAviso() {
           {breadcrumbSegments.length > 0 && (
             <WizardBreadcrumb
               segments={breadcrumbSegments}
+              categoryIcon={categories.find(c => c.id === selectedCategory)?.icon}
               onChangeCat={currentStep > 1 ? wizardBlockProps.onChangeCategory : undefined}
             />
           )}
@@ -612,6 +650,7 @@ export default function PublicarAviso() {
             <div className="mt-4 pt-4 border-t border-gray-100">
               <WizardBreadcrumb
                 segments={breadcrumbSegments}
+                categoryIcon={categories.find(c => c.id === selectedCategory)?.icon}
                 onChangeCat={wizardBlockProps.onChangeCategory}
               />
             </div>
@@ -620,9 +659,9 @@ export default function PublicarAviso() {
       </div>
 
       {/* Content */}
-      <div className="max-w-[1400px] mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <div className="max-w-[1400px] mx-auto px-0 py-4 sm:py-6">
         {/* Layout: Full width sin preview lateral */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div>
             <div className="bg-white rounded-none sm:rounded-lg overflow-hidden">
               <div className="p-3 sm:p-10 lg:p-12">
@@ -675,26 +714,25 @@ export default function PublicarAviso() {
                     }) => (
                       <button
                         onClick={onClick}
-                        className={`w-full flex items-center gap-3 px-4 py-[14px] text-left transition-colors border-b border-gray-100 last:border-b-0 active:bg-gray-50 ${
+                        className={`w-full flex items-center gap-4 px-5 py-5 text-left transition-colors border-b border-gray-100 last:border-b-0 active:bg-gray-50 ${
                           isActive ? 'bg-brand-50' : 'bg-white'
                         }`}
                       >
-                        {/* Ícono de categoría — URL (img) o emoji (span) */}
-                        {icon ? (
-                          icon.startsWith('http') ? (
-                            <img src={icon} alt="" className="w-6 h-6 object-contain flex-shrink-0" />
-                          ) : (
-                            <span className="text-xl leading-none flex-shrink-0">{icon}</span>
-                          )
-                        ) : isServicio ? (
-                          <Building2 className="w-5 h-5 text-brand-500 flex-shrink-0" />
-                        ) : null}
-                        <span className={`flex-1 text-base font-medium ${isActive ? 'text-brand-800' : 'text-gray-800'}`}>
+                        {/* Ícono de categoría */}
+                        {(() => {
+                          const { url, color } = parseIcon(icon);
+                          if (url) return (
+                            <img src={url} alt="" className="w-8 h-8 object-contain flex-shrink-0" style={{ filter: hexToFilter(color) }} />
+                          );
+                          if (isServicio) return <Building2 className="w-7 h-7 text-brand-500 flex-shrink-0" />;
+                          return null;
+                        })()}
+                        <span className={`flex-1 text-lg font-medium ${isActive ? 'text-brand-800' : 'text-gray-800'}`}>
                           {label}
                         </span>
                         {isSelected
-                          ? <Check className="w-5 h-5 text-brand-600 flex-shrink-0" />
-                          : <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-brand-500' : 'text-gray-300'}`} />
+                          ? <Check className="w-6 h-6 text-brand-600 flex-shrink-0" />
+                          : <ChevronRight className={`w-6 h-6 flex-shrink-0 ${isActive ? 'text-brand-500' : 'text-gray-300'}`} />
                         }
                       </button>
                     );
@@ -807,9 +845,9 @@ export default function PublicarAviso() {
 
                         {/* ── DESKTOP: Miller columns (lg+) ── */}
                         <div className="hidden lg:block">
-                          <div className="mb-4">
-                            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-1">¿Qué vas a publicar?</h2>
-                            <p className="text-sm lg:text-base text-gray-500">
+                          <div className="mb-5">
+                            <h2 className="text-3xl font-bold text-gray-900 mb-1">¿Qué vas a publicar?</h2>
+                            <p className="text-base text-gray-500">
                               Seleccioná categoría → subcategoría{showL3Col ? ' → tipo' : ''}
                             </p>
                           </div>
@@ -817,10 +855,10 @@ export default function PublicarAviso() {
 
                             {/* COLUMNA 1 — L1 */}
                             <div className="flex flex-col border-r border-gray-200 bg-gray-50">
-                              <div className="px-3 py-2 bg-gray-100 border-b border-gray-200">
-                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Categoría</p>
+                              <div className="px-4 py-3 bg-gray-100 border-b border-gray-200">
+                                <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Categoría</p>
                               </div>
-                              <div className="flex flex-col overflow-y-auto max-h-[420px]">
+                              <div className="flex flex-col overflow-y-auto max-h-[680px]">
                                 {categories.map((cat) => {
                                   const isSelected = selectedCategory === cat.id;
                                   return (
@@ -837,19 +875,19 @@ export default function PublicarAviso() {
                                           setSelectedPageType('particular'); setShowProfileGate(false);
                                         }
                                       }}
-                                      className={`w-full px-4 py-3 text-left flex items-center gap-2 justify-between transition-all border-b border-gray-100 last:border-b-0 ${
+                                      className={`w-full px-5 py-4 text-left flex items-center gap-3 justify-between transition-all border-b border-gray-100 last:border-b-0 ${
                                         isSelected ? 'bg-brand-600 text-white font-semibold' : 'hover:bg-white text-gray-800 hover:text-brand-700'
                                       }`}
                                     >
-                                      <span className="flex items-center gap-2">
-                                        {cat.icon && (
-                                          cat.icon.startsWith('http')
-                                            ? <img src={cat.icon} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
-                                            : <span className="text-base leading-none">{cat.icon}</span>
-                                        )}
-                                        <span className="text-sm font-medium">{cat.display_name}</span>
+                                      <span className="flex items-center gap-3">
+                                        {(() => {
+                                          const { url, color } = parseIcon(cat.icon);
+                                          if (!url) return null;
+                                          return <img src={url} alt="" className="w-8 h-8 object-contain flex-shrink-0" style={{ filter: isSelected ? 'brightness(0) invert(1)' : hexToFilter(color) }} />;
+                                        })()}
+                                        <span className="text-lg font-medium">{cat.display_name}</span>
                                       </span>
-                                      {isSelected && <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-80" />}
+                                      {isSelected && <ChevronRight className="w-5 h-5 flex-shrink-0 opacity-80" />}
                                     </button>
                                   );
                                 })}
@@ -859,12 +897,12 @@ export default function PublicarAviso() {
                             {/* COLUMNA 2 — L2 */}
                             {selectedCategory && (
                               <div className={`flex flex-col ${showL3Col ? 'border-r border-gray-200' : ''} bg-white`}>
-                                <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
-                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Subcategoría</p>
+                                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                                  <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Subcategoría</p>
                                 </div>
-                                <div className="flex flex-col overflow-y-auto max-h-[420px]">
+                                <div className="flex flex-col overflow-y-auto max-h-[680px]">
                                   {l2Subs.length === 0 ? (
-                                    <div className="p-4 text-sm text-gray-400 italic">Cargando...</div>
+                                    <div className="p-5 text-base text-gray-400 italic">Cargando...</div>
                                   ) : l2Subs.map((sub) => {
                                     const hasChildren = (childrenMap[sub.id] || []).length > 0;
                                     const isServicioEmpresa = sub.slug === 'servicios' || sub.slug === 'empresas';
@@ -881,17 +919,17 @@ export default function PublicarAviso() {
                                             handleSelectLeaf(sub);
                                           }
                                         }}
-                                        className={`w-full px-4 py-3 text-left flex items-center justify-between transition-all border-b border-gray-100 last:border-b-0 ${
+                                        className={`w-full px-5 py-4 text-left flex items-center justify-between transition-all border-b border-gray-100 last:border-b-0 ${
                                           isActive ? 'bg-brand-50 text-brand-800 font-semibold border-l-2 border-l-brand-500' : 'hover:bg-gray-50 text-gray-800 hover:text-brand-700'
                                         }`}
                                       >
-                                        <div className="flex items-center gap-2 min-w-0">
-                                          {isServicioEmpresa && <Building2 className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />}
-                                          <span className="text-sm truncate">{sub.display_name}</span>
+                                        <div className="flex items-center gap-3 min-w-0">
+                                          {isServicioEmpresa && <Building2 className="w-5 h-5 text-brand-500 flex-shrink-0" />}
+                                          <span className="text-lg truncate">{sub.display_name}</span>
                                         </div>
                                         {hasChildren
-                                          ? <ChevronRight className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />
-                                          : isActive && <Check className="w-3.5 h-3.5 text-brand-600 flex-shrink-0" />
+                                          ? <ChevronRight className="w-5 h-5 text-brand-400 flex-shrink-0" />
+                                          : isActive && <Check className="w-5 h-5 text-brand-600 flex-shrink-0" />
                                         }
                                       </button>
                                     );
@@ -903,12 +941,12 @@ export default function PublicarAviso() {
                             {/* COLUMNA 3 — L3 */}
                             {showL3Col && (
                               <div className="flex flex-col bg-white">
-                                <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
-                                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                                  <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">
                                     {expandedL2Sub_data?.display_name ?? 'Tipo'}
                                   </p>
                                 </div>
-                                <div className="flex flex-col overflow-y-auto max-h-[420px]">
+                                <div className="flex flex-col overflow-y-auto max-h-[680px]">
                                   {l3Subs.map((child) => {
                                     const parentSlug = expandedL2Sub_data?.slug;
                                     const isSelected = selectedSubcategory === child.id;
@@ -916,12 +954,12 @@ export default function PublicarAviso() {
                                       <button
                                         key={child.id}
                                         onClick={() => handleSelectLeaf(child, parentSlug)}
-                                        className={`w-full px-4 py-3 text-left flex items-center justify-between transition-all border-b border-gray-100 last:border-b-0 ${
+                                        className={`w-full px-5 py-4 text-left flex items-center justify-between transition-all border-b border-gray-100 last:border-b-0 ${
                                           isSelected ? 'bg-brand-600 text-white font-semibold' : 'hover:bg-gray-50 text-gray-800 hover:text-brand-700'
                                         }`}
                                       >
-                                        <span className="text-sm">{child.display_name}</span>
-                                        {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                                        <span className="text-lg">{child.display_name}</span>
+                                        {isSelected && <Check className="w-5 h-5 flex-shrink-0" />}
                                       </button>
                                     );
                                   })}
@@ -984,7 +1022,7 @@ export default function PublicarAviso() {
 
     {/* Actions */}
     <div className="bg-white border-t border-gray-100">
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-3">
+      <div className="max-w-6xl mx-auto px-0 py-3 sm:py-4 flex items-center justify-between gap-3">
 
             {/* Back — siempre con texto, mismo alto que Continuar */}
             {currentStep > 1 ? (

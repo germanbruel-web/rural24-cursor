@@ -20,12 +20,27 @@ const { Client } = pkg;
 
 const REPO_ROOT      = path.resolve(process.cwd(), '..');
 const MIGRATIONS_DIR = path.join(REPO_ROOT, 'supabase', 'migrations');
-const CONFIG_TABLES  = ['global_settings', 'global_config'];
+const CONFIG_TABLES  = ['categories', 'global_settings', 'global_config', 'home_sections', 'cms_hero_images', 'hero_images', 'banners_clean', 'form_templates_v2', 'form_fields_v2', 'wizard_configs'];
 
 interface CommitInfo { sha: string; message: string }
 
 function getDbClient(url: string) {
   return new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
+}
+
+/** Archivos modificados sin commitear en el working directory */
+function getDirtyFiles(): { count: number; files: string[] } {
+  try {
+    const output = execSync('git status --porcelain', {
+      cwd: REPO_ROOT,
+      timeout: 5000,
+    }).toString().trim();
+    if (!output) return { count: 0, files: [] };
+    const files = output.split('\n').filter(Boolean).map(l => l.slice(3));
+    return { count: files.length, files };
+  } catch {
+    return { count: -1, files: [] };
+  }
 }
 
 /** Commits locales no pusheados a origin/main */
@@ -85,14 +100,38 @@ async function getMigrationStatus(client: InstanceType<typeof Client>) {
   };
 }
 
-/** Hash MD5 de una tabla para comparar entre envs */
-async function getTableHash(client: InstanceType<typeof Client>, table: string): Promise<string | null> {
+/** Hash MD5 de una tabla excluyendo columnas de auditoría.
+ *  normalizeDevRef: reemplaza ref DEV por PROD antes de hashear (para comparar DEV vs PROD
+ *  cuando el clone sustituye storage URLs en los JSONB values). */
+const AUDIT_COLS = ['created_at', 'updated_at', 'modified_at', 'created_by', 'updated_by', 'modified_by'];
+const DEV_SUPABASE_REF  = 'lmkuecdvxtenrikjomol';
+const PROD_SUPABASE_REF = 'ufrzkjuylhvdkrvbjdyh';
+
+async function getTableHash(
+  client: InstanceType<typeof Client>,
+  table: string,
+  normalizeDevRef = false
+): Promise<string | null> {
   try {
-    const { rows } = await client.query(`
-      SELECT md5(string_agg(row_text, '|' ORDER BY row_text)) AS hash
-      FROM (SELECT row_to_json(t)::text AS row_text FROM public."${table}" t) sub
-    `);
-    return (rows[0] as { hash: string } | undefined)?.hash ?? null;
+    const { rows: colRows } = await client.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = $1
+         AND column_name != ALL($2::text[])
+       ORDER BY ordinal_position`,
+      [table, AUDIT_COLS]
+    );
+    if (colRows.length === 0) return null;
+    const cols = colRows.map(r => `"${r.column_name}"`).join(', ');
+
+    const rowTextExpr = normalizeDevRef
+      ? `replace(row_to_json(t)::text, '${DEV_SUPABASE_REF}', '${PROD_SUPABASE_REF}')`
+      : `row_to_json(t)::text`;
+
+    const { rows } = await client.query<{ hash: string }>(
+      `SELECT md5(string_agg(row_text, '|' ORDER BY row_text)) AS hash
+       FROM (SELECT ${rowTextExpr} AS row_text FROM (SELECT ${cols} FROM public."${table}") t) sub`
+    );
+    return rows[0]?.hash ?? null;
   } catch {
     return null;
   }
@@ -102,8 +141,8 @@ async function getConfigStatus(devClient: InstanceType<typeof Client>, prodClien
   const results = await Promise.all(
     CONFIG_TABLES.map(async (table) => {
       const [devHash, prodHash] = await Promise.all([
-        getTableHash(devClient, table),
-        getTableHash(prodClient, table),
+        getTableHash(devClient, table, true),  // normaliza refs DEV→PROD antes de hashear
+        getTableHash(prodClient, table, false),
       ]);
       return {
         name:   table,
@@ -135,8 +174,9 @@ export async function GET(request: NextRequest) {
     try {
       await Promise.all([devClient.connect(), prodClient.connect()]);
 
-      const [unpushed, commitsDiff, migrationsDev, migrationsProd, config] = await Promise.all([
+      const [unpushed, dirty, commitsDiff, migrationsDev, migrationsProd, config] = await Promise.all([
         Promise.resolve(getUnpushedCommits()),
+        Promise.resolve(getDirtyFiles()),
         Promise.resolve(getCommitDiff()),
         getMigrationStatus(devClient),
         getMigrationStatus(prodClient),
@@ -144,7 +184,8 @@ export async function GET(request: NextRequest) {
       ]);
 
       const localHasPending =
-        (unpushed.count > 0) ||
+        dirty.count > 0 ||
+        unpushed.count > 0 ||
         migrationsDev.pending.length > 0;
 
       const prodHasPending =
@@ -160,6 +201,7 @@ export async function GET(request: NextRequest) {
         // Etapa 1: LOCAL → DEV
         local: {
           hasPending: localHasPending,
+          dirtyFiles: dirty,
           unpushedCommits: unpushed,
           migrations: migrationsDev,
         },

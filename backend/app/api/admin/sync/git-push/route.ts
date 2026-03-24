@@ -41,6 +41,20 @@ export async function POST(request: NextRequest) {
     const shouldMerge: boolean = body.merge === true;
 
     try {
+      // 0. Verificar si hay commits en main que no están en prod
+      const comparison = await ghFetch(
+        `/repos/${REPO}/compare/prod...main`
+      ) as { ahead_by: number; behind_by: number };
+
+      if (comparison.ahead_by === 0) {
+        return NextResponse.json({
+          success: true,
+          alreadyInSync: true,
+          message: 'main y prod ya están sincronizados — nada que deployar',
+          merged: false,
+        });
+      }
+
       // 1. Buscar PR abierto existente main→prod
       const prs = await ghFetch(
         `/repos/${REPO}/pulls?base=prod&head=main&state=open`

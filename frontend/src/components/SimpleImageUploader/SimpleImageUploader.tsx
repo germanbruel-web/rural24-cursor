@@ -19,25 +19,33 @@ import { useImageCompression } from '../../hooks/useImageCompression';
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { DEFAULT_PLACEHOLDER_IMAGE } from '../../constants/defaultImages';
 
 // Imagen predeterminada: se usa defaultImageUrl prop (placeholder por categoría).
 // Esta constante es el último recurso si no hay prop.
 const DEFAULT_IMAGE = {
-  url: 'https://via.placeholder.com/800x600/10b981/ffffff?text=Rural24',
+  url: DEFAULT_PLACEHOLDER_IMAGE,
   path: '',
-  fallback: 'https://via.placeholder.com/800x600/10b981/ffffff?text=Rural24'
+  fallback: DEFAULT_PLACEHOLDER_IMAGE,
 };
 
 export interface UploadedImage {
   url?: string;
+  /** public_id de Cloudinary (equivale al campo 'path' legacy) */
+  public_id?: string;
+  /** @deprecated Usar public_id. Mantenido para compatibilidad con avisos existentes. */
   path?: string;
+  version?: number;
+  format?: string;
+  width?: number;
+  height?: number;
   file?: File;
   preview?: string;
   status: 'uploading' | 'success' | 'error';
   progress: number;
   error?: string;
-  sortOrder: number;      // ✅ Orden de visualización
-  isPrimary: boolean;     // ✅ Es la foto principal
+  sortOrder: number;      // Orden de visualización
+  isPrimary: boolean;     // Es la foto principal
 }
 
 interface Props {
@@ -170,22 +178,19 @@ export const SimpleImageUploader: React.FC<Props> = ({
         console.log(`[SimpleUploader] 📤 Uploading ${i + 1}/${validFiles.length}: ${file.name}`);
         
         const result = await uploadsApi.uploadImage(file, folder);
-        
-        console.log(`[SimpleUploader] 🔍 RAW result from API:`, result);
-        console.log(`[SimpleUploader] ✅ Success:`, {
-          url: result.url,
-          path: result.path
-        });
-        console.log(`[SimpleUploader] 🔍 result.url type:`, typeof result.url);
-        console.log(`[SimpleUploader] 🔍 result.path type:`, typeof result.path);
 
-        // Actualizar imagen con éxito
+        // Actualizar imagen con MediaInfo completo
         updatedImages[imageIndex] = {
           ...updatedImages[imageIndex],
           url: result.url,
-          path: result.path,
+          public_id: result.public_id,
+          path: result.public_id,  // backward compat con avisos existentes
+          version: result.version,
+          format: result.format,
+          width: result.width,
+          height: result.height,
           status: 'success',
-          progress: 100
+          progress: 100,
         };
 
         console.log(`[SimpleUploader] 🖼️ updatedImages[${imageIndex}] AFTER update:`, updatedImages[imageIndex]);
@@ -286,42 +291,33 @@ export const SimpleImageUploader: React.FC<Props> = ({
   };
 
   const addDefaultImage = () => {
-    // Si hay URL por categoría (prop), usarla; si no, usar la genérica del sistema
     const targetUrl = defaultImageUrl || DEFAULT_IMAGE.url;
 
-    // Verificar que la imagen carga antes de agregarla
+    // Solo aceptar URLs de Cloudinary como imágenes de aviso.
+    // Las URLs de Supabase Storage (settings CMS) no son válidas para UGC.
+    if (!targetUrl.includes('cloudinary.com')) {
+      notify.error('La imagen predeterminada debe estar en Cloudinary. Subí una foto propia.');
+      return;
+    }
+
     const img = new Image();
     img.onload = () => {
       const defaultImage: UploadedImage = {
         url: targetUrl,
-        path: targetUrl === DEFAULT_IMAGE.url ? DEFAULT_IMAGE.path : 'cms/category-placeholder',
+        public_id: targetUrl,
+        path: targetUrl,
         status: 'success',
         progress: 100,
         sortOrder: images.length,
-        isPrimary: images.length === 0
+        isPrimary: images.length === 0,
       };
-
       const updated = [...images, defaultImage];
       setImages(updated);
       onImagesChange(updated);
     };
-
     img.onerror = () => {
-      // Fallback al placeholder genérico si la imagen de categoría falla
-      const defaultImage: UploadedImage = {
-        url: DEFAULT_IMAGE.fallback,
-        path: 'fallback/placeholder',
-        status: 'success',
-        progress: 100,
-        sortOrder: images.length,
-        isPrimary: images.length === 0
-      };
-
-      const updated = [...images, defaultImage];
-      setImages(updated);
-      onImagesChange(updated);
+      notify.error('No se pudo cargar la imagen predeterminada.');
     };
-
     img.src = targetUrl;
   };
 

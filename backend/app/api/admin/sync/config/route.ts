@@ -18,7 +18,10 @@ const { Client } = pkg;
 // Mismo orden que db-clone-config.mjs (respeta FKs entre tablas)
 const TABLES = [
   'categories', 'subcategories',
-  'site_settings', 'global_settings', 'global_config', 'banners', 'banners_clean',
+  'site_settings', 'global_settings', 'global_config',
+  'cms_hero_images', 'hero_images',
+  'home_sections',
+  'banners', 'banners_clean',
   'option_lists', 'option_list_items',
   'form_templates_v2', 'form_fields_v2',
   'wizard_configs',
@@ -81,19 +84,26 @@ async function cloneTable(
   const columns = Object.keys(rowsToInsert[0]);
   const colList = columns.map(c => `"${c}"`).join(', ');
 
-  for (const row of rowsToInsert) {
-    const values = columns.map(col => {
-      if (NULLIFY_COLS.includes(col)) return null;
-      const val = replaceStorageRefs(row[col]);
-      if (jsonCols.has(col) && val !== null) {
-        return typeof val === 'string' ? val : JSON.stringify(val);
-      }
-      return val;
+  const BATCH = 100;
+  for (let i = 0; i < rowsToInsert.length; i += BATCH) {
+    const chunk = rowsToInsert.slice(i, i + BATCH);
+    const allValues: unknown[] = [];
+    const rowPlaceholders = chunk.map((row, ri) => {
+      const vals = columns.map(col => {
+        if (NULLIFY_COLS.includes(col)) return null;
+        const val = replaceStorageRefs(row[col]);
+        if (jsonCols.has(col) && val !== null) {
+          return typeof val === 'string' ? val : JSON.stringify(val);
+        }
+        return val;
+      });
+      allValues.push(...vals);
+      const base = ri * columns.length;
+      return `(${columns.map((_, ci) => `$${base + ci + 1}`).join(', ')})`;
     });
-    const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
     await prodClient.query(
-      `INSERT INTO public."${tableName}" (${colList}) VALUES (${placeholders})`,
-      values
+      `INSERT INTO public."${tableName}" (${colList}) VALUES ${rowPlaceholders.join(', ')}`,
+      allValues
     );
   }
 
