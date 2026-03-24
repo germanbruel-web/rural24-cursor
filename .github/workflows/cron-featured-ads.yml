@@ -18,16 +18,9 @@
 name: Featured Ads Cleanup Cron
 
 on:
-  # Ejecutar 3 veces al día:
-  #   - 09:00 UTC = 06:00 Argentina → Activa destacados del día
-  #   - 15:00 UTC = 12:00 Argentina → Expira vencidos del mediodía
-  #   - 00:00 UTC = 21:00 Argentina → Cleanup nocturno
-  schedule:
-    - cron: '0 9 * * *'
-    - cron: '0 15 * * *'
-    - cron: '0 0 * * *'
-  
-  # Permitir ejecución manual desde GitHub UI
+  # DESACTIVADO 2026-03-24: pg_cron cubre activate + expire en DEV y PROD
+  # cada 15 minutos directamente en Supabase. GitHub Actions es redundante.
+  # workflow_dispatch habilitado solo para debugging manual si fuera necesario.
   workflow_dispatch:
 
 jobs:
