@@ -4,7 +4,18 @@
  * Separación DEV / PROD basada en NODE_ENV.
  */
 
-export const MEDIA_ENV = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+/**
+ * CLOUDINARY_ENV debe setearse explícitamente en cada entorno de Render:
+ *   - Render DEV (staging): CLOUDINARY_ENV=dev
+ *   - Render PROD:          CLOUDINARY_ENV=prod
+ *   - Local (.env.local):   CLOUDINARY_ENV=dev
+ *
+ * NO usar NODE_ENV: Render siempre deploya con NODE_ENV=production,
+ * tanto en staging como en producción real.
+ */
+export const MEDIA_ENV: 'dev' | 'prod' =
+  (process.env.CLOUDINARY_ENV as 'dev' | 'prod') ??
+  (process.env.NODE_ENV === 'production' ? 'prod' : 'dev');
 
 /** Carpetas raíz por contexto */
 export const MEDIA_ROOTS = {

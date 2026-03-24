@@ -13,9 +13,9 @@ export async function DELETE(request: NextRequest) {
   return withAuth(request, async (_user: AuthUser) => {
     try {
     const body = await request.json();
-    const { url, urls } = body;
+    const { url, urls, public_id, public_ids } = body;
 
-    // Batch delete
+    // Batch delete — acepta urls[] (legacy) o public_ids[]
     if (urls && Array.isArray(urls)) {
       const publicIds = urls
         .map(extractCloudinaryPublicId)
@@ -29,18 +29,27 @@ export async function DELETE(request: NextRequest) {
       }
 
       const result = await deleteManyFromCloudinary(publicIds);
-
-      // Debug only
       if (process.env.NODE_ENV !== 'production') console.log(`[DELETE BATCH] ${result.success}/${publicIds.length} deleted`);
-
-      return NextResponse.json({
-        success: result.success,
-        failed: result.failed,
-        errors: result.errors
-      });
+      return NextResponse.json({ success: result.success, failed: result.failed, errors: result.errors });
     }
 
-    // Single delete
+    if (public_ids && Array.isArray(public_ids)) {
+      const ids = public_ids.filter(Boolean) as string[];
+      if (ids.length === 0) {
+        return NextResponse.json({ error: 'No public_ids provided' }, { status: 400 });
+      }
+      const result = await deleteManyFromCloudinary(ids);
+      if (process.env.NODE_ENV !== 'production') console.log(`[DELETE BATCH] ${result.success}/${ids.length} deleted`);
+      return NextResponse.json({ success: result.success, failed: result.failed, errors: result.errors });
+    }
+
+    // Single delete — acepta url (legacy) o public_id
+    if (public_id) {
+      const success = await deleteFromCloudinary(public_id);
+      if (process.env.NODE_ENV !== 'production') console.log(`[DELETE] ${public_id} deleted`);
+      return NextResponse.json(success ? { success: true } : { error: 'Failed to delete image' }, { status: success ? 200 : 500 });
+    }
+
     if (url) {
       const publicId = extractCloudinaryPublicId(url);
 
@@ -65,7 +74,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Missing url or urls parameter' },
+      { error: 'Missing url, urls, public_id or public_ids parameter' },
       { status: 400 }
     );
 

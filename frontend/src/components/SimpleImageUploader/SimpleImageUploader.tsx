@@ -231,17 +231,26 @@ export const SimpleImageUploader: React.FC<Props> = ({
   };
 
   const removeImage = (index: number) => {
+    const target = images[index];
     const updated = images.filter((_, i) => i !== index);
-    
+
     // Reordenar y actualizar isPrimary
     const reindexed = updated.map((img, idx) => ({
       ...img,
       sortOrder: idx,
       isPrimary: idx === 0
     }));
-    
+
     setImages(reindexed);
     onImagesChange(reindexed);
+
+    // Eliminar de Cloudinary si fue subida en esta sesión (tiene public_id y no es data URI ni placeholder)
+    const pid = target?.public_id;
+    if (pid && !pid.startsWith('data:') && target.status === 'success') {
+      uploadsApi.deleteImage(pid).catch((err) => {
+        console.warn('[SimpleUploader] No se pudo eliminar de Cloudinary:', err);
+      });
+    }
   };
 
   // ✅ DRAG & DROP: Reordenar imágenes

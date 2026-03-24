@@ -97,9 +97,10 @@ export const uploadsApi = {
    * Elimina una imagen de Cloudinary vía BFF
    */
   async deleteImage(publicId: string): Promise<boolean> {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/api/uploads/delete`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...headers },
       body: JSON.stringify({ public_id: publicId }),
     });
 
@@ -120,9 +121,10 @@ export const uploadsApi = {
     failed: number;
     errors: string[];
   }> {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/api/uploads/delete`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...headers },
       body: JSON.stringify({ public_ids: publicIds }),
     });
 
