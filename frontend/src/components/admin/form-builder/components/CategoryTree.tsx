@@ -69,7 +69,13 @@ export function CategoryTree({
                     esCatActiva ? 'bg-brand-50 text-brand-700' : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  {cat.icon && <span className="text-base leading-none">{CATEGORY_ICON_MAP[cat.icon] ?? cat.icon}</span>}
+                  {cat.icon && (
+                    cat.icon.startsWith('http')
+                      ? <img src={cat.icon.split('|')[0]} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
+                      : CATEGORY_ICON_MAP[cat.icon]
+                        ? <span className="text-base leading-none">{CATEGORY_ICON_MAP[cat.icon]}</span>
+                        : null
+                  )}
                   <span className="flex-1 truncate">{cat.display_name}</span>
                   {esCatActiva && cargandoSubs
                     ? <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-400" />
