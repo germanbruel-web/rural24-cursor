@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { execSync } from 'child_process';
 import path from 'path';
 import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
-import { logger } from '@/lib/logger';
+import { logger } from '@/infrastructure/logger';
 
 const REPO_ROOT = path.resolve(process.cwd(), '..');
 
