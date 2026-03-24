@@ -198,6 +198,7 @@ export default function SyncPanel() {
   const [markProdResult,    setMarkProdResult]    = useState<ActionResult>({ state: 'idle' });
   const [configResult,      setConfigResult]      = useState<ActionResult>({ state: 'idle' });
   const [prResult,          setPrResult]          = useState<ActionResult>({ state: 'idle' });
+  const [mergeResult,       setMergeResult]       = useState<ActionResult>({ state: 'idle' });
   const [deployResult,      setDeployResult]      = useState<ActionResult>({ state: 'idle' });
 
   const load = useCallback(async (manual = false) => {
@@ -364,6 +365,26 @@ export default function SyncPanel() {
       }
     } catch (err) {
       setPrResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
+    }
+  };
+
+  const handleMergePR = async () => {
+    if (!window.confirm('¿Mergear PR main → prod en GitHub?\nEsto actualiza la rama prod con todos los commits de main.')) return;
+    setMergeResult({ state: 'loading' });
+    try {
+      const json = await callSyncAction('/api/admin/sync/git-push', { merge: true });
+      if (json.success) {
+        if (json.alreadyInSync) {
+          setMergeResult({ state: 'ok', message: 'main y prod ya están sincronizados' });
+        } else {
+          const pr = json.pr as { number: number; url: string };
+          setMergeResult({ state: 'ok', message: `PR #${pr.number} mergeado ✓` });
+        }
+      } else {
+        setMergeResult({ state: 'error', message: String(json.error ?? 'Error') });
+      }
+    } catch (err) {
+      setMergeResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
     }
   };
 
@@ -572,6 +593,7 @@ export default function SyncPanel() {
               )}
               <div className="mt-3 flex flex-wrap gap-3">
                 <ActionButton label="Crear PR main → prod" result={prResult} onClick={handleCreatePR} />
+                <ActionButton label="Mergear PR" result={mergeResult} onClick={handleMergePR} />
                 <ActionButton label="Deploy PROD" result={deployResult} onClick={handleDeploy} destructive />
               </div>
             </div>
