@@ -152,11 +152,14 @@ export async function handleOAuthCallback(): Promise<{ session: any; error: any 
 export async function createOAuthUserProfile(user: any, providerOverride?: 'google' | 'facebook') {
   try {
     const metadata = user.user_metadata || {};
-    
-    // Extraer nombre del metadata del proveedor
-    const fullName = metadata.full_name || metadata.name || '';
-    const [firstName, ...lastNameParts] = fullName.split(' ');
-    const lastName = lastNameParts.join(' ');
+
+    // Google puede devolver full_name, name, o given_name + family_name por separado
+    const firstName = metadata.given_name || metadata.first_name || (metadata.full_name || metadata.name || '').split(' ')[0] || null;
+    const lastName  = metadata.family_name || metadata.last_name  || (metadata.full_name || metadata.name || '').split(' ').slice(1).join(' ') || null;
+    const fullName  = metadata.full_name || metadata.name
+      || [firstName, lastName].filter(Boolean).join(' ')
+      || user.email?.split('@')[0]
+      || 'Usuario';
     
     // Determinar el proveedor
     const provider = providerOverride || user.app_metadata?.provider || 'unknown';
