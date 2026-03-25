@@ -118,16 +118,8 @@ export async function handleOAuthCallback(): Promise<{ session: any; error: any 
       if (error) return { session: null, error };
       if (!data.session?.user) return { session: null, error: new Error('Sesión vacía tras setSession') };
 
-      // Crear perfil si es nuevo usuario
-      const { data: existingProfile } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', data.session.user.id)
-        .single();
-
-      if (!existingProfile) {
-        await createOAuthUserProfile(data.session.user);
-      }
+      // Crear/actualizar perfil (upsert: nuevo usuario o actualizar nombre vacío)
+      await createOAuthUserProfile(data.session.user);
 
       // Limpiar tokens de la URL
       window.history.replaceState(null, '', window.location.pathname + '#/auth/callback');
@@ -171,15 +163,27 @@ export async function createOAuthUserProfile(user: any, providerOverride?: 'goog
       .eq('name', 'free')
       .single();
 
-    // Crear perfil
+    // Verificar si ya existe perfil con nombre cargado
+    const { data: existing } = await supabase
+      .from('users')
+      .select('id, first_name, full_name')
+      .eq('id', user.id)
+      .single();
+
+    // Solo actualizar nombre si el perfil no tiene nombre cargado aún
+    const shouldUpdateName = !existing?.first_name && !existing?.full_name;
+
+    // Crear/actualizar perfil
     const { error } = await supabase
       .from('users')
       .upsert({
         id: user.id,
         email: user.email,
-        first_name: firstName || null,
-        last_name: lastName || null,
-        full_name: fullName || user.email?.split('@')[0] || 'Usuario',
+        ...(shouldUpdateName ? {
+          first_name: firstName || null,
+          last_name: lastName || null,
+          full_name: fullName || user.email?.split('@')[0] || 'Usuario',
+        } : {}),
         avatar_url: metadata.avatar_url || metadata.picture || null,
         user_type: 'particular',
         subscription_plan_id: freePlan?.id || null,

@@ -22,7 +22,6 @@ import type { Category, Subcategory } from '../../types/v2';
 import { getProvinces, type Province } from '../../services/v2/locationsService';
 import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
-import AuthModal from '../auth/AuthModal';
 import { navigateTo } from '../../hooks/useNavigate';
 
 // Design System Components
@@ -76,9 +75,6 @@ export default function PublicarAviso() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editAdId, setEditAdId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  // Modal de autenticación
-  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Data loaded from API
   const [categories, setCategories] = useState<Category[]>([]);
@@ -1062,7 +1058,6 @@ export default function PublicarAviso() {
                     uploadedImagesRef,
                     draftId,
                     onDraftDelete: deleteDraft,
-                    onShowAuthModal: () => setShowAuthModal(true),
                     UUID_REGEX,
                     onSetCurrentStep: setCurrentStep,
                   });
@@ -1092,12 +1087,6 @@ export default function PublicarAviso() {
       </div>
     </div>
 
-    {/* Modal de Autenticación */}
-    <AuthModal
-      isOpen={showAuthModal}
-      onClose={() => setShowAuthModal(false)}
-      initialView="login"
-    />
   </div>
 );
 }

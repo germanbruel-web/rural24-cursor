@@ -27,7 +27,6 @@ import { UserMenu } from './UserMenu';
 import { useAuth } from '../../contexts/AuthContext';
 import { canAccessPage } from '../../utils/rolePermissions';
 import { useSiteSetting } from '../../hooks/useSiteSetting';
-import AuthModal from '../auth/AuthModal';
 import type { Page } from '../../../App';
 
 interface HeaderNewProps {
@@ -38,8 +37,6 @@ interface HeaderNewProps {
 
 export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch, hideSearch = false }) => {
   const { user, profile, signOut } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login');
   const [showMobileUserMenu, setShowMobileUserMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -67,16 +64,10 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch, hide
     }
   };
 
-  // Abrir modal de auth con vista específica
-  const openAuth = (view: 'login' | 'register') => {
-    setAuthModalView(view);
-    setShowAuthModal(true);
-  };
-
   // Manejar click en "Publicar Gratis"
   const handlePublish = () => {
     if (!user) {
-      openAuth('login');
+      window.location.hash = '#/login';
     } else {
       window.location.hash = '#/publicar';
     }
@@ -160,14 +151,14 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch, hide
               {!user && (
                 <div className="sm:hidden flex items-center gap-0 min-h-[36px]">
                   <button
-                    onClick={() => openAuth('login')}
+                    onClick={() => { window.location.hash = '#/login'; }}
                     className="px-2 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                   >
                     Entrar
                   </button>
                   <span className="text-gray-300">|</span>
                   <button
-                    onClick={() => openAuth('register')}
+                    onClick={() => { window.location.hash = '#/register'; }}
                     className="px-2 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                   >
                     Registrarse
@@ -284,10 +275,10 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch, hide
 
               {/* User Menu - Solo Desktop */}
               <div className="hidden sm:block">
-                <UserMenu 
+                <UserMenu
                   onNavigate={onNavigate}
-                  onShowAuthModal={() => openAuth('login')}
-                  onShowRegisterModal={() => openAuth('register')}
+                  onShowAuthModal={() => { window.location.hash = '#/login'; }}
+                  onShowRegisterModal={() => { window.location.hash = '#/register'; }}
                 />
               </div>
 
@@ -305,15 +296,6 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch, hide
           )}
         </div>
       </header>
-
-      {/* Modal de Autenticación */}
-      {showAuthModal && (
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          initialView={authModalView}
-        />
-      )}
 
     </>
   );

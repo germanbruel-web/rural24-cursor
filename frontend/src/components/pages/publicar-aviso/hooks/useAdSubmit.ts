@@ -25,7 +25,6 @@ interface SubmitParams {
   uploadedImagesRef: React.MutableRefObject<UploadedImage[]>;
   draftId: string;
   onDraftDelete: () => void;
-  onShowAuthModal: () => void;
   UUID_REGEX: RegExp;
   onSetCurrentStep: (step: number) => void;
 }
@@ -41,11 +40,11 @@ export function useAdSubmit() {
       title, description, price, currency, priceUnit,
       province, locality, attributeValues,
       uploadedImagesRef, draftId,
-      onDraftDelete, onShowAuthModal, UUID_REGEX, onSetCurrentStep,
+      onDraftDelete, UUID_REGEX, onSetCurrentStep,
     } = params;
 
     if (!profile) {
-      onShowAuthModal();
+      window.location.hash = '#/login';
       notify.warning('Debes iniciar sesión para publicar');
       return;
     }

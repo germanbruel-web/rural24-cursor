@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, Sparkles, Zap, Building2, Gift, Megaphone, Send, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import AuthModal from '../auth/AuthModal';
 import { getAllPlans, formatPrice, type SubscriptionPlan } from '../../services/subscriptionService';
 import { navigateTo } from '../../hooks/useNavigate';
 
@@ -25,7 +24,6 @@ const COLOR_CLASSES: Record<string, { bg: string; text: string; ring: string }> 
 
 export const PricingPage: React.FC = () => {
   const { user } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,18 +42,13 @@ export const PricingPage: React.FC = () => {
   }, []);
 
   const handleSelectPlan = (planName: string) => {
-    if (planName === 'free' && !user) {
-      setShowAuthModal(true);
-      return;
-    }
-
     if (planName === 'empresa') {
       window.location.href = '#contact';
       return;
     }
 
     if (!user) {
-      setShowAuthModal(true);
+      window.location.hash = '#/register';
       return;
     }
 
@@ -241,12 +234,6 @@ export const PricingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)}
-        initialView="register"
-      />
     </div>
   );
 };
