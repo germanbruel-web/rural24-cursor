@@ -1,6 +1,22 @@
+## ⚠️ REGLA DE ORO #0 — LOCAL = DEV (ABSOLUTA, PRIORIDAD MÁXIMA DE TODAS)
+
+**ANTES de cualquier acción en PROD: LOCAL debe ser 100% igual a DEV.**
+
+Esto significa SIN EXCEPCIÓN:
+1. Cero archivos sin commitear (`git status` limpio)
+2. Cero commits sin pushear a `origin/main` (`git log origin/main..HEAD` vacío)
+3. DEV DB y LOCAL usan la misma instancia Supabase DEV — misma DB, sin divergencia posible
+4. Migraciones: SIEMPRE descargar backup SQL antes de aplicar cualquier migración
+5. El flujo es: LOCAL ✓ → DEV ✓ → comparar `main` vs `prod` en GitHub → recién ahí PROD
+
+**El Sync Panel en `#/sync-panel` es la herramienta que verifica y ejecuta este flujo.**
+**Las acciones de PROD están bloqueadas si LOCAL tiene pendientes.**
+
+---
+
 # CLAUDE.md — Rural24 Orchestrator
 > Auto-cargado por Claude Code al inicio de cada sesión.
-> Última actualización: 2026-03-18
+> Última actualización: 2026-03-25
 > Governance detallado: `.claude/` | Legado Cursor: `OlderCursor/`
 
 ---

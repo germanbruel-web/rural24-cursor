@@ -2,8 +2,11 @@
  * SyncPanel — Panel de sincronización LOCAL → DEV → PROD
  * Solo visible en DEV (import.meta.env.DEV) y para superadmin.
  *
- * Etapa 1: LOCAL → DEV  (migraciones pendientes en Supabase DEV, commits sin pushear)
- * Etapa 2: DEV   → PROD (migraciones pendientes en PROD, config, deploy)
+ * REGLA DE ORO #0: LOCAL debe ser 100% igual a DEV antes de cualquier acción PROD.
+ * Las acciones de PROD están bloqueadas si LOCAL tiene pendientes.
+ *
+ * Etapa 1: LOCAL → DEV  (archivos commitados + pusheados a main, migraciones en DEV)
+ * Etapa 2: DEV   → PROD (commits main→prod, migraciones PROD, config)
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -90,6 +93,27 @@ async function callSyncAction(
   }
 }
 
+async function downloadBackup(target: 'dev' | 'prod') {
+  const token = await getAuthToken();
+  const res = await fetch(`${API_BASE}/api/admin/sync/backup?target=${target}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error((json as { error?: string }).error ?? `HTTP ${res.status}`);
+  }
+  const blob = await res.blob();
+  const url  = URL.createObjectURL(blob);
+  const ts   = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `rural24_backup_${target}_${ts}.sql`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
 
 function StepHeader({ step, label, ok }: { step: number; label: string; ok: boolean }) {
@@ -173,6 +197,38 @@ function MigrationList({ files }: { files: string[] }) {
   );
 }
 
+function BackupButton({ target, disabled }: { target: 'dev' | 'prod'; disabled?: boolean }) {
+  const [state, setState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
+  const [msg,   setMsg]   = useState('');
+
+  const handle = async () => {
+    setState('loading');
+    try {
+      await downloadBackup(target);
+      setState('ok');
+      setMsg('Backup descargado');
+      setTimeout(() => setState('idle'), 3000);
+    } catch (err: unknown) {
+      setState('error');
+      setMsg(err instanceof Error ? err.message : 'Error');
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={handle}
+        disabled={state === 'loading' || disabled}
+        className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-gray-700 hover:bg-gray-800 text-white disabled:opacity-40 transition-colors"
+      >
+        {state === 'loading' ? 'Generando...' : `Descargar Backup ${target.toUpperCase()}`}
+      </button>
+      {state === 'ok'    && <span className="text-xs text-green-700 font-medium">✓ {msg}</span>}
+      {state === 'error' && <span className="text-xs text-red-700 font-medium">✗ {msg}</span>}
+    </div>
+  );
+}
+
 // ─── Panel principal ──────────────────────────────────────────────────────────
 
 export default function SyncPanel() {
@@ -239,8 +295,8 @@ export default function SyncPanel() {
       setCommitResult({ state: 'ok', message: 'Commit creado ✓' });
       setCommitMsg('');
       setTimeout(() => { load(true); setCommitResult({ state: 'idle' }); }, 1500);
-    } catch (err: any) {
-      setCommitResult({ state: 'error', message: err.message });
+    } catch (err: unknown) {
+      setCommitResult({ state: 'error', message: err instanceof Error ? err.message : 'Error' });
     }
   };
 
@@ -261,7 +317,7 @@ export default function SyncPanel() {
   };
 
   const handleMigrateDev = async () => {
-    if (!window.confirm('¿Aplicar todas las migraciones pendientes en DEV?')) return;
+    if (!window.confirm('¿Aplicar todas las migraciones pendientes en DEV?\n\nAsegurate de haber descargado el backup antes.')) return;
     setMigrateDevResult({ state: 'loading' });
     try {
       const json = await callSyncAction('/api/admin/sync/migrate', { target: 'dev' });
@@ -296,7 +352,7 @@ export default function SyncPanel() {
   };
 
   const handleMigrateProd = async () => {
-    if (!window.confirm('¿Aplicar todas las migraciones pendientes en PROD?')) return;
+    if (!window.confirm('¿Aplicar todas las migraciones pendientes en PROD?\n\nAsegurate de haber descargado el backup de PROD antes.\nEsta acción es irreversible.')) return;
     setMigrateProdResult({ state: 'loading' });
     try {
       const json = await callSyncAction('/api/admin/sync/migrate', { target: 'prod' });
@@ -403,6 +459,11 @@ export default function SyncPanel() {
     }
   };
 
+  // ── Gate de PROD: bloqueado si LOCAL tiene pendientes ─────────────────────
+  const localOk = status
+    ? !status.local.hasPending
+    : false;
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
@@ -418,6 +479,12 @@ export default function SyncPanel() {
             {refreshing ? 'Actualizando...' : 'Actualizar'}
           </button>
         </p>
+      </div>
+
+      {/* Regla de oro */}
+      <div className="rounded-xl border-2 border-brand-400 bg-brand-50 px-4 py-3 text-sm text-brand-800">
+        <strong>Regla de oro:</strong> LOCAL = DEV antes de cualquier acción en PROD.
+        El código debe estar 100% commitado y pusheado a <code className="bg-white/60 px-1 rounded">main</code> antes de tocar PROD.
       </div>
 
       {loading && (
@@ -537,9 +604,13 @@ export default function SyncPanel() {
                   </span>
                 )}
               </div>
+              {/* Backup siempre disponible para DEV */}
+              <div className="mt-2">
+                <BackupButton target="dev" />
+              </div>
               {status.local.migrations.pending.length > 0 && (
                 <>
-                  <button onClick={() => setShowLocalMigrations(v => !v)} className="text-xs text-brand-600 hover:underline mb-2">
+                  <button onClick={() => setShowLocalMigrations(v => !v)} className="text-xs text-brand-600 hover:underline mb-2 mt-3 block">
                     {showLocalMigrations ? 'Ocultar' : 'Ver pendientes'}
                   </button>
                   {showLocalMigrations && <MigrationList files={status.local.migrations.pending} />}
@@ -564,10 +635,20 @@ export default function SyncPanel() {
 
           {/* ══════════════════════════════════════════════════════════════════
               ETAPA 2 — DEV → PROD
+              BLOQUEADO si LOCAL tiene pendientes
           ══════════════════════════════════════════════════════════════════ */}
           <StepHeader step={2} label="DEV → PROD" ok={!status.prod.hasPending} />
 
-          <div className="space-y-3 pl-2 border-l-2 border-gray-200 ml-3">
+          {/* Gate: aviso de bloqueo */}
+          {!localOk && (
+            <div className="rounded-xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <strong>Bloqueado.</strong> Completá la Etapa 1 antes de operar PROD.
+              <br />
+              <span className="text-xs">LOCAL debe tener cero archivos sin commitear y cero commits sin pushear a <code className="bg-white/60 px-1 rounded">origin/main</code>.</span>
+            </div>
+          )}
+
+          <div className={`space-y-3 pl-2 border-l-2 ml-3 ${localOk ? 'border-gray-200' : 'border-red-200 opacity-60 pointer-events-none'}`}>
 
             {/* Código main→prod */}
             <div className="rounded-xl border border-gray-200 bg-white p-4">
@@ -592,9 +673,9 @@ export default function SyncPanel() {
                 </>
               )}
               <div className="mt-3 flex flex-wrap gap-3">
-                <ActionButton label="Crear PR main → prod" result={prResult} onClick={handleCreatePR} />
-                <ActionButton label="Mergear PR" result={mergeResult} onClick={handleMergePR} />
-                <ActionButton label="Deploy PROD" result={deployResult} onClick={handleDeploy} destructive />
+                <ActionButton label="Crear PR main → prod" result={prResult} onClick={handleCreatePR} disabled={!localOk} />
+                <ActionButton label="Mergear PR" result={mergeResult} onClick={handleMergePR} disabled={!localOk} />
+                <ActionButton label="Deploy PROD" result={deployResult} onClick={handleDeploy} destructive disabled={!localOk} />
               </div>
             </div>
 
@@ -612,9 +693,13 @@ export default function SyncPanel() {
                   </span>
                 )}
               </div>
+              {/* Backup PROD — siempre disponible aunque el resto esté bloqueado */}
+              <div className="mt-2 pointer-events-auto opacity-100">
+                <BackupButton target="prod" />
+              </div>
               {status.prod.migrations.pending.length > 0 && (
                 <>
-                  <button onClick={() => setShowProdMigrations(v => !v)} className="text-xs text-brand-600 hover:underline mb-2">
+                  <button onClick={() => setShowProdMigrations(v => !v)} className="text-xs text-brand-600 hover:underline mb-2 mt-3 block">
                     {showProdMigrations ? 'Ocultar' : 'Ver pendientes'}
                   </button>
                   {showProdMigrations && <MigrationList files={status.prod.migrations.pending} />}
@@ -624,11 +709,13 @@ export default function SyncPanel() {
                       result={migrateProdResult}
                       onClick={handleMigrateProd}
                       destructive
+                      disabled={!localOk}
                     />
                     <ActionButton
                       label="Marcar como aplicadas (sin ejecutar SQL)"
                       result={markProdResult}
                       onClick={handleMarkProd}
+                      disabled={!localOk}
                     />
                   </div>
                 </>
@@ -663,6 +750,7 @@ export default function SyncPanel() {
                     result={configResult}
                     onClick={handleCloneConfig}
                     destructive
+                    disabled={!localOk}
                   />
                   <button
                     onClick={async () => {
@@ -681,6 +769,25 @@ export default function SyncPanel() {
               )}
             </div>
 
+          </div>
+
+          {/* ── Snapshots ─────────────────────────────────────────────── */}
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-semibold text-sm text-gray-700">Snapshots / Backups manuales</span>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">
+              Descargá backups SQL de tablas de configuración (no incluye datos de usuarios).
+              Para backup completo de datos, usá el dashboard de Supabase → Backups.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <BackupButton target="dev" />
+              <BackupButton target="prod" />
+            </div>
+            <p className="text-xs text-gray-400 mt-3">
+              Guardá los archivos .sql en un lugar seguro (Drive, carpeta local).
+              Para restaurar: ejecutar el SQL manualmente en el dashboard de Supabase.
+            </p>
           </div>
 
           <p className="text-xs text-gray-400 text-center">
