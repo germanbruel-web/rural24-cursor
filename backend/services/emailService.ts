@@ -191,6 +191,13 @@ export interface WelcomeEmailData {
   firstName: string;
 }
 
+export interface WelcomeVerifyEmailData {
+  to:               string;
+  toName:           string;
+  firstName:        string;
+  confirmationLink: string;
+}
+
 function templateWelcome(d: WelcomeEmailData): string {
   const name = d.firstName || d.toName || 'Agricultor';
   return `<!DOCTYPE html>
@@ -305,6 +312,143 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
   }
 
   logger.info(`[Email] Enviado welcome → ${data.to}`);
+}
+
+// ── Welcome email con verificación (email/contraseña) ─────────
+
+function templateWelcomeVerify(d: WelcomeVerifyEmailData): string {
+  const name = d.firstName || d.toName || 'Agricultor';
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+
+          <tr>
+            <td style="background:#65a30d;padding:28px 32px;">
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:bold;">
+                Rural<span style="background:#ffffff;color:#65a30d;border-radius:4px;padding:0 5px;margin-left:2px;">24</span>
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 8px;color:#6b7280;font-size:14px;">Hola, <strong style="color:#111827;">${name}</strong></p>
+              <h2 style="margin:0 0 16px;color:#111827;font-size:22px;font-weight:bold;line-height:1.3;">
+                ¡Bienvenido a Rural24!
+              </h2>
+              <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+                Ya sos parte de la comunidad de clasificados agrarios más grande de Argentina.
+                Antes de empezar, confirmá tu cuenta haciendo clic en el botón de abajo.
+              </p>
+
+              <!-- CTA principal: confirmar cuenta -->
+              <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td style="background:#65a30d;border-radius:8px;">
+                    <a href="${d.confirmationLink}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:bold;">
+                      Confirmar mi cuenta
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Aviso de expiración -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:14px 16px;">
+                    <p style="margin:0;font-size:13px;color:#92400e;line-height:1.5;">
+                      <strong>⚠️ Este link es de un solo uso</strong> y expira en 24 horas.<br>
+                      Si no confirmás tu cuenta no vas a poder iniciar sesión.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Qué podés hacer -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr>
+                  <td width="33%" style="padding:12px;background:#f9fafb;border-radius:8px;text-align:center;vertical-align:top;">
+                    <p style="margin:0 0 4px;font-size:20px;">🌾</p>
+                    <p style="margin:0;font-size:12px;font-weight:bold;color:#111827;">Publicá gratis</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#6b7280;">Hacienda, insumos y maquinaria</p>
+                  </td>
+                  <td width="4%"></td>
+                  <td width="33%" style="padding:12px;background:#f9fafb;border-radius:8px;text-align:center;vertical-align:top;">
+                    <p style="margin:0 0 4px;font-size:20px;">🔍</p>
+                    <p style="margin:0;font-size:12px;font-weight:bold;color:#111827;">Buscá avisos</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#6b7280;">Filtrá por provincia y precio</p>
+                  </td>
+                  <td width="4%"></td>
+                  <td width="33%" style="padding:12px;background:#f9fafb;border-radius:8px;text-align:center;vertical-align:top;">
+                    <p style="margin:0 0 4px;font-size:20px;">⭐</p>
+                    <p style="margin:0;font-size:12px;font-weight:bold;color:#111827;">Destacá</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#6b7280;">Aparecé primero en búsquedas</p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
+                Si el botón no funciona, copiá este link en tu navegador:<br>
+                <a href="${d.confirmationLink}" style="color:#65a30d;word-break:break-all;">${d.confirmationLink}</a>
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:20px 32px;border-top:1px solid #f3f4f6;">
+              <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
+                Rural24 — Clasificados Agrarios de Argentina<br>
+                <a href="https://rural24.com.ar" style="color:#65a30d;text-decoration:none;">rural24.com.ar</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendWelcomeVerifyEmail(data: WelcomeVerifyEmailData): Promise<void> {
+  const accountId   = process.env.ZOHO_ACCOUNT_ID;
+  const fromAddress = process.env.ZOHO_FROM_EMAIL || 'info@rural24.com.ar';
+
+  if (!accountId) throw new Error('ZOHO_ACCOUNT_ID no configurado en Render');
+
+  const token = await getAccessToken();
+
+  const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
+    method:  'POST',
+    headers: {
+      'Authorization': `Zoho-oauthtoken ${token}`,
+      'Content-Type':  'application/json',
+    },
+    body: JSON.stringify({
+      fromAddress,
+      fromName:   'Rural24 - Clasificados',
+      toAddress:  data.to,
+      subject:    `¡Bienvenido a Rural24! Confirmá tu cuenta, ${data.firstName || data.toName}`,
+      mailFormat: 'html',
+      content:    templateWelcomeVerify(data),
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Zoho Mail API error ${res.status}: ${err}`);
+  }
+
+  logger.info(`[Email] Enviado welcome_verify → ${data.to}`);
 }
 
 // ── Verificar configuración ───────────────────────────────────

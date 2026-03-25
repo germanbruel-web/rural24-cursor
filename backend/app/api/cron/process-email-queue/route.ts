@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/infrastructure/supabase/client';
-import { sendFeaturedActivatedEmail, sendWelcomeEmail } from '@/services/emailService';
+import { sendFeaturedActivatedEmail, sendWelcomeEmail, sendWelcomeVerifyEmail } from '@/services/emailService';
 import { logger } from '@/infrastructure/logger';
 
 const CRON_SECRET  = process.env.CRON_SECRET;
@@ -67,11 +67,45 @@ export async function POST(request: NextRequest) {
             expiresAt: item.payload.expires_at,
           });
         } else if (item.type === 'welcome') {
-          await sendWelcomeEmail({
-            to:        item.to_email,
-            toName:    item.to_name,
-            firstName: item.payload.first_name || '',
-          });
+          const provider  = item.payload.provider || 'email';
+          const isOAuth   = ['google', 'facebook', 'twitter', 'github'].includes(provider);
+
+          if (isOAuth) {
+            await sendWelcomeEmail({
+              to:        item.to_email,
+              toName:    item.to_name,
+              firstName: item.payload.first_name || '',
+            });
+          } else {
+            // Generar link de confirmación via admin API
+            let confirmationLink = 'https://rural24.com.ar';
+            try {
+              const { data: linkData } = await supabase.auth.admin.generateLink({
+                type:  'magiclink',
+                email: item.to_email,
+              });
+              if (linkData?.properties?.action_link) {
+                confirmationLink = linkData.properties.action_link;
+              }
+            } catch (_e) {
+              // Si ya confirmó o falló, enviamos Template A como fallback
+              await sendWelcomeEmail({
+                to:        item.to_email,
+                toName:    item.to_name,
+                firstName: item.payload.first_name || '',
+              });
+              await supabase.rpc('mark_email_sent', { p_id: item.id });
+              sent++;
+              continue;
+            }
+
+            await sendWelcomeVerifyEmail({
+              to:               item.to_email,
+              toName:           item.to_name,
+              firstName:        item.payload.first_name || '',
+              confirmationLink,
+            });
+          }
         }
 
         await supabase.rpc('mark_email_sent', { p_id: item.id });
