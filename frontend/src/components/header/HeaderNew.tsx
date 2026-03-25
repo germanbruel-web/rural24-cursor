@@ -43,7 +43,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch, hide
   const mobileUserMenuRef = useRef<HTMLDivElement>(null);
 
   // Logo dinámico desde site_settings (CMS), con fallback estático
-  const LOGO_PATH = useSiteSetting('header_logo', '/images/logos/rural24-dark.webp');
+  const LOGO_PATH = useSiteSetting('header_logo', 'https://res.cloudinary.com/ruralcloudinary/image/upload/v1774475353/zf3ls8uf4ssazypsdtnb.webp');
 
   // Detect scroll para sticky header
   useEffect(() => {

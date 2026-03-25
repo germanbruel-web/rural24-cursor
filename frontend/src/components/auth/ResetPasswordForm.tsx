@@ -32,7 +32,7 @@ export default function ResetPasswordForm({ onSuccess, onBack }: ResetPasswordFo
 
   if (success) {
     return (
-      <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
+      <div className="w-full bg-white rounded-xl p-8">
         <div className="text-center">
           <CheckCircle className="w-16 h-16 text-brand-600 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-brand-950 mb-2">Email Enviado</h2>
@@ -54,7 +54,7 @@ export default function ResetPasswordForm({ onSuccess, onBack }: ResetPasswordFo
   }
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
+    <div className="w-full bg-white rounded-xl p-8">
       <div className="text-center mb-8">
         <KeyRound className="w-12 h-12 text-brand-600 mx-auto mb-4" />
         <h2 className="text-3xl font-bold text-brand-950">Recuperar Contraseña</h2>

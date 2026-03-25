@@ -11,14 +11,13 @@ import { useBrowserStorage } from '../../hooks/useBrowserStorage';
 
 interface LoginFormProps {
   onSuccess?: () => void;
-  onClose?: () => void;
   onSwitchToRegister?: () => void;
   onSwitchToReset?: () => void;
 }
 
-export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSwitchToReset }: LoginFormProps) {
+export default function LoginForm({ onSuccess, onSwitchToRegister, onSwitchToReset }: LoginFormProps) {
   const { signIn, user } = useAuth();
-  const headerLogo = useSiteSetting('header_logo', '/images/logos/rural24-dark.webp');
+  const headerLogo = useSiteSetting('header_logo', 'https://res.cloudinary.com/ruralcloudinary/image/upload/v1774475353/zf3ls8uf4ssazypsdtnb.webp');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -75,25 +74,14 @@ export default function LoginForm({ onSuccess, onClose, onSwitchToRegister, onSw
   };
 
   return (
-    <div className="w-full bg-white rounded-xl shadow-lg p-4 sm:p-6">
+    <div className="w-full bg-white rounded-xl p-4 sm:p-6">
       <div className="relative text-center mb-4 sm:mb-6">
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="absolute -top-1 -right-1 p-1.5 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        )}
-        <img 
-          src={headerLogo} 
-          alt="RURAL24" 
-          className="h-7 w-auto mx-auto mb-2" 
+        <img
+          src={headerLogo}
+          alt="RURAL24"
+          className="h-14 w-auto mx-auto mb-3"
         />
-        <h2 className="text-2xl sm:text-3xl font-bold text-brand-950">Iniciar Sesión</h2>
-        <p className="text-sm sm:text-base text-gray-600 mt-1">Accede a tu cuenta de Rural24</p>
+        <h2 className="text-base font-semibold text-gray-500">Iniciar Sesión</h2>
       </div>
 
       {error && (

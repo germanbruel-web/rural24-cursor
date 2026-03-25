@@ -21,7 +21,6 @@ import FormField from '../molecules/FormField';
 
 interface RegisterFormProps {
   onSuccess?: () => void;
-  onClose?: () => void;
   onSwitchToLogin?: () => void;
 }
 
@@ -35,8 +34,8 @@ const ACTIVITY_OPTIONS: { value: Activity; label: string }[] = [
   { value: 'usuario_general', label: 'Usuario General' },
 ];
 
-export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: RegisterFormProps) {
-  const headerLogo = useSiteSetting('header_logo', '/images/logos/rural24-dark.webp');
+export default function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) {
+  const headerLogo = useSiteSetting('header_logo', 'https://res.cloudinary.com/ruralcloudinary/image/upload/v1774475353/zf3ls8uf4ssazypsdtnb.webp');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -136,15 +135,8 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
   // ── SUCCESS STATE ──
   if (success) {
     return (
-      <div className="w-full bg-white rounded-xl shadow-lg p-6">
+      <div className="w-full bg-white rounded-xl p-6">
         <div className="relative text-center">
-          {onClose && (
-            <button onClick={onClose} className="absolute -top-1 -right-1 p-1.5 hover:bg-gray-100 rounded-full transition-colors">
-              <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
           <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Mail className="w-9 h-9 text-brand-600" />
           </div>
@@ -171,23 +163,15 @@ export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: Re
 
   // ── FORM ──
   return (
-    <div className="w-full bg-white rounded-xl shadow-lg p-4 sm:p-6">
+    <div className="w-full bg-white rounded-xl p-4 sm:p-6">
       {/* Header */}
       <div className="relative text-center mb-5">
-        {onClose && (
-          <button onClick={onClose} className="absolute -top-1 -right-1 p-1.5 hover:bg-gray-100 rounded-full transition-colors">
-            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        )}
-        <img 
-          src={headerLogo} 
-          alt="RURAL24" 
-          className="h-7 w-auto mx-auto mb-2" 
+        <img
+          src={headerLogo}
+          alt="RURAL24"
+          className="h-14 w-auto mx-auto mb-3"
         />
-        <h2 className="text-2xl font-bold text-gray-900">Crear Cuenta</h2>
-        <p className="text-sm text-gray-500 mt-1">Registrate gratis en Rural24</p>
+        <h2 className="text-base font-semibold text-gray-500">Crear Cuenta</h2>
       </div>
 
       {/* Error */}

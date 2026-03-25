@@ -51,7 +51,7 @@ export default function AuthPage({ initialView = 'login', onSuccess }: AuthPageP
 
         {/* Contenido del form centrado verticalmente */}
         <div className="flex-1 flex items-center justify-center px-8 py-16">
-          <div className="w-full max-w-sm">
+          <div className="w-full max-w-md">
             {view === 'login' && (
               <LoginForm
                 onSuccess={handleSuccess}
