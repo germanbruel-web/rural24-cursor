@@ -100,53 +100,49 @@ export async function signInWithFacebook() {
  * Supabase maneja esto automáticamente, pero podemos usarlo para lógica adicional
  */
 export async function handleOAuthCallback(): Promise<{ session: any; error: any }> {
-  return new Promise((resolve) => {
-    let resolved = false;
+  try {
+    // El hash router genera URLs con doble #:
+    //   /#/auth/callback#access_token=...&refresh_token=...
+    // Supabase no detecta el token automáticamente — lo extraemos manualmente.
+    const fullHash = window.location.hash; // "#/auth/callback#access_token=..."
 
-    const finish = (session: any, error: any) => {
-      if (resolved) return;
-      resolved = true;
-      subscription?.unsubscribe();
-      resolve({ session, error });
-    };
+    const accessTokenMatch  = fullHash.match(/access_token=([^&]+)/);
+    const refreshTokenMatch = fullHash.match(/refresh_token=([^&]+)/);
 
-    // Timeout de seguridad: 12 segundos
-    const timeout = setTimeout(() => {
-      finish(null, new Error('Tiempo de espera agotado al obtener la sesión'));
-    }, 12000);
+    if (accessTokenMatch && refreshTokenMatch) {
+      const access_token  = decodeURIComponent(accessTokenMatch[1]);
+      const refresh_token = decodeURIComponent(refreshTokenMatch[1]);
 
-    // Suscribirse al evento SIGNED_IN (Supabase procesa el code PKCE en background)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        clearTimeout(timeout);
-        console.log('OAuth SIGNED_IN:', session.user.email);
+      const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
 
-        // Crear perfil si es nuevo usuario
-        const { data: existingProfile } = await supabase
-          .from('users')
-          .select('id')
-          .eq('id', session.user.id)
-          .single();
+      if (error) return { session: null, error };
+      if (!data.session?.user) return { session: null, error: new Error('Sesión vacía tras setSession') };
 
-        if (!existingProfile) {
-          await createOAuthUserProfile(session.user);
-        }
+      // Crear perfil si es nuevo usuario
+      const { data: existingProfile } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', data.session.user.id)
+        .single();
 
-        finish(session, null);
+      if (!existingProfile) {
+        await createOAuthUserProfile(data.session.user);
       }
-    });
 
-    // Intento inmediato: si la sesión ya está lista (re-login)
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (session?.user) {
-        clearTimeout(timeout);
-        finish(session, null);
-      } else if (error) {
-        clearTimeout(timeout);
-        finish(null, error);
-      }
-    });
-  });
+      // Limpiar tokens de la URL
+      window.history.replaceState(null, '', window.location.pathname + '#/auth/callback');
+
+      return { session: data.session, error: null };
+    }
+
+    // Fallback: sesión ya establecida (re-login sin token en URL)
+    const { data: { session }, error } = await supabase.auth.getSession();
+    return { session, error: error ?? null };
+
+  } catch (error: any) {
+    console.error('Exception en handleOAuthCallback:', error);
+    return { session: null, error };
+  }
 }
 
 /**
