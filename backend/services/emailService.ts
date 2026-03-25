@@ -159,6 +159,7 @@ export async function sendFeaturedActivatedEmail(data: FeaturedActivatedData): P
 
   const body = {
     fromAddress,
+    fromName:    'Rural24 - Clasificados',
     toAddress:   data.to,
     subject:     `Tu aviso "${data.adTitle.substring(0, 50)}" ya esta destacado en Rural24`,
     mailFormat:  'html',
@@ -290,6 +291,7 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
     },
     body: JSON.stringify({
       fromAddress,
+      fromName:   'Rural24 - Clasificados',
       toAddress:  data.to,
       subject:    `¡Bienvenido a Rural24, ${data.firstName || data.toName}!`,
       mailFormat: 'html',
