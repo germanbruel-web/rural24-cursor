@@ -17,6 +17,7 @@ import {
   OAuthCallbackPage,
   DashboardLayout,
 } from "./src/components";
+import AuthPage from "./src/components/auth/AuthPage";
 import { BottomNav } from "./src/components/BottomNav";
 
 // ============================================================
@@ -68,6 +69,7 @@ const SitemapSeoPanel = lazy(() => import("./src/components/admin/SitemapSeoPane
 const SuperAdminCreditsConfig = lazy(() => import("./src/components/admin/SuperAdminCreditsConfig").then(m => ({ default: m.SuperAdminCreditsConfig })));
 const HeroCmsPanel = lazy(() => import("./src/components/admin/HeroCmsPanel"));
 const HomeSectionBuilder = lazy(() => import("./src/components/admin/HomeSectionBuilder"));
+const OnboardingSlidesAdmin = lazy(() => import("./src/components/admin/OnboardingSlidesAdmin"));
 
 // Dashboard Components (solo para usuarios autenticados)
 const MessagesPanel = lazy(() => import("./src/components/dashboard/MessagesPanel").then(m => ({ default: m.MessagesPanel })));
@@ -109,7 +111,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'servicios' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'home-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard' | 'editar-aviso' | 'sync-panel';
+export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'servicios' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'home-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard' | 'editar-aviso' | 'sync-panel' | 'login' | 'register' | 'onboarding-cms';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -139,6 +141,8 @@ const AppContent: React.FC = () => {
     
     if (hash.startsWith('#/auth/confirm')) return 'email-confirm';
     if (hash.startsWith('#/auth/callback')) return 'auth-callback';
+    if (hash === '#/login') return 'login';
+    if (hash === '#/register') return 'register';
     if (hash === '#/preguntas-frecuentes-rural24' || hash === '#/how-it-works') return 'how-it-works';
     if (hash === '#/servicios-rural24') return 'servicios';
     if (hash === '#/contacto-rural24') return 'contact';
@@ -179,6 +183,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/dashboard/sitemap-seo') return 'sitemap-seo';
     if (hash === '#/hero-cms') return 'hero-cms';
     if (hash === '#/home-cms') return 'home-cms';
+    if (hash === '#/onboarding-cms') return 'onboarding-cms';
     if (hash === '#/payment-result') return 'payment-result';
     if (hash === '#/featured-checkout') return 'featured-checkout';
     if (hash === '#/profile') return 'profile';
@@ -283,7 +288,6 @@ const AppContent: React.FC = () => {
   const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
   const [adToEdit, setAdToEdit] = useState<Ad | undefined>(undefined);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login');
   
   // Estado global para el límite de avisos destacados en HomePage (desde Config Global)
   const [homepageFeaturedLimit, setHomepageFeaturedLimit] = useState<number | null>(null);
@@ -305,6 +309,11 @@ const AppContent: React.FC = () => {
         return;
       }
       
+      // Auth pages
+      if (hash === '#/login') { navigateToPage('login'); return; }
+      if (hash === '#/register') { navigateToPage('register'); return; }
+      if (hash === '#/onboarding-cms') { navigateToPage('onboarding-cms'); return; }
+
       // Routing para confirmación de email
       if (hash.startsWith('#/auth/confirm')) {
         navigateToPage('email-confirm');
@@ -486,13 +495,14 @@ const AppContent: React.FC = () => {
     loadAllBanners();
   }, [isMobile]);
 
-  // Listener para abrir modal de autenticación desde eventos personalizados
+  // Listener para abrir auth — navega a #/login o #/register (página split layout)
   React.useEffect(() => {
     const handleOpenAuthModal = (e: CustomEvent) => {
       const { view } = e.detail || {};
-      if (view === 'login' || view === 'register') {
-        setAuthModalView(view);
-        setShowAuthModal(true);
+      if (view === 'register') {
+        window.location.hash = '#/register';
+      } else {
+        window.location.hash = '#/login';
       }
     };
 
@@ -615,12 +625,12 @@ const AppContent: React.FC = () => {
   }
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'favorites', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'design-system', 'mis-empresas', 'sync-panel'].includes(currentPage);
+  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'favorites', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'onboarding-cms', 'design-system', 'mis-empresas', 'sync-panel'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
     // Esperar a que cargue el perfil antes de verificar permisos en páginas protegidas
-    const isProtectedPage = ['users', 'banners', 'coupons', 'credits-config', 'settings', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'design-system'].includes(currentPage);
+    const isProtectedPage = ['users', 'banners', 'coupons', 'credits-config', 'settings', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'onboarding-cms', 'design-system'].includes(currentPage);
     
     if (authLoading && isProtectedPage) {
       return (
@@ -690,6 +700,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'sitemap-seo' && canAccessPage('sitemap-seo', profile?.role) && <SitemapSeoPanel />}
                 {currentPage === 'hero-cms' && canAccessPage('hero-cms', profile?.role) && <HeroCmsPanel />}
                 {currentPage === 'home-cms' && canAccessPage('home-cms', profile?.role) && <HomeSectionBuilder />}
+                {currentPage === 'onboarding-cms' && canAccessPage('onboarding-cms', profile?.role) && <OnboardingSlidesAdmin />}
                 {currentPage === 'credits-config' && canAccessPage('credits-config', profile?.role) && <SuperAdminCreditsConfig />}
                 {currentPage === 'mis-empresas' && canAccessPage('mis-empresas', profile?.role) && <MisEmpresasPanel />}
                 {currentPage === 'dashboard' && <DashboardPanel />}
@@ -706,6 +717,14 @@ const AppContent: React.FC = () => {
           </DashboardLayout>
         </div>
     );
+  }
+
+  // Páginas de autenticación — split layout con carrusel onboarding
+  if (currentPage === 'login') {
+    return <AuthPage initialView="login" onSuccess={() => navigateToPage('home')} />;
+  }
+  if (currentPage === 'register') {
+    return <AuthPage initialView="register" onSuccess={() => navigateToPage('home')} />;
   }
 
   // Página de confirmación de email
