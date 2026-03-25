@@ -853,11 +853,6 @@ const AppContent: React.FC = () => {
         <Suspense fallback={<LoadingFallback />}>
           <PublicarAviso />
         </Suspense>
-        <AuthModal 
-          isOpen={showAuthModal} 
-          onClose={() => setShowAuthModal(false)}
-          initialView={authModalView}
-        />
       </div>
     );
   }
@@ -880,11 +875,6 @@ const AppContent: React.FC = () => {
         <Suspense fallback={<LoadingFallback />}>
           <HowItWorksPage />
         </Suspense>
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          initialView="register"
-        />
       </div>
     );
   }
@@ -990,7 +980,7 @@ const AppContent: React.FC = () => {
         // VISTA DE INICIO - Lazy loaded
         <Suspense fallback={<LoadingFallback />}>
           <HomePage 
-            onShowAuthModal={() => setShowAuthModal(true)}
+            onShowAuthModal={() => { window.location.hash = '#/login'; }}
             onSearch={handleAdvancedSearch}
             onCategoryHover={setHoveredCategory}
             onBannerChange={setCurrentBanner}
