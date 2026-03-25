@@ -1,40 +1,57 @@
 /**
  * Email Service — Rural24
- * Transporte SMTP via Zoho Mail (Plan Forever Free).
- * Usa nodemailer — sin SDKs propietarios.
+ * Envío via Zoho Mail REST API (HTTPS) — sin SMTP, funciona en Render Free.
  *
  * Variables de entorno requeridas:
- *   SMTP_HOST   smtp.zoho.com
- *   SMTP_PORT   465
- *   SMTP_USER   info@rural24.com.ar
- *   SMTP_PASS   contraseña de la cuenta Zoho
+ *   ZOHO_CLIENT_ID      — Client ID de la app Self-Client en api-console.zoho.com
+ *   ZOHO_CLIENT_SECRET  — Client Secret
+ *   ZOHO_REFRESH_TOKEN  — Refresh token (no expira)
+ *   ZOHO_ACCOUNT_ID     — ID numérico de la cuenta Zoho Mail
+ *   ZOHO_FROM_EMAIL     — info@rural24.com.ar
  */
 
-import nodemailer from 'nodemailer';
 import { logger } from '@/infrastructure/logger';
 
-// ── Transporte ────────────────────────────────────────────────
+const ZOHO_TOKEN_URL   = 'https://accounts.zoho.com/oauth/v2/token';
+const ZOHO_MAIL_URL    = 'https://mail.zoho.com/api/accounts';
 
-let _transporter: nodemailer.Transporter | null = null;
+// ── Cache de access token (expira en 1 hora) ──────────────────
+let _accessToken: string | null = null;
+let _tokenExpiresAt = 0;
 
-function getTransporter(): nodemailer.Transporter {
-  if (_transporter) return _transporter;
+async function getAccessToken(): Promise<string> {
+  if (_accessToken && Date.now() < _tokenExpiresAt - 60_000) {
+    return _accessToken;
+  }
 
-  _transporter = nodemailer.createTransport({
-    host:   process.env.SMTP_HOST  || 'smtp.zoho.com',
-    port:   parseInt(process.env.SMTP_PORT || '465'),
-    secure: true, // SSL en puerto 465
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    pool: true,       // reutiliza conexiones
-    maxConnections: 3,
-    rateDelta: 1000,  // máx 1 email/seg (límite Zoho)
-    rateLimit: 1,
+  const { ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_REFRESH_TOKEN } = process.env;
+  if (!ZOHO_CLIENT_ID || !ZOHO_CLIENT_SECRET || !ZOHO_REFRESH_TOKEN) {
+    throw new Error('Zoho OAuth no configurado — agregar ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_REFRESH_TOKEN en Render');
+  }
+
+  const params = new URLSearchParams({
+    grant_type:    'refresh_token',
+    client_id:     ZOHO_CLIENT_ID,
+    client_secret: ZOHO_CLIENT_SECRET,
+    refresh_token: ZOHO_REFRESH_TOKEN,
   });
 
-  return _transporter;
+  const res = await fetch(ZOHO_TOKEN_URL, {
+    method: 'POST',
+    body:   params,
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Zoho token refresh fallido: ${err}`);
+  }
+
+  const data = await res.json();
+  _accessToken    = data.access_token;
+  _tokenExpiresAt = Date.now() + (data.expires_in * 1000);
+
+  logger.info('[Email] Zoho access token renovado');
+  return _accessToken!;
 }
 
 // ── Tipos ────────────────────────────────────────────────────
@@ -47,7 +64,7 @@ export interface FeaturedActivatedData {
   expiresAt: string;
 }
 
-// ── Templates ─────────────────────────────────────────────────
+// ── Template HTML ─────────────────────────────────────────────
 
 function templateFeaturedActivated(d: FeaturedActivatedData): string {
   const expires = new Date(d.expiresAt).toLocaleDateString('es-AR', {
@@ -60,7 +77,6 @@ function templateFeaturedActivated(d: FeaturedActivatedData): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tu aviso está destacado</title>
 </head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
@@ -68,16 +84,14 @@ function templateFeaturedActivated(d: FeaturedActivatedData): string {
       <td align="center">
         <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
 
-          <!-- Header -->
           <tr>
             <td style="background:#65a30d;padding:28px 32px;">
-              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:-0.3px;">
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:bold;">
                 Rural<span style="background:#ffffff;color:#65a30d;border-radius:4px;padding:0 5px;margin-left:2px;">24</span>
               </h1>
             </td>
           </tr>
 
-          <!-- Cuerpo -->
           <tr>
             <td style="padding:32px;">
               <p style="margin:0 0 8px;color:#6b7280;font-size:14px;">Hola, <strong style="color:#111827;">${d.toName}</strong></p>
@@ -85,7 +99,6 @@ function templateFeaturedActivated(d: FeaturedActivatedData): string {
                 ¡Tu aviso ya está destacado!
               </h2>
 
-              <!-- Card del aviso -->
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:24px;">
                 <tr>
                   <td style="padding:16px 20px;">
@@ -98,12 +111,10 @@ function templateFeaturedActivated(d: FeaturedActivatedData): string {
                 </tr>
               </table>
 
-              <!-- CTA -->
               <table cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="background:#65a30d;border-radius:8px;">
-                    <a href="${adUrl}"
-                       style="display:inline-block;padding:12px 28px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;">
+                    <a href="${adUrl}" style="display:inline-block;padding:12px 28px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;">
                       Ver mi aviso
                     </a>
                   </td>
@@ -112,12 +123,11 @@ function templateFeaturedActivated(d: FeaturedActivatedData): string {
 
               <p style="margin:24px 0 0;font-size:13px;color:#6b7280;line-height:1.6;">
                 Tu aviso aparecerá en los primeros lugares de búsqueda y en la página de inicio
-                hasta la fecha indicada. Si tenés alguna duda, respondé este correo.
+                hasta la fecha indicada.
               </p>
             </td>
           </tr>
 
-          <!-- Footer -->
           <tr>
             <td style="padding:20px 32px;border-top:1px solid #f3f4f6;">
               <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
@@ -135,37 +145,51 @@ function templateFeaturedActivated(d: FeaturedActivatedData): string {
 </html>`;
 }
 
-// ── Funciones de envío ────────────────────────────────────────
+// ── Envío ─────────────────────────────────────────────────────
 
-/**
- * Envía email de destacado activado.
- * Lanza error en caso de fallo para que el caller registre el mensaje real.
- */
 export async function sendFeaturedActivatedEmail(data: FeaturedActivatedData): Promise<void> {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    throw new Error('SMTP no configurado — agregar SMTP_USER y SMTP_PASS en Render');
+  const accountId   = process.env.ZOHO_ACCOUNT_ID;
+  const fromAddress = process.env.ZOHO_FROM_EMAIL || 'info@rural24.com.ar';
+
+  if (!accountId) {
+    throw new Error('ZOHO_ACCOUNT_ID no configurado en Render');
   }
 
-  const transporter = getTransporter();
-  await transporter.sendMail({
-    from:    `"Rural24" <${process.env.SMTP_USER}>`,
-    to:      data.to,
-    subject: `Tu aviso "${data.adTitle.substring(0, 50)}" ya esta destacado`,
-    html:    templateFeaturedActivated(data),
+  const token = await getAccessToken();
+
+  const body = {
+    fromAddress,
+    toAddress:   data.to,
+    subject:     `Tu aviso "${data.adTitle.substring(0, 50)}" ya esta destacado en Rural24`,
+    mailFormat:  'html',
+    content:     templateFeaturedActivated(data),
+  };
+
+  const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
+    method:  'POST',
+    headers: {
+      'Authorization': `Zoho-oauthtoken ${token}`,
+      'Content-Type':  'application/json',
+    },
+    body: JSON.stringify(body),
   });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Zoho Mail API error ${res.status}: ${err}`);
+  }
+
   logger.info(`[Email] Enviado featured_activated → ${data.to}`);
 }
 
-// ── Verificar conexión SMTP ───────────────────────────────────
+// ── Verificar configuración ───────────────────────────────────
 
-export async function verifySMTPConnection(): Promise<boolean> {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return false;
+export async function verifyZohoConfig(): Promise<boolean> {
   try {
-    await getTransporter().verify();
-    logger.info('[Email] Conexión SMTP verificada OK');
+    await getAccessToken();
     return true;
   } catch (error: any) {
-    logger.error('[Email] Error verificando SMTP:', error.message);
+    logger.error('[Email] Zoho config inválida:', error.message);
     return false;
   }
 }
