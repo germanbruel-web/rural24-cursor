@@ -58,10 +58,8 @@ export async function POST(request: NextRequest) {
     // 2. Enviar cada email
     for (const item of items as QueueItem[]) {
       try {
-        let ok = false;
-
         if (item.type === 'featured_activated') {
-          ok = await sendFeaturedActivatedEmail({
+          await sendFeaturedActivatedEmail({
             to:        item.to_email,
             toName:    item.to_name,
             adTitle:   item.payload.ad_title  || 'Tu aviso',
@@ -70,13 +68,8 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        if (ok) {
-          await supabase.rpc('mark_email_sent',   { p_id: item.id });
-          sent++;
-        } else {
-          await supabase.rpc('mark_email_failed', { p_id: item.id, p_error: 'sendMail returned false' });
-          failed++;
-        }
+        await supabase.rpc('mark_email_sent', { p_id: item.id });
+        sent++;
       } catch (err: any) {
         logger.error(`[EmailQueue] Error procesando ${item.id}:`, err.message);
         await supabase.rpc('mark_email_failed', { p_id: item.id, p_error: err.message });

@@ -137,28 +137,23 @@ function templateFeaturedActivated(d: FeaturedActivatedData): string {
 
 // ── Funciones de envío ────────────────────────────────────────
 
-export async function sendFeaturedActivatedEmail(data: FeaturedActivatedData): Promise<boolean> {
-  const smtpConfigured = process.env.SMTP_USER && process.env.SMTP_PASS;
-
-  if (!smtpConfigured) {
-    logger.warn('[Email] SMTP no configurado — email omitido (configurar SMTP_USER + SMTP_PASS)');
-    return false;
+/**
+ * Envía email de destacado activado.
+ * Lanza error en caso de fallo para que el caller registre el mensaje real.
+ */
+export async function sendFeaturedActivatedEmail(data: FeaturedActivatedData): Promise<void> {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    throw new Error('SMTP no configurado — agregar SMTP_USER y SMTP_PASS en Render');
   }
 
-  try {
-    const transporter = getTransporter();
-    await transporter.sendMail({
-      from:    `"Rural24" <${process.env.SMTP_USER}>`,
-      to:      data.to,
-      subject: `✅ Tu aviso "${data.adTitle.substring(0, 50)}" ya está destacado`,
-      html:    templateFeaturedActivated(data),
-    });
-    logger.info(`[Email] Enviado featured_activated → ${data.to}`);
-    return true;
-  } catch (error: any) {
-    logger.error(`[Email] Error enviando a ${data.to}:`, error.message);
-    return false;
-  }
+  const transporter = getTransporter();
+  await transporter.sendMail({
+    from:    `"Rural24" <${process.env.SMTP_USER}>`,
+    to:      data.to,
+    subject: `Tu aviso "${data.adTitle.substring(0, 50)}" ya esta destacado`,
+    html:    templateFeaturedActivated(data),
+  });
+  logger.info(`[Email] Enviado featured_activated → ${data.to}`);
 }
 
 // ── Verificar conexión SMTP ───────────────────────────────────
