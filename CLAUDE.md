@@ -166,7 +166,7 @@ Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
 | Chat-B | Notificación vendedor + enmascarado datos sensibles | ✅ 2026-03-18 |
 | UX-Mobile | BottomNav 80px + safe-area, 5 tabs (FAB Publicar + Chat + Alertas) | ✅ 2026-03-18 |
 | UX-Desktop | Header: campanita reemplaza Favoritos, Chat abre overlay inline | ✅ 2026-03-18 |
-| 7C | ProductCard badge INSUMO/SERVICIO + price_unit + completeness bar | Pendiente |
+| 7C | ProductCard badge INSUMO/SERVICIO + price_unit + completeness bar | ✅ Ya implementado (verificado 2026-03-24) |
 | 3D.6 | Notificación al activar Destacado (pg_cron → email) | Pendiente |
 
 ## TAXONOMÍA (Sprint 7B — decisión de producto)
