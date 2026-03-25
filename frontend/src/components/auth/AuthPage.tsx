@@ -37,8 +37,8 @@ export default function AuthPage({ initialView = 'login', onSuccess }: AuthPageP
   return (
     <div className="fixed inset-0 z-50 bg-white flex">
 
-      {/* ── Panel izquierdo: formulario ────────────────────────── */}
-      <div className="relative flex flex-col w-full lg:w-[480px] xl:w-[520px] flex-shrink-0 overflow-y-auto">
+      {/* ── Panel izquierdo: formulario (50% desktop, 100% mobile) ── */}
+      <div className="relative flex flex-col w-full lg:w-1/2 overflow-y-auto">
 
         {/* Botón cerrar */}
         <button
@@ -77,8 +77,8 @@ export default function AuthPage({ initialView = 'login', onSuccess }: AuthPageP
         </div>
       </div>
 
-      {/* ── Panel derecho: carrusel onboarding (solo desktop) ─── */}
-      <div className="hidden lg:block flex-1 relative">
+      {/* ── Panel derecho: carrusel onboarding (50% desktop, oculto mobile) ── */}
+      <div className="hidden lg:block lg:w-1/2 relative">
         <OnboardingCarousel />
       </div>
 
