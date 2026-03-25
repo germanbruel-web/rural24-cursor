@@ -178,22 +178,20 @@ export async function createOAuthUserProfile(user: any, providerOverride?: 'goog
         last_name: lastName || null,
         full_name: fullName || user.email?.split('@')[0] || 'Usuario',
         avatar_url: metadata.avatar_url || metadata.picture || null,
-        account_type: 'persona', // Por defecto, pueden cambiarlo después
         user_type: 'particular',
         subscription_plan_id: freePlan?.id || null,
         email_verified: user.email_confirmed_at ? true : false,
-        oauth_provider: provider,
       }, {
         onConflict: 'id',
       });
 
     if (error) {
       console.error('Error creando perfil OAuth:', error);
-    } else {
-      console.log('Perfil OAuth creado para:', user.email);
+      throw new Error(`No se pudo crear el perfil: ${error.message}`);
     }
   } catch (error) {
     console.error('Exception creando perfil OAuth:', error);
+    throw error;
   }
 }
 

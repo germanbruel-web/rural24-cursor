@@ -6,9 +6,9 @@
  * Supabase maneja el token automáticamente y redirige al usuario.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { handleOAuthCallback, createOAuthUserProfile } from '../../services/socialAuthService';
+import { handleOAuthCallback } from '../../services/socialAuthService';
 import { useAuth } from '../../contexts/AuthContext';
 import { navigateTo } from '../../hooks/useNavigate';
 import { setJustLoggedIn } from '../../utils/profileCompleteness';
@@ -22,13 +22,18 @@ export default function OAuthCallbackPage({ onComplete, onError }: OAuthCallback
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Procesando autenticación...');
   const { refreshProfile } = useAuth();
+  const processed = useRef(false);
 
   useEffect(() => {
+    // Ejecutar una sola vez aunque las props cambien entre renders
+    if (processed.current) return;
+    processed.current = true;
+
     const processCallback = async () => {
       try {
-        // 1. Manejar el callback de OAuth y obtener la sesión
+        // handleOAuthCallback extrae tokens, llama setSession() y crea perfil si es nuevo
         const { session, error } = await handleOAuthCallback();
-        
+
         if (error) {
           console.error('❌ Error en OAuth callback:', error);
           setStatus('error');
@@ -44,20 +49,13 @@ export default function OAuthCallbackPage({ onComplete, onError }: OAuthCallback
           return;
         }
 
-        // 2. Crear perfil en la tabla users si es nuevo
-        const provider = session.user.app_metadata?.provider as 'google' | 'facebook' | undefined;
-        if (provider) {
-          await createOAuthUserProfile(session.user, provider);
-        }
-
-        // 3. Refrescar el perfil en el contexto
+        // Refrescar el perfil en el contexto
         await refreshProfile();
 
         setStatus('success');
         setMessage('¡Autenticación exitosa! Redirigiendo...');
 
-        // 4. Redirigir al perfil después de un breve delay
-        setJustLoggedIn(); // Flag para nudge de perfil
+        setJustLoggedIn();
         setTimeout(() => {
           navigateTo('/profile');
           onComplete?.();
@@ -72,7 +70,7 @@ export default function OAuthCallbackPage({ onComplete, onError }: OAuthCallback
     };
 
     processCallback();
-  }, [onComplete, onError, refreshProfile]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
