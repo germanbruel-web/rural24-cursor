@@ -182,6 +182,129 @@ export async function sendFeaturedActivatedEmail(data: FeaturedActivatedData): P
   logger.info(`[Email] Enviado featured_activated → ${data.to}`);
 }
 
+// ── Welcome email ─────────────────────────────────────────────
+
+export interface WelcomeEmailData {
+  to:        string;
+  toName:    string;
+  firstName: string;
+}
+
+function templateWelcome(d: WelcomeEmailData): string {
+  const name = d.firstName || d.toName || 'Agricultor';
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+
+          <tr>
+            <td style="background:#65a30d;padding:28px 32px;">
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:bold;">
+                Rural<span style="background:#ffffff;color:#65a30d;border-radius:4px;padding:0 5px;margin-left:2px;">24</span>
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 8px;color:#6b7280;font-size:14px;">Hola, <strong style="color:#111827;">${name}</strong></p>
+              <h2 style="margin:0 0 16px;color:#111827;font-size:22px;font-weight:bold;line-height:1.3;">
+                ¡Bienvenido a Rural24!
+              </h2>
+              <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+                Ya sos parte de la comunidad de clasificados agrarios más grande de Argentina.
+                Publicá tus avisos, encontrá lo que necesitás y conectate con productores de todo el país.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr>
+                  <td width="33%" style="padding:12px;background:#f9fafb;border-radius:8px;text-align:center;vertical-align:top;">
+                    <p style="margin:0 0 4px;font-size:20px;">🌾</p>
+                    <p style="margin:0;font-size:12px;font-weight:bold;color:#111827;">Publicá gratis</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#6b7280;">Hacienda, insumos y maquinaria</p>
+                  </td>
+                  <td width="4%"></td>
+                  <td width="33%" style="padding:12px;background:#f9fafb;border-radius:8px;text-align:center;vertical-align:top;">
+                    <p style="margin:0 0 4px;font-size:20px;">🔍</p>
+                    <p style="margin:0;font-size:12px;font-weight:bold;color:#111827;">Buscá avisos</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#6b7280;">Filtrá por provincia y precio</p>
+                  </td>
+                  <td width="4%"></td>
+                  <td width="33%" style="padding:12px;background:#f9fafb;border-radius:8px;text-align:center;vertical-align:top;">
+                    <p style="margin:0 0 4px;font-size:20px;">⭐</p>
+                    <p style="margin:0;font-size:12px;font-weight:bold;color:#111827;">Destacá</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#6b7280;">Aparecé primero en búsquedas</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background:#65a30d;border-radius:8px;">
+                    <a href="https://rural24.com.ar" style="display:inline-block;padding:12px 28px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;">
+                      Ir a Rural24
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:20px 32px;border-top:1px solid #f3f4f6;">
+              <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
+                Rural24 — Clasificados Agrarios de Argentina<br>
+                <a href="https://rural24.com.ar" style="color:#65a30d;text-decoration:none;">rural24.com.ar</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
+  const accountId   = process.env.ZOHO_ACCOUNT_ID;
+  const fromAddress = process.env.ZOHO_FROM_EMAIL || 'info@rural24.com.ar';
+
+  if (!accountId) throw new Error('ZOHO_ACCOUNT_ID no configurado en Render');
+
+  const token = await getAccessToken();
+
+  const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
+    method:  'POST',
+    headers: {
+      'Authorization': `Zoho-oauthtoken ${token}`,
+      'Content-Type':  'application/json',
+    },
+    body: JSON.stringify({
+      fromAddress,
+      toAddress:  data.to,
+      subject:    `¡Bienvenido a Rural24, ${data.firstName || data.toName}!`,
+      mailFormat: 'html',
+      content:    templateWelcome(data),
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Zoho Mail API error ${res.status}: ${err}`);
+  }
+
+  logger.info(`[Email] Enviado welcome → ${data.to}`);
+}
+
 // ── Verificar configuración ───────────────────────────────────
 
 export async function verifyZohoConfig(): Promise<boolean> {

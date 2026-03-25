@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/infrastructure/supabase/client';
-import { sendFeaturedActivatedEmail } from '@/services/emailService';
+import { sendFeaturedActivatedEmail, sendWelcomeEmail } from '@/services/emailService';
 import { logger } from '@/infrastructure/logger';
 
 const CRON_SECRET  = process.env.CRON_SECRET;
@@ -65,6 +65,12 @@ export async function POST(request: NextRequest) {
             adTitle:   item.payload.ad_title  || 'Tu aviso',
             adSlug:    item.payload.ad_slug   || item.payload.ad_id,
             expiresAt: item.payload.expires_at,
+          });
+        } else if (item.type === 'welcome') {
+          await sendWelcomeEmail({
+            to:        item.to_email,
+            toName:    item.to_name,
+            firstName: item.payload.first_name || '',
           });
         }
 
