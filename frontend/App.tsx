@@ -1024,11 +1024,10 @@ const AppContent: React.FC = () => {
       {/* Footer Principal Dinámico */}
       <Footer onCategoryClick={(category) => handleAdvancedSearch({ categories: [category] })} />
 
-      {/* Modal de Autenticación Global */}
+      {/* Modal de Autenticación Global (fallback legacy) */}
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        initialView={authModalView}
       />
 
     </div>
