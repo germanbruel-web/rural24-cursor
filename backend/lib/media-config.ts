@@ -36,7 +36,7 @@ export type MediaEntity = 'ads' | 'users' | 'machinery' | 'properties';
 export const MEDIA_ENTITIES: MediaEntity[] = ['ads', 'users', 'machinery', 'properties'];
 
 /** Carpetas CMS que se separan por entorno */
-export const CMS_FOLDERS = ['banners', 'cms', 'system', 'categories', 'logos', 'hero', 'sections'] as const;
+export const CMS_FOLDERS = ['banners', 'cms', 'system', 'categories', 'logos', 'hero', 'sections', 'email-media'] as const;
 
 /** Carpetas de assets de app (sin prefijo de entorno) */
 export const APP_FOLDERS = ['app-icons', 'app-logos', 'app-placeholders', 'app-brands'] as const;
