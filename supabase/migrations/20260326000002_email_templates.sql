@@ -17,6 +17,7 @@ COMMENT ON TABLE public.email_templates IS 'Plantillas de email editables desde 
 -- RLS: solo service_role puede escribir; lectura desde backend (service_role)
 ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "service_role_all" ON public.email_templates;
 CREATE POLICY "service_role_all" ON public.email_templates
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
@@ -29,6 +30,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_email_templates_updated_at ON public.email_templates;
 CREATE TRIGGER trg_email_templates_updated_at
   BEFORE UPDATE ON public.email_templates
   FOR EACH ROW EXECUTE FUNCTION public.set_email_templates_updated_at();

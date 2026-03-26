@@ -18,5 +18,6 @@ COMMENT ON TABLE public.email_media IS 'Imágenes subidas a Cloudinary para usar
 
 ALTER TABLE public.email_media ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "service_role_all" ON public.email_media;
 CREATE POLICY "service_role_all" ON public.email_media
   FOR ALL TO service_role USING (true) WITH CHECK (true);

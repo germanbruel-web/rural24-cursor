@@ -59,6 +59,9 @@ ON CONFLICT DO NOTHING;
 -- RLS: público puede leer slides activos
 ALTER TABLE public.onboarding_slides ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "onboarding_slides_public_read" ON public.onboarding_slides;
+DROP POLICY IF EXISTS "onboarding_slides_superadmin_all" ON public.onboarding_slides;
+
 CREATE POLICY "onboarding_slides_public_read"
   ON public.onboarding_slides FOR SELECT
   USING (is_active = true);
