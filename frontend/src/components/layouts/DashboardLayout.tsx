@@ -34,6 +34,7 @@ import {
   Store,
   Palette,
   Building2,
+  Mail,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -116,6 +117,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     // Configuración
     'hero-cms': <Sparkles className="w-5 h-5" />,
     'backend-settings': <SettingsIcon className="w-5 h-5" />,
+    'email-templates-admin': <Mail className="w-5 h-5" />,
     'global-settings': <SettingsIcon className="w-5 h-5" />,
     'sitemap-seo': <Globe className="w-5 h-5" />,
     'design-system': <Palette className="w-5 h-5" />,

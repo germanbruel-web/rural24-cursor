@@ -234,6 +234,11 @@ export const MENU_STRUCTURE: MenuItem[] = [
     allowedRoles: ['superadmin'],
   },
   {
+    id: 'email-templates-admin',
+    label: 'Plantillas Email',
+    allowedRoles: ['superadmin'],
+  },
+  {
     id: 'global-settings',
     label: 'Config Global',
     allowedRoles: ['superadmin'],
