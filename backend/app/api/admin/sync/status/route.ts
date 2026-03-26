@@ -20,7 +20,7 @@ const { Client } = pkg;
 
 const REPO_ROOT      = path.resolve(process.cwd(), '..');
 const MIGRATIONS_DIR = path.join(REPO_ROOT, 'supabase', 'migrations');
-const CONFIG_TABLES  = ['categories', 'global_settings', 'global_config', 'home_sections', 'cms_hero_images', 'hero_images', 'banners_clean', 'form_templates_v2', 'form_fields_v2', 'wizard_configs'];
+const CONFIG_TABLES  = ['categories', 'global_settings', 'global_config', 'home_sections', 'cms_hero_images', 'hero_images', 'banners_clean', 'form_templates_v2', 'form_fields_v2', 'wizard_configs', 'option_lists', 'option_list_items'];
 
 interface CommitInfo { sha: string; message: string }
 
