@@ -4,16 +4,17 @@
 // Cada bloque lee del WizardBlockProps lo que necesita
 // ============================================================
 
-import React from 'react';
 import type { WizardBlock } from '../../services/v2/wizardConfigService';
 import type { WizardBlockProps } from './wizardTypes';
 
 import { PriceBlock }           from './blocks/PriceBlock';
-import { LocationBlock }         from './blocks/LocationBlock';
-import { ImagesBlock }           from './blocks/ImagesBlock';
+import { LocationBlock }        from './blocks/LocationBlock';
+import { ImagesBlock }          from './blocks/ImagesBlock';
 import { TitleDescriptionBlock } from './blocks/TitleDescriptionBlock';
-import { DynamicFieldsBlock }    from './blocks/DynamicFieldsBlock';
-import { EmpresaSelectorBlock }  from './blocks/EmpresaSelectorBlock';
+import { DynamicFieldsBlock }   from './blocks/DynamicFieldsBlock';
+import { EmpresaSelectorBlock } from './blocks/EmpresaSelectorBlock';
+import { ColorPickerBlock }     from './blocks/ColorPickerBlock';
+import { AvatarUploadBlock }   from './blocks/AvatarUploadBlock';
 
 interface Props {
   block: WizardBlock;
@@ -28,17 +29,12 @@ export function BlockRenderer({ block, wizardProps: p }: Props) {
         <DynamicFieldsBlock
           categoryId={p.categoryId}
           subcategoryId={p.subcategoryId}
-          categoryDisplayName={p.categoryDisplayName}
           subcategoryDisplayName={p.subcategoryDisplayName}
-          selectedPageType={p.selectedPageType}
           attributeValues={p.attributeValues}
           onAttributeChange={p.onAttributeChange}
           expandedGroup={p.expandedGroup}
           onGroupToggle={p.onGroupToggle}
           completedGroups={p.completedGroups}
-          categories={p.categories}
-          subcategories={p.subcategories}
-          onChangeCategory={p.onChangeCategory}
         />
       );
 
@@ -60,6 +56,8 @@ export function BlockRenderer({ block, wizardProps: p }: Props) {
           priceUnit={p.priceUnit}
           setPriceUnit={p.setPriceUnit}
           priceUnitOptions={p.priceUnitOptions}
+          priceType={p.priceType}
+          setPriceType={p.setPriceType}
           config={block.config}
         />
       );
@@ -97,6 +95,22 @@ export function BlockRenderer({ block, wizardProps: p }: Props) {
           onDescriptionChange={p.onDescriptionChange}
           autoFillContext={p.autoFillContext}
           config={block.config}
+        />
+      );
+
+    case 'color_picker':
+      return (
+        <ColorPickerBlock
+          bgColor={p.bgColor}
+          setBgColor={p.setBgColor}
+        />
+      );
+
+    case 'avatar_upload':
+      return (
+        <AvatarUploadBlock
+          avatarUrl={p.avatarUrl}
+          setAvatarUrl={p.setAvatarUrl}
         />
       );
 

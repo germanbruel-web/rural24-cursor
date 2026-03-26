@@ -32,6 +32,8 @@ export interface WizardBlockProps {
   priceUnit: string;
   setPriceUnit: (v: string) => void;
   priceUnitOptions: { value: string; label: string }[];
+  priceType: string;
+  setPriceType: (v: string) => void;
 
   // ── Location ─────────────────────────────────────────────
   province: string;
@@ -53,6 +55,14 @@ export interface WizardBlockProps {
   onTitleChange: (v: string) => void;
   onDescriptionChange: (v: string) => void;
   autoFillContext: AutoFillContext;
+
+  // ── Color picker ─────────────────────────────────────────
+  bgColor: string;
+  setBgColor: (v: string) => void;
+
+  // ── Avatar upload ─────────────────────────────────────────
+  avatarUrl: string;
+  setAvatarUrl: (v: string) => void;
 
   // ── Empresa selector ─────────────────────────────────────
   selectedBusinessProfileId: string | null;

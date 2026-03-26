@@ -15,6 +15,7 @@ import { DEFAULT_PLACEHOLDER_IMAGE } from '../../constants/defaultImages';
 interface CMSImage {
   name: string;
   url: string;
+  public_id: string;
   size: number;
   created_at: string;
 }
@@ -54,7 +55,7 @@ export const CMSImagesGallery: React.FC = () => {
 
     try {
       setDeleting(image.name);
-      const success = await deleteCMSImage(image.url);
+      const success = await deleteCMSImage(image.public_id);
       
       toast.hide(loadingToast);
       

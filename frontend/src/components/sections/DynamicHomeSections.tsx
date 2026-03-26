@@ -37,6 +37,9 @@ interface AdItem {
   attributes?: Record<string, unknown>;
   status: string;
   featured_expires_at?: string;
+  categories?: { slug: string } | null;
+  user_id?: string;
+  users?: { avatar_url: string | null } | null;
 }
 
 // Contexto para habilitar countdown de vencimiento de destacados
@@ -130,7 +133,7 @@ function useAds(section: HomeSection) {
       try {
         let query = supabase
           .from('ads')
-          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, subcategories(display_name)')
+          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name), categories(slug)')
           .eq('status', 'active')
           .limit(limit);
 
@@ -207,7 +210,7 @@ function useAds(section: HomeSection) {
         }
 
         const { data } = await query.order('created_at', { ascending: false });
-        const adsData = (data ?? []) as AdItem[];
+        const adsData = (data ?? []) as unknown as AdItem[];
 
         // Enriquecer con expires_at de featured_ads (solo si countdown habilitado)
         if (countdownEnabled && adsData.length > 0) {
@@ -287,9 +290,17 @@ function AdsSubLabel({ count, featured = false }: { count: number; featured?: bo
 
 // ---- Helper: AdItem → product prop de ProductCard ----
 
+function resolveJoin<T>(val: T | T[] | null | undefined): T | null {
+  if (!val) return null;
+  return Array.isArray(val) ? (val[0] ?? null) : val;
+}
+
 function adToProduct(ad: AdItem): Product {
   const firstImage = ad.images?.[0];
   const imageUrl = typeof firstImage === 'string' ? firstImage : ((firstImage as any)?.url ?? '');
+  const cats = resolveJoin(ad.categories as any);
+  const subs = resolveJoin((ad as any).subcategories);
+  const users = resolveJoin(ad.users as any);
   return {
     id: ad.id,
     title: ad.title,
@@ -304,11 +315,14 @@ function adToProduct(ad: AdItem): Product {
     images: ad.images as Product['images'],
     sourceUrl: '',
     category: '',
-    subcategory: (ad as any).subcategories?.display_name,
+    subcategory: subs?.display_name,
     isSponsored: false,
     ad_type: ad.ad_type as Product['ad_type'],
     attributes: ad.attributes,
     featured_expires_at: ad.featured_expires_at,
+    category_slug: cats?.slug,
+    user_id: ad.user_id,
+    user_avatar_url: users?.avatar_url ?? undefined,
   };
 }
 
@@ -782,7 +796,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
         // 2. Avisos destacados
         let adsQuery = supabase
           .from('ads')
-          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, subcategories(display_name)')
+          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name), categories(slug)')
           .eq('status', 'active')
           .eq('category_id', cat.id)
           .limit(featuredLimit);
@@ -809,7 +823,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
         }
 
         const { data: adsRaw } = await adsQuery.order('created_at', { ascending: false });
-        const adsArr = (adsRaw ?? []) as AdItem[];
+        const adsArr = (adsRaw ?? []) as unknown as AdItem[];
 
         // Enriquecer con expires_at si countdown habilitado
         if (countdownEnabled && adsArr.length > 0) {

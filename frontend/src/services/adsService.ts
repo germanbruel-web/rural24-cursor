@@ -77,6 +77,15 @@ export function transformAdToProduct(ad: Ad): Product {
     model: ad.model,
     user_id: ad.user_id,
     seller: ad.seller,
+    category_id: (ad as any).category_id,
+    category_slug: (ad as any).category_slug
+      ?? (ad as any).categories?.slug
+      ?? (typeof ad.category === 'object' && ad.category !== null ? (ad.category as any).slug : undefined),
+    user_avatar_url: (ad as any).user_avatar_url,
+    price_unit: (ad as any).price_unit,
+    featured_expires_at: (ad as any).featured_expires_at,
+    ad_type: (ad as any).ad_type,
+    business_profile_id: (ad as any).business_profile_id,
   };
 }
 

@@ -15,7 +15,9 @@ export type WizardBlockType =
   | 'location'
   | 'images'
   | 'title_description'
-  | 'empresa_selector';
+  | 'empresa_selector'
+  | 'color_picker'
+  | 'avatar_upload';
 
 export interface WizardBlockConfig {
   // price
@@ -24,6 +26,8 @@ export interface WizardBlockConfig {
   show_unit?: boolean;
   currencies?: string[];          // fallback estático ej: ['ARS','USD']
   currencies_list?: string;       // nombre de option_list — tiene prioridad sobre currencies
+  price_type_list?: string;       // nombre de option_list para tipo de precio (ej: 'price-types-servicios')
+  price_no_amount_values?: string[]; // valores que ocultan el input numérico (ej: ['a-convenir'])
   // images
   max_images?: number;
   // title_description

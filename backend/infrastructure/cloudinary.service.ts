@@ -111,7 +111,7 @@ export async function uploadToCloudinary(
         resource_type: 'image',
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'svg'],
         transformation: [
-          { quality: 'auto:good', fetch_format: 'auto' },
+          { quality: 'auto:good' },
         ],
       },
       (error, result) => {

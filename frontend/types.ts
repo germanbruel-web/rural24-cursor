@@ -34,6 +34,9 @@ export interface Product {
   business_profile_id?: string; // FK a business_profiles (Sprint 3G)
   price_unit?: string; // Unidad de precio (ej: 'cabeza', 'tn', 'ha', 'unidad')
   featured_expires_at?: string; // ISO timestamp de vencimiento del destacado (featured_ads.expires_at)
+  category_id?: string; // UUID de la categoría
+  category_slug?: string; // Slug de la categoría (para detectar Servicios/Empleos)
+  user_avatar_url?: string; // Avatar del usuario (para card de Servicios)
   // Información del vendedor (para productos de usuarios)
   user_id?: string;
   seller?: {

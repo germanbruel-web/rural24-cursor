@@ -247,37 +247,31 @@ export async function updateImageSetting(
 }
 
 /**
- * Eliminar imagen del bucket CMS
+ * Eliminar imagen CMS de Cloudinary via BFF (superadmin only).
  */
-export async function deleteCMSImage(imagePath: string): Promise<boolean> {
+export async function deleteCMSImage(publicId: string): Promise<boolean> {
   try {
-    // Verificar permisos
-    if (!await isSuperAdmin()) {
-      console.error('❌ No tienes permisos (requiere superadmin)');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      console.error('❌ No hay sesión activa');
       return false;
     }
 
-    // Extraer path relativo de la URL (remover dominio y query params)
-    const urlWithoutQuery = imagePath.split('?')[0]; // Remover ?t=timestamp
-    const path = urlWithoutQuery.split('/cms-images/').pop();
-    
-    if (!path) {
-      console.error('❌ Path inválido:', imagePath);
+    const res = await fetch(`${API_URL}/api/admin/site-settings/delete-image`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ public_id: publicId }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Error desconocido' }));
+      console.error('❌ Error eliminando imagen:', err);
       return false;
     }
 
-    console.log('🗑️ Eliminando imagen del storage:', path);
-
-    const { error } = await supabase.storage
-      .from('cms-images')
-      .remove([path]);
-
-    if (error) {
-      console.error('❌ Error eliminando imagen:', error);
-      return false;
-    }
-
-    console.log('✅ Imagen eliminada exitosamente:', path);
     return true;
   } catch (error) {
     console.error('❌ Error en deleteCMSImage:', error);
@@ -286,47 +280,27 @@ export async function deleteCMSImage(imagePath: string): Promise<boolean> {
 }
 
 /**
- * Listar todas las imágenes del CMS
+ * Listar imágenes CMS desde Cloudinary via BFF (superadmin only).
  */
-export async function listCMSImages(): Promise<Array<{ name: string; url: string; size: number; created_at: string }>> {
+export async function listCMSImages(): Promise<Array<{ name: string; url: string; public_id: string; size: number; created_at: string }>> {
   try {
-    // Verificar permisos
-    if (!await isSuperAdmin()) {
-      console.error('❌ No tienes permisos (requiere superadmin)');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      console.error('❌ No hay sesión activa');
       return [];
     }
 
-    const { data, error } = await supabase.storage
-      .from('cms-images')
-      .list('', {
-        limit: 100,
-        offset: 0,
-        sortBy: { column: 'created_at', order: 'desc' }
-      });
+    const res = await fetch(`${API_URL}/api/admin/site-settings/list-images`, {
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+    });
 
-    if (error) {
-      console.error('❌ Error listando imágenes:', error);
+    if (!res.ok) {
+      console.error('❌ Error listando imágenes');
       return [];
     }
 
-    // Obtener URLs públicas
-    const images = data
-      .filter(file => !file.id.endsWith('/')) // Filtrar carpetas
-      .map(file => {
-        const { data: urlData } = supabase.storage
-          .from('cms-images')
-          .getPublicUrl(file.name);
-        
-        return {
-          name: file.name,
-          url: urlData.publicUrl,
-          size: file.metadata?.size || 0,
-          created_at: file.created_at || new Date().toISOString()
-        };
-      });
-
-    console.log(`📁 Encontradas ${images.length} imágenes en CMS`);
-    return images;
+    const { images } = await res.json();
+    return images ?? [];
   } catch (error) {
     console.error('❌ Error en listCMSImages:', error);
     return [];

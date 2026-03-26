@@ -269,9 +269,9 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             autoFocus={autoFocus}
-            className="w-full pl-10 pr-32 py-2.5 text-sm border border-gray-300 rounded-lg
+            className="w-full pl-10 pr-28 py-2.5 text-sm border border-gray-300 rounded-full
                      focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600
-                     transition-all bg-gray-50 hover:bg-white
+                     transition-all bg-white shadow-sm hover:shadow
                      placeholder:text-gray-400"
             autoComplete="off"
           />
@@ -281,8 +281,8 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
             <button
               type="button"
               onClick={handleClear}
-              className="absolute right-24 top-1/2 -translate-y-1/2 p-1 
-                       text-gray-400 hover:text-gray-600 hover:bg-gray-200 
+              className="absolute right-[6.5rem] top-1/2 -translate-y-1/2 p-1
+                       text-gray-400 hover:text-gray-600 hover:bg-gray-100
                        rounded-full transition-colors"
               tabIndex={-1}
             >
@@ -292,25 +292,22 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
 
           {/* Loading indicator */}
           {loading && (
-            <div className="absolute right-24 top-1/2 -translate-y-1/2">
+            <div className="absolute right-[6.5rem] top-1/2 -translate-y-1/2">
               <Loader2 className="w-4 h-4 text-brand-600 animate-spin" />
             </div>
           )}
 
-          {/* Botón Buscar - Minimalista con leve verde */}
+          {/* Botón Buscar */}
           <button
             type="submit"
             disabled={!query.trim()}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 
-                     px-4 py-1.5 
-                     bg-gradient-to-b from-gray-50 to-gray-100 
-                     hover:from-brand-600/5 hover:to-brand-600/10
-                     border border-gray-200
-                     text-brand-600 font-medium text-sm 
-                     rounded-md 
+            className="absolute right-1.5 top-1/2 -translate-y-1/2
+                     px-5 py-1.5
+                     bg-brand-600 hover:bg-brand-700
+                     text-white font-medium text-sm
+                     rounded-full
                      transition-all duration-200
                      disabled:opacity-40 disabled:cursor-not-allowed
-                     disabled:text-gray-400
                      shadow-sm hover:shadow"
           >
             Buscar
@@ -322,8 +319,8 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
       {showDropdown && displayItems.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute top-full left-0 right-0 mt-2 
-                   bg-white rounded-lg shadow-xl border border-gray-200 
+          className="absolute top-full left-0 right-0 mt-2
+                   bg-white rounded-2xl shadow-xl border border-gray-200
                    py-2 z-[9999] max-h-96 overflow-y-auto"
         >
           {/* Header según contexto */}

@@ -51,9 +51,12 @@ export function usePublicarWizardState(isEditMode: boolean) {
   // Step 5: Info
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [bgColor, setBgColor] = useState('#FFFFFF');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
   const [priceUnit, setPriceUnit] = useState('');
+  const [priceType, setPriceType] = useState('');
   const [priceConfig, setPriceConfig] = useState<PriceConfig | null>(null);
   const [priceUnitOptions, setPriceUnitOptions] = useState<{ value: string; label: string }[]>([]);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
@@ -259,9 +262,12 @@ export function usePublicarWizardState(isEditMode: boolean) {
     // Step 5
     title, setTitle,
     description, setDescription,
+    bgColor, setBgColor,
+    avatarUrl, setAvatarUrl,
     price, setPrice,
     currency, setCurrency,
     priceUnit, setPriceUnit,
+    priceType, setPriceType,
     priceConfig,
     priceUnitOptions,
     suggestedTitles, setSuggestedTitles,

@@ -60,15 +60,6 @@ export class AdsService {
       );
     }
 
-    // Validar que al menos tenga una imagen
-    if (!data.images || data.images.length === 0) {
-      return Result.fail(
-        new ValidationError('Debe incluir al menos una imagen', {
-          images: ['Sin imágenes'],
-        })
-      );
-    }
-
     // Crear anuncio
     return this.adsRepo.createAd(data);
   }

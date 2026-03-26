@@ -16,13 +16,17 @@ interface SubmitParams {
   selectedBusinessProfileId: string | null;
   title: string;
   description: string;
+  bgColor: string;
+  avatarUrl: string;
   price: string;
   currency: 'ARS' | 'USD';
   priceUnit: string;
+  priceType: string;
   province: string;
   locality: string;
   attributeValues: Record<string, any>;
   uploadedImagesRef: React.MutableRefObject<UploadedImage[]>;
+  hasImagesStep: boolean;
   draftId: string;
   onDraftDelete: () => void;
   UUID_REGEX: RegExp;
@@ -37,9 +41,9 @@ export function useAdSubmit() {
       profile, isEditMode, editAdId,
       selectedCategory, selectedSubcategory, selectedCategoryType,
       selectedPageType, selectedBusinessProfileId,
-      title, description, price, currency, priceUnit,
+      bgColor, avatarUrl, title, description, price, currency, priceUnit, priceType,
       province, locality, attributeValues,
-      uploadedImagesRef, draftId,
+      uploadedImagesRef, hasImagesStep, draftId,
       onDraftDelete, UUID_REGEX, onSetCurrentStep,
     } = params;
 
@@ -73,7 +77,7 @@ export function useAdSubmit() {
           };
         });
 
-      if (finalImages.length === 0) {
+      if (hasImagesStep && finalImages.length === 0) {
         console.error('[useAdSubmit] NO IMAGES FOUND - Aborting submit');
         if (currentImages.length > 0) {
           const statuses = currentImages.map(img => img.status);
@@ -84,7 +88,11 @@ export function useAdSubmit() {
         return;
       }
 
-      const cleanAttributes = attributeValues;
+      const cleanAttributes = {
+        ...attributeValues,
+        ...(priceType ? { price_type: priceType } : {}),
+        ...(bgColor ? { bg_color: bgColor } : {}),
+      };
 
       const adData = {
         category_id: selectedCategory,
@@ -157,13 +165,13 @@ export function useAdSubmit() {
           currency,
           city: finalCity,
           province: finalProvince,
-          images: finalImages,
+          ...(finalImages.length > 0 ? { images: finalImages } : {}),
           attributes: cleanAttributes,
           contact_phone: null,
           contact_email: null,
         };
 
-        const ad = await adsApi.create(createData);
+        const ad = await adsApi.create(createData as any);
 
         resultId = ad.slug || ad.id;
 
@@ -172,6 +180,14 @@ export function useAdSubmit() {
         }
 
         notify.success('Aviso publicado exitosamente!');
+      }
+
+      // Si el usuario subió un nuevo avatar, guardarlo en su perfil
+      if (avatarUrl && profile) {
+        await supabase
+          .from('users')
+          .update({ avatar_url: avatarUrl })
+          .eq('id', profile.id);
       }
 
       setTimeout(() => {

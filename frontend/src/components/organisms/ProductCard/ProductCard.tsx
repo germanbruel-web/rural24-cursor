@@ -16,6 +16,7 @@ import { navigateTo } from '../../../hooks/useNavigate';
 import { getImageVariant } from '../../../utils/imageOptimizer';
 import { FavoriteButton } from '../../favorites/FavoriteButton';
 import { ShareModal } from '../../molecules/ShareModal/ShareModal';
+import { EmpleoModal } from '../../molecules/EmpleoModal/EmpleoModal';
 // ---- Countdown badge: muestra tiempo restante hasta vencimiento del destacado ----
 const THRESHOLD_MS = 48 * 60 * 60 * 1000; // 48 horas
 
@@ -65,6 +66,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
 }) => {
   const [imageError, setImageError] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [emploModal, setEmploModal] = useState(false);
   const imageUrl = useProductImage(product);
   const cardLabel = getProductLabel(product);
 
@@ -72,6 +74,11 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
   const isCompact = variant === 'compact';
 
   const shareUrl = `${window.location.origin}${window.location.pathname}#/ad/${product.slug || product.id}`;
+
+  // Detectar categorías sin foto de portada
+  const catSlug = product.category_slug?.toLowerCase() ?? '';
+  const isColorCard = catSlug === 'servicios' || catSlug === 'empleos';
+  const bgColor = isColorCard ? ((product.attributes?.bg_color as string) || '#FFFFFF') : null;
 
   // Optimizar imagen con crop inteligente por variante
   const optimizedImageUrl = getImageVariant(
@@ -96,7 +103,13 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
   const handleCardClick = (e: React.MouseEvent) => {
     // Prevenir navegación si se hace click en botones
     if ((e.target as HTMLElement).closest('button')) return;
-    
+
+    // Empleos: modal en lugar de AdDetail
+    if (catSlug === 'empleos') {
+      setEmploModal(true);
+      return;
+    }
+
     if (product.slug) {
       navigateTo(`/ad/${product.slug}`);
     } else if (product.id && product.title) {
@@ -122,19 +135,54 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
       )}
       onClick={handleCardClick}
     >
-      {/* Imagen con overlay */}
+      {/* Imagen / Color de fondo */}
       <div className={cn(
-        'relative w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200',
-        isFeatured ? 'aspect-[16/9]' : 'aspect-[4/3]'
-      )}>
-        <img
-          src={optimizedImageUrl}
-          alt={product.title}
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover"
-          onError={() => setImageError(true)}
-        />
+        'relative w-full overflow-hidden',
+        isFeatured ? 'aspect-[16/9]' : 'aspect-[4/3]',
+        !isColorCard && 'bg-gradient-to-br from-gray-100 to-gray-200'
+      )}
+        style={isColorCard ? { backgroundColor: bgColor! } : undefined}
+      >
+        {isColorCard ? (
+          /* Card de color: avatar circular centrado */
+          <div className="absolute inset-0 flex items-center justify-center">
+            {product.user_avatar_url ? (
+              <img
+                src={product.user_avatar_url}
+                alt={product.title}
+                className={cn(
+                  'rounded-full object-cover border-4',
+                  isFeatured ? 'w-20 h-20' : 'w-16 h-16',
+                  'shadow-md',
+                  catSlug === 'servicios'
+                    ? 'border-transparent ring-2 ring-offset-2 ring-brand-500'
+                    : 'border-gray-300'
+                )}
+                style={catSlug === 'servicios' ? {
+                  borderImage: 'linear-gradient(135deg, #84cc16, #4ade80) 1',
+                } : undefined}
+              />
+            ) : (
+              <div className={cn(
+                'rounded-full bg-gray-200 flex items-center justify-center text-gray-400',
+                isFeatured ? 'w-20 h-20' : 'w-16 h-16'
+              )}>
+                <svg className="w-1/2 h-1/2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                </svg>
+              </div>
+            )}
+          </div>
+        ) : (
+          <img
+            src={optimizedImageUrl}
+            alt={product.title}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+            onError={() => setImageError(true)}
+          />
+        )}
         
         {/* Gradient overlay en hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -271,6 +319,14 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         title={product.title}
         url={shareUrl}
       />
+
+      {emploModal && (
+        <EmpleoModal
+          isOpen={emploModal}
+          onClose={() => setEmploModal(false)}
+          product={product}
+        />
+      )}
     </Card>
   );
 });

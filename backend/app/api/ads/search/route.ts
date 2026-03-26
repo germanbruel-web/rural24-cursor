@@ -580,6 +580,7 @@ export async function GET(request: NextRequest) {
         title,
         description,
         price,
+        price_unit,
         currency,
         province,
         location,
@@ -587,13 +588,15 @@ export async function GET(request: NextRequest) {
         created_at,
         attributes,
         user_id,
+        ad_type,
         category_id,
         subcategory_id,
         status,
         approval_status,
         condition,
         brand_id,
-        model_id
+        model_id,
+        categories(slug)
       `, { count: 'exact' })
       .eq('status', 'active')
       .eq('approval_status', 'approved');
@@ -749,14 +752,16 @@ export async function GET(request: NextRequest) {
     }
 
     // ============================================================
-    // 4. RESOLVER NOMBRES DE MARCAS/MODELOS (batch)
+    // 4. RESOLVER NOMBRES DE MARCAS/MODELOS + AVATARES (batch)
     // ============================================================
     const brandIds = [...new Set((ads || []).map((a: any) => a.brand_id).filter(Boolean))];
     const modelIds = [...new Set((ads || []).map((a: any) => a.model_id).filter(Boolean))];
-    
+    const userIds = [...new Set((ads || []).map((a: any) => a.user_id).filter(Boolean))];
+
     const brandMap = new Map<string, string>();
     const modelMap = new Map<string, string>();
-    
+    const userAvatarMap = new Map<string, string | null>();
+
     if (brandIds.length > 0) {
       const { data: brandsData } = await supabase
         .from('brands')
@@ -770,6 +775,13 @@ export async function GET(request: NextRequest) {
         .select('id, name')
         .in('id', modelIds);
       (modelsData || []).forEach((m: any) => modelMap.set(m.id, m.name));
+    }
+    if (userIds.length > 0) {
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('id, avatar_url')
+        .in('id', userIds);
+      (usersData || []).forEach((u: any) => userAvatarMap.set(u.id, u.avatar_url || null));
     }
 
     // ============================================================
@@ -807,10 +819,13 @@ export async function GET(request: NextRequest) {
         model: resolvedModel || attrs.model || attrs.modelo || null,
         attributes: attrs,
         user_id: ad.user_id,
+        ad_type: (ad as any).ad_type || 'particular',
+        price_unit: (ad as any).price_unit || null,
+        user_avatar_url: ad.user_id ? (userAvatarMap.get(ad.user_id) ?? null) : null,
         // Usar los nombres resueltos previamente (sin JOINs)
         category: categoryName || 'Sin categoría',
         subcategory: subcategoryName || '',
-        category_slug: categorySlug || '',
+        category_slug: categorySlug || ((ad as any).categories?.slug) || '',
         subcategory_slug: subcategorySlug || '',
       };
     });

@@ -212,6 +212,28 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
         )}
         {children}
       </div>
+
+      {/* Scroll indicator — solo desktop */}
+      <div className="hidden md:flex absolute bottom-7 left-1/2 -translate-x-1/2 z-20 flex-col items-center gap-1.5">
+        <svg
+          width="26" height="40" viewBox="0 0 26 40"
+          className="text-white/50"
+          fill="none" stroke="currentColor" strokeWidth="2"
+        >
+          {/* Contorno del mouse */}
+          <rect x="1" y="1" width="24" height="38" rx="12" ry="12" />
+          {/* Ruedita / dot animado */}
+          <circle cx="13" cy="12" r="3" fill="currentColor" stroke="none" className="animate-scroll-dot" />
+        </svg>
+        <style>{`
+          @keyframes scrollDot {
+            0%   { transform: translateY(0);    opacity: 1; }
+            60%  { transform: translateY(10px); opacity: 0.3; }
+            100% { transform: translateY(0);    opacity: 1; }
+          }
+          .animate-scroll-dot { animation: scrollDot 1.8s ease-in-out infinite; }
+        `}</style>
+      </div>
     </section>
   );
 };

@@ -14,6 +14,7 @@ import {
   Settings,
   Camera,
   CheckCircle2,
+  Palette,
 } from 'lucide-react';
 import { Building2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -62,7 +63,7 @@ function hexToFilter(hex: string): string {
 // WIZARD STEPS — icono map para config dinámica
 // ====================================================================
 const STEP_ICON_MAP: Record<string, React.FC<any>> = {
-  Tag, Settings, MapPin, Camera, FileText, CheckCircle2,
+  Tag, Settings, MapPin, Camera, FileText, CheckCircle2, Palette,
 };
 
 // ====================================================================
@@ -105,7 +106,10 @@ export default function PublicarAviso() {
     locality, setLocality,
     uploadedImages, uploadedImagesRef,
     handleImagesChange,
+    bgColor, setBgColor,
+    avatarUrl, setAvatarUrl,
     title, description, price, currency, priceUnit, setPriceUnit,
+    priceType, setPriceType,
     priceUnitOptions,
     suggestedTitles, suggestedDescriptions,
     selectedTitleIndex, selectedDescIndex,
@@ -238,6 +242,13 @@ export default function PublicarAviso() {
     }
   }, [selectedCategory]);
 
+  // Pre-cargar avatar del perfil si el wizard aún no tiene uno
+  useEffect(() => {
+    if (!avatarUrl && profile?.avatar_url) {
+      setAvatarUrl(profile.avatar_url);
+    }
+  }, [profile?.avatar_url]);
+
   // ====================================================================
   // DATA LOADING
   // ====================================================================
@@ -338,6 +349,7 @@ export default function PublicarAviso() {
   // ====================================================================
   const activeStepKey = wizardSteps[currentStep - 1]?.key ?? '';
   const activeStep    = wizardSteps[currentStep - 1];
+  const hasImagesStep = wizardSteps.some(s => s.blocks?.some(b => b.type === 'images'));
 
   const selectedSubFull = subcategories.find(s => s.id === selectedSubcategory);
   const l2Sub = selectedSubFull?.parent_id
@@ -352,7 +364,10 @@ export default function PublicarAviso() {
   const wizardBlockProps: WizardBlockProps = {
     price, setPrice: wizardState.setPrice,
     currency, setCurrency: wizardState.setCurrency,
+    bgColor, setBgColor,
+    avatarUrl, setAvatarUrl,
     priceUnit, setPriceUnit, priceUnitOptions,
+    priceType, setPriceType,
     province, setProvince, locality, setLocality, provinces,
     uploadedImages, uploadedImagesRef, onImagesChange: handleImagesChange,
     title, description, titleError, descriptionError,
@@ -405,7 +420,13 @@ export default function PublicarAviso() {
     }
 
     if (activeStepKey === 'caracteristicas') {
-      if (!price) {
+      const priceBlock = wizardSteps
+        .find(s => s.key === 'caracteristicas')?.blocks
+        .find(b => b.type === 'price');
+      const priceOptional = priceBlock?.config?.price_optional ?? false;
+      const noAmountValues = priceBlock?.config?.price_no_amount_values ?? [];
+      const typeHidesAmount = priceType && noAmountValues.includes(priceType);
+      if (!price && !priceOptional && !typeHidesAmount) {
         notify.error('El precio es obligatorio');
         return;
       }
@@ -1051,11 +1072,15 @@ export default function PublicarAviso() {
                     description,
                     price,
                     currency,
+                    bgColor,
+                    avatarUrl,
                     priceUnit,
+                    priceType,
                     province,
                     locality,
                     attributeValues,
                     uploadedImagesRef,
+                    hasImagesStep,
                     draftId,
                     onDraftDelete: deleteDraft,
                     UUID_REGEX,

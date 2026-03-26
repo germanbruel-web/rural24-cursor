@@ -80,7 +80,7 @@ export const BannersVipHero = () => {
     <div className="w-full">
       {/* Track del carrusel */}
       <div
-        className="relative w-full overflow-hidden bg-gray-100"
+        className="relative w-full overflow-hidden"
         style={{ paddingBottom: isMobile ? '20.83%' : '18.18%' }}
       >
         <div
