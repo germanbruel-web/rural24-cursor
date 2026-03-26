@@ -61,6 +61,50 @@ Esta regla aplica también a agentes/subagentes delegados: deben reportar al Orq
 
 ---
 
+## ⚠️ REGLA DE ORO — SISTEMA DESTACADOS / pg_cron (FUNCIONALIDAD CORE)
+
+**Los Destacados son la principal fuente de monetización de Rural24. Los cron jobs de pg_cron son SAGRADOS.**
+
+### Jobs pg_cron — ÚNICOS, INMUTABLES, NO DUPLICAR
+
+| Job | Schedule | Función |
+|---|---|---|
+| `rural24-activate-featured` | `*/15 * * * *` | `pending → active` cuando `scheduled_start <= NOW()` |
+| `rural24-expire-featured` | `*/15 * * * *` | `active → expired` cuando `expires_at <= NOW()` |
+| `rural24-featured-expiry-check` | `0 12 * * *` | Inserta notificación campanita 24h antes de vencer |
+
+### Ciclo de vida de un Destacado
+
+```
+PAGO CONFIRMADO
+      ↓
+featured_ads.status = 'pending'  (scheduled_start = fecha futura o NOW)
+      ↓  (pg_cron cada 15 min)
+featured_ads.status = 'active'   (activated_at seteado, visible en homepage/resultados)
+      ↓  (pg_cron cada 15 min)
+featured_ads.status = 'expired'  (expires_at alcanzado, sale de homepage/resultados)
+      ↓  (pg_cron diario 12:00, 24h antes)
+notificación campanita → "¡Tu destacado vence mañana!"
+```
+
+### Columnas canónicas de featured_ads
+- `status`: `pending | active | expired`
+- `scheduled_start`: cuándo debe activarse
+- `expires_at`: cuándo debe expirar  ← **NO `ends_at`** (columna legacy eliminada)
+- `activated_at`: timestamp de activación real
+
+### Reglas ABSOLUTAS para nuevas migraciones con pg_cron
+
+1. **ANTES** de crear un cron job: `SELECT jobname FROM cron.job` — verificar que no existe
+2. **SIEMPRE** usar `cron.unschedule('nombre')` antes de `cron.schedule('nombre', ...)` en la migración
+3. **NUNCA** crear jobs con nombres distintos a los canónicos de arriba
+4. **NUNCA** usar columnas `ends_at` o `activated_at` — son legacy y no existen
+5. Si hay duda: consultar `cron.job` en DEV y PROD antes de tocar nada
+
+**Violación de esta regla = doble-activación de destacados = bugs de facturación.**
+
+---
+
 ## REGLAS OBLIGATORIAS DE SESION
 
 1. Leer este archivo + `MEMORY.md` antes de cualquier acción
