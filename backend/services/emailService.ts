@@ -214,7 +214,7 @@ export async function sendFeaturedActivatedEmail(data: FeaturedActivatedData): P
   const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
     method: 'POST',
     headers: { 'Authorization': `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fromAddress, fromName: 'Rural24 - Clasificados', toAddress: data.to, subject, mailFormat: 'html', content }),
+    body: JSON.stringify({ fromAddress, toAddress: data.to, subject, mailFormat: 'html', content }),
   });
   if (!res.ok) throw new Error(`Zoho Mail API error ${res.status}: ${await res.text()}`);
   logger.info(`[Email] Enviado featured_activated → ${data.to}`);
@@ -335,7 +335,7 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
   const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
     method: 'POST',
     headers: { 'Authorization': `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fromAddress, fromName: 'Rural24 - Clasificados', toAddress: data.to, subject, mailFormat: 'html', content }),
+    body: JSON.stringify({ fromAddress, toAddress: data.to, subject, mailFormat: 'html', content }),
   });
   if (!res.ok) throw new Error(`Zoho Mail API error ${res.status}: ${await res.text()}`);
   logger.info(`[Email] Enviado welcome → ${data.to}`);
@@ -464,7 +464,7 @@ export async function sendWelcomeVerifyEmail(data: WelcomeVerifyEmailData): Prom
   const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
     method: 'POST',
     headers: { 'Authorization': `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fromAddress, fromName: 'Rural24 - Clasificados', toAddress: data.to, subject, mailFormat: 'html', content }),
+    body: JSON.stringify({ fromAddress, toAddress: data.to, subject, mailFormat: 'html', content }),
   });
   if (!res.ok) throw new Error(`Zoho Mail API error ${res.status}: ${await res.text()}`);
   logger.info(`[Email] Enviado welcome_verify → ${data.to}`);
@@ -564,7 +564,7 @@ export async function sendContactEmail(data: ContactFormData): Promise<void> {
   const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
     method: 'POST',
     headers: { 'Authorization': `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fromAddress, fromName: 'Rural24 - Formulario de Contacto', toAddress: contactEmail, subject, mailFormat: 'html', content }),
+    body: JSON.stringify({ fromAddress, toAddress: contactEmail, subject, mailFormat: 'html', content }),
   });
   if (!res.ok) throw new Error(`Zoho Mail API error ${res.status}: ${await res.text()}`);
   logger.info(`[Email] Enviado contact_form (${data.tipo}) de ${data.email}`);
@@ -600,7 +600,6 @@ export async function sendTestEmail(type: string, to: string): Promise<void> {
     headers: { 'Authorization': `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       fromAddress,
-      fromName:   'Rural24 - Test Email',
       toAddress:  to,
       subject:    `[TEST] ${subject}`,
       mailFormat: 'html',
