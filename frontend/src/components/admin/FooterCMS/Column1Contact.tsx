@@ -91,7 +91,7 @@ export const Column1Contact: React.FC<Props> = ({ column, onChange }) => {
       const imageUrl = typeof result === 'string' ? result : result.url;
 
       // Actualizar en site_settings
-      const success = await updateImageSetting('footer_logo', file, 'footer');
+      const success = await updateImageSetting('footer_logo', file);
 
       toast.hide(loadingToast);
 

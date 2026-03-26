@@ -5,14 +5,13 @@
  * Acepta multipart/form-data con hasta 3 imágenes adjuntas (≤3MB c/u).
  * Tipos: soporte | sugerencias | publicidad
  *
- * TODO: integrar sistema de email cuando se defina el proveedor.
- * Configurar: CONTACT_EMAIL en variables de entorno del backend.
+ * Notificación: envía email a CONTACT_EMAIL (default: info@rural24.com.ar) via Zoho.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-
-export const runtime = 'edge';
+import { sendContactEmail } from '@/services/emailService';
+import { logger } from '@/infrastructure/logger';
 
 const MAX_FILES     = 3;
 const MAX_SIZE_MB   = 3;
@@ -87,23 +86,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ── TODO: enviar email cuando se defina el proveedor de correo ──────────
-    // Configurar env var CONTACT_EMAIL con el destino (ej: hola@rural24.com.ar)
-    // Opciones a evaluar: Resend, SendGrid, Nodemailer + SMTP
-    //
-    // Estructura sugerida del email:
-    //   Asunto: [RURAL24] ${TIPO_LABELS[tipo]} de ${nombre}
-    //   Adjuntos: images.map(f => ({ filename: f.name, content: Buffer.from(await f.arrayBuffer()) }))
-    // ────────────────────────────────────────────────────────────────────────
-
-    console.log(
-      `[contact] Nueva consulta:\n` +
-      `  Tipo: ${TIPO_LABELS[tipo]}\n` +
-      `  De: ${nombre} <${email}>\n` +
-      `  Teléfono: ${telefono ?? '-'}\n` +
-      `  Adjuntos: ${images.length > 0 ? images.map(f => `${f.name} (${(f.size / 1024).toFixed(0)}KB)`).join(', ') : 'ninguno'}\n` +
-      `  Mensaje: ${mensaje.substring(0, 200)}${mensaje.length > 200 ? '...' : ''}`
+    logger.info(
+      `[contact] Nueva consulta: ${TIPO_LABELS[tipo]} de ${nombre} <${email}> (${images.length} adjuntos)`
     );
+
+    // ── Notificación por email (fire-and-forget: no bloquea la respuesta) ──
+    sendContactEmail({
+      tipo,
+      tipoLabel: TIPO_LABELS[tipo],
+      nombre,
+      email,
+      telefono,
+      mensaje,
+      adjuntos: images.length,
+    }).catch(err => {
+      logger.error('[contact] Error enviando email de notificación:', err);
+    });
 
     return NextResponse.json({
       success: true,

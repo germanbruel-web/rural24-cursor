@@ -98,6 +98,7 @@ const EmpresaPublicPage = lazy(() => import("./src/components/pages/EmpresaPubli
 const APITestPage = import.meta.env.DEV ? lazy(() => import("./src/pages/APITest")) : null;
 const DiagnosticsPage = import.meta.env.DEV ? lazy(() => import("./src/pages/DiagnosticsPage").then(m => ({ default: m.DiagnosticsPage }))) : null;
 const SyncPanel = import.meta.env.DEV ? lazy(() => import("./src/components/admin/SyncPanel")) : null;
+const EmailTemplatesAdmin = lazy(() => import("./src/components/admin/EmailTemplatesAdmin"));
 const DesignSystemShowcaseSimple = lazy(() => import("./src/components/DesignSystemShowcaseSimple").then(m => ({ default: m.DesignSystemShowcaseSimple })));
 const PaymentResultPage = lazy(() => import("./src/pages/PaymentResultPage"));
 const FeaturedCheckoutPage = lazy(() => import("./src/pages/FeaturedCheckoutPage"));
@@ -111,7 +112,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'servicios' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'home-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard' | 'editar-aviso' | 'sync-panel' | 'login' | 'register' | 'onboarding-cms';
+export type Page = 'home' | 'my-ads' | 'favorites' | 'inbox' | 'all-ads' | 'ads-management' | 'ad-detail' | 'profile' | 'subscription' | 'users' | 'banners' | 'settings' | 'contacts' | 'email-confirm' | 'auth-callback' | 'how-it-works' | 'servicios' | 'publicar-v2' | 'publicar-v3' | 'test-form' | 'categories-admin' | 'attributes-admin' | 'option-lists' | 'templates-admin' | 'backend-settings' | 'global-settings' | 'payments-admin' | 'sitemap-seo' | 'pricing' | 'contact' | 'design-showcase' | 'design-system' | 'example-migration' | 'api-test' | 'diagnostics' | 'pending-ads' | 'deleted-ads' | 'publicar' | 'ad-finder' | 'coupons' | 'company-profile' | 'hero-cms' | 'home-cms' | 'credits-config' | 'payment-result' | 'featured-checkout' | 'mis-empresas' | 'dashboard' | 'editar-aviso' | 'sync-panel' | 'login' | 'register' | 'onboarding-cms' | 'email-templates-admin';
 
 /**
  * Componente principal de Rural24 - Clasificados de Agronegocios
@@ -184,6 +185,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/hero-cms') return 'hero-cms';
     if (hash === '#/home-cms') return 'home-cms';
     if (hash === '#/onboarding-cms') return 'onboarding-cms';
+    if (hash === '#/email-templates-admin') return 'email-templates-admin';
     if (hash === '#/payment-result') return 'payment-result';
     if (hash === '#/featured-checkout') return 'featured-checkout';
     if (hash === '#/profile') return 'profile';
@@ -233,6 +235,7 @@ const AppContent: React.FC = () => {
       'hero-cms': '#/hero-cms',
       'home-cms': '#/home-cms',
       'sync-panel': '#/sync-panel',
+      'email-templates-admin': '#/email-templates-admin',
       'credits-config': '#/credits-config',
       'profile': '#/profile',
       'subscription': '#/subscription',
@@ -625,12 +628,12 @@ const AppContent: React.FC = () => {
   }
 
   // Determinar si debe usar Dashboard Layout
-  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'favorites', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'onboarding-cms', 'design-system', 'mis-empresas', 'sync-panel'].includes(currentPage);
+  const isDashboardPage = ['dashboard', 'profile', 'subscription', 'users', 'my-ads', 'favorites', 'inbox', 'banners', 'coupons', 'settings', 'contacts', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'onboarding-cms', 'design-system', 'mis-empresas', 'sync-panel', 'email-templates-admin'].includes(currentPage);
 
   // Render con Dashboard Layout
   if (isDashboardPage) {
     // Esperar a que cargue el perfil antes de verificar permisos en páginas protegidas
-    const isProtectedPage = ['users', 'banners', 'coupons', 'credits-config', 'settings', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'onboarding-cms', 'design-system'].includes(currentPage);
+    const isProtectedPage = ['users', 'banners', 'coupons', 'credits-config', 'settings', 'categories-admin', 'attributes-admin', 'option-lists', 'templates-admin', 'backend-settings', 'global-settings', 'payments-admin', 'sitemap-seo', 'hero-cms', 'home-cms', 'onboarding-cms', 'design-system', 'email-templates-admin'].includes(currentPage);
     
     if (authLoading && isProtectedPage) {
       return (
@@ -706,6 +709,7 @@ const AppContent: React.FC = () => {
                 {currentPage === 'dashboard' && <DashboardPanel />}
                 {currentPage === 'design-system' && canAccessPage('design-system', profile?.role) && <DesignSystemShowcaseSimple />}
                 {import.meta.env.DEV && currentPage === 'sync-panel' && canAccessPage('sync-panel', profile?.role) && SyncPanel && <SyncPanel />}
+                {currentPage === 'email-templates-admin' && canAccessPage('email-templates-admin', profile?.role) && <EmailTemplatesAdmin />}
                 {currentPage === 'settings' && (
                   <div className="bg-white rounded-lg shadow p-6">
                     <h2 className="text-2xl font-bold mb-4">Configuración</h2>

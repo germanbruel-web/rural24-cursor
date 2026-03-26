@@ -230,9 +230,8 @@ export const BackendSettings: React.FC = () => {
       setUploadProgress({ settingKey, progress: 10, status: 'uploading' });
 
       const success = await updateImageSetting(
-        settingKey, 
-        file, 
-        settingKey.split('_')[0],
+        settingKey,
+        file,
         (progress) => {
           if (progress < 90) {
             setUploadProgress({ settingKey, progress, status: 'uploading' });

@@ -99,10 +99,12 @@ export async function middleware(request: NextRequest) {
     );
   }
   
-  // Content Security Policy (modo report-only por ahora)
-  // Después de validar sin errores, cambiar a 'Content-Security-Policy'
-  const csp = buildCSP();
-  response.headers.set('Content-Security-Policy-Report-Only', csp);
+  // Content Security Policy
+  // En prod: header enforced. En dev/staging: report-only para detectar violaciones sin romper.
+  const isProd = process.env.CLOUDINARY_ENV === 'prod';
+  const csp = buildCSP(isProd);
+  const cspHeader = isProd ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only';
+  response.headers.set(cspHeader, csp);
 
   // ===========================================
   // 3. CORS PREFLIGHT (OPTIONS)
@@ -133,20 +135,20 @@ export async function middleware(request: NextRequest) {
 
 /**
  * Content Security Policy
- * Ajustar según tus necesidades específicas
+ * En prod: sin unsafe-inline/unsafe-eval en script-src.
+ * En dev/staging: permisivo para no bloquear HMR ni herramientas de desarrollo.
  */
-function buildCSP(): string {
+function buildCSP(isProd: boolean): string {
+  const scriptSrc = isProd
+    ? ["'self'", 'https://aistudiocdn.com']
+    : ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://aistudiocdn.com'];
+
   const csp = {
     'default-src': ["'self'"],
-    'script-src': [
-      "'self'",
-      "'unsafe-inline'", // TODO: Remover después de migrar scripts inline
-      "'unsafe-eval'",   // TODO: Necesario para Vite en dev, remover en prod
-      'https://aistudiocdn.com',
-    ],
+    'script-src': scriptSrc,
     'style-src': [
       "'self'",
-      "'unsafe-inline'", // Tailwind usa inline styles
+      "'unsafe-inline'", // Tailwind requiere inline styles
       'https://fonts.googleapis.com',
     ],
     'img-src': [
@@ -161,9 +163,13 @@ function buildCSP(): string {
     ],
     'connect-src': [
       "'self'",
-      'https://lmkuecdvxtenrikjomol.supabase.co',
+      'https://lmkuecdvxtenrikjomol.supabase.co', // Supabase DEV
+      'https://ufrzkjuylhvdkrvbjdyh.supabase.co', // Supabase PROD
       'https://rural24.onrender.com',
+      'https://rural24-prod.onrender.com',
       'https://res.cloudinary.com',
+      'wss://lmkuecdvxtenrikjomol.supabase.co',    // Realtime DEV
+      'wss://ufrzkjuylhvdkrvbjdyh.supabase.co',    // Realtime PROD
     ],
     'frame-ancestors': ["'none'"],
     'base-uri': ["'self'"],

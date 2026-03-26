@@ -52,6 +52,9 @@ export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   'home-cms': ['superadmin'],
   'design-system': ['superadmin'],
 
+  'onboarding-cms': ['superadmin'],
+  'email-templates-admin': ['superadmin'],
+
   // Solo SuperAdmin — Solo DEV (oculto en PROD por import.meta.env.DEV en App.tsx)
   'sync-panel': ['superadmin'],
 };

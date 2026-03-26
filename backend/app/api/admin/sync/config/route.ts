@@ -25,6 +25,7 @@ const TABLES = [
   'option_lists', 'option_list_items',
   'form_templates_v2', 'form_fields_v2',
   'wizard_configs',
+  'email_templates',
 ];
 
 const NULLIFY_COLS = ['updated_by', 'created_by', 'modified_by'];

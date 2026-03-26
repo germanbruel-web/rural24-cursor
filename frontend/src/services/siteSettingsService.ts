@@ -8,6 +8,8 @@
 
 import { supabase } from './supabaseClient';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 export interface SiteSetting {
   id: string;
   setting_key: string;
@@ -156,62 +158,46 @@ export async function updateSetting(payload: UpdateSettingPayload): Promise<bool
 }
 
 /**
- * Subir imagen al bucket CMS con cache-busting
+ * Subir imagen CMS a Cloudinary via BFF (superadmin only).
+ * settingKey determina la carpeta: logos → rural24/app/logos/ (sin env prefix)
  */
 export async function uploadCMSImage(
-  file: File, 
-  folder: string = '',
+  file: File,
+  settingKey: string = '',
   onProgress?: (progress: number) => void
 ): Promise<string | null> {
   try {
-    // Verificar permisos
-    if (!await isSuperAdmin()) {
-      console.error('❌ No tienes permisos para subir imágenes (requiere superadmin)');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      console.error('❌ No hay sesión activa');
       return null;
     }
-
-    // Generar nombre único
-    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(7);
-    const fileName = `${folder ? folder + '/' : ''}${timestamp}-${random}.${fileExt}`;
-
-    console.log('📤 Subiendo imagen:', {
-      nombre: file.name,
-      tamaño: `${(file.size / 1024).toFixed(1)} KB`,
-      tipo: file.type,
-      destino: fileName
-    });
 
     onProgress?.(10);
 
-    // Subir a storage
-    const { data, error } = await supabase.storage
-      .from('cms-images')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('settingKey', settingKey);
 
-    if (error) {
-      console.error('❌ Error subiendo imagen:', error);
-      return null;
-    }
+    onProgress?.(20);
+
+    const res = await fetch(`${API_URL}/api/admin/site-settings/upload-image`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+      body: formData,
+    });
 
     onProgress?.(80);
 
-    // Obtener URL pública con cache-busting
-    const { data: publicUrlData } = supabase.storage
-      .from('cms-images')
-      .getPublicUrl(data.path);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Error desconocido' }));
+      console.error('❌ Error subiendo imagen:', err);
+      return null;
+    }
 
-    // Agregar timestamp para evitar cache del navegador
-    const cacheBustedUrl = `${publicUrlData.publicUrl}?t=${timestamp}`;
-
-    console.log('✅ Imagen subida exitosamente:', cacheBustedUrl);
+    const { url } = await res.json();
     onProgress?.(100);
-    
-    return cacheBustedUrl;
+    return url;
   } catch (error) {
     console.error('❌ Error en uploadCMSImage:', error);
     return null;
@@ -219,38 +205,19 @@ export async function uploadCMSImage(
 }
 
 /**
- * Actualizar setting con nueva imagen (incluye limpieza de imagen anterior)
+ * Actualizar setting con nueva imagen via Cloudinary BFF.
  */
 export async function updateImageSetting(
-  settingKey: string, 
-  file: File, 
-  folder: string = '',
+  settingKey: string,
+  file: File,
   onProgress?: (progress: number) => void
 ): Promise<boolean> {
   try {
-    // Verificar permisos
-    if (!await isSuperAdmin()) {
-      console.error('❌ No tienes permisos (requiere superadmin)');
-      return false;
-    }
-
-    console.log('🔄 Iniciando actualización de imagen:', settingKey);
     onProgress?.(5);
 
-    // 1. Obtener URL de imagen anterior para eliminarla después
-    const { data: oldSetting } = await supabase
-      .from('site_settings')
-      .select('setting_value')
-      .eq('setting_key', settingKey)
-      .single();
-
-    const oldImageUrl = oldSetting?.setting_value;
-    onProgress?.(10);
-
-    // 2. Subir nueva imagen
-    const imageUrl = await uploadCMSImage(file, folder, (progress) => {
-      // Mapear progreso de subida a 10-85%
-      onProgress?.(10 + (progress * 0.75));
+    // 1. Subir nueva imagen a Cloudinary via BFF
+    const imageUrl = await uploadCMSImage(file, settingKey, (progress) => {
+      onProgress?.(5 + (progress * 0.8));
     });
 
     if (!imageUrl) {
@@ -260,10 +227,10 @@ export async function updateImageSetting(
 
     onProgress?.(90);
 
-    // 3. Actualizar setting con nueva URL
+    // 2. Actualizar setting con nueva URL
     const success = await updateSetting({
       setting_key: settingKey,
-      setting_value: imageUrl
+      setting_value: imageUrl,
     });
 
     if (!success) {
@@ -271,23 +238,7 @@ export async function updateImageSetting(
       return false;
     }
 
-    onProgress?.(95);
-
-    // 4. Eliminar imagen anterior (si existe y no es placeholder)
-    if (oldImageUrl && 
-        oldImageUrl.includes('/cms-images/') && 
-        !oldImageUrl.includes('image-preview')) {
-      try {
-        await deleteCMSImage(oldImageUrl);
-        console.log('🗑️ Imagen anterior eliminada');
-      } catch (error) {
-        console.warn('⚠️ No se pudo eliminar imagen anterior:', error);
-        // No es crítico, continuamos
-      }
-    }
-
     onProgress?.(100);
-    console.log('✅ Actualización de imagen completada exitosamente');
     return true;
   } catch (error) {
     console.error('❌ Error en updateImageSetting:', error);

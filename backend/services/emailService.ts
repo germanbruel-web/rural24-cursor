@@ -11,6 +11,7 @@
  */
 
 import { logger } from '@/infrastructure/logger';
+import { getSupabaseClient } from '@/infrastructure/supabase/client';
 
 const ZOHO_TOKEN_URL   = 'https://accounts.zoho.com/oauth/v2/token';
 const ZOHO_MAIL_URL    = 'https://mail.zoho.com/api/accounts';
@@ -18,6 +19,51 @@ const ZOHO_MAIL_URL    = 'https://mail.zoho.com/api/accounts';
 // ── Cache de access token (expira en 1 hora) ──────────────────
 let _accessToken: string | null = null;
 let _tokenExpiresAt = 0;
+
+// ── Cache de templates DB (TTL 5 minutos) ─────────────────────
+
+interface DbTemplate {
+  subject:      string;
+  html_content: string;
+}
+
+const _templateCache = new Map<string, { data: DbTemplate; expiresAt: number }>();
+const TEMPLATE_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+async function getDbTemplate(type: string): Promise<DbTemplate | null> {
+  const cached = _templateCache.get(type);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.data;
+  }
+
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('email_templates')
+      .select('subject, html_content')
+      .eq('type', type)
+      .single();
+
+    if (error || !data || !data.html_content) return null;
+
+    const template: DbTemplate = { subject: data.subject, html_content: data.html_content };
+    _templateCache.set(type, { data: template, expiresAt: Date.now() + TEMPLATE_CACHE_TTL });
+    return template;
+  } catch {
+    return null;
+  }
+}
+
+/** Invalida la caché de un tipo de template (llamar después de cada PUT admin). */
+export function invalidateTemplateCache(type: string): void {
+  _templateCache.delete(type);
+  logger.info(`[Email] Cache invalidada para template: ${type}`);
+}
+
+/** Sustituye variables {{var}} en un string de template. */
+function interpolate(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? `{{${key}}}`);
+}
 
 async function getAccessToken(): Promise<string> {
   if (_accessToken && Date.now() < _tokenExpiresAt - 60_000) {
@@ -150,36 +196,27 @@ function templateFeaturedActivated(d: FeaturedActivatedData): string {
 export async function sendFeaturedActivatedEmail(data: FeaturedActivatedData): Promise<void> {
   const accountId   = process.env.ZOHO_ACCOUNT_ID;
   const fromAddress = process.env.ZOHO_FROM_EMAIL || 'info@rural24.com.ar';
+  if (!accountId) throw new Error('ZOHO_ACCOUNT_ID no configurado en Render');
 
-  if (!accountId) {
-    throw new Error('ZOHO_ACCOUNT_ID no configurado en Render');
-  }
+  const expires = new Date(data.expiresAt).toLocaleDateString('es-AR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  });
+  const adUrl = `https://rural24.com.ar/#/ad/${data.adSlug}`;
+  const vars  = { to_name: data.toName, ad_title: data.adTitle, ad_url: adUrl, expires_at: expires };
+
+  const dbTpl  = await getDbTemplate('featured_activated');
+  const subject = dbTpl ? interpolate(dbTpl.subject, vars)
+    : `Tu aviso "${data.adTitle.substring(0, 50)}" ya esta destacado en Rural24`;
+  const content = dbTpl?.html_content ? interpolate(dbTpl.html_content, vars)
+    : templateFeaturedActivated(data);
 
   const token = await getAccessToken();
-
-  const body = {
-    fromAddress,
-    fromName:    'Rural24 - Clasificados',
-    toAddress:   data.to,
-    subject:     `Tu aviso "${data.adTitle.substring(0, 50)}" ya esta destacado en Rural24`,
-    mailFormat:  'html',
-    content:     templateFeaturedActivated(data),
-  };
-
   const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
-    method:  'POST',
-    headers: {
-      'Authorization': `Zoho-oauthtoken ${token}`,
-      'Content-Type':  'application/json',
-    },
-    body: JSON.stringify(body),
+    method: 'POST',
+    headers: { 'Authorization': `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fromAddress, fromName: 'Rural24 - Clasificados', toAddress: data.to, subject, mailFormat: 'html', content }),
   });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Zoho Mail API error ${res.status}: ${err}`);
-  }
-
+  if (!res.ok) throw new Error(`Zoho Mail API error ${res.status}: ${await res.text()}`);
   logger.info(`[Email] Enviado featured_activated → ${data.to}`);
 }
 
@@ -285,32 +322,22 @@ function templateWelcome(d: WelcomeEmailData): string {
 export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
   const accountId   = process.env.ZOHO_ACCOUNT_ID;
   const fromAddress = process.env.ZOHO_FROM_EMAIL || 'info@rural24.com.ar';
-
   if (!accountId) throw new Error('ZOHO_ACCOUNT_ID no configurado en Render');
 
+  const name = data.firstName || data.toName || 'Agricultor';
+  const vars = { first_name: name, to_name: data.toName };
+
+  const dbTpl  = await getDbTemplate('welcome');
+  const subject = dbTpl ? interpolate(dbTpl.subject, vars) : `¡Bienvenido a Rural24, ${name}!`;
+  const content = dbTpl?.html_content ? interpolate(dbTpl.html_content, vars) : templateWelcome(data);
+
   const token = await getAccessToken();
-
   const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
-    method:  'POST',
-    headers: {
-      'Authorization': `Zoho-oauthtoken ${token}`,
-      'Content-Type':  'application/json',
-    },
-    body: JSON.stringify({
-      fromAddress,
-      fromName:   'Rural24 - Clasificados',
-      toAddress:  data.to,
-      subject:    `¡Bienvenido a Rural24, ${data.firstName || data.toName}!`,
-      mailFormat: 'html',
-      content:    templateWelcome(data),
-    }),
+    method: 'POST',
+    headers: { 'Authorization': `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fromAddress, fromName: 'Rural24 - Clasificados', toAddress: data.to, subject, mailFormat: 'html', content }),
   });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Zoho Mail API error ${res.status}: ${err}`);
-  }
-
+  if (!res.ok) throw new Error(`Zoho Mail API error ${res.status}: ${await res.text()}`);
   logger.info(`[Email] Enviado welcome → ${data.to}`);
 }
 
@@ -422,33 +449,166 @@ function templateWelcomeVerify(d: WelcomeVerifyEmailData): string {
 export async function sendWelcomeVerifyEmail(data: WelcomeVerifyEmailData): Promise<void> {
   const accountId   = process.env.ZOHO_ACCOUNT_ID;
   const fromAddress = process.env.ZOHO_FROM_EMAIL || 'info@rural24.com.ar';
-
   if (!accountId) throw new Error('ZOHO_ACCOUNT_ID no configurado en Render');
 
-  const token = await getAccessToken();
+  const name = data.firstName || data.toName || 'Agricultor';
+  const vars = { first_name: name, to_name: data.toName, confirmation_link: data.confirmationLink };
 
+  const dbTpl  = await getDbTemplate('welcome_verify');
+  const subject = dbTpl ? interpolate(dbTpl.subject, vars)
+    : `¡Bienvenido a Rural24! Confirmá tu cuenta, ${name}`;
+  const content = dbTpl?.html_content ? interpolate(dbTpl.html_content, vars)
+    : templateWelcomeVerify(data);
+
+  const token = await getAccessToken();
   const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
-    method:  'POST',
-    headers: {
-      'Authorization': `Zoho-oauthtoken ${token}`,
-      'Content-Type':  'application/json',
-    },
+    method: 'POST',
+    headers: { 'Authorization': `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fromAddress, fromName: 'Rural24 - Clasificados', toAddress: data.to, subject, mailFormat: 'html', content }),
+  });
+  if (!res.ok) throw new Error(`Zoho Mail API error ${res.status}: ${await res.text()}`);
+  logger.info(`[Email] Enviado welcome_verify → ${data.to}`);
+}
+
+// ── Formulario de contacto (notificación interna) ─────────────
+
+export interface ContactFormData {
+  tipo:      string;
+  tipoLabel: string;
+  nombre:    string;
+  email:     string;
+  telefono?: string;
+  mensaje:   string;
+  adjuntos:  number; // cantidad, sin binarios
+}
+
+function templateContactForm(d: ContactFormData): string {
+  const phone = d.telefono ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:120px;">Teléfono</td><td style="padding:6px 0;font-size:13px;color:#111827;">${d.telefono}</td></tr>` : '';
+  const adj   = d.adjuntos > 0 ? `<p style="margin:16px 0 0;font-size:13px;color:#6b7280;">${d.adjuntos} imagen${d.adjuntos > 1 ? 'es' : ''} adjunta${d.adjuntos > 1 ? 's' : ''} (ver panel admin)</p>` : '';
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+
+          <tr>
+            <td style="background:#65a30d;padding:24px 32px;">
+              <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:bold;">
+                Rural<span style="background:#ffffff;color:#65a30d;border-radius:4px;padding:0 5px;margin-left:2px;">24</span>
+                <span style="font-size:14px;font-weight:normal;margin-left:12px;opacity:0.9;">Nueva consulta: ${d.tipoLabel}</span>
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:32px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin-bottom:20px;">
+                <tr>
+                  <td>
+                    <table cellpadding="0" cellspacing="0">
+                      <tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:120px;">Tipo</td><td style="padding:6px 0;font-size:13px;color:#111827;font-weight:bold;">${d.tipoLabel}</td></tr>
+                      <tr><td style="padding:6px 0;color:#6b7280;font-size:13px;">Nombre</td><td style="padding:6px 0;font-size:13px;color:#111827;">${d.nombre}</td></tr>
+                      <tr><td style="padding:6px 0;color:#6b7280;font-size:13px;">Email</td><td style="padding:6px 0;font-size:13px;"><a href="mailto:${d.email}" style="color:#65a30d;">${d.email}</a></td></tr>
+                      ${phone}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 8px;font-size:13px;color:#6b7280;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">Mensaje</p>
+              <p style="margin:0;font-size:14px;color:#111827;line-height:1.7;white-space:pre-wrap;">${d.mensaje}</p>
+              ${adj}
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:16px 32px;border-top:1px solid #f3f4f6;">
+              <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
+                Notificación interna — Rural24
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendContactEmail(data: ContactFormData): Promise<void> {
+  const accountId    = process.env.ZOHO_ACCOUNT_ID;
+  const fromAddress  = process.env.ZOHO_FROM_EMAIL || 'info@rural24.com.ar';
+  const contactEmail = process.env.CONTACT_EMAIL   || 'info@rural24.com.ar';
+  if (!accountId) throw new Error('ZOHO_ACCOUNT_ID no configurado en Render');
+
+  const vars = {
+    tipo_label: data.tipoLabel,
+    nombre:     data.nombre,
+    email:      data.email,
+    telefono:   data.telefono || '-',
+    mensaje:    data.mensaje,
+    adjuntos:   String(data.adjuntos),
+  };
+
+  const dbTpl  = await getDbTemplate('contact_form');
+  const subject = dbTpl ? interpolate(dbTpl.subject, vars) : `[Rural24] ${data.tipoLabel} de ${data.nombre}`;
+  const content = dbTpl?.html_content ? interpolate(dbTpl.html_content, vars) : templateContactForm(data);
+
+  const token = await getAccessToken();
+  const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
+    method: 'POST',
+    headers: { 'Authorization': `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fromAddress, fromName: 'Rural24 - Formulario de Contacto', toAddress: contactEmail, subject, mailFormat: 'html', content }),
+  });
+  if (!res.ok) throw new Error(`Zoho Mail API error ${res.status}: ${await res.text()}`);
+  logger.info(`[Email] Enviado contact_form (${data.tipo}) de ${data.email}`);
+}
+
+// ── Test send (admin panel) ───────────────────────────────────
+
+const SAMPLE_VARS: Record<string, Record<string, string>> = {
+  welcome:            { first_name: 'Juan', to_name: 'Juan Pérez' },
+  welcome_verify:     { first_name: 'Juan', to_name: 'Juan Pérez', confirmation_link: 'https://rural24.com.ar/#/confirm?token=SAMPLE' },
+  featured_activated: { to_name: 'Juan Pérez', ad_title: 'Vendo 50 novillos Hereford', ad_url: 'https://rural24.com.ar/#/ad/ejemplo', expires_at: 'viernes, 4 de abril de 2026' },
+  contact_form:       { tipo_label: 'Soporte', nombre: 'María García', email: 'maria@ejemplo.com', telefono: '11 1234-5678', mensaje: 'Este es un mensaje de prueba del formulario de contacto.', adjuntos: '2' },
+};
+
+export async function sendTestEmail(type: string, to: string): Promise<void> {
+  const accountId   = process.env.ZOHO_ACCOUNT_ID;
+  const fromAddress = process.env.ZOHO_FROM_EMAIL || 'info@rural24.com.ar';
+  if (!accountId) throw new Error('ZOHO_ACCOUNT_ID no configurado en Render');
+
+  const vars = SAMPLE_VARS[type] ?? {};
+
+  const dbTpl = await getDbTemplate(type);
+  const subject = dbTpl
+    ? interpolate(dbTpl.subject, vars)
+    : `[TEST] Plantilla ${type} — Rural24`;
+  const content = dbTpl?.html_content
+    ? interpolate(dbTpl.html_content, vars)
+    : `<p>La plantilla <strong>${type}</strong> no tiene HTML configurado todavía.</p>`;
+
+  const token = await getAccessToken();
+  const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
+    method: 'POST',
+    headers: { 'Authorization': `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       fromAddress,
-      fromName:   'Rural24 - Clasificados',
-      toAddress:  data.to,
-      subject:    `¡Bienvenido a Rural24! Confirmá tu cuenta, ${data.firstName || data.toName}`,
+      fromName:   'Rural24 - Test Email',
+      toAddress:  to,
+      subject:    `[TEST] ${subject}`,
       mailFormat: 'html',
-      content:    templateWelcomeVerify(data),
+      content,
     }),
   });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Zoho Mail API error ${res.status}: ${err}`);
-  }
-
-  logger.info(`[Email] Enviado welcome_verify → ${data.to}`);
+  if (!res.ok) throw new Error(`Zoho Mail API error ${res.status}: ${await res.text()}`);
+  logger.info(`[Email] Test enviado (${type}) → ${to}`);
 }
 
 // ── Verificar configuración ───────────────────────────────────
