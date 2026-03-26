@@ -12,7 +12,8 @@ import { logger } from '@/infrastructure/logger';
 
 const INTERVAL_MS   = 2 * 60 * 1000; // 2 minutos
 const WORKER_FLAG   = '_rural24EmailWorkerStarted';
-const BACKEND_URL   = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const PORT          = process.env.PORT || '3000';
+const BACKEND_URL   = `http://localhost:${PORT}`;
 const CRON_SECRET   = process.env.CRON_SECRET;
 
 async function processQueue(): Promise<void> {
