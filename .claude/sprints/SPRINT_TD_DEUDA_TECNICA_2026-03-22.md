@@ -13,11 +13,11 @@
 | TD-2 | Styles DRY — formStyles constants | ✅ Completo | Urgente | Bajo |
 | TD-3 | Logger: migrar hot paths restantes | ✅ Completo | Media | Medio |
 | TD-4 | Admin DELETE users → endpoint BFF | ✅ Completo | Alta | Bajo |
-| TD-5 | TypeScript: eliminar `any` críticos | ⬜ Pendiente | Media | Medio |
+| TD-5 | TypeScript: eliminar `any` críticos | ✅ Completo 2026-03-27 | Media | Medio |
 | TD-6 | localStorage abstraction (`useBrowserStorage`) | ✅ Completo | Media | Bajo |
-| TD-7 | CSP hardening — unsafe-inline/eval | ⬜ Pendiente | Alta | Medio |
+| TD-7 | CSP hardening — unsafe-inline/eval | ✅ Completo (ya estaba) | Alta | Medio |
 | TD-8 | Service Worker + PWA caching strategy | ✅ Completo | Alta | Alto |
-| TD-9 | Email: implementar contact/route.ts | ⬜ Pendiente | Alta | Medio |
+| TD-9 | Email: implementar contact/route.ts | ✅ Completo (ya estaba) | Alta | Medio |
 
 ---
 

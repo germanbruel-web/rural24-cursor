@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
+import type { Ad } from '../../../types';
 import { QuickEditAdModal } from './QuickEditAdModal';
 import CreateFeaturedModal from './CreateFeaturedModal';
 import BulkVisibilityModal from './BulkVisibilityModal';
@@ -161,11 +162,15 @@ export default function AllAdsTab() {
       const { data: adsData, error } = await query;
       if (error) throw error;
 
+      type UserRow = { id: string; full_name: string | null; email: string | null };
+      type CatRow = { id: string; display_name: string | null };
+      type FeaturedRow = { ad_id: string; status: string; placement: string; expires_at?: string };
+
       const userIds = [...new Set((adsData || []).map((row) => row.user_id).filter(Boolean))];
       const usersMap: Record<string, { name: string; email: string }> = {};
       if (userIds.length) {
         const { data: users } = await supabase.from('users').select('id, full_name, email').in('id', userIds);
-        (users || []).forEach((u: any) => {
+        (users as UserRow[] || []).forEach((u) => {
           usersMap[u.id] = { name: u.full_name || 'Usuario', email: u.email || '' };
         });
       }
@@ -174,7 +179,7 @@ export default function AllAdsTab() {
       const catsMap: Record<string, string> = {};
       if (catIds.length) {
         const { data: cats } = await supabase.from('categories').select('id, display_name').in('id', catIds);
-        (cats || []).forEach((c: any) => {
+        (cats as CatRow[] || []).forEach((c) => {
           catsMap[c.id] = c.display_name || '';
         });
       }
@@ -187,12 +192,12 @@ export default function AllAdsTab() {
           .select('ad_id, status, placement, expires_at')
           .in('ad_id', adIds)
           .in('status', ['active', 'pending']);
-        (featured || []).forEach((f: any) => {
+        (featured as FeaturedRow[] || []).forEach((f) => {
           featuredMap[f.ad_id] = { status: f.status, placement: f.placement, expires_at: f.expires_at };
         });
       }
 
-      let enriched = (adsData || []).map((ad: any) => ({
+      let enriched = (adsData || []).map((ad) => ({
         ...ad,
         seller_name: usersMap[ad.user_id]?.name || 'Usuario',
         seller_email: usersMap[ad.user_id]?.email || '',
@@ -200,7 +205,7 @@ export default function AllAdsTab() {
         featured_status: featuredMap[ad.id]?.status,
         featured_placement: featuredMap[ad.id]?.placement,
         featured_expires_at: featuredMap[ad.id]?.expires_at,
-      })) as AdRow[];
+      })) as AdRow[];  // cast necesario: adsData sin tipos Supabase generados
 
       if (statusFilter === 'featured') {
         enriched = enriched.filter((row) => Boolean(row.featured_status));
@@ -690,7 +695,7 @@ export default function AllAdsTab() {
         <BulkVisibilityModal
           isOpen={true}
           onClose={() => setShowBulkVisibility(false)}
-          ads={ads.map((a) => ({ ...a, category: a.category_name })) as any}
+          ads={ads.map((a) => ({ ...a, category: a.category_name })) as Ad[]}
           featuredMap={ads.reduce<Record<string, any[]>>((acc, a) => {
             if (a.featured_status) acc[a.id] = [{ status: a.featured_status, placement: a.featured_placement }];
             return acc;
@@ -766,7 +771,7 @@ export default function AllAdsTab() {
                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Nivel de destacado</label>
                 <select
                   value={bulkFeaturedPlacement}
-                  onChange={(e) => setBulkFeaturedPlacement(e.target.value as any)}
+                  onChange={(e) => setBulkFeaturedPlacement(e.target.value as 'homepage' | 'results' | 'detail')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
                 >
                   <option value="homepage">Homepage (Alto)</option>

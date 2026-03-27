@@ -5,11 +5,11 @@ interface BulkImportModalProps {
   type: 'brands' | 'models';
   isOpen: boolean;
   onClose: () => void;
-  onImport: (data: any[]) => Promise<{ success: number; errors: string[] }>;
+  onImport: (data: Record<string, string>[]) => Promise<{ success: number; errors: string[] }>;
 }
 
 interface ParsedRow {
-  data: any;
+  data: Record<string, string>;
   rowNumber: number;
   errors: string[];
 }
@@ -50,7 +50,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
       const delimiter = line.includes('\t') ? '\t' : ',';
       const values = line.split(delimiter).map(v => v.trim());
       
-      const row: any = {};
+      const row: Record<string, string> = {};
       const errors: string[] = [];
 
       // Mapear valores a columnas

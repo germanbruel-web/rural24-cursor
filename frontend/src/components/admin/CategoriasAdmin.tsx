@@ -28,7 +28,7 @@ type ItemType = 'category' | 'subcategory' | 'type';
 // Modal de confirmación de eliminación
 interface DeleteModalState {
   isOpen: boolean;
-  item: any;
+  item: Category | Subcategory | CategoryType | null;
   type: ItemType;
   hasAds: boolean;
   adsCount: number;
@@ -99,7 +99,7 @@ export const CategoriasAdmin: React.FC = () => {
   // Form state
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<ItemType>('category');
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editingItem, setEditingItem] = useState<Category | Subcategory | CategoryType | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     display_name: '',
@@ -220,7 +220,7 @@ export const CategoriasAdmin: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleEdit = (item: any, type: ItemType) => {
+  const handleEdit = (item: Category | Subcategory | CategoryType, type: ItemType) => {
     setFormType(type);
     setEditingItem(item);
     
@@ -306,7 +306,7 @@ export const CategoriasAdmin: React.FC = () => {
   };
 
   // Iniciar proceso de eliminación - verifica dependencias primero
-  const handleDeleteClick = async (item: any, type: ItemType) => {
+  const handleDeleteClick = async (item: Category | Subcategory | CategoryType, type: ItemType) => {
     setDeleteModal({
       isOpen: true,
       item,
