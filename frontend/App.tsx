@@ -18,6 +18,7 @@ import {
   DashboardLayout,
 } from "./src/components";
 import AuthPage from "./src/components/auth/AuthPage";
+import { PageErrorBoundary } from "./src/components/common/PageErrorBoundary";
 import { BottomNav } from "./src/components/BottomNav";
 
 // ============================================================
@@ -927,23 +928,27 @@ const AppContent: React.FC = () => {
       navigateToPage('home');
       return null;
     }
-    return <Suspense fallback={<LoadingFallback />}><APITestPage /></Suspense>;
+    return <PageErrorBoundary pageName="APITest"><Suspense fallback={<LoadingFallback />}><APITestPage /></Suspense></PageErrorBoundary>;
   }
 
   // Página de resultado de pago MercadoPago
   if (currentPage === 'payment-result') {
     return (
-      <Suspense fallback={<LoadingFallback />}>
-        <PaymentResultPage />
-      </Suspense>
+      <PageErrorBoundary pageName="PaymentResult">
+        <Suspense fallback={<LoadingFallback />}>
+          <PaymentResultPage />
+        </Suspense>
+      </PageErrorBoundary>
     );
   }
 
   if (currentPage === 'featured-checkout') {
     return (
-      <Suspense fallback={<LoadingFallback />}>
-        <FeaturedCheckoutPage />
-      </Suspense>
+      <PageErrorBoundary pageName="FeaturedCheckout">
+        <Suspense fallback={<LoadingFallback />}>
+          <FeaturedCheckoutPage />
+        </Suspense>
+      </PageErrorBoundary>
     );
   }
 
@@ -953,7 +958,7 @@ const AppContent: React.FC = () => {
       navigateToPage('home');
       return null;
     }
-    return <Suspense fallback={<LoadingFallback />}><DiagnosticsPage /></Suspense>;
+    return <PageErrorBoundary pageName="Diagnostics"><Suspense fallback={<LoadingFallback />}><DiagnosticsPage /></Suspense></PageErrorBoundary>;
   }
 
   // Render normal para home, búsqueda y detalle
@@ -972,29 +977,33 @@ const AppContent: React.FC = () => {
       />
 
       {currentPage === 'ad-detail' && selectedAdId ? (
-        <Suspense fallback={<LoadingFallback />}>
-          <AdDetailPageLazy />
-        </Suspense>
+        <PageErrorBoundary pageName="AdDetail">
+          <Suspense fallback={<LoadingFallback />}>
+            <AdDetailPageLazy />
+          </Suspense>
+        </PageErrorBoundary>
       ) : isSearching ? (
-        // VISTA DE BÚSQUEDA - Lazy loaded  
-        <Suspense fallback={<LoadingFallback />}>
-          <SearchPage />
-        </Suspense>
+        <PageErrorBoundary pageName="Search">
+          <Suspense fallback={<LoadingFallback />}>
+            <SearchPage />
+          </Suspense>
+        </PageErrorBoundary>
       ) : (
-        // VISTA DE INICIO - Lazy loaded
-        <Suspense fallback={<LoadingFallback />}>
-          <HomePage 
-            onShowAuthModal={() => { window.location.hash = '#/login'; }}
-            onSearch={handleAdvancedSearch}
-            onCategoryHover={setHoveredCategory}
-            onBannerChange={setCurrentBanner}
-            onAdClick={(adId) => {
-              setSelectedAdId(adId);
-              setCurrentPage('ad-detail');
-            }}
-            hoveredCategory={hoveredCategory}
-          />
-        </Suspense>
+        <PageErrorBoundary pageName="Home">
+          <Suspense fallback={<LoadingFallback />}>
+            <HomePage
+              onShowAuthModal={() => { window.location.hash = '#/login'; }}
+              onSearch={handleAdvancedSearch}
+              onCategoryHover={setHoveredCategory}
+              onBannerChange={setCurrentBanner}
+              onAdClick={(adId) => {
+                setSelectedAdId(adId);
+                setCurrentPage('ad-detail');
+              }}
+              hoveredCategory={hoveredCategory}
+            />
+          </Suspense>
+        </PageErrorBoundary>
       )}
 
       {/* Botón flotante Scroll to Top */}
