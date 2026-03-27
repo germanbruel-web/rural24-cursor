@@ -28,6 +28,16 @@ interface UserProfile {
   privacy_mode?: 'public' | 'private';
   profile_views?: number;
   profile_contacts_received?: number;
+  // Ubicación extendida
+  domicilio?: string;
+  codigo_postal?: string;
+  // Facturación
+  cuit?: string;
+  billing_same_address?: boolean;
+  billing_address?: string;
+  billing_localidad?: string;
+  billing_provincia?: string;
+  billing_codigo_postal?: string;
 }
 
 interface AuthContextType {

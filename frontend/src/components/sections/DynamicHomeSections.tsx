@@ -21,6 +21,8 @@ interface SectionProps {
   section: HomeSection;
 }
 
+interface AdImage { url: string; public_id?: string; }
+
 interface AdItem {
   id: string;
   title: string;
@@ -28,7 +30,7 @@ interface AdItem {
   price: number | null;
   currency: string;
   price_unit?: string;
-  images: string[];
+  images: (string | AdImage)[];
   category_id: string;
   subcategory_id: string | null;
   province?: string;
@@ -37,10 +39,14 @@ interface AdItem {
   attributes?: Record<string, unknown>;
   status: string;
   featured_expires_at?: string;
-  categories?: { slug: string } | null;
+  categories?: { slug: string } | { slug: string }[] | null;
+  subcategories?: { slug: string } | { slug: string }[] | null;
   user_id?: string;
-  users?: { avatar_url: string | null } | null;
+  users?: { avatar_url: string | null } | { avatar_url: string | null }[] | null;
 }
+
+type FeaturedRow = { ad_id: string; expires_at?: string };
+type SubcatRow   = { id: string };
 
 // Contexto para habilitar countdown de vencimiento de destacados
 const CountdownEnabledCtx = React.createContext(false);
@@ -160,7 +166,7 @@ function useAds(section: HomeSection) {
             } else {
               const { data: children } = await supabase
                 .from('subcategories').select('id').eq('parent_id', subcat.id);
-              const ids = [subcat.id, ...(children ?? []).map((c: any) => c.id)];
+              const ids = [subcat.id, ...(children ?? []).map((c: SubcatRow) => c.id)];
               query = query.in('subcategory_id', ids);
             }
           }
@@ -174,7 +180,7 @@ function useAds(section: HomeSection) {
             );
             if (!rpcErr && rpcData?.length > 0) {
               // Hay destacados activos → mostrar solo esos
-              query = query.in('id', rpcData.map((f: any) => f.ad_id));
+              query = query.in('id', rpcData.map((f: FeaturedRow) => f.ad_id));
             } else if (!rpcErr) {
               // Sin destacados activos → fallback a avisos regulares de la misma categoría
               setFeaturedFallback(true);
@@ -183,7 +189,7 @@ function useAds(section: HomeSection) {
               // RPC falló → fallback directo a featured_ads table
               const { data: fIds } = await supabase
                 .from('featured_ads').select('ad_id').eq('status', 'active').eq('placement', 'homepage');
-              const ids = (fIds ?? []).map((f: any) => f.ad_id);
+              const ids = (fIds ?? []).map((f: FeaturedRow) => f.ad_id);
               if (ids.length > 0) query = query.in('id', ids);
               else setFeaturedFallback(true); // sin datos, mostrar regulares
             }
@@ -191,7 +197,7 @@ function useAds(section: HomeSection) {
             // Sin categoría: fallback directo
             const { data: fIds } = await supabase
               .from('featured_ads').select('ad_id').eq('status', 'active').eq('placement', 'homepage');
-            const ids = (fIds ?? []).map((f: any) => f.ad_id);
+            const ids = (fIds ?? []).map((f: FeaturedRow) => f.ad_id);
             if (ids.length > 0) query = query.in('id', ids);
             else setFeaturedFallback(true);
           }
@@ -221,7 +227,7 @@ function useAds(section: HomeSection) {
             .in('ad_id', adIds)
             .eq('status', 'active');
           const expiresMap: Record<string, string> = {};
-          (fa ?? []).forEach((f: any) => { if (f.expires_at) expiresMap[f.ad_id] = f.expires_at; });
+          (fa ?? []).forEach((f: FeaturedRow) => { if (f.expires_at) expiresMap[f.ad_id] = f.expires_at; });
           setAds(adsData.map(a => ({ ...a, featured_expires_at: expiresMap[a.id] })));
         } else {
           setAds(adsData);
@@ -297,10 +303,10 @@ function resolveJoin<T>(val: T | T[] | null | undefined): T | null {
 
 function adToProduct(ad: AdItem): Product {
   const firstImage = ad.images?.[0];
-  const imageUrl = typeof firstImage === 'string' ? firstImage : ((firstImage as any)?.url ?? '');
-  const cats = resolveJoin(ad.categories as any);
-  const subs = resolveJoin((ad as any).subcategories);
-  const users = resolveJoin(ad.users as any);
+  const imageUrl = typeof firstImage === 'string' ? firstImage : ((firstImage as AdImage)?.url ?? '');
+  const cats  = resolveJoin(ad.categories);
+  const subs  = resolveJoin(ad.subcategories);
+  const users = resolveJoin(ad.users);
   return {
     id: ad.id,
     title: ad.title,
@@ -808,7 +814,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
           );
           if (!rpcErr && rpcData?.length > 0) {
             // Hay destacados activos → filtrar solo esos
-            adsQuery = adsQuery.in('id', rpcData.map((f: any) => f.ad_id));
+            adsQuery = adsQuery.in('id', rpcData.map((f: FeaturedRow) => f.ad_id));
           } else if (!rpcErr) {
             // Sin destacados activos → fallback a avisos regulares de la misma categoría
             // adsQuery ya tiene .eq('category_id', cat.id) — continúa sin filtro featured
@@ -816,7 +822,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
             // RPC falló → fallback directo a featured_ads table
             const { data: fIds } = await supabase
               .from('featured_ads').select('ad_id').eq('status', 'active').eq('placement', 'homepage');
-            const ids = (fIds ?? []).map((f: any) => f.ad_id);
+            const ids = (fIds ?? []).map((f: FeaturedRow) => f.ad_id);
             if (ids.length > 0) adsQuery = adsQuery.in('id', ids);
             // Si tampoco hay en fallback → continúa sin filtro (muestra regulares)
           }
@@ -834,7 +840,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
             .in('ad_id', adIds)
             .eq('status', 'active');
           const expiresMap: Record<string, string> = {};
-          (fa ?? []).forEach((f: any) => { if (f.expires_at) expiresMap[f.ad_id] = f.expires_at; });
+          (fa ?? []).forEach((f: FeaturedRow) => { if (f.expires_at) expiresMap[f.ad_id] = f.expires_at; });
           setFeaturedAds(adsArr.map(a => ({ ...a, featured_expires_at: expiresMap[a.id] })));
         } else {
           setFeaturedAds(adsArr);
@@ -852,7 +858,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
             .order('sort_order');
 
           if (l2s?.length) {
-            const l2Ids = l2s.map((s: any) => s.id);
+            const l2Ids = l2s.map((s) => s.id);
 
             // L3 subcategorías
             const { data: l3s } = await supabase
@@ -879,12 +885,12 @@ function CategorySectionRenderer({ section }: SectionProps) {
             // Construir lista plana: L2s con sus L3s intercalados
             const links: TaxLinkItem[] = [];
             for (const l2 of l2s) {
-              const l3sOfL2 = (l3s ?? []).filter((l: any) => l.parent_id === l2.id);
+              const l3sOfL2 = (l3s ?? []).filter((l) => l.parent_id === l2.id);
 
               if (l3sOfL2.length > 0) {
                 // L2 con hijos: entrada "todos" que incluye avisos directos en L2 + todos sus L3s
                 const l2DirectCount = countMap.get(l2.id) ?? 0;
-                const l3Total = l3sOfL2.reduce((sum: number, l3: any) => sum + (countMap.get(l3.id) ?? 0), 0);
+                const l3Total = l3sOfL2.reduce((sum: number, l3) => sum + (countMap.get(l3.id) ?? 0), 0);
                 links.push({
                   slug: l2.slug,
                   label: l2.display_name,
@@ -1204,7 +1210,7 @@ class SectionErrorBoundary extends React.Component<
   { children: React.ReactNode; sectionId: string },
   { hasError: boolean }
 > {
-  constructor(props: any) {
+  constructor(props: { children: React.ReactNode; sectionId: string }) {
     super(props);
     this.state = { hasError: false };
   }

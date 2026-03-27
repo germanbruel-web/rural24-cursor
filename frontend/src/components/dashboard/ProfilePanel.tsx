@@ -195,23 +195,23 @@ export const ProfilePanel: React.FC = () => {
   });
 
   const [locationForm, setLocationForm] = useState({
-    domicilio:     (profile as any)?.domicilio || '',
+    domicilio:     profile?.domicilio || '',
     province:      profile?.province || '',
     location:      profile?.location || '',
-    codigo_postal: (profile as any)?.codigo_postal || '',
+    codigo_postal: profile?.codigo_postal || '',
   });
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [locationLocalities, setLocationLocalities] = useState<Locality[]>([]);
 
   const [billingSameAddress, setBillingSameAddress] = useState(
-    (profile as any)?.billing_same_address !== false
+    profile?.billing_same_address !== false
   );
   const [billingForm, setBillingForm] = useState({
-    cuit_cuil:     (profile as any)?.cuit || '',
-    domicilio:     (profile as any)?.billing_address || '',
-    localidad:     (profile as any)?.billing_localidad || '',
-    provincia:     (profile as any)?.billing_provincia || '',
-    codigo_postal: (profile as any)?.billing_codigo_postal || '',
+    cuit_cuil:     profile?.cuit || '',
+    domicilio:     profile?.billing_address || '',
+    localidad:     profile?.billing_localidad || '',
+    provincia:     profile?.billing_provincia || '',
+    codigo_postal: profile?.billing_codigo_postal || '',
   });
 
   // Mobile verification
@@ -247,18 +247,18 @@ export const ProfilePanel: React.FC = () => {
     });
     setLocationForm(f => ({
       ...f,
-      domicilio:     (profile as any).domicilio || '',
+      domicilio:     profile.domicilio || '',
       province:      profile.province || '',
       location:      profile.location || '',
-      codigo_postal: (profile as any).codigo_postal || '',
+      codigo_postal: profile.codigo_postal || '',
     }));
-    setBillingSameAddress((profile as any).billing_same_address !== false);
+    setBillingSameAddress(profile.billing_same_address !== false);
     setBillingForm({
-      cuit_cuil:     (profile as any).cuit || '',
-      domicilio:     (profile as any).billing_address || '',
-      localidad:     (profile as any).billing_localidad || '',
-      provincia:     (profile as any).billing_provincia || '',
-      codigo_postal: (profile as any).billing_codigo_postal || '',
+      cuit_cuil:     profile.cuit || '',
+      domicilio:     profile.billing_address || '',
+      localidad:     profile.billing_localidad || '',
+      provincia:     profile.billing_provincia || '',
+      codigo_postal: profile.billing_codigo_postal || '',
     });
     setMobileInput(profile.mobile || '');
     if (profile.mobile_verified) setVerificationStep('verified');
@@ -352,10 +352,10 @@ export const ProfilePanel: React.FC = () => {
     setEditingLocation(false);
     setLocationForm(f => ({
       ...f,
-      domicilio:     (profile as any)?.domicilio || '',
+      domicilio:     profile?.domicilio || '',
       province:      profile?.province || '',
       location:      profile?.location || '',
-      codigo_postal: (profile as any)?.codigo_postal || '',
+      codigo_postal: profile?.codigo_postal || '',
     }));
   };
 
@@ -380,13 +380,13 @@ export const ProfilePanel: React.FC = () => {
 
   const handleCancelBilling = () => {
     setEditingBilling(false);
-    setBillingSameAddress((profile as any)?.billing_same_address !== false);
+    setBillingSameAddress(profile?.billing_same_address !== false);
     setBillingForm({
-      cuit_cuil:     (profile as any)?.cuit || '',
-      domicilio:     (profile as any)?.billing_address || '',
-      localidad:     (profile as any)?.billing_localidad || '',
-      provincia:     (profile as any)?.billing_provincia || '',
-      codigo_postal: (profile as any)?.billing_codigo_postal || '',
+      cuit_cuil:     profile?.cuit || '',
+      domicilio:     profile?.billing_address || '',
+      localidad:     profile?.billing_localidad || '',
+      provincia:     profile?.billing_provincia || '',
+      codigo_postal: profile?.billing_codigo_postal || '',
     });
   };
 
