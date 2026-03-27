@@ -71,40 +71,8 @@ export default defineConfig(({ mode }) => {
       registerType: 'autoUpdate',
       devOptions: { enabled: true },
       includeAssets: ['images/**/*.{png,webp,svg}'],
-      manifest: {
-        name: 'RURAL24 — Clasificados Agropecuarios',
-        short_name: 'Rural24',
-        description: 'Comprá y vendé ganado, maquinaria, insumos e inmuebles rurales en Argentina.',
-        theme_color: '#138A2C',
-        background_color: '#ffffff',
-        display: 'standalone',
-        start_url: '/',
-        scope: '/',
-        orientation: 'portrait',
-        icons: [
-          { src: '/images/Apprural/web/icon-192.png',          sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: '/images/Apprural/web/icon-192-maskable.png',  sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-          { src: '/images/Apprural/web/icon-512.png',           sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: '/images/Apprural/web/icon-512-maskable.png',  sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        ],
-        id: '/',
-        screenshots: [
-  {
-    src: '/screenshot-desktop.webp',
-    type: 'image/webp',
-    sizes: '1280x720',
-    form_factor: 'wide',
-    label: 'RURAL24 — Clasificados Agropecuarios',
-  },
-  {
-    src: '/screenshot-mobile.webp',
-    type: 'image/webp',
-    sizes: '390x844',
-    form_factor: 'narrow',
-    label: 'RURAL24 — Clasificados Agropecuarios',
-  },
-],
-      },
+      // manifest is served from public/manifest.json (linked in index.html)
+      manifest: false,
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,webp,svg,woff2}'],
         navigateFallback: '/index.html',

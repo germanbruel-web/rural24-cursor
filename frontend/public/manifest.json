@@ -1,8 +1,10 @@
 {
+  "id": "/",
   "name": "RURAL24 | El futuro del campo",
   "short_name": "Rural24",
   "description": "Clasificados agropecuarios de Argentina. Comprá y vendé ganado, maquinaria, insumos e inmuebles rurales.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#138A2C",
