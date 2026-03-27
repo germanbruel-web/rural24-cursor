@@ -15,6 +15,21 @@ interface LoginFormProps {
   onSwitchToReset?: () => void;
 }
 
+function mapAuthError(message?: string): string {
+  const msg = (message || '').toLowerCase();
+  if (msg.includes('invalid login credentials') || msg.includes('invalid_credentials'))
+    return 'Email o contraseña incorrectos';
+  if (msg.includes('email not confirmed'))
+    return 'Debés confirmar tu email antes de ingresar. Revisá tu casilla de correo.';
+  if (msg.includes('too many requests') || msg.includes('rate limit'))
+    return 'Demasiados intentos fallidos. Esperá unos minutos antes de volver a intentar.';
+  if (msg.includes('user not found'))
+    return 'No existe una cuenta con ese email';
+  if (msg.includes('network') || msg.includes('fetch'))
+    return 'Error de conexión. Verificá tu internet e intentá de nuevo.';
+  return 'Error al iniciar sesión. Intentá de nuevo.';
+}
+
 export default function LoginForm({ onSuccess, onSwitchToRegister, onSwitchToReset }: LoginFormProps) {
   const { signIn, user } = useAuth();
   const headerLogo = useSiteSetting('header_logo', 'https://res.cloudinary.com/ruralcloudinary/image/upload/v1774475353/zf3ls8uf4ssazypsdtnb.webp');
@@ -64,7 +79,7 @@ export default function LoginForm({ onSuccess, onSwitchToRegister, onSwitchToRes
     const { error: signInError } = await signIn(email, password);
 
     if (signInError) {
-      setError(signInError.message || 'Error al iniciar sesión');
+      setError(mapAuthError(signInError.message));
       setLoading(false);
     } else {
       setLoading(false);
