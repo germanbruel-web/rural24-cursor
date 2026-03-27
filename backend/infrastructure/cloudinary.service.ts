@@ -110,6 +110,7 @@ export async function uploadToCloudinary(
         public_id: buildPublicId(userId),
         resource_type: 'image',
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'svg'],
+        format: 'webp',
       },
       (error, result) => {
         if (error) {
