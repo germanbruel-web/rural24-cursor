@@ -52,11 +52,11 @@ const VARIANTS = {
   /** Imagen completa — sin transformación extra */
   full: undefined as string | undefined,
   /** Miniatura cuadrada 200×200 para tablas de admin */
-  thumbnail: 'c_fill,w_200,h_200,f_auto,q_auto',
+  thumbnail: 'c_fill,w_200,h_200,q_auto',
   /** Card de producto — 400×300, crop centrado */
-  card: 'c_fill,w_400,h_300,f_auto,q_auto',
-  /** Hero / detalle — ancho máximo 1200, formato auto */
-  hero: 'w_1200,f_auto,q_auto',
+  card: 'c_fill,w_400,h_300,q_auto',
+  /** Hero / detalle — ancho máximo 1200 */
+  hero: 'w_1200,q_auto',
 } as const;
 
 type Variant = keyof typeof VARIANTS;
