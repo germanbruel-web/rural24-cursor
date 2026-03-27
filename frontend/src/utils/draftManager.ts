@@ -58,7 +58,7 @@ export class DraftManager {
       // Marcar como borrador activo
       localStorage.setItem(ACTIVE_DRAFT_KEY, state.draftId);
       
-      console.log('💾 Draft saved:', state.draftId, 'Step:', state.currentStep);
+      if (import.meta.env.DEV) console.log('💾 Draft saved:', state.draftId, 'Step:', state.currentStep);
     } catch (error) {
       console.error('❌ Error saving draft:', error);
     }
@@ -75,7 +75,7 @@ export class DraftManager {
       if (!data) return null;
       
       const draft = JSON.parse(data) as DraftState;
-      console.log('📂 Draft loaded:', draftId, 'Step:', draft.currentStep);
+      if (import.meta.env.DEV) console.log('📂 Draft loaded:', draftId, 'Step:', draft.currentStep);
       
       return draft;
     } catch (error) {
@@ -104,7 +104,7 @@ export class DraftManager {
         localStorage.removeItem(ACTIVE_DRAFT_KEY);
       }
       
-      console.log('🗑️ Draft deleted:', draftId);
+      if (import.meta.env.DEV) console.log('🗑️ Draft deleted:', draftId);
     } catch (error) {
       console.error('❌ Error deleting draft:', error);
     }
@@ -125,7 +125,7 @@ export class DraftManager {
             const draft = JSON.parse(data) as DraftState;
             if (now - draft.lastModified > maxAge) {
               localStorage.removeItem(key);
-              console.log('🧹 Old draft cleaned:', draft.draftId);
+              if (import.meta.env.DEV) console.log('🧹 Old draft cleaned:', draft.draftId);
             }
           }
         }
@@ -166,7 +166,7 @@ export class DraftManager {
 export function updateDraftURL(draftId: string, step: number): void {
   const url = `#/publicar-aviso?draft=${draftId}&step=${step}`;
   window.history.replaceState(null, '', url);
-  console.log('🔗 URL updated:', url);
+  if (import.meta.env.DEV) console.log('🔗 URL updated:', url);
 }
 
 /**

@@ -404,7 +404,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // =====================================================
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       const interval = setInterval(() => {
         categoryCache.logStats();
       }, 1000 * 60); // Cada minuto

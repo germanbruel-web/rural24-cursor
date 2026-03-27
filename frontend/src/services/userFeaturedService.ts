@@ -452,7 +452,7 @@ export async function getFeaturedForHomepage(
     }
 
     // Debug: Log origen de destacados (opcional - comentar en producción)
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       const userPaid = featuredIds.filter((f: any) => !f.is_manual).length;
       const adminManual = featuredIds.filter((f: any) => f.is_manual).length;
       console.log(`[Featured Homepage] Total: ${featuredIds.length} | Usuario: ${userPaid} | Admin: ${adminManual}`);
@@ -509,7 +509,7 @@ export async function getFeaturedForResults(
     }
 
     // Debug: Log origen de destacados (opcional - comentar en producción)
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       const userPaid = featuredIds.filter((f: any) => !f.is_manual).length;
       const adminManual = featuredIds.filter((f: any) => f.is_manual).length;
       console.log(`[Featured Results] Total: ${featuredIds.length} | Usuario: ${userPaid} | Admin: ${adminManual}`);

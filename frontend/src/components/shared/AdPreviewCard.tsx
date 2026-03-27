@@ -31,18 +31,6 @@ interface AdPreviewCardProps {
 export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ data }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // DEBUGGING: Ver qué datos recibe el componente
-  console.log('==============================================');
-  console.log('🖼️ AdPreviewCard - Datos recibidos:');
-  console.log('==============================================');
-  console.log('📦 data completo:', data);
-  console.log('📸 images:', data.images);
-  console.log('📸 images length:', data.images?.length);
-  console.log('📸 Primera imagen:', data.images?.[0]);
-  console.log('🏷️ category:', data.category);
-  console.log('🏷️ subcategory:', data.subcategory);
-  console.log('==============================================');
-
   const hasImages = data.images && data.images.length > 0;
 
   return (

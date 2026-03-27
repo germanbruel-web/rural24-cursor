@@ -185,9 +185,9 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
 
   // Mostrar resumen de duplicados solo si hay alguno
   if (duplicatesFound.size > 0) {
-    console.log(`📊 ${title}: ${categoryProducts.length} productos únicos (${duplicatesFound.size} duplicados removidos de ${allProducts.length} totales)`);
+    if (import.meta.env.DEV) console.log(`📊 ${title}: ${categoryProducts.length} productos únicos (${duplicatesFound.size} duplicados removidos de ${allProducts.length} totales)`);
     // Solo mostrar en modo desarrollo si es necesario debuggear
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       duplicatesFound.forEach((title, id) => {
         console.debug(`   ↳ Duplicado: ${title}`);
       });

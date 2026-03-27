@@ -30,7 +30,7 @@ class CategoryCache {
       timestamp: Date.now(),
       ttl: ttl || this.DEFAULT_TTL,
     });
-    console.log(`📦 Cache SET: ${key} (TTL: ${(ttl || this.DEFAULT_TTL) / 1000}s)`);
+    if (import.meta.env.DEV) console.log(`📦 Cache SET: ${key} (TTL: ${(ttl || this.DEFAULT_TTL) / 1000}s)`);
   }
 
   /**
@@ -41,7 +41,7 @@ class CategoryCache {
     
     if (!item) {
       this.stats.misses++;
-      console.log(`❌ Cache MISS: ${key}`);
+      if (import.meta.env.DEV) console.log(`❌ Cache MISS: ${key}`);
       return null;
     }
 
@@ -50,12 +50,12 @@ class CategoryCache {
     if (isExpired) {
       this.cache.delete(key);
       this.stats.misses++;
-      console.log(`⏰ Cache EXPIRED: ${key}`);
+      if (import.meta.env.DEV) console.log(`⏰ Cache EXPIRED: ${key}`);
       return null;
     }
 
     this.stats.hits++;
-    console.log(`✅ Cache HIT: ${key}`);
+    if (import.meta.env.DEV) console.log(`✅ Cache HIT: ${key}`);
     return item.data;
   }
 
@@ -65,7 +65,7 @@ class CategoryCache {
   invalidate(key: string): void {
     const deleted = this.cache.delete(key);
     if (deleted) {
-      console.log(`🗑️ Cache INVALIDATE: ${key}`);
+      if (import.meta.env.DEV) console.log(`🗑️ Cache INVALIDATE: ${key}`);
     }
   }
 
@@ -80,7 +80,7 @@ class CategoryCache {
         count++;
       }
     }
-    console.log(`🗑️ Cache INVALIDATE PATTERN: ${pattern} (${count} items)`);
+    if (import.meta.env.DEV) console.log(`🗑️ Cache INVALIDATE PATTERN: ${pattern} (${count} items)`);
   }
 
   /**
@@ -90,7 +90,7 @@ class CategoryCache {
     const size = this.cache.size;
     this.cache.clear();
     this.stats = { hits: 0, misses: 0 };
-    console.log(`🧹 Cache CLEARED (${size} items removed)`);
+    if (import.meta.env.DEV) console.log(`🧹 Cache CLEARED (${size} items removed)`);
   }
 
   /**
@@ -115,12 +115,14 @@ class CategoryCache {
     const total = stats.hits + stats.misses;
     const hitRate = total > 0 ? ((stats.hits / total) * 100).toFixed(1) : '0.0';
     
-    console.group('📊 Cache Statistics');
-    console.log(`Hits: ${stats.hits}`);
-    console.log(`Misses: ${stats.misses}`);
-    console.log(`Hit Rate: ${hitRate}%`);
-    console.log(`Cache Size: ${stats.size} items`);
-    console.groupEnd();
+    if (import.meta.env.DEV) {
+      console.group('📊 Cache Statistics');
+      console.log(`Hits: ${stats.hits}`);
+      console.log(`Misses: ${stats.misses}`);
+      console.log(`Hit Rate: ${hitRate}%`);
+      console.log(`Cache Size: ${stats.size} items`);
+      console.groupEnd();
+    }
   }
 
   /**
@@ -137,7 +139,7 @@ class CategoryCache {
       }
     }
     
-    if (cleaned > 0) {
+    if (cleaned > 0 && import.meta.env.DEV) {
       console.log(`🧹 Cache CLEANUP: ${cleaned} expired items removed`);
     }
   }

@@ -30,20 +30,13 @@ export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
   useEffect(() => {
     const fetchDollar = async () => {
       try {
-        const [oficialRes, blueRes] = await Promise.all([
-          fetch('https://dolarapi.com/v1/dolares/oficial'),
-          fetch('https://dolarapi.com/v1/dolares/blue'),
-        ]);
-        if (oficialRes.ok && blueRes.ok) {
-          const oficial = await oficialRes.json();
-          const blue = await blueRes.json();
-          setDollarRates({
-            oficial: Math.round(oficial.venta || 0),
-            blue: Math.round(blue.venta || 0),
-          });
+        const res = await fetch('/api/dollar-rates');
+        if (res.ok) {
+          const data = await res.json();
+          setDollarRates({ oficial: data.oficial, blue: data.blue });
         }
-      } catch (error) {
-        console.warn('Error fetching dollar rates:', error);
+      } catch {
+        // silencioso — muestra 0 si no hay datos
       }
     };
 

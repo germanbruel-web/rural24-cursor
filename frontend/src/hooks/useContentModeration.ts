@@ -175,7 +175,7 @@ export function useContentModeration() {
       }
 
       // Log en desarrollo
-      if (logResults && process.env.NODE_ENV === 'development') {
+      if (logResults && import.meta.env.DEV) {
         console.log(`[ContentModeration] 🔍 Análisis:`, {
           file: file.name,
           approved: result.isApproved,
