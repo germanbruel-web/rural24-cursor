@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const result = await uploadToCloudinary(buffer, 'email-media', undefined, user.id);
+        const result = await uploadToCloudinary(buffer, 'email-media', undefined, user.id, 'jpg');
 
         const supabase = getSupabaseClient();
         const { data, error } = await supabase

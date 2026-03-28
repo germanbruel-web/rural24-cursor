@@ -102,6 +102,7 @@ export async function uploadToCloudinary(
   folder: string = 'ads',
   entity?: MediaEntity,
   userId?: string,
+  outputFormat: 'webp' | 'jpg' | 'png' = 'webp',
 ): Promise<CloudinaryUploadResult> {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -110,7 +111,7 @@ export async function uploadToCloudinary(
         public_id: buildPublicId(userId),
         resource_type: 'image',
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'svg'],
-        format: 'webp',
+        format: outputFormat,
       },
       (error, result) => {
         if (error) {
