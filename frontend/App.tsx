@@ -142,6 +142,7 @@ const AppContent: React.FC = () => {
     // Intentar recuperar del hash primero
     const hash = window.location.hash;
     
+    if (hash.startsWith('#access_token=')) return 'auth-callback'; // Supabase redirect a /auth/callback#access_token=...
     if (hash.startsWith('#/auth/confirm')) return 'email-confirm';
     if (hash.startsWith('#/auth/callback')) return 'auth-callback';
     if (hash === '#/login') return 'login';
@@ -306,6 +307,9 @@ const AppContent: React.FC = () => {
       // Scroll to top cuando cambia la página
       window.scrollTo(0, 0);
       
+      // Supabase redirect a /auth/callback#access_token=... (email confirmation / OAuth)
+      if (hash.startsWith('#access_token=')) { navigateToPage('auth-callback'); return; }
+
       // Routing para búsqueda: #/search?cat=X&sub=Y&prov=Z
       if (hash.startsWith('#/search')) {
         console.log('🔍 Navegando a página de búsqueda:', hash);
