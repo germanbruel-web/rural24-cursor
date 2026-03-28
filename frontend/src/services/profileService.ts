@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './supabaseClient';
+import { uploadsApi } from './api/uploads';
 
 // ============================================================================
 // TIPOS
@@ -155,83 +156,33 @@ export async function updateProfile(updates: Partial<ProfileData>): Promise<{ er
 }
 
 /**
- * Subir avatar/logo
+ * Subir avatar/logo — usa BFF → Cloudinary (igual que ads y banners)
  */
 export async function uploadAvatar(file: File): Promise<{ url: string | null; error: Error | null }> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { url: null, error: new Error('No autenticado') };
-    }
+    if (!user) return { url: null, error: new Error('No autenticado') };
 
-    const fileExt = file.name.split('.').pop()?.toLowerCase();
-    const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'heic'];
-    
-    if (!fileExt || !allowedExts.includes(fileExt)) {
-      return { url: null, error: new Error('Formato de imagen no válido. Use JPG, PNG, WebP, AVIF o HEIC.') };
-    }
+    const mediaInfo = await uploadsApi.uploadImage(file, 'profiles');
 
-    // Limitar tamaño a 2MB
-    if (file.size > 2 * 1024 * 1024) {
-      return { url: null, error: new Error('La imagen no puede superar 2MB') };
-    }
+    const { error: updateError } = await updateProfile({ avatar_url: mediaInfo.url });
+    if (updateError) return { url: null, error: updateError };
 
-    const fileName = `${user.id}/avatar.${fileExt}`;
-    
-    // Subir a Supabase Storage
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, file, { 
-        upsert: true,
-        contentType: file.type 
-      });
-
-    if (uploadError) {
-      return { url: null, error: uploadError };
-    }
-
-    // Obtener URL pública
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
-
-    // Agregar timestamp para evitar caché
-    const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
-
-    // Actualizar perfil con la URL
-    const { error: updateError } = await updateProfile({ avatar_url: urlWithTimestamp });
-    if (updateError) {
-      return { url: null, error: updateError };
-    }
-
-    return { url: urlWithTimestamp, error: null };
+    return { url: mediaInfo.url, error: null };
   } catch (error) {
     return { url: null, error: error as Error };
   }
 }
 
 /**
- * Eliminar avatar
+ * Eliminar avatar — limpia la URL en DB (imagen queda en Cloudinary sin referencia)
  */
 export async function deleteAvatar(): Promise<{ error: Error | null }> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { error: new Error('No autenticado') };
-    }
+    if (!user) return { error: new Error('No autenticado') };
 
-    // Eliminar del storage
-    const { error: deleteError } = await supabase.storage
-      .from('avatars')
-      .remove([`${user.id}/avatar.jpg`, `${user.id}/avatar.png`, `${user.id}/avatar.webp`]);
-
-    if (deleteError) {
-      console.warn('Error eliminando archivo de storage:', deleteError);
-    }
-
-    // Limpiar URL en perfil
     const { error: updateError } = await updateProfile({ avatar_url: '' });
-    
     return { error: updateError };
   } catch (error) {
     return { error: error as Error };

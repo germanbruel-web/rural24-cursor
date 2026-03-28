@@ -14,6 +14,7 @@ import {
   Footer,
   AuthModal,
   EmailConfirmationPage,
+  EmailGatePage,
   OAuthCallbackPage,
   DashboardLayout,
 } from "./src/components";
@@ -200,7 +201,7 @@ const AppContent: React.FC = () => {
   });
   
   const { products, isLoading, getFilterOptions, refetch } = useProducts();
-  const { profile, loading: authLoading } = useAuth();
+  const { profile, session, loading: authLoading } = useAuth();
   
   // 🔔 Redirect post-login a perfil + nudge de completitud
   useProfileNudge();
@@ -626,6 +627,13 @@ const AppContent: React.FC = () => {
   // Estado actual de la app (solo en dev)
   if (import.meta.env.DEV) {
     console.log('🎯 Estado actual - currentPage:', currentPage, 'isSearching:', isSearching);
+  }
+
+  // Email gate — bloquear toda navegación si el email no está confirmado
+  // Usa session.user para evitar conflicto con el devUser fake (que no tiene email_confirmed_at)
+  const exemptFromGate = currentPage === 'email-confirm' || currentPage === 'auth-callback';
+  if (!authLoading && session && !session.user.email_confirmed_at && !exemptFromGate) {
+    return <EmailGatePage email={session.user.email ?? ''} />;
   }
 
   // Determinar si debe usar Dashboard Layout
