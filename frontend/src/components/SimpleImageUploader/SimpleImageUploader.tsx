@@ -90,7 +90,7 @@ export const SimpleImageUploader: React.FC<Props> = ({
       });
     
     if (needsSync) {
-      console.log('[SimpleUploader] 🔄 Syncing with existingImages:', existingImages.length);
+      if (import.meta.env.DEV) console.log('[SimpleUploader] 🔄 Syncing with existingImages:', existingImages.length);
       // Asegurar sortOrder e isPrimary en sync
       const synced = existingImages.map((img, idx) => ({
         ...img,
@@ -120,10 +120,7 @@ export const SimpleImageUploader: React.FC<Props> = ({
       if (!validation.isValid) {
         // Mostrar primer error
         notify.error(validation.errors[0], 5000);
-        console.log(`[SimpleUploader] ❌ Validación falló:`, {
-          file: file.name,
-          errors: validation.errors
-        });
+        if (import.meta.env.DEV) console.log(`[SimpleUploader] ❌ Validación falló:`, { file: file.name, errors: validation.errors });
         continue;
       }
 
@@ -164,7 +161,7 @@ export const SimpleImageUploader: React.FC<Props> = ({
         // 🗜️ COMPRIMIR si es necesaria
         const originalSize = file.size;
         if (originalSize > 2 * 1024 * 1024) { // >2MB
-          console.log(`[SimpleUploader] 🗜️ Comprimiendo imagen ${i + 1}...`);
+          if (import.meta.env.DEV) console.log(`[SimpleUploader] 🗜️ Comprimiendo imagen ${i + 1}...`);
           notify.info('Optimizando imagen...', 2000);
           
           const compressionResult = await compressImage(file);

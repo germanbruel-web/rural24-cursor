@@ -128,7 +128,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
         if (selectedIndex >= 0 && displayItems[selectedIndex]) {
           handleSelectItem(displayItems[selectedIndex]);
         } else if (query.trim()) {
-          handleSubmit(e as any);
+          doSearch(query.trim());
         }
         break;
 
@@ -177,29 +177,19 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
   );
 
   // Submit del formulario
+  const doSearch = (trimmed: string) => {
+    searchAnalytics.trackSearch({ query: trimmed, source: 'header' });
+    setShowDropdown(false);
+    if (onSearch) onSearch(trimmed);
+    else window.location.hash = `#/search?q=${encodeURIComponent(trimmed)}`;
+    setSelectedIndex(-1);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = query.trim();
     if (!trimmed) return;
-
-    // Track en analytics
-    searchAnalytics.trackSearch({
-      query: trimmed,
-      source: 'header',
-    });
-
-    // Guardar en historial (lo hace el hook automáticamente)
-    setShowDropdown(false);
-
-    if (onSearch) {
-      onSearch(trimmed);
-    } else {
-      // Navegar a página de búsqueda
-      window.location.hash = `#/search?q=${encodeURIComponent(trimmed)}`;
-    }
-
-    // query se sincroniza automáticamente desde el hashchange
-    setSelectedIndex(-1);
+    doSearch(trimmed);
   };
 
   // Limpiar input

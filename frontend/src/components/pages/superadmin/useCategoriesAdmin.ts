@@ -38,19 +38,19 @@ interface FormStates {
   categoryTypeFormData: CategoryTypeFormData;
   formData: ModelFormData;
   brandFormData: BrandFormData;
-  editingCategory: any | null;
-  editingSubcategory: any | null;
-  editingCategoryType: any | null;
-  editingModel: any | null;
-  editingBrand: any | null;
+  editingCategory: Record<string, unknown> | null;
+  editingSubcategory: Record<string, unknown> | null;
+  editingCategoryType: Record<string, unknown> | null;
+  editingModel: Record<string, unknown> | null;
+  editingBrand: Record<string, unknown> | null;
 }
 
 export function useCategoriesAdmin(nav: NavigationState) {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [subcategories, setSubcategories] = useState<any[]>([]);
-  const [categoryTypes, setCategoryTypes] = useState<any[]>([]);
-  const [brands, setBrands] = useState<any[]>([]);
-  const [models, setModels] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Record<string, unknown>[]>([]);
+  const [subcategories, setSubcategories] = useState<Record<string, unknown>[]>([]);
+  const [categoryTypes, setCategoryTypes] = useState<Record<string, unknown>[]>([]);
+  const [brands, setBrands] = useState<Record<string, unknown>[]>([]);
+  const [models, setModels] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -62,19 +62,19 @@ export function useCategoriesAdmin(nav: NavigationState) {
     try {
       switch (nav.mode) {
         case 'categories':
-          setCategories((await getCategories()) as any[]);
+          setCategories((await getCategories()) as Record<string, unknown>[]);
           break;
         case 'subcategories':
-          if (nav.categoryId) setSubcategories((await getSubcategories(nav.categoryId)) as any[]);
+          if (nav.categoryId) setSubcategories((await getSubcategories(nav.categoryId)) as Record<string, unknown>[]);
           break;
         case 'category_types':
-          if (nav.subcategoryId) setCategoryTypes((await getCategoryTypes(nav.subcategoryId)) as any[]);
+          if (nav.subcategoryId) setCategoryTypes((await getCategoryTypes(nav.subcategoryId)) as Record<string, unknown>[]);
           break;
         case 'brands':
-          if (nav.subcategoryId) setBrands((await getBrandsBySubcategory(nav.subcategoryId)) as any[]);
+          if (nav.subcategoryId) setBrands((await getBrandsBySubcategory(nav.subcategoryId)) as Record<string, unknown>[]);
           break;
         case 'models':
-          if (nav.brandId) setModels((await getModels(nav.brandId)) as any[]);
+          if (nav.brandId) setModels((await getModels(nav.brandId)) as Record<string, unknown>[]);
           break;
       }
     } catch (error) {
@@ -168,7 +168,7 @@ export function useCategoriesAdmin(nav: NavigationState) {
             icon: categoryFormData.icon || null,
             name,
           };
-          console.log('📝 Actualizando categoría:', updateData);
+          if (import.meta.env.DEV) console.log('📝 Actualizando categoría:', updateData);
           await updateCategory(editingCategory.id, updateData);
           alert('✅ Categoría actualizada');
         } else {
@@ -337,12 +337,12 @@ export function useCategoriesAdmin(nav: NavigationState) {
             }
 
             // La marca existe pero no está vinculada, solo vincularla
-            console.log(`✅ Vinculando marca existente "${brandFormData.display_name}" a la subcategoría`);
+            if (import.meta.env.DEV) console.log(`✅ Vinculando marca existente "${brandFormData.display_name}" a la subcategoría`);
           } else {
             // La marca no existe, crearla
             const newBrand = await createBrand(brandFormData);
             brandId = newBrand.id;
-            console.log(`✅ Marca "${brandFormData.display_name}" creada exitosamente`);
+            if (import.meta.env.DEV) console.log(`✅ Marca "${brandFormData.display_name}" creada exitosamente`);
           }
 
           // Vincular la marca a la subcategoría

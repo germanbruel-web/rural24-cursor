@@ -12,6 +12,17 @@ import { supabase } from '../supabaseClient';
 // TIPOS
 // ============================================================================
 
+interface SubscriptionPlanRow {
+  name: string;
+  display_name: string;
+  max_ads: number | null;
+  max_contacts_per_month: number | null;
+  max_featured_ads: number | null;
+  has_public_profile: boolean | null;
+  has_catalog: boolean | null;
+  has_analytics: boolean | null;
+}
+
 export interface PlanLimits {
   planName: string;
   planDisplayName: string;
@@ -129,7 +140,7 @@ export async function getUserPlanLimits(userId?: string): Promise<PlanLimits> {
     };
   }
 
-  const plan = data.subscription_plans as any;
+  const plan = data.subscription_plans as SubscriptionPlanRow | null;
   if (!plan) {
     return getFreePlanLimits();
   }

@@ -10,6 +10,8 @@ import { supabase } from '../supabaseClient';
 // ============================================================================
 
 export type PaymentType = 'subscription' | 'featured_ad' | 'upgrade' | 'renewal' | 'other';
+
+type PaymentUserRow = { email: string; full_name: string | null } | null;
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'cancelled';
 export type PaymentMethod = 'simulated' | 'mercadopago' | 'stripe' | 'transfer' | 'cash' | 'other';
 
@@ -224,8 +226,8 @@ export async function getAllPayments(
 
   return (data || []).map(p => ({
     ...p,
-    user_email: (p.users as any)?.email,
-    user_name: (p.users as any)?.full_name
+    user_email: (p.users as PaymentUserRow)?.email,
+    user_name: (p.users as PaymentUserRow)?.full_name
   }));
 }
 

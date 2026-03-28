@@ -542,9 +542,10 @@ export async function getMaquinariasBrandsBySubcategory(subcategoryId: string) {
 
   if (error) throw error;
 
+  type ItemWithBrand = { maquinarias_marcas: { id: string; display_name: string } | null };
   const uniqueBrands = new Map();
   data?.forEach(item => {
-    const brand = (item as any).maquinarias_marcas;
+    const brand = (item as ItemWithBrand).maquinarias_marcas;
     if (brand && !uniqueBrands.has(brand.id)) {
       uniqueBrands.set(brand.id, brand);
     }
