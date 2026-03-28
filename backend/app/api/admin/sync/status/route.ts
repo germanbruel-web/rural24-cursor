@@ -146,7 +146,8 @@ async function getConfigStatus(devClient: InstanceType<typeof Client>, prodClien
       ]);
       return {
         name:   table,
-        inSync: devHash !== null && prodHash !== null && devHash === prodHash,
+        // null === null (ambas vacías) = en sync; distinto = desincronizado
+        inSync: devHash === prodHash,
       };
     })
   );
