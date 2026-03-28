@@ -30,6 +30,9 @@ interface UserProfile {
   profile_contacts_received?: number;
   // Ubicación extendida
   domicilio?: string;
+  calle?: string;
+  altura?: string;
+  piso_dpto?: string;
   codigo_postal?: string;
   // Facturación
   cuit?: string;

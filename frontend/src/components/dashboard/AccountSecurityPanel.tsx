@@ -10,11 +10,11 @@
  * Nota: Privacidad (público/privado) se gestiona en el Hero del ProfilePanel.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   Lock, Mail, Trash2, Eye, EyeOff, Shield, AlertTriangle,
-  ChevronDown, ChevronUp, Loader2, CheckCircle,
+  ChevronDown, ChevronUp, Loader2, CheckCircle, XCircle,
 } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import {
@@ -23,6 +23,7 @@ import {
   requestAccountDeletion,
   detectAuthProvider,
   getActiveDeletionRequest,
+  verifyCurrentPassword,
 } from '../../services/accountService';
 
 // ─── Subcomponente: sección colapsable ─────────────────────────────────────
@@ -73,44 +74,73 @@ const Section: React.FC<SectionProps> = ({
   );
 };
 
-// ─── Campo de contraseña con toggle visibilidad ─────────────────────────────
+// ─── Campo de contraseña con toggle visibilidad + estado de validación ────────
+
+type PwStatus = 'idle' | 'checking' | 'valid' | 'invalid';
 
 interface PasswordInputProps {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   disabled?: boolean;
+  status?: PwStatus;
+  errorMessage?: string;
 }
 
-const PasswordInput: React.FC<PasswordInputProps> = ({ label, value, onChange, placeholder, disabled }) => {
-  const [visible, setVisible] = useState(false);
-  return (
-    <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-      <div className="relative">
-        <input
-          type={visible ? 'text' : 'password'}
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          placeholder={placeholder}
-          disabled={disabled}
-          className="w-full px-3 py-2 pr-10 text-sm border border-gray-300 rounded-lg
-            focus:ring-2 focus:ring-brand-600 focus:border-transparent
-            disabled:bg-gray-50 disabled:text-gray-400"
-        />
-        <button
-          type="button"
-          onClick={() => setVisible(v => !v)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-          tabIndex={-1}
-        >
-          {visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-        </button>
+const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
+  ({ label, value, onChange, onBlur, placeholder, disabled, status = 'idle', errorMessage }, ref) => {
+    const [visible, setVisible] = useState(false);
+    const hasStatus = status !== 'idle';
+
+    const statusIcon = hasStatus && (
+      <span className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none">
+        {status === 'checking' && <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />}
+        {status === 'valid'    && <CheckCircle className="w-4 h-4 text-success-600" />}
+        {status === 'invalid'  && <XCircle className="w-4 h-4 text-error-600" />}
+      </span>
+    );
+
+    return (
+      <div>
+        <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+        <div className="relative">
+          <input
+            ref={ref}
+            type={visible ? 'text' : 'password'}
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            onBlur={onBlur}
+            placeholder={placeholder}
+            disabled={disabled}
+            className={`w-full px-3 py-2 text-sm border rounded-lg
+              focus:ring-2 focus:ring-brand-600 focus:border-transparent
+              disabled:bg-gray-50 disabled:text-gray-400
+              ${hasStatus ? 'pr-16' : 'pr-10'}
+              ${status === 'invalid' ? 'border-error-500' : 'border-gray-300'}`}
+          />
+          {statusIcon}
+          <button
+            type="button"
+            onClick={() => setVisible(v => !v)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            tabIndex={-1}
+          >
+            {visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        {errorMessage && (
+          <p className="mt-1 text-xs text-error-600 flex items-center gap-1">
+            <XCircle className="w-3 h-3 flex-shrink-0" />
+            {errorMessage}
+          </p>
+        )}
       </div>
-    </div>
-  );
-};
+    );
+  }
+);
+PasswordInput.displayName = 'PasswordInput';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
@@ -122,20 +152,46 @@ export const AccountSecurityPanel: React.FC = () => {
   // ── 1. Contraseña ─────────────────────────────────────────────────────
 
   const [authProvider, setAuthProvider] = useState<'email' | 'oauth' | null>(null);
+  const [currentPw, setCurrentPw] = useState('');
+  const [currentPwState, setCurrentPwState] = useState<PwStatus>('idle');
+  const [currentPwError, setCurrentPwError] = useState('');
   const [pwForm, setPwForm] = useState({ newPassword: '', confirmPassword: '' });
   const [pwLoading, setPwLoading] = useState(false);
+  const newPwRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     detectAuthProvider().then(p => setAuthProvider(p));
   }, []);
 
+  useEffect(() => {
+    if (currentPwState === 'valid') newPwRef.current?.focus();
+  }, [currentPwState]);
+
+  const handleVerifyCurrentPassword = async () => {
+    if (!currentPw || currentPwState === 'checking') return;
+    if (!profile?.email) return;
+    setCurrentPwState('checking');
+    setCurrentPwError('');
+    const result = await verifyCurrentPassword(profile.email, currentPw);
+    if (result.success) {
+      setCurrentPwState('valid');
+    } else {
+      setCurrentPwState('invalid');
+      setCurrentPwError(result.error ?? 'Contraseña incorrecta.');
+    }
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (currentPwState !== 'valid') return;
     setPwLoading(true);
     const result = await changePassword(pwForm);
     if (result.success) {
       notify.success('Contraseña actualizada correctamente.');
       setPwForm({ newPassword: '', confirmPassword: '' });
+      setCurrentPw('');
+      setCurrentPwState('idle');
+      setCurrentPwError('');
     } else {
       notify.error(result.error ?? 'Error al cambiar la contraseña.');
     }
@@ -228,24 +284,56 @@ export const AccountSecurityPanel: React.FC = () => {
           </div>
         ) : (
           <form onSubmit={handleChangePassword} className="space-y-3">
+            {/* Paso 1: Contraseña actual */}
             <PasswordInput
+              label="Contraseña actual"
+              value={currentPw}
+              onChange={(v) => {
+                setCurrentPw(v);
+                if (currentPwState !== 'idle') { setCurrentPwState('idle'); setCurrentPwError(''); }
+              }}
+              onBlur={handleVerifyCurrentPassword}
+              placeholder="Tu contraseña actual"
+              disabled={pwLoading}
+              status={currentPwState}
+              errorMessage={currentPwError}
+            />
+            {/* Paso 2a: Nueva contraseña */}
+            <PasswordInput
+              ref={newPwRef}
               label="Nueva contraseña"
               value={pwForm.newPassword}
               onChange={v => setPwForm(f => ({ ...f, newPassword: v }))}
               placeholder="Mínimo 8 caracteres"
-              disabled={pwLoading}
+              disabled={pwLoading || currentPwState !== 'valid'}
             />
-            <PasswordInput
-              label="Repetir nueva contraseña"
-              value={pwForm.confirmPassword}
-              onChange={v => setPwForm(f => ({ ...f, confirmPassword: v }))}
-              placeholder="Repetí la nueva contraseña"
-              disabled={pwLoading}
-            />
+            {/* Paso 2b: Repetir nueva contraseña */}
+            {(() => {
+              const confirmPwStatus: PwStatus =
+                pwForm.confirmPassword.length === 0 ? 'idle'
+                : pwForm.newPassword === pwForm.confirmPassword && pwForm.newPassword.length >= 8 ? 'valid'
+                : 'invalid';
+              return (
+                <PasswordInput
+                  label="Repetir nueva contraseña"
+                  value={pwForm.confirmPassword}
+                  onChange={v => setPwForm(f => ({ ...f, confirmPassword: v }))}
+                  placeholder="Repetí la nueva contraseña"
+                  disabled={pwLoading || currentPwState !== 'valid'}
+                  status={confirmPwStatus}
+                />
+              );
+            })()}
             <p className="text-[11px] text-gray-400">Usá al menos 8 caracteres, mezclando letras y números.</p>
+            {/* Paso 3: Submit */}
             <button
               type="submit"
-              disabled={pwLoading || !pwForm.newPassword || !pwForm.confirmPassword}
+              disabled={
+                pwLoading ||
+                currentPwState !== 'valid' ||
+                pwForm.newPassword.length < 8 ||
+                pwForm.newPassword !== pwForm.confirmPassword
+              }
               className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg
                 hover:bg-brand-500 transition-colors flex items-center gap-2
                 disabled:opacity-50 disabled:cursor-not-allowed"

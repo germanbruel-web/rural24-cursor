@@ -33,6 +33,9 @@ export interface ProfileData {
 
   // Ubicación física
   domicilio?: string;
+  calle?: string;
+  altura?: string;
+  piso_dpto?: string;
   codigo_postal?: string;
 
   // Facturación (cuit ya existía en la tabla)
@@ -127,7 +130,7 @@ export async function updateProfile(updates: Partial<ProfileData>): Promise<{ er
       'company_name', 'company_cuit', 'avatar_url', 'company_description',
       'services', 'privacy_mode',
       // Ubicación física
-      'domicilio', 'codigo_postal',
+      'domicilio', 'calle', 'altura', 'piso_dpto', 'codigo_postal',
       // Facturación
       'cuit', 'billing_same_address', 'billing_address',
       'billing_localidad', 'billing_provincia', 'billing_codigo_postal',

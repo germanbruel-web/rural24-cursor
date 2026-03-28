@@ -63,6 +63,29 @@ export async function detectAuthProvider(): Promise<'email' | 'oauth' | null> {
 }
 
 /**
+ * Verifica la contraseña actual del usuario autenticado
+ * intentando un signIn silencioso con sus credenciales.
+ */
+export async function verifyCurrentPassword(
+  email: string,
+  password: string
+): Promise<AccountActionResult> {
+  try {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      if (error.status === 429 || error.message?.toLowerCase().includes('rate limit')) {
+        return { success: false, error: 'Demasiados intentos. Esperá unos minutos e intentá de nuevo.' };
+      }
+      return { success: false, error: 'Contraseña incorrecta.' };
+    }
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : undefined;
+    return { success: false, error: msg ?? 'No se pudo verificar la contraseña. Intentá de nuevo.' };
+  }
+}
+
+/**
  * Cambia la contraseña del usuario autenticado.
  * Valida que las contraseñas coincidan y cumplan mínimo de seguridad.
  */

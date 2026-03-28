@@ -13,7 +13,7 @@
  * Los cupones se canjean directamente en el checkout del modal de Destacados.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   User, MapPin, Edit, Save, X,
@@ -21,6 +21,15 @@ import {
   Loader2, Shield, Send, AlertCircle, Globe,
   EyeOff, FileText, Calendar,
 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+interface StreetSuggestion {
+  nombre:        string;
+  categoria:     string;
+  altura_minima: number | null;
+  altura_maxima: number | null;
+}
 import { notify } from '../../utils/notifications';
 import { getProvinces, getLocalitiesByProvince, type Province, type Locality } from '../../services/v2/locationsService';
 import { hasPremiumFeatures as checkPremium } from '../../constants/plans';
@@ -195,13 +204,21 @@ export const ProfilePanel: React.FC = () => {
   });
 
   const [locationForm, setLocationForm] = useState({
-    domicilio:     profile?.domicilio || '',
-    province:      profile?.province || '',
-    location:      profile?.location || '',
+    province:      profile?.province      || '',
+    location:      profile?.location      || '',
+    calle:         profile?.calle         || '',
+    altura:        profile?.altura        || '',
+    piso_dpto:     profile?.piso_dpto     || '',
     codigo_postal: profile?.codigo_postal || '',
   });
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [locationLocalities, setLocationLocalities] = useState<Locality[]>([]);
+
+  // Autocomplete calles
+  const [streetSuggestions, setStreetSuggestions] = useState<StreetSuggestion[]>([]);
+  const [streetLoading, setStreetLoading]         = useState(false);
+  const [streetOpen, setStreetOpen]               = useState(false);
+  const streetDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [billingSameAddress, setBillingSameAddress] = useState(
     profile?.billing_same_address !== false
@@ -247,9 +264,11 @@ export const ProfilePanel: React.FC = () => {
     });
     setLocationForm(f => ({
       ...f,
-      domicilio:     profile.domicilio || '',
-      province:      profile.province || '',
-      location:      profile.location || '',
+      province:      profile.province      || '',
+      location:      profile.location      || '',
+      calle:         profile.calle         || '',
+      altura:        profile.altura        || '',
+      piso_dpto:     profile.piso_dpto     || '',
       codigo_postal: profile.codigo_postal || '',
     }));
     setBillingSameAddress(profile.billing_same_address !== false);
@@ -330,6 +349,30 @@ export const ProfilePanel: React.FC = () => {
     setMobileInput(profile?.mobile || '');
   };
 
+  // ── Autocomplete calles (georef-ar) ──────────────────────────────────────
+  const handleCalleChange = (v: string) => {
+    setLocationForm(f => ({ ...f, calle: v, altura: '' }));
+    setStreetOpen(false);
+    if (streetDebounceRef.current) clearTimeout(streetDebounceRef.current);
+    if (v.length < 2 || !locationForm.province || !locationForm.location) return;
+
+    streetDebounceRef.current = setTimeout(async () => {
+      setStreetLoading(true);
+      try {
+        const params = new URLSearchParams({
+          q:        v,
+          province: locationForm.province,
+          locality: locationForm.location,
+        });
+        const res  = await fetch(`${API_URL}/api/config/address/streets?${params}`);
+        const data = await res.json() as { streets?: StreetSuggestion[] };
+        setStreetSuggestions(data.streets ?? []);
+        setStreetOpen((data.streets ?? []).length > 0);
+      } catch { /* silencioso */ }
+      finally { setStreetLoading(false); }
+    }, 300);
+  };
+
   // ── Save: Ubicación ───────────────────────────────────────────────────────
   const handleSaveLocation = async () => {
     setSaving('location');
@@ -337,7 +380,9 @@ export const ProfilePanel: React.FC = () => {
       const { error } = await updateProfile({
         province:      locationForm.province,
         location:      locationForm.location,
-        domicilio:     locationForm.domicilio,
+        calle:         locationForm.calle,
+        altura:        locationForm.altura,
+        piso_dpto:     locationForm.piso_dpto,
         codigo_postal: locationForm.codigo_postal,
       });
       if (error) { notify.error('Error: ' + error.message); return; }
@@ -350,11 +395,15 @@ export const ProfilePanel: React.FC = () => {
 
   const handleCancelLocation = () => {
     setEditingLocation(false);
+    setStreetOpen(false);
+    setStreetSuggestions([]);
     setLocationForm(f => ({
       ...f,
-      domicilio:     profile?.domicilio || '',
-      province:      profile?.province || '',
-      location:      profile?.location || '',
+      province:      profile?.province      || '',
+      location:      profile?.location      || '',
+      calle:         profile?.calle         || '',
+      altura:        profile?.altura        || '',
+      piso_dpto:     profile?.piso_dpto     || '',
       codigo_postal: profile?.codigo_postal || '',
     }));
   };
@@ -702,55 +751,147 @@ export const ProfilePanel: React.FC = () => {
             saving={saving === 'location'}
           >
             <div className="space-y-3">
-              <Field
-                label="Domicilio"
-                value={locationForm.domicilio}
-                onChange={(v) => setLocationForm(f => ({ ...f, domicilio: v }))}
-                isEditing={editingLocation}
-                placeholder="Av. San Martín 1234"
-                optional
-              />
+
+              {/* 1. Provincia */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">Provincia</label>
+                {editingLocation ? (
+                  <select
+                    value={locationForm.province}
+                    onChange={(e) => setLocationForm(f => ({
+                      ...f, province: e.target.value, location: '', calle: '', altura: '',
+                    }))}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
+                  >
+                    <option value="">Seleccionar provincia</option>
+                    {provinces.map(prov => (
+                      <option key={prov.id} value={prov.name}>{prov.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg text-gray-900">
+                    {locationForm.province || <span className="text-gray-400">Sin especificar</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Localidad */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">Localidad</label>
+                {editingLocation ? (
+                  <select
+                    value={locationForm.location}
+                    onChange={(e) => setLocationForm(f => ({
+                      ...f, location: e.target.value, calle: '', altura: '',
+                    }))}
+                    disabled={!locationForm.province}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent disabled:opacity-50"
+                  >
+                    <option value="">
+                      {locationForm.province ? 'Seleccionar localidad' : 'Primero seleccioná provincia'}
+                    </option>
+                    {locationLocalities.map(loc => (
+                      <option key={loc.id} value={loc.name}>{loc.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg text-gray-900">
+                    {locationForm.location || <span className="text-gray-400">Sin especificar</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Calle (autocomplete georef-ar) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">
+                  Calle <span className="font-normal text-gray-400">(opcional)</span>
+                </label>
+                {editingLocation ? (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={locationForm.calle}
+                      onChange={(e) => handleCalleChange(e.target.value)}
+                      onBlur={() => setTimeout(() => setStreetOpen(false), 150)}
+                      disabled={!locationForm.location}
+                      placeholder={locationForm.location ? 'Ej: Av. San Martín' : 'Primero seleccioná localidad'}
+                      className="w-full px-3 py-2 pr-8 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent disabled:opacity-50 disabled:bg-gray-50"
+                    />
+                    {streetLoading && (
+                      <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400 pointer-events-none" />
+                    )}
+                    {streetOpen && streetSuggestions.length > 0 && (
+                      <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-auto">
+                        {streetSuggestions.map((s) => (
+                          <li
+                            key={s.nombre}
+                            onMouseDown={() => {
+                              setLocationForm(f => ({ ...f, calle: s.nombre, altura: '' }));
+                              setStreetOpen(false);
+                            }}
+                            className="px-3 py-2 text-sm cursor-pointer hover:bg-brand-50 flex items-center justify-between"
+                          >
+                            <span className="font-medium text-gray-800">{s.nombre}</span>
+                            <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{s.categoria}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ) : (
+                  <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg text-gray-900">
+                    {locationForm.calle || <span className="text-gray-400">Sin especificar</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* 4. Altura + Piso/Depto */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Localidad</label>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    Altura <span className="font-normal text-gray-400">(opcional)</span>
+                  </label>
                   {editingLocation ? (
-                    <select
-                      value={locationForm.location}
-                      onChange={(e) => setLocationForm(f => ({ ...f, location: e.target.value }))}
-                      disabled={!locationForm.province}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent disabled:opacity-50"
-                    >
-                      <option value="">Seleccionar</option>
-                      {locationLocalities.map(loc => (
-                        <option key={loc.id} value={loc.name}>{loc.name}</option>
-                      ))}
-                    </select>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={locationForm.altura}
+                      onChange={(e) => setLocationForm(f => ({
+                        ...f, altura: e.target.value.replace(/\D/g, ''),
+                      }))}
+                      disabled={!locationForm.calle}
+                      placeholder="1234"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent disabled:opacity-50 disabled:bg-gray-50"
+                    />
                   ) : (
                     <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg text-gray-900">
-                      {locationForm.location || <span className="text-gray-400">Sin especificar</span>}
+                      {locationForm.altura || <span className="text-gray-400">-</span>}
                     </div>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Provincia</label>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    Piso/Depto/Otro <span className="font-normal text-gray-400">(opcional)</span>
+                  </label>
                   {editingLocation ? (
-                    <select
-                      value={locationForm.province}
-                      onChange={(e) => setLocationForm(f => ({ ...f, province: e.target.value, location: '' }))}
+                    <input
+                      type="text"
+                      maxLength={20}
+                      value={locationForm.piso_dpto}
+                      onChange={(e) => setLocationForm(f => ({ ...f, piso_dpto: e.target.value }))}
+                      placeholder="3°B, Casa, Torre 2"
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
-                    >
-                      <option value="">Seleccionar</option>
-                      {provinces.map(prov => (
-                        <option key={prov.id} value={prov.name}>{prov.name}</option>
-                      ))}
-                    </select>
+                    />
                   ) : (
                     <div className="px-3 py-2 text-sm bg-gray-50 rounded-lg text-gray-900">
-                      {locationForm.province || <span className="text-gray-400">Sin especificar</span>}
+                      {locationForm.piso_dpto || <span className="text-gray-400">-</span>}
                     </div>
                   )}
                 </div>
               </div>
+
+              {/* 5. Código Postal */}
               <Field
                 label="Código Postal"
                 value={locationForm.codigo_postal}
@@ -759,6 +900,7 @@ export const ProfilePanel: React.FC = () => {
                 placeholder="Ej: 1900"
                 optional
               />
+
             </div>
           </SectionCard>
 
