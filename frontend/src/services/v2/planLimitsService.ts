@@ -140,7 +140,8 @@ export async function getUserPlanLimits(userId?: string): Promise<PlanLimits> {
     };
   }
 
-  const plan = data.subscription_plans as SubscriptionPlanRow | null;
+  const raw = data.subscription_plans;
+  const plan = (Array.isArray(raw) ? raw[0] : raw) as SubscriptionPlanRow | null;
   if (!plan) {
     return getFreePlanLimits();
   }
@@ -198,7 +199,7 @@ export async function getUserLimitsStatus(userId?: string): Promise<UserLimitsSt
     getUserPlanLimits(uid),
     supabase
       .from('users')
-      .select('contacts_used_this_month, contacts_reset_at')
+      .select('contacts_used_this_month')
       .eq('id', uid)
       .single(),
     supabase
@@ -216,9 +217,6 @@ export async function getUserLimitsStatus(userId?: string): Promise<UserLimitsSt
   const currentAds = adsCount.count || 0;
   const currentFeatured = featuredCount.count || 0;
   const contactsUsed = userData.data?.contacts_used_this_month || 0;
-  const contactsResetAt = userData.data?.contacts_reset_at 
-    ? new Date(userData.data.contacts_reset_at) 
-    : null;
 
   const status: UserLimitsStatus = {
     plan,
@@ -233,7 +231,7 @@ export async function getUserLimitsStatus(userId?: string): Promise<UserLimitsSt
       limit: plan.maxContactsPerMonth,
       canContact: plan.maxContactsPerMonth === null || contactsUsed < plan.maxContactsPerMonth,
       remaining: plan.maxContactsPerMonth === null ? null : Math.max(0, plan.maxContactsPerMonth - contactsUsed),
-      resetsAt: getNextResetDate(contactsResetAt)
+      resetsAt: getNextResetDate()
     },
     featured: {
       current: currentFeatured,
@@ -252,10 +250,9 @@ export async function getUserLimitsStatus(userId?: string): Promise<UserLimitsSt
 /**
  * Calcular próxima fecha de reset
  */
-function getNextResetDate(lastReset: Date | null): Date {
+function getNextResetDate(): Date {
   const now = new Date();
-  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  return nextMonth;
+  return new Date(now.getFullYear(), now.getMonth() + 1, 1);
 }
 
 // ============================================================================
@@ -318,39 +315,20 @@ export async function checkCanFeatureAd(userId?: string): Promise<CheckResult> {
 // ============================================================================
 
 /**
- * Incrementar contador de contactos usados
- * Llamar después de enviar un contacto exitosamente
+ * Incrementar contador de contactos usados.
+ * Llama a la RPC handle_contact_used que maneja reset mensual + incremento atómicamente.
  */
 export async function incrementContactUsage(userId?: string): Promise<void> {
   const uid = userId || (await supabase.auth.getUser()).data.user?.id;
-  
+
   if (!uid) return;
 
-  // Verificar si necesita reset
-  const { data: user } = await supabase
-    .from('users')
-    .select('contacts_reset_at')
-    .eq('id', uid)
-    .single();
+  const { error } = await supabase.rpc('handle_contact_used', { p_user_id: uid });
 
-  const lastReset = user?.contacts_reset_at ? new Date(user.contacts_reset_at) : null;
-  const needsReset = !lastReset || lastReset < new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-
-  if (needsReset) {
-    // Reset y poner en 1
-    await supabase
-      .from('users')
-      .update({ 
-        contacts_used_this_month: 1,
-        contacts_reset_at: new Date().toISOString()
-      })
-      .eq('id', uid);
-  } else {
-    // Incrementar
-    await supabase.rpc('increment_contacts_used', { user_id: uid });
+  if (error) {
+    console.error('Error incrementing contact usage:', error);
   }
 
-  // Limpiar cache
   clearCache();
 }
 
