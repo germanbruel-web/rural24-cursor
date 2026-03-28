@@ -1,7 +1,7 @@
 /**
  * POST /api/admin/sync/git-push
- * Crea un PR de main → prod en GitHub y opcionalmente lo mergea.
- * Body: { merge?: boolean } — si merge=true, auto-mergea con squash.
+ * Sincroniza prod con main actualizando el ref directamente (force-update).
+ * Reemplaza el flujo PR+squash que causaba divergencia de ramas.
  * Solo superadmin.
  */
 
@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, type AuthUser } from '@/infrastructure/auth/guard';
 import { logger } from '@/lib/logger';
 
-const REPO = 'germanbruel-web/rural24-cursor';
+const REPO   = 'germanbruel-web/rural24-cursor';
 const GH_API = 'https://api.github.com';
 
 async function ghFetch(path: string, options: RequestInit = {}) {
@@ -37,16 +37,20 @@ async function ghFetch(path: string, options: RequestInit = {}) {
 
 export async function POST(request: NextRequest) {
   return withAuth(request, async (_user: AuthUser) => {
-    const body = await request.json().catch(() => ({}));
-    const shouldMerge: boolean = body.merge === true;
+    // Ignorado pero mantenido por compatibilidad con el frontend del Sync Panel
+    await request.json().catch(() => ({}));
 
     try {
-      // 0. Verificar si hay commits en main que no están en prod
-      const comparison = await ghFetch(
-        `/repos/${REPO}/compare/prod...main`
-      ) as { ahead_by: number; behind_by: number };
+      // 1. Obtener SHA actual de main y prod
+      const [mainRef, prodRef] = await Promise.all([
+        ghFetch(`/repos/${REPO}/git/ref/heads/main`) as Promise<{ object: { sha: string } }>,
+        ghFetch(`/repos/${REPO}/git/ref/heads/prod`) as Promise<{ object: { sha: string } }>,
+      ]);
 
-      if (comparison.ahead_by === 0) {
+      const mainSha = mainRef.object.sha;
+      const prodSha = prodRef.object.sha;
+
+      if (mainSha === prodSha) {
         return NextResponse.json({
           success: true,
           alreadyInSync: true,
@@ -55,52 +59,20 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // 1. Buscar PR abierto existente main→prod
-      const prs = await ghFetch(
-        `/repos/${REPO}/pulls?base=prod&head=main&state=open`
-      ) as Array<{ number: number; html_url: string; title: string }>;
-
-      let prNumber: number;
-      let prUrl: string;
-
-      if (prs.length > 0) {
-        // Ya existe — reusar
-        prNumber = prs[0].number;
-        prUrl    = prs[0].html_url;
-        logger.log(`[sync/git-push] PR existente: #${prNumber}`);
-      } else {
-        // Crear nuevo PR
-        const today = new Date().toISOString().slice(0, 10);
-        const pr = await ghFetch(`/repos/${REPO}/pulls`, {
-          method: 'POST',
-          body: JSON.stringify({
-            title: `chore: sync main → prod [${today}]`,
-            body: `Deploy automático desde el panel Sync DEV→PROD.\n\nGenerado: ${new Date().toISOString()}`,
-            head: 'main',
-            base: 'prod',
-          }),
-        }) as { number: number; html_url: string };
-
-        prNumber = pr.number;
-        prUrl    = pr.html_url;
-        logger.log(`[sync/git-push] PR creado: #${prNumber} ${prUrl}`);
-      }
-
-      if (!shouldMerge) {
-        return NextResponse.json({ success: true, pr: { number: prNumber, url: prUrl }, merged: false });
-      }
-
-      // 2. Mergear (squash)
-      await ghFetch(`/repos/${REPO}/pulls/${prNumber}/merge`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          merge_method: 'squash',
-          commit_title: `chore: sync main → prod [${new Date().toISOString().slice(0, 10)}]`,
-        }),
+      // 2. Force-update prod → main SHA (equivalente a git push origin main:prod --force)
+      await ghFetch(`/repos/${REPO}/git/refs/heads/prod`, {
+        method: 'PATCH',
+        body: JSON.stringify({ sha: mainSha, force: true }),
       });
 
-      logger.log(`[sync/git-push] PR #${prNumber} mergeado`);
-      return NextResponse.json({ success: true, pr: { number: prNumber, url: prUrl }, merged: true });
+      logger.log(`[sync/git-push] prod actualizado: ${prodSha.slice(0, 7)} → ${mainSha.slice(0, 7)}`);
+
+      return NextResponse.json({
+        success: true,
+        merged: true,
+        sha: mainSha,
+        message: `prod sincronizado con main (${mainSha.slice(0, 7)})`,
+      });
 
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
