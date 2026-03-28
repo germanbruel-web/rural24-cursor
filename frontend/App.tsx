@@ -29,6 +29,8 @@ import { useProducts, useCategoryPrefetch, useRealtimeCategories, OfflineBanner 
 import { PWAInstallBanner } from "./src/components/PWAInstallBanner";
 import { useAuth, CategoryProvider, ToastProvider, AccountProvider } from "./src/contexts";
 import { useProfileNudge } from './src/hooks/useProfileNudge';
+import { ProfileCompleteModal } from './src/components/modals/ProfileCompleteModal';
+import type { ProfileCompletenessResult } from './src/utils/profileCompleteness';
 
 // ============================================================
 // SERVICES
@@ -203,9 +205,14 @@ const AppContent: React.FC = () => {
   
   const { products, isLoading, getFilterOptions, refetch } = useProducts();
   const { profile, session, loading: authLoading } = useAuth();
-  
-  // 🔔 Redirect post-login a perfil + nudge de completitud
-  useProfileNudge();
+
+  // 🔔 Modal de completar perfil
+  const [profileModalData, setProfileModalData] = useState<ProfileCompletenessResult | null>(null);
+
+  // 🔔 Redirect post-login a perfil + modal de completitud
+  useProfileNudge({
+    onShowModal: (data) => setProfileModalData(data),
+  });
   
   // ⚡ Wrapper para setCurrentPage que persiste en localStorage
   const navigateToPage = useCallback((page: Page) => {
@@ -1044,6 +1051,20 @@ const AppContent: React.FC = () => {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
       />
+
+      {/* Modal de completar perfil (post-login) */}
+      {profileModalData && (
+        <ProfileCompleteModal
+          open={!!profileModalData}
+          onClose={() => setProfileModalData(null)}
+          onGoToProfile={() => {
+            setProfileModalData(null);
+            navigateTo('/profile');
+          }}
+          percentage={profileModalData.percentage}
+          missingFields={profileModalData.missingFields}
+        />
+      )}
 
     </div>
   );
