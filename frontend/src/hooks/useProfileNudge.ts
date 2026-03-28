@@ -15,7 +15,6 @@
 
 import { useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { navigateTo } from './useNavigate';
 import { notify } from '../utils/notifications';
 import {
   checkProfileCompleteness,
@@ -41,8 +40,6 @@ export function useProfileNudge({ onShowModal }: UseProfileNudgeOptions): void {
     if (!justLoggedIn) return;
 
     hasChecked.current = true;
-
-    navigateTo('/profile');
 
     const result = checkProfileCompleteness(profile);
 
