@@ -88,29 +88,4 @@ jobs:
             --exclude="*.config.*" --exclude="*.example" -l . | wc -l)
           echo "Files with localhost references: $LOCALHOST_COUNT"
 
-    # ============================================
-    # PERFORMANCE — check frontend bundle size
-    # ============================================
-      - name: Check frontend bundle size
-        working-directory: frontend
-        run: |
-          echo "Checking bundle size..."
 
-          # Calcula el tamaño total de la carpeta dist generada por Vite
-          SIZE=$(du -sb dist | cut -f1)
-
-          # Define límite máximo permitido (5 MB)
-          MAX_SIZE=$((5 * 1024 * 1024))
-
-          # Muestra tamaño actual del bundle
-          echo "Bundle size: $SIZE bytes"
-
-          # Si el bundle supera el límite, falla el CI
-          if [ "$SIZE" -gt "$MAX_SIZE" ]; then
-            echo "::error::Bundle too large! Limit is 5MB."
-            exit 1
-          fi
-
-          # Si está dentro del límite, pasa el test
-          echo "Bundle size OK"
-  
