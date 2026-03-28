@@ -112,6 +112,7 @@ export async function uploadToCloudinary(
         resource_type: 'image',
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'svg'],
         format: outputFormat,
+        background: outputFormat === 'jpg' ? 'white' : undefined,
       },
       (error, result) => {
         if (error) {
