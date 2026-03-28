@@ -50,11 +50,29 @@ if (!DEV_DB_URL || !PROD_DB_URL) {
   process.exit(1);
 }
 
-// Extraer project refs para reemplazar URLs de Supabase Storage
-const devRefMatch = DEV_DB_URL.match(/db\.([a-z]+)\.supabase\.co/);
-const prodRefMatch = PROD_DB_URL.match(/db\.([a-z]+)\.supabase\.co/);
-const DEV_REF = devRefMatch?.[1];
-const PROD_REF = prodRefMatch?.[1];
+// Extraer project ref de URL — soporta formato directo y pooler
+// Directo: postgresql://postgres:[PASS]@db.{ref}.supabase.co:5432/postgres
+// Pooler:  postgresql://postgres.{ref}:[PASS]@...pooler.supabase.com:6543/postgres
+function extractRef(url) {
+  const directMatch = url.match(/db\.([a-z0-9]+)\.supabase\.co/);
+  if (directMatch) return directMatch[1];
+  const poolerMatch = url.match(/postgres\.([a-z0-9]+)@/);
+  if (poolerMatch) return poolerMatch[1];
+  return null;
+}
+
+const DEV_REF  = extractRef(DEV_DB_URL);
+const PROD_REF = extractRef(PROD_DB_URL);
+
+if (!DEV_REF || !PROD_REF) {
+  console.error('❌ No se pudieron extraer los project refs de las URLs.');
+  console.error('   Formatos soportados:');
+  console.error('   Directo: postgresql://postgres:[PASS]@db.{ref}.supabase.co:5432/postgres');
+  console.error('   Pooler:  postgresql://postgres.{ref}:[PASS]@...pooler.supabase.com:6543/postgres');
+  console.error(`   DEV_DB_URL:  ${DEV_DB_URL?.replace(/:([^:@]+)@/, ':***@')}`);
+  console.error(`   PROD_DB_URL: ${PROD_DB_URL?.replace(/:([^:@]+)@/, ':***@')}`);
+  process.exit(1);
+}
 
 // Tablas a clonar DEV → PROD (sin datos de usuarios: no tocar ads, users, wallets)
 // Orden importa por FK:
