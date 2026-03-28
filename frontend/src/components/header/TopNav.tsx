@@ -9,6 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign } from 'lucide-react';
 import type { Page } from '../../../App';
+import { API_URL } from '../../services/api/client';
 
 interface TopNavProps {
   onNavigate: (page: Page) => void;
@@ -30,7 +31,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onNavigate }) => {
   useEffect(() => {
     const fetchDollar = async () => {
       try {
-        const res = await fetch('/api/dollar-rates');
+        const res = await fetch(`${API_URL}/api/dollar-rates`);
         if (res.ok) {
           const data = await res.json();
           setDollarRates({ oficial: data.oficial, blue: data.blue });

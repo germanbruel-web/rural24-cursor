@@ -78,11 +78,13 @@ export async function POST(request: NextRequest) {
             });
           } else {
             // Generar link de confirmación via admin API
-            let confirmationLink = 'https://rural24.com.ar';
+            const frontendUrl = process.env.FRONTEND_URL || 'https://prod-frontend-uxzm.onrender.com';
+            let confirmationLink = `${frontendUrl}/#/auth/confirm`;
             try {
               const { data: linkData } = await supabase.auth.admin.generateLink({
-                type:  'magiclink',
-                email: item.to_email,
+                type:    'magiclink',
+                email:   item.to_email,
+                options: { redirectTo: `${frontendUrl}/#/auth/confirm` },
               });
               if (linkData?.properties?.action_link) {
                 confirmationLink = linkData.properties.action_link;
