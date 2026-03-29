@@ -16,7 +16,7 @@ Esto significa SIN EXCEPCIÓN:
 
 # CLAUDE.md — Rural24 Orchestrator
 > Auto-cargado por Claude Code al inicio de cada sesión.
-> Última actualización: 2026-03-25
+> Última actualización: 2026-03-28
 > Governance detallado: `.claude/` | Legado Cursor: `OlderCursor/`
 
 ---
@@ -133,10 +133,10 @@ notificación campanita → "¡Tu destacado vence mañana!"
 ## FUENTE DE VERDAD DB
 
 ```
-database/RURAL24_SCHEMA_DEV_2026-03-23.sql
+database/RURAL24_SCHEMA_DEV_2026-03-28.sql
 ```
-Dump real de DEV generado 2026-03-23. Consultar SIEMPRE antes de crear tablas, columnas o RPCs.
-Schema anterior disponible en `database/RURAL24_SCHEMA_DEV_2026-03-21.sql`.
+Dump real de DEV generado 2026-03-28. Consultar SIEMPRE antes de crear tablas, columnas o RPCs.
+Schema anterior disponible en `database/RURAL24_SCHEMA_DEV_2026-03-23.sql`.
 Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
 
 ---
@@ -166,10 +166,29 @@ Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
 - Validación: Zod en todas las rutas
 - Singleton Supabase: no crear múltiples instancias
 - service_role key: NUNCA en frontend, solo en variables de entorno backend
+- Auth guard: `withAuth(request, handler)` en `backend/infrastructure/auth/guard.ts` → expone `user.id`, `user.email`, `user.role`, `user.full_name`
 
 ### Git / Deploy
 - Trabajo diario en `main` → Render auto-deploya Staging
 - Producción: PR `main → prod` + trigger manual en Render Prod
+
+---
+
+## SISTEMA DE EMAILS TRANSACCIONALES
+
+**Supabase NO envía emails.** `enable_confirmations = false` en `supabase/config.toml`. El backend maneja todo vía Zoho Mail.
+
+| Tipo | Disparador | Flujo |
+|---|---|---|
+| `welcome` (OAuth) | Trigger SQL `trg_welcome_email` → `email_queue` | Worker 2min → `sendWelcomeEmail()` |
+| `welcome_verify` (email/pwd) | Mismo trigger | Worker → `generateLink('magiclink')` → `sendWelcomeVerifyEmail()` |
+| `featured_activated` | Trigger SQL en `featured_ads` (pending→active) | Worker 2min → `sendFeaturedActivatedEmail()` |
+| `contact_form` | POST `/api/contact` | Sync directo → `sendContactEmail()` |
+
+- **Templates**: tabla `email_templates` en DB, editables desde `#/email-templates-admin`. Fallback hardcodeado en `emailService.ts` si no existe en DB.
+- **Resend verification**: `POST /api/auth/resend-verification` (requiere Bearer). EmailGatePage: 120s cooldown + localStorage `rural24_resend_{email}` + máx 1 resend.
+- **Magic link confirm**: redirige a `/#/auth/confirm` → `EmailConfirmationPage.tsx`
+- **NUNCA usar `supabase.auth.resend()`** — no funciona con `enable_confirmations = false`
 
 ---
 
@@ -228,6 +247,8 @@ Migraciones van en: `supabase/migrations/YYYYMMDDHHMMSS_descripcion.sql`
 | UX-Desktop | Header: campanita reemplaza Favoritos, Chat abre overlay inline | ✅ 2026-03-18 |
 | 7C | ProductCard badge INSUMO/SERVICIO + price_unit + completeness bar | ✅ Ya implementado (verificado 2026-03-24) |
 | 3D.6 | Notificación al activar Destacado (pg_cron → email) | Pendiente |
+| Email-Resend | Resend verification email: 120s cooldown + localStorage + max 1 resend | ✅ 2026-03-28 |
+| CI-Fix | GitHub Actions: job security tenía bundle size check sin build previo | ✅ 2026-03-28 |
 
 ## TAXONOMÍA (Sprint 7B — decisión de producto)
 - **PRODUCTO** (ad_type=particular): Hacienda, Insumos, Maquinarias — sin gate, cualquier usuario

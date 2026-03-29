@@ -70,36 +70,3 @@ export async function verifyUserEmailAsAdmin(userId: string): Promise<VerifyEmai
     };
   }
 }
-
-/**
- * 📧 Resend verification email
- * @param email - Email del usuario
- * @returns Resultado de la operación
- */
-export async function resendVerificationEmail(email: string): Promise<VerifyEmailResult> {
-  try {
-    // Usar RPC de Supabase
-    const { data, error } = await supabase.rpc('resend_verification_email', {
-      email_input: email,
-    });
-
-    if (error) {
-      return {
-        success: false,
-        error: error.code || 'RPC_ERROR',
-        message: error.message,
-      };
-    }
-
-    return {
-      success: true,
-      message: `Email de verificación reenviado a ${email}`,
-    };
-  } catch (err: any) {
-    return {
-      success: false,
-      error: 'FETCH_ERROR',
-      message: err.message || 'Error al reenviar email',
-    };
-  }
-}
