@@ -140,6 +140,8 @@ export const getProductLabel = (product: Product): string => {
     ...((product as any).dynamic_fields || {})
   };
 
+  const catSlug = (product.category_slug || '').toLowerCase();
+
   // Subcategoría: regla por categoría.
   // hacienda → L3 leaf (ej: "Novillitos") — el tipo exacto de animal es la info relevante
   // resto    → L2 padre (ej: "Tractores") — la categoría de máquina es la info relevante
@@ -147,8 +149,6 @@ export const getProductLabel = (product: Product): string => {
     ? (product.subcategory || product.subcategory_l2)
     : (product.subcategory_l2 || product.subcategory);
   if (subcatLabel) parts.push(String(subcatLabel));
-
-  const catSlug = (product.category_slug || '').toLowerCase();
   const fieldGroups = CATEGORY_CARD_LABEL[catSlug];
 
   if (fieldGroups !== undefined) {
