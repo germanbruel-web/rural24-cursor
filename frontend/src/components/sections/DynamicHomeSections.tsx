@@ -854,8 +854,10 @@ function CategorySectionRenderer({ section }: SectionProps) {
             // Hay destacados activos → filtrar solo esos
             adsQuery = adsQuery.in('id', rpcData.map((f: FeaturedRow) => f.ad_id));
           } else if (!rpcErr) {
-            // Sin destacados activos → fallback a avisos regulares de la misma categoría
-            // adsQuery ya tiene .eq('category_id', cat.id) — continúa sin filtro featured
+            // Sin destacados activos y featured_only=true → no mostrar nada
+            setFeaturedAds([]);
+            setLoading(false);
+            return;
           } else {
             // RPC falló → fallback directo a featured_ads table
             const { data: fIds } = await supabase

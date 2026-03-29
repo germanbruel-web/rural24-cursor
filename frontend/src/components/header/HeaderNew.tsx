@@ -100,8 +100,8 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch, hide
         className={`bg-white border-b border-gray-200 transition-all duration-300 relative z-50
                    ${isScrolled ? 'sticky top-0 shadow-md backdrop-blur-sm bg-white/95' : ''}`}
       >
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-3 h-14 sm:h-16">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 h-20 contenido-cv">
+          <div className="flex items-center justify-between gap-3 sm:h-16">
             
             {/* LOGO - Izquierda */}
             <button 
@@ -135,7 +135,7 @@ export const HeaderNew: React.FC<HeaderNewProps> = ({ onNavigate, onSearch, hide
               {/* CTA "Publicar Aviso Gratis" - Solo Desktop */}
               <button
                 onClick={handlePublish}
-                className="hidden sm:flex items-center gap-2 px-5 py-2.5 
+                className="hidden sm:flex items-center gap-2 px-5 py-2 
                          bg-brand-600 hover:bg-brand-500
                          text-white font-semibold rounded-full
                          shadow-md hover:shadow-lg

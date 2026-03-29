@@ -291,9 +291,9 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
           <button
             type="submit"
             disabled={!query.trim()}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2
-                     px-5 py-1.5
-                     bg-brand-600 hover:bg-brand-700
+            className="absolute right-1 top-1/2 -translate-y-1/2
+                     px-5 py-2
+                   bg-black hover:bg-brand-700
                      text-white font-medium text-sm
                      rounded-full
                      transition-all duration-200

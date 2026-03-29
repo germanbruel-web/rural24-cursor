@@ -168,6 +168,10 @@
   --border-focus: 96 165 250;
 }
 
+
+  .contenido-cv{align-content: center;}
+  .contenido-ch{align-content:space-between;}
+
 /* ====================================================================
    BASE STYLES - Configuración global profesional
    ==================================================================== */
@@ -323,7 +327,7 @@
     text-wrap: balance;
   }
   
-  /* ANIMACIÓN DE GRADIENTE */
+ /* ANIMACIÓN DE GRADIENTE */
   .gradient-brand {
     @apply bg-gradient-to-r from-brand-600 to-brand-500;
   }
@@ -532,3 +536,4 @@
 .border-nature-brick { border-color: rgb(var(--color-nature-brick)); }
 .border-nature-farm { border-color: rgb(var(--color-nature-farm)); }
 .border-nature-compost { border-color: rgb(var(--color-nature-compost)); }
+

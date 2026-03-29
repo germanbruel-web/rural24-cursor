@@ -570,6 +570,82 @@ export async function sendContactEmail(data: ContactFormData): Promise<void> {
   logger.info(`[Email] Enviado contact_form (${data.tipo}) de ${data.email}`);
 }
 
+// ── Empleo contact (sin login requerido) ─────────────────────
+
+export interface EmpleoContactData {
+  to:       string;  // email del publicador
+  adTitle:  string;
+  celular:  string;
+  email?:   string;
+  mensaje:  string;
+}
+
+function templateEmpleoContact(d: EmpleoContactData): string {
+  const emailRow = d.email
+    ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:120px;">Email</td><td style="padding:6px 0;font-size:13px;"><a href="mailto:${d.email}" style="color:#65a30d;">${d.email}</a></td></tr>`
+    : '';
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <tr>
+            <td style="background:#65a30d;padding:24px 32px;">
+              <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:bold;">
+                Rural<span style="background:#ffffff;color:#65a30d;border-radius:4px;padding:0 5px;margin-left:2px;">24</span>
+                <span style="font-size:14px;font-weight:normal;margin-left:12px;opacity:0.9;">Nueva consulta de empleo</span>
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 20px;color:#374151;font-size:14px;">Alguien se interesó en tu aviso <strong style="color:#111827;">${d.adTitle}</strong>:</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin-bottom:20px;">
+                <tr><td>
+                  <table cellpadding="0" cellspacing="0">
+                    <tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:120px;">Celular</td><td style="padding:6px 0;font-size:13px;color:#111827;font-weight:bold;">${d.celular}</td></tr>
+                    ${emailRow}
+                  </table>
+                </td></tr>
+              </table>
+              <p style="margin:0 0 8px;font-size:13px;color:#6b7280;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">Mensaje</p>
+              <p style="margin:0;font-size:14px;color:#111827;line-height:1.7;white-space:pre-wrap;">${d.mensaje}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px;border-top:1px solid #f3f4f6;">
+              <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">Rural24 — Clasificados Agrarios de Argentina</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendEmpleoContactEmail(data: EmpleoContactData): Promise<void> {
+  const accountId   = process.env.ZOHO_ACCOUNT_ID;
+  const fromAddress = process.env.ZOHO_FROM_EMAIL || 'info@rural24.com.ar';
+  if (!accountId) throw new Error('ZOHO_ACCOUNT_ID no configurado en Render');
+
+  const subject = `[Rural24] Nueva consulta para tu aviso: ${data.adTitle.substring(0, 60)}`;
+  const content = templateEmpleoContact(data);
+
+  const token = await getAccessToken();
+  const res = await fetch(`${ZOHO_MAIL_URL}/${accountId}/messages`, {
+    method: 'POST',
+    headers: { 'Authorization': `Zoho-oauthtoken ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fromAddress, toAddress: data.to, subject, mailFormat: 'html', content }),
+  });
+  if (!res.ok) throw new Error(`Zoho Mail API error ${res.status}: ${await res.text()}`);
+  logger.info(`[Email] Enviado empleo_contact → ${data.to}`);
+}
+
 // ── Test send (admin panel) ───────────────────────────────────
 
 const SAMPLE_VARS: Record<string, Record<string, string>> = {
