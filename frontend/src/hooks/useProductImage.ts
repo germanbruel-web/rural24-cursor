@@ -117,6 +117,22 @@ const CATEGORY_CARD_LABEL: Record<string, Array<string[]>> = {
  * Siempre arranca con la subcategoría L2, luego los atributos configurados.
  * Resultado: "Tractores · John Deere · 8320 · 2019"
  */
+/**
+ * Humaniza un valor de atributo que puede ser un slug o valor raw.
+ * - Slugs con guiones/underscores → Title Case: "gasoil-grado-2" → "Gasoil Grado 2"
+ * - Palabras en minúscula (tipo ofrezco, busco) → capitaliza primera letra
+ * - Valores ya formateados (marcas, modelos) → sin cambio
+ */
+const humanizeAttrValue = (val: string): string => {
+  if (val.includes('-') || val.includes('_')) {
+    return val.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+  if (val === val.toLowerCase() && /^[a-z]/.test(val)) {
+    return val.charAt(0).toUpperCase() + val.slice(1);
+  }
+  return val;
+};
+
 export const getProductLabel = (product: Product): string => {
   const parts: string[] = [];
   const attrs = {
@@ -137,7 +153,7 @@ export const getProductLabel = (product: Product): string => {
     for (const keys of fieldGroups) {
       for (const key of keys) {
         const val = attrs[key];
-        if (val) { parts.push(String(val)); break; }
+        if (val) { parts.push(humanizeAttrValue(String(val))); break; }
       }
     }
   } else {
