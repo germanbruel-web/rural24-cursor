@@ -27,6 +27,8 @@ interface FormState {
 const EMPTY: FormState = { tipo: null, nombre: '', email: '', telefono: '', mensaje: '' };
 type Status = 'idle' | 'sending' | 'success' | 'error';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 export const ContactoPage: React.FC = () => {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
@@ -82,7 +84,7 @@ export const ContactoPage: React.FC = () => {
       if (form.telefono.trim()) fd.append('telefono', form.telefono.trim());
       fd.append('mensaje', form.mensaje.trim());
       files.forEach(f => fd.append('adjuntos', f));
-      const res = await fetch('/api/contact', { method: 'POST', body: fd });
+      const res = await fetch(`${API_URL}/api/contact`, { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) { setServerError(data.error ?? 'Error al enviar. Intentá de nuevo.'); setStatus('error'); return; }
       setStatus('success');
