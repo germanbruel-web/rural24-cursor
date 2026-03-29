@@ -40,7 +40,8 @@ interface AdItem {
   status: string;
   featured_expires_at?: string;
   categories?: { slug: string } | { slug: string }[] | null;
-  subcategories?: { display_name: string; parent_subcat?: any } | { display_name: string; parent_subcat?: any }[] | null;
+  subcategories?: { display_name: string } | { display_name: string }[] | null;
+  subcategory_l2?: string;
   user_id?: string;
   users?: { avatar_url: string | null } | { avatar_url: string | null }[] | null;
 }
@@ -139,7 +140,7 @@ function useAds(section: HomeSection) {
       try {
         let query = supabase
           .from('ads')
-          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name, parent_subcat:subcategories!parent_id(display_name)), categories(slug)')
+          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name), categories(slug)')
           .eq('status', 'active')
           .limit(limit);
 
@@ -218,9 +219,44 @@ function useAds(section: HomeSection) {
         const { data } = await query.order('created_at', { ascending: false });
         const adsData = (data ?? []) as unknown as AdItem[];
 
+        // Resolver subcategoría L2 (padre) para categorías con jerarquía de 3 niveles.
+        // Ej: maquinaria-agricola donde subcategory_id apunta a L3 ("De tracción doble")
+        // y queremos mostrar el L2 padre ("Tractores") en el card.
+        let subcatL2Map: Record<string, string> = {};
+        if (adsData.length > 0) {
+          const subcatIds = [...new Set(adsData.map(a => a.subcategory_id).filter(Boolean))] as string[];
+          if (subcatIds.length > 0) {
+            const { data: subcatRows } = await supabase
+              .from('subcategories')
+              .select('id, display_name, parent_id')
+              .in('id', subcatIds);
+            const parentIds = [...new Set((subcatRows ?? []).map((s: any) => s.parent_id).filter(Boolean))] as string[];
+            if (parentIds.length > 0) {
+              const { data: parentRows } = await supabase
+                .from('subcategories')
+                .select('id, display_name')
+                .in('id', parentIds);
+              const parentNameMap: Record<string, string> = {};
+              (parentRows ?? []).forEach((p: any) => { parentNameMap[p.id] = p.display_name; });
+              (subcatRows ?? []).forEach((s: any) => {
+                subcatL2Map[s.id] = (s.parent_id && parentNameMap[s.parent_id])
+                  ? parentNameMap[s.parent_id]
+                  : s.display_name;
+              });
+            } else {
+              (subcatRows ?? []).forEach((s: any) => { subcatL2Map[s.id] = s.display_name; });
+            }
+          }
+        }
+
+        const enrichedAds = adsData.map(a => ({
+          ...a,
+          subcategory_l2: a.subcategory_id ? (subcatL2Map[a.subcategory_id] ?? undefined) : undefined,
+        }));
+
         // Enriquecer con expires_at de featured_ads (solo si countdown habilitado)
-        if (countdownEnabled && adsData.length > 0) {
-          const adIds = adsData.map(a => a.id);
+        if (countdownEnabled && enrichedAds.length > 0) {
+          const adIds = enrichedAds.map(a => a.id);
           const { data: fa } = await supabase
             .from('featured_ads')
             .select('ad_id, expires_at')
@@ -228,9 +264,9 @@ function useAds(section: HomeSection) {
             .eq('status', 'active');
           const expiresMap: Record<string, string> = {};
           (fa ?? []).forEach((f: FeaturedRow) => { if (f.expires_at) expiresMap[f.ad_id] = f.expires_at; });
-          setAds(adsData.map(a => ({ ...a, featured_expires_at: expiresMap[a.id] })));
+          setAds(enrichedAds.map(a => ({ ...a, featured_expires_at: expiresMap[a.id] })));
         } else {
-          setAds(adsData);
+          setAds(enrichedAds);
         }
       } catch (e) {
         console.error('[DynamicHomeSections] Error cargando avisos:', e);
@@ -305,10 +341,8 @@ function adToProduct(ad: AdItem): Product {
   const firstImage = ad.images?.[0];
   const imageUrl = typeof firstImage === 'string' ? firstImage : ((firstImage as AdImage)?.url ?? '');
   const cats  = resolveJoin(ad.categories);
-  const subs  = resolveJoin(ad.subcategories) as { display_name: string; parent_subcat?: any } | null;
+  const subs  = resolveJoin(ad.subcategories) as { display_name: string } | null;
   const users = resolveJoin(ad.users);
-  // Resolver nombre de subcategoría padre (L2) para categorías con jerarquía 3 niveles
-  const parentSubcat = subs?.parent_subcat ? resolveJoin(subs.parent_subcat) as { display_name: string } | null : null;
   return {
     id: ad.id,
     title: ad.title,
@@ -324,7 +358,7 @@ function adToProduct(ad: AdItem): Product {
     sourceUrl: '',
     category: '',
     subcategory: subs?.display_name,
-    subcategory_l2: parentSubcat?.display_name ?? subs?.display_name,
+    subcategory_l2: ad.subcategory_l2 ?? subs?.display_name,
     isSponsored: false,
     ad_type: ad.ad_type as Product['ad_type'],
     attributes: ad.attributes,
@@ -805,7 +839,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
         // 2. Avisos destacados
         let adsQuery = supabase
           .from('ads')
-          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name, parent_subcat:subcategories!parent_id(display_name)), categories(slug)')
+          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name), categories(slug)')
           .eq('status', 'active')
           .eq('category_id', cat.id)
           .limit(featuredLimit);
