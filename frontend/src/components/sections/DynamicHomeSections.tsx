@@ -49,6 +49,35 @@ interface AdItem {
 type FeaturedRow = { ad_id: string; expires_at?: string };
 type SubcatRow   = { id: string };
 
+// Resuelve subcategoría L2 (padre) para un array de ads.
+// Si el ad está en L3, retorna el display_name del L2 padre.
+// Si está en L2 (sin padre), retorna su propio display_name.
+async function resolveSubcatL2Map(
+  adsData: { subcategory_id: string | null }[]
+): Promise<Record<string, string>> {
+  const subcatIds = [...new Set(adsData.map(a => a.subcategory_id).filter(Boolean))] as string[];
+  if (subcatIds.length === 0) return {};
+
+  const { data: subcatRows } = await supabase
+    .from('subcategories').select('id, display_name, parent_id').in('id', subcatIds);
+
+  const parentIds = [...new Set((subcatRows ?? []).map((s: any) => s.parent_id).filter(Boolean))] as string[];
+  const parentNameMap: Record<string, string> = {};
+  if (parentIds.length > 0) {
+    const { data: parentRows } = await supabase
+      .from('subcategories').select('id, display_name').in('id', parentIds);
+    (parentRows ?? []).forEach((p: any) => { parentNameMap[p.id] = p.display_name; });
+  }
+
+  const map: Record<string, string> = {};
+  (subcatRows ?? []).forEach((s: any) => {
+    map[s.id] = (s.parent_id && parentNameMap[s.parent_id])
+      ? parentNameMap[s.parent_id]
+      : s.display_name;
+  });
+  return map;
+}
+
 // Contexto para habilitar countdown de vencimiento de destacados
 const CountdownEnabledCtx = React.createContext(false);
 
@@ -219,35 +248,7 @@ function useAds(section: HomeSection) {
         const { data } = await query.order('created_at', { ascending: false });
         const adsData = (data ?? []) as unknown as AdItem[];
 
-        // Resolver subcategoría L2 (padre) para categorías con jerarquía de 3 niveles.
-        // Ej: maquinaria-agricola donde subcategory_id apunta a L3 ("De tracción doble")
-        // y queremos mostrar el L2 padre ("Tractores") en el card.
-        let subcatL2Map: Record<string, string> = {};
-        if (adsData.length > 0) {
-          const subcatIds = [...new Set(adsData.map(a => a.subcategory_id).filter(Boolean))] as string[];
-          if (subcatIds.length > 0) {
-            const { data: subcatRows } = await supabase
-              .from('subcategories')
-              .select('id, display_name, parent_id')
-              .in('id', subcatIds);
-            const parentIds = [...new Set((subcatRows ?? []).map((s: any) => s.parent_id).filter(Boolean))] as string[];
-            if (parentIds.length > 0) {
-              const { data: parentRows } = await supabase
-                .from('subcategories')
-                .select('id, display_name')
-                .in('id', parentIds);
-              const parentNameMap: Record<string, string> = {};
-              (parentRows ?? []).forEach((p: any) => { parentNameMap[p.id] = p.display_name; });
-              (subcatRows ?? []).forEach((s: any) => {
-                subcatL2Map[s.id] = (s.parent_id && parentNameMap[s.parent_id])
-                  ? parentNameMap[s.parent_id]
-                  : s.display_name;
-              });
-            } else {
-              (subcatRows ?? []).forEach((s: any) => { subcatL2Map[s.id] = s.display_name; });
-            }
-          }
-        }
+        const subcatL2Map = adsData.length > 0 ? await resolveSubcatL2Map(adsData) : {};
 
         const enrichedAds = adsData.map(a => ({
           ...a,
@@ -866,7 +867,14 @@ function CategorySectionRenderer({ section }: SectionProps) {
         }
 
         const { data: adsRaw } = await adsQuery.order('created_at', { ascending: false });
-        const adsArr = (adsRaw ?? []) as unknown as AdItem[];
+        const adsRawArr = (adsRaw ?? []) as unknown as AdItem[];
+
+        // Resolver subcategoría L2 (mismo patrón que useAds)
+        const subcatL2Map = adsRawArr.length > 0 ? await resolveSubcatL2Map(adsRawArr) : {};
+        const adsArr = adsRawArr.map(a => ({
+          ...a,
+          subcategory_l2: a.subcategory_id ? (subcatL2Map[a.subcategory_id] ?? undefined) : undefined,
+        }));
 
         // Enriquecer con expires_at si countdown habilitado
         if (countdownEnabled && adsArr.length > 0) {
