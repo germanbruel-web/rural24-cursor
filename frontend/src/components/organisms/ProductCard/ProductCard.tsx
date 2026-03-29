@@ -214,8 +214,12 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
 
           // HACIENDA: mostrar Edad como badge
           if (isHacienda) {
-            const edad = attrs.edad || attrs.edad_meses || attrs.age;
-            if (!edad) return null;
+            const edadRaw = attrs.edad || attrs.edad_meses || attrs.age;
+            if (!edadRaw) return null;
+            const edadStr = String(edadRaw);
+            const edad = edadStr.includes('-') || edadStr.includes('_')
+              ? edadStr.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+              : edadStr;
             return (
               <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">
                 {edad}
