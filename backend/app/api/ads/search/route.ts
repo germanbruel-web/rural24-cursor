@@ -606,9 +606,12 @@ export async function GET(request: NextRequest) {
       query = query.eq('category_id', categoryId);
     }
 
-    // Filtrar por subcategoría
+    // Filtrar por subcategoría — incluir hijos L3 para que buscar "Tractores" (L2) devuelva ads en L3
     if (subcategoryId) {
-      query = query.eq('subcategory_id', subcategoryId);
+      const { data: childRows } = await supabase
+        .from('subcategories').select('id').eq('parent_id', subcategoryId);
+      const subcatIds = [subcategoryId, ...(childRows ?? []).map((c: any) => c.id)];
+      query = query.in('subcategory_id', subcatIds);
     }
 
     // Filtrar por provincia (texto exacto o similar)

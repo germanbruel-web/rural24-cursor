@@ -301,6 +301,12 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
                     <span>›</span>
                   </>
                 )}
+                {ad.subcategory_parent && (
+                  <>
+                    <span>{ad.subcategory_parent.display_name}</span>
+                    <span>›</span>
+                  </>
+                )}
                 {ad.subcategories && <span>{ad.subcategories.display_name}</span>}
               </div>
 

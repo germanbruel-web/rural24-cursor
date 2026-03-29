@@ -25,6 +25,7 @@ export interface Ad {
   created_at: string;
   categories?: { name: string; display_name: string } | null;
   subcategories?: { name: string; display_name: string } | null;
+  subcategory_parent?: { display_name: string } | null;
   operation_types?: { display_name: string } | null;
   images?: NormalizedImage[];
   seller?: Seller | null;

@@ -91,6 +91,11 @@ function renderField(field: FormFieldV2, optionLabels: OptionLabels, attrs: Reco
   );
 }
 
+const INTERNAL_ATTRS = new Set([
+  'bg_color',   // color visual de card servicios/empleos
+  'price_type', // tipo precio interno del wizard
+]);
+
 export const AdFormSections: React.FC<AdFormSectionsProps> = ({ form, ad, optionLabels }) => {
   const attrs = ad.attributes;
   if (!attrs || Object.keys(attrs).length === 0) return null;
@@ -101,7 +106,7 @@ export const AdFormSections: React.FC<AdFormSectionsProps> = ({ form, ad, option
       <div className="bg-white rounded-xl shadow-sm p-5">
         <h2 className="text-sm font-semibold text-gray-700 mb-4">Información adicional</h2>
         <dl className={`grid ${gridColsClass(cols)} gap-x-6 gap-y-1`}>
-          {Object.entries(attrs).map(([key, val]) =>
+          {Object.entries(attrs).filter(([key]) => !INTERNAL_ATTRS.has(key)).map(([key, val]) =>
             val !== null && val !== '' ? (
               <div key={key} className="border-b border-gray-100 pb-3">
                 <dt className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{key}</dt>
@@ -119,6 +124,7 @@ export const AdFormSections: React.FC<AdFormSectionsProps> = ({ form, ad, option
       section,
       fields: form.fields
         .filter(f => f.section_id === section.id)
+        .filter(f => !INTERNAL_ATTRS.has(f.field_name))
         .filter(f => {
           const val = attrs[f.field_name];
           return val !== null && val !== undefined && val !== '';
@@ -129,6 +135,7 @@ export const AdFormSections: React.FC<AdFormSectionsProps> = ({ form, ad, option
 
   const unsectioned = form.fields
     .filter(f => !f.section_id)
+    .filter(f => !INTERNAL_ATTRS.has(f.field_name))
     .filter(f => {
       const val = attrs[f.field_name];
       return val !== null && val !== undefined && val !== '';
