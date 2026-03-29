@@ -212,6 +212,22 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
             || product.category?.toLowerCase().includes('ganader')
             || product.category?.toLowerCase().includes('hacienda');
 
+          // INMOBILIARIA: mostrar tipo de operación (Venta, Alquiler, etc.)
+          const isInmobiliaria = (product as any).category_slug === 'inmobiliaria-rural';
+          if (isInmobiliaria) {
+            const opRaw = attrs.tipo_de_operacion;
+            if (!opRaw) return null;
+            const opStr = String(opRaw);
+            const op = opStr.includes('-') || opStr.includes('_')
+              ? opStr.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+              : opStr.charAt(0).toUpperCase() + opStr.slice(1);
+            return (
+              <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">
+                {op}
+              </span>
+            );
+          }
+
           // HACIENDA: mostrar Edad como badge
           if (isHacienda) {
             const edadRaw = attrs.edad || attrs.edad_meses || attrs.age;

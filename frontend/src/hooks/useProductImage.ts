@@ -98,7 +98,7 @@ const CATEGORY_CARD_LABEL: Record<string, Array<string[]>> = {
     ['marca', 'brand'],
   ],
   'inmobiliaria-rural': [
-    ['tipo_de_operacion'],
+    // tipo_de_operacion va como badge sobre la imagen, no en el label
   ],
   'servicios': [
     ['tipo_de_busqueda'],
