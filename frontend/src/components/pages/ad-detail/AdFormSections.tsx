@@ -31,7 +31,7 @@ function resolveFieldValue(field: FormFieldV2, value: any, optionLabels: OptionL
   if (field.field_type === 'number' && (field.metadata as any)?.suffix) {
     return `${strValue} ${(field.metadata as any).suffix}`;
   }
-  return strValue;
+  return humanizeSlug(strValue);
 }
 
 function renderField(field: FormFieldV2, optionLabels: OptionLabels, attrs: Record<string, any>) {
@@ -96,6 +96,16 @@ const INTERNAL_ATTRS = new Set([
   'price_type', // tipo precio interno del wizard
 ]);
 
+const humanizeKey = (key: string): string =>
+  key.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+const humanizeSlug = (val: string): string => {
+  if (/^[a-z0-9_-]+$/.test(val) && (val.includes('-') || val.includes('_'))) {
+    return val.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+  return val;
+};
+
 export const AdFormSections: React.FC<AdFormSectionsProps> = ({ form, ad, optionLabels }) => {
   const attrs = ad.attributes;
   if (!attrs || Object.keys(attrs).length === 0) return null;
@@ -109,8 +119,8 @@ export const AdFormSections: React.FC<AdFormSectionsProps> = ({ form, ad, option
           {Object.entries(attrs).filter(([key]) => !INTERNAL_ATTRS.has(key)).map(([key, val]) =>
             val !== null && val !== '' ? (
               <div key={key} className="border-b border-gray-100 pb-3">
-                <dt className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{key}</dt>
-                <dd className="text-sm font-medium text-gray-900">{String(val)}</dd>
+                <dt className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{humanizeKey(key)}</dt>
+                <dd className="text-sm font-medium text-gray-900">{humanizeSlug(String(val))}</dd>
               </div>
             ) : null
           )}

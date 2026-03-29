@@ -59,7 +59,7 @@ export function useAdData(adId: string) {
           ? supabase.from('categories').select('name, display_name').eq('id', subcatResult.data.category_id).single()
           : Promise.resolve({ data: null }),
         subcatResult.data?.parent_id
-          ? supabase.from('subcategories').select('display_name').eq('id', subcatResult.data.parent_id).single()
+          ? supabase.from('subcategories').select('id, display_name').eq('id', subcatResult.data.parent_id).single()
           : Promise.resolve({ data: null }),
       ]);
       categoryData = catResult.data;
@@ -122,7 +122,11 @@ export function useAdData(adId: string) {
   };
 
   const loadFormAndLabels = async (loadedAd: Ad) => {
-    const loadedForm = await getFormForContext(loadedAd.category_id, loadedAd.subcategory_id);
+    let loadedForm = await getFormForContext(loadedAd.category_id, loadedAd.subcategory_id);
+    // Fallback: si el aviso está en L3 y no hay template, intentar con L2 padre
+    if (!loadedForm && loadedAd.subcategory_parent?.id) {
+      loadedForm = await getFormForContext(loadedAd.category_id, loadedAd.subcategory_parent.id);
+    }
     setForm(loadedForm);
     if (!loadedForm) return;
 
