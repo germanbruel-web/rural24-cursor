@@ -68,32 +68,54 @@ export const useProductImage = (product: Product): string => {
 };
 
 /**
- * CONFIGURACIÓN DE ATRIBUTOS PRIORITARIOS POR SUBCATEGORÍA
- * 
- * Formato: subcategory_name (lowercase) → [atributo_nivel_1, atributo_nivel_2[]]
- * El nivel 2 ahora es un array de fallbacks para buscar en orden
+ * CONFIG-DRIVEN CARD LABELS — por category_slug
+ *
+ * Formato: category_slug → lista ordenada de grupos de keys de atributos.
+ * Cada grupo es un array de fallbacks: se usa el primero encontrado en attrs.
+ * La subcategoría L2 se antepone siempre de forma automática.
+ *
+ * Fórmulas acordadas (producto):
+ *   maquinaria-agricola  → Subcategoria · Marca · Modelo · Año
+ *   hacienda             → Subcategoria · Raza · Edad
+ *   insumos              → Subcategoria · Marca
+ *   inmobiliaria-rural   → Subcategoria · Tipo de operación
+ *   servicios            → Subcategoria · Tipo de búsqueda
+ *   equipamiento         → Subcategoria · Marca
+ *   repuestos            → Subcategoria
+ *   empleos              → Subcategoria · Tipo de búsqueda
  */
-const SUBCATEGORY_PRIORITY_ATTRIBUTES: Record<string, [string, string[]]> = {
-  // === GANADERÍA ===
-  // Formato: [tipoX, [raza, razaX, legacy...]]
-  'bovinos': ['tipobovino', ['raza', 'razabovinos', 'breed']],
-  'ovinos': ['tipoovino', ['raza', 'razaovinos', 'razabovinos', 'breed']],
-  'equinos': ['tipoequino', ['raza', 'razaequinos', 'breed']],
-  'porcinos': ['tipoporcino', ['raza', 'razaporcinos', 'breed']],
-  'caprinos': ['tipocaprino', ['raza', 'razacaprinos', 'breed']],
-  'aves': ['tipoave', ['raza', 'razaaves', 'breed']],
+const CATEGORY_CARD_LABEL: Record<string, Array<string[]>> = {
+  'maquinaria-agricola': [
+    ['marca', 'marcas', 'brand'],
+    ['modelo', 'model'],
+    ['ano', 'año', 'year'],
+  ],
+  'hacienda': [
+    ['raza', 'especie_y_raza', 'razabovinos', 'razaovinos', 'razaequinos', 'razaporcinos', 'razacaprinos', 'razaaves', 'breed'],
+    ['edad', 'edad_meses'],
+  ],
+  'insumos': [
+    ['marca', 'brand'],
+  ],
+  'inmobiliaria-rural': [
+    ['tipo_de_operacion'],
+  ],
+  'servicios': [
+    ['tipo_de_busqueda'],
+  ],
+  'equipamiento': [
+    ['marca', 'brand'],
+  ],
+  'repuestos': [],
+  'empleos': [
+    ['necesidad', 'tipo_de_busqueda'],
+  ],
 };
 
 /**
- * Obtiene el label del producto con taxonomía de 2 niveles
- * 
- * ARQUITECTURA:
- * 1. Subcategoría (siempre primero) - ej: "Bovinos"
- * 2. Atributo Nivel 1 según config - ej: "Toro" (tipobovino)
- * 3. Atributo Nivel 2 según config - ej: "Aberdeen Angus" (raza con fallbacks)
- * 4. Fallback: marca/brand si no hay config específica
- * 
- * Resultado: "Bovinos · Toro · Aberdeen Angus"
+ * Genera el label del card según la categoría del aviso.
+ * Siempre arranca con la subcategoría L2, luego los atributos configurados.
+ * Resultado: "Tractores · John Deere · 8320 · 2019"
  */
 export const getProductLabel = (product: Product): string => {
   const parts: string[] = [];
@@ -101,56 +123,31 @@ export const getProductLabel = (product: Product): string => {
     ...(product.attributes || {}),
     ...((product as any).dynamic_fields || {})
   };
-  
-  // Normalizar nombre de subcategoría para buscar config
-  const subcategoryKey = (product.subcategory || '').toLowerCase().trim();
-  
-  // 1. Subcategoría (siempre primero)
-  // Para maquinaria-agricola: mostrar L2 (tipo de máquina: Tractores, Cosechadoras, etc.)
-  // en lugar del L3 (ej: "Agrícolas") que es demasiado genérico para el card
-  const subcatLabel = product.category_slug === 'maquinaria-agricola'
-    ? (product.subcategory_l2 || product.subcategory)
-    : product.subcategory;
-  if (subcatLabel) {
-    parts.push(String(subcatLabel));
-  }
-  
-  // 2. Buscar atributos prioritarios según config de subcategoría
-  const priorityConfig = SUBCATEGORY_PRIORITY_ATTRIBUTES[subcategoryKey];
-  
-  if (priorityConfig) {
-    const [attr1Key, attr2Fallbacks] = priorityConfig;
-    
-    // Atributo Nivel 1 (ej: tipobovino = "Toro")
-    if (attr1Key && attrs[attr1Key]) {
-      parts.push(String(attrs[attr1Key]));
-    }
-    
-    // Atributo Nivel 2 con fallbacks (buscar en orden hasta encontrar uno)
-    if (attr2Fallbacks && Array.isArray(attr2Fallbacks)) {
-      for (const key of attr2Fallbacks) {
-        if (attrs[key]) {
-          parts.push(String(attrs[key]));
-          break; // Usar el primero encontrado
-        }
+
+  // Subcategoría: subcategory_l2 = L2 padre cuando el aviso está en L3,
+  // o la subcategoría hoja si está directamente en L2.
+  const subcatLabel = product.subcategory_l2 || product.subcategory;
+  if (subcatLabel) parts.push(String(subcatLabel));
+
+  const catSlug = (product.category_slug || '').toLowerCase();
+  const fieldGroups = CATEGORY_CARD_LABEL[catSlug];
+
+  if (fieldGroups !== undefined) {
+    // Categoría configurada: recorrer grupos en orden
+    for (const keys of fieldGroups) {
+      for (const key of keys) {
+        const val = attrs[key];
+        if (val) { parts.push(String(val)); break; }
       }
     }
   } else {
-    // Fallback para categorías sin config específica
-    if (product.category?.toLowerCase().includes('ganader')) {
-      // Ganadería sin config: buscar raza legacy
-      const raza = attrs.raza || attrs.breed || attrs.razabovinos;
-      if (raza) parts.push(String(raza));
-    } else {
-      // Maquinaria, Insumos, Repuestos, etc.: Marca · Modelo · Año
-      const marca = attrs.marca || attrs.brand || product.brand;
-      if (marca) parts.push(String(marca));
-      const modelo = attrs.modelo || attrs.model;
-      if (modelo) parts.push(String(modelo));
-      // Año solo si hay marca (contextualiza mejor que solo el número)
-      const ano = attrs.ano || attrs.año || attrs.year;
-      if (ano && marca) parts.push(String(ano));
-    }
+    // Categoría sin config conocida: fallback genérico marca · modelo · año
+    const marca = attrs.marca || attrs.marcas || attrs.brand || product.brand;
+    if (marca) parts.push(String(marca));
+    const modelo = attrs.modelo || attrs.model;
+    if (modelo) parts.push(String(modelo));
+    const ano = attrs.ano || attrs.año || attrs.year;
+    if (ano && marca) parts.push(String(ano));
   }
 
   return parts.join(' · ') || product.category || '';
