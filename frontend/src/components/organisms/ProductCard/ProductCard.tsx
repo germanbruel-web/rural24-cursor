@@ -208,11 +208,13 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
             ...(product.attributes || {}),
             ...((product as any).dynamic_fields || {})
           };
-          const isGanaderia = product.category?.toLowerCase().includes('ganader');
-          
-          // GANADERÍA: mostrar Edad
-          if (isGanaderia) {
-            const edad = attrs.edad || attrs.age;
+          const isHacienda = (product as any).category_slug === 'hacienda'
+            || product.category?.toLowerCase().includes('ganader')
+            || product.category?.toLowerCase().includes('hacienda');
+
+          // HACIENDA: mostrar Edad como badge
+          if (isHacienda) {
+            const edad = attrs.edad || attrs.edad_meses || attrs.age;
             if (!edad) return null;
             return (
               <span className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-light text-white bg-black/50 backdrop-blur-sm rounded">

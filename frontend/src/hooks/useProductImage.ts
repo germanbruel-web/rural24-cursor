@@ -92,7 +92,7 @@ const CATEGORY_CARD_LABEL: Record<string, Array<string[]>> = {
   ],
   'hacienda': [
     ['raza', 'especie_y_raza', 'razabovinos', 'razaovinos', 'razaequinos', 'razaporcinos', 'razacaprinos', 'razaaves', 'breed'],
-    ['edad', 'edad_meses'],
+    // edad NO va en el label — se muestra como badge sobre la imagen (igual que Nuevo/Usado)
   ],
   'insumos': [
     ['marca', 'brand'],
@@ -140,9 +140,12 @@ export const getProductLabel = (product: Product): string => {
     ...((product as any).dynamic_fields || {})
   };
 
-  // Subcategoría: subcategory_l2 = L2 padre cuando el aviso está en L3,
-  // o la subcategoría hoja si está directamente en L2.
-  const subcatLabel = product.subcategory_l2 || product.subcategory;
+  // Subcategoría: regla por categoría.
+  // hacienda → L3 leaf (ej: "Novillitos") — el tipo exacto de animal es la info relevante
+  // resto    → L2 padre (ej: "Tractores") — la categoría de máquina es la info relevante
+  const subcatLabel = catSlug === 'hacienda'
+    ? (product.subcategory || product.subcategory_l2)
+    : (product.subcategory_l2 || product.subcategory);
   if (subcatLabel) parts.push(String(subcatLabel));
 
   const catSlug = (product.category_slug || '').toLowerCase();
