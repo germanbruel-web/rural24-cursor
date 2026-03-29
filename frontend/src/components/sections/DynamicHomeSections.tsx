@@ -40,7 +40,7 @@ interface AdItem {
   status: string;
   featured_expires_at?: string;
   categories?: { slug: string } | { slug: string }[] | null;
-  subcategories?: { slug: string } | { slug: string }[] | null;
+  subcategories?: { display_name: string; parent_subcat?: any } | { display_name: string; parent_subcat?: any }[] | null;
   user_id?: string;
   users?: { avatar_url: string | null } | { avatar_url: string | null }[] | null;
 }
@@ -139,7 +139,7 @@ function useAds(section: HomeSection) {
       try {
         let query = supabase
           .from('ads')
-          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name), categories(slug)')
+          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name, parent_subcat:subcategories!parent_id(display_name)), categories(slug)')
           .eq('status', 'active')
           .limit(limit);
 
@@ -305,8 +305,10 @@ function adToProduct(ad: AdItem): Product {
   const firstImage = ad.images?.[0];
   const imageUrl = typeof firstImage === 'string' ? firstImage : ((firstImage as AdImage)?.url ?? '');
   const cats  = resolveJoin(ad.categories);
-  const subs  = resolveJoin(ad.subcategories);
+  const subs  = resolveJoin(ad.subcategories) as { display_name: string; parent_subcat?: any } | null;
   const users = resolveJoin(ad.users);
+  // Resolver nombre de subcategoría padre (L2) para categorías con jerarquía 3 niveles
+  const parentSubcat = subs?.parent_subcat ? resolveJoin(subs.parent_subcat) as { display_name: string } | null : null;
   return {
     id: ad.id,
     title: ad.title,
@@ -322,6 +324,7 @@ function adToProduct(ad: AdItem): Product {
     sourceUrl: '',
     category: '',
     subcategory: subs?.display_name,
+    subcategory_l2: parentSubcat?.display_name ?? subs?.display_name,
     isSponsored: false,
     ad_type: ad.ad_type as Product['ad_type'],
     attributes: ad.attributes,
@@ -802,7 +805,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
         // 2. Avisos destacados
         let adsQuery = supabase
           .from('ads')
-          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name), categories(slug)')
+          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name, parent_subcat:subcategories!parent_id(display_name)), categories(slug)')
           .eq('status', 'active')
           .eq('category_id', cat.id)
           .limit(featuredLimit);

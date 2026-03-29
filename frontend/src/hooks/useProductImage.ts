@@ -106,8 +106,13 @@ export const getProductLabel = (product: Product): string => {
   const subcategoryKey = (product.subcategory || '').toLowerCase().trim();
   
   // 1. Subcategoría (siempre primero)
-  if (product.subcategory) {
-    parts.push(String(product.subcategory));
+  // Para maquinaria-agricola: mostrar L2 (tipo de máquina: Tractores, Cosechadoras, etc.)
+  // en lugar del L3 (ej: "Agrícolas") que es demasiado genérico para el card
+  const subcatLabel = product.category_slug === 'maquinaria-agricola'
+    ? (product.subcategory_l2 || product.subcategory)
+    : product.subcategory;
+  if (subcatLabel) {
+    parts.push(String(subcatLabel));
   }
   
   // 2. Buscar atributos prioritarios según config de subcategoría

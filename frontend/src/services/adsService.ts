@@ -81,6 +81,7 @@ export function transformAdToProduct(ad: Ad): Product {
     category_slug: (ad as any).category_slug
       ?? (ad as any).categories?.slug
       ?? (typeof ad.category === 'object' && ad.category !== null ? (ad.category as any).slug : undefined),
+    subcategory_l2: (ad as any).subcategory_l2 || undefined,
     user_avatar_url: (ad as any).user_avatar_url,
     price_unit: (ad as any).price_unit,
     featured_expires_at: (ad as any).featured_expires_at,

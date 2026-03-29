@@ -785,7 +785,45 @@ export async function GET(request: NextRequest) {
     }
 
     // ============================================================
-    // 5. TRANSFORMAR RESPONSE
+    // 5. RESOLVER SUBCATEGORÍAS L2 (para card label: tipo de máquina)
+    // Necesario para maquinaria-agricola donde subcategory_id apunta a L3
+    // y necesitamos el nombre del padre (L2) para mostrar en el card.
+    // ============================================================
+    const subcatIdSet = [...new Set((ads || []).map((a: any) => a.subcategory_id).filter(Boolean))] as string[];
+    const subcatL2Map = new Map<string, string>(); // subcategory_id → L2 display_name
+
+    if (subcatIdSet.length > 0) {
+      const { data: subcatRows } = await supabase
+        .from('subcategories')
+        .select('id, display_name, parent_id')
+        .in('id', subcatIdSet);
+
+      const parentIdSet = [...new Set((subcatRows || []).map((s: any) => s.parent_id).filter(Boolean))] as string[];
+
+      if (parentIdSet.length > 0) {
+        const { data: parentRows } = await supabase
+          .from('subcategories')
+          .select('id, display_name')
+          .in('id', parentIdSet);
+
+        const parentNameMap = new Map<string, string>(
+          (parentRows || []).map((p: any) => [p.id, p.display_name])
+        );
+
+        (subcatRows || []).forEach((s: any) => {
+          if (s.parent_id && parentNameMap.has(s.parent_id)) {
+            subcatL2Map.set(s.id, parentNameMap.get(s.parent_id)!);
+          } else {
+            subcatL2Map.set(s.id, s.display_name);
+          }
+        });
+      } else {
+        (subcatRows || []).forEach((s: any) => subcatL2Map.set(s.id, s.display_name));
+      }
+    }
+
+    // ============================================================
+    // 6. TRANSFORMAR RESPONSE
     // ============================================================
     const transformedAds = (ads || []).map((ad: any) => {
       // Extraer imagen principal del array images
@@ -825,6 +863,7 @@ export async function GET(request: NextRequest) {
         // Usar los nombres resueltos previamente (sin JOINs)
         category: categoryName || 'Sin categoría',
         subcategory: subcategoryName || '',
+        subcategory_l2: ad.subcategory_id ? (subcatL2Map.get(ad.subcategory_id) || subcategoryName || '') : (subcategoryName || ''),
         category_slug: categorySlug || ((ad as any).categories?.slug) || '',
         subcategory_slug: subcategorySlug || '',
       };

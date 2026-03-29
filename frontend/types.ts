@@ -36,6 +36,7 @@ export interface Product {
   featured_expires_at?: string; // ISO timestamp de vencimiento del destacado (featured_ads.expires_at)
   category_id?: string; // UUID de la categoría
   category_slug?: string; // Slug de la categoría (para detectar Servicios/Empleos)
+  subcategory_l2?: string; // Nombre de subcategoría nivel L2 (padre), usado para maquinaria-agricola en card
   user_avatar_url?: string; // Avatar del usuario (para card de Servicios)
   // Información del vendedor (para productos de usuarios)
   user_id?: string;
