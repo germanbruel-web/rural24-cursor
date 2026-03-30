@@ -30,7 +30,7 @@ export const BannersVipHero = () => {
           setCurrentIndex(Math.floor(Math.random() * banners.length));
         }
       })
-      .catch(e => console.error('[BannersVipHero]', e))
+      .catch(e => { if (import.meta.env.DEV) console.warn('[BannersVipHero]', e); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -55,12 +55,12 @@ export const BannersVipHero = () => {
   useEffect(() => {
     const banner = displayBanners[safeIndex];
     if (!banner || impressionsRecorded.current.has(banner.id)) return;
-    incrementBannerImpression(banner.id).catch(console.error);
+    incrementBannerImpression(banner.id).catch(() => {});
     impressionsRecorded.current.add(banner.id);
   }, [safeIndex, count]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClick = (banner: BannerClean) => {
-    incrementBannerClick(banner.id).catch(console.error);
+    incrementBannerClick(banner.id).catch(() => {});
   };
 
   // Skeleton mientras carga

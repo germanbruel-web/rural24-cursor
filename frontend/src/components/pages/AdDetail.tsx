@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Helmet } from 'react-helmet-async';
+import type { User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '../../services/supabaseClient';
 import {
   MapPin, Calendar, Tag, ArrowLeft,
@@ -71,7 +73,7 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
   const { currentImageIndex, lightboxOpen, setCurrentImageIndex, setLightboxOpen } = useLightbox(images.length);
 
   const [showStickyBar, setShowStickyBar] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [userCheckDone, setUserCheckDone] = useState(false);
 
   const mobileCTARef = useRef<HTMLDivElement>(null);
@@ -258,6 +260,53 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
 
   return (
     <>
+      {/* ── SEO Meta Tags ──────────────────────────────────────── */}
+      {(() => {
+        const pageTitle = `${ad.title} | Rural24`;
+        const pageDescription = ad.description
+          ? ad.description.slice(0, 155).replace(/\n/g, ' ')
+          : `${ad.categories?.display_name || 'Aviso'} en ${ad.province || ad.location || 'Argentina'} — Rural24`;
+        const firstImage = ad.images?.[0]?.url;
+        const canonicalUrl = `https://rural24.com.ar/#/ad/${ad.id}`;
+
+        const productSchema = {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: ad.title,
+          ...(ad.description ? { description: ad.description } : {}),
+          url: canonicalUrl,
+          ...(firstImage ? { image: firstImage } : {}),
+          ...(ad.categories ? { category: ad.categories.display_name } : {}),
+          offers: {
+            '@type': 'Offer',
+            priceCurrency: ad.currency || 'ARS',
+            ...(ad.price ? { price: ad.price } : {}),
+            availability: 'https://schema.org/InStock',
+            seller: { '@type': 'Person', name: ad.seller?.full_name || 'Vendedor' },
+          },
+        };
+
+        return (
+          <Helmet>
+            <title>{pageTitle}</title>
+            <meta name="description" content={pageDescription} />
+            <meta property="og:title" content={pageTitle} />
+            <meta property="og:description" content={pageDescription} />
+            <meta property="og:type" content="product" />
+            <meta property="og:url" content={canonicalUrl} />
+            <meta property="og:site_name" content="Rural24" />
+            <meta property="og:locale" content="es_AR" />
+            {firstImage && <meta property="og:image" content={firstImage} />}
+            {firstImage && <meta property="og:image:alt" content={ad.title} />}
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content={pageTitle} />
+            <meta name="twitter:description" content={pageDescription} />
+            {firstImage && <meta name="twitter:image" content={firstImage} />}
+            <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
+          </Helmet>
+        );
+      })()}
+
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 pb-24 lg:pb-6">
 
         {onBack && (

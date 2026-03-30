@@ -45,7 +45,7 @@ export default function CategoryCarousel({ category }: CategoryCarouselProps) {
       setCurrentIndex(0);
       impressionTracked.current.clear();
     } catch (error) {
-      console.error('Error cargando banners carousel:', error);
+      if (import.meta.env.DEV) console.warn('[CategoryCarousel] Error cargando banners:', error);
       setBanners([]);
     } finally {
       setLoading(false);
@@ -91,6 +91,8 @@ export default function CategoryCarousel({ category }: CategoryCarouselProps) {
           alt={currentBanner.title}
           className="w-full h-auto object-cover"
           style={{ maxHeight: '120px' }}
+          loading="lazy"
+          decoding="async"
         />
       </div>
 

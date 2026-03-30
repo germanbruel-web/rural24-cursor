@@ -8,15 +8,16 @@
  */
 
 import React from 'react';
+import type { Product, FilterOptions, SearchFilters } from '../../types';
 import { SearchResultsPageMinimal } from '../components';
 import { SearchSEO } from '../components/SearchSEO';
 
 interface SearchPageProps {
-  results?: any[];
+  results?: Product[];
   onBack?: () => void;
-  onSearch?: (params: any) => void;
-  filterOptions?: any;
-  onFilter?: (filters: any) => void;
+  onSearch?: (params: SearchFilters) => void;
+  filterOptions?: FilterOptions;
+  onFilter?: (filters: SearchFilters) => void;
   onViewDetail?: (adId: string) => void;
 }
 

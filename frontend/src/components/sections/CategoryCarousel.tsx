@@ -89,11 +89,6 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
         adCategory?.toLowerCase() === cat.toLowerCase()
       ) || adCategory?.toLowerCase() === category?.toLowerCase();
       
-      // Debug: Mostrar por qué se filtra o no
-      if (category === 'Maquinarias' && ad.title) {
-        console.log(`[Premium] ${ad.title}: category="${adCategory}" matches="${matchesCategory}"`);
-      }
-      
       return matchesCategory;
     })
     .map(ad => ({
@@ -129,11 +124,6 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
       const matchesCategory = categoryMap[category]?.some(cat => 
         adCategory?.toLowerCase() === cat.toLowerCase()
       ) || adCategory?.toLowerCase() === category?.toLowerCase();
-      
-      // Debug: Mostrar por qué se filtra o no
-      if (category === 'Maquinarias' && ad.title) {
-        console.log(`[Manual] ${ad.title}: category="${adCategory}" approved="${isApproved}" featured="${isFeatured}" matches="${matchesCategory}"`);
-      }
       
       // Solo avisos manuales aprobados que NO sean featured (los featured ya están en premiumProducts)
       return matchesCategory && isApproved && !isFeatured;
@@ -183,18 +173,8 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
     return true;
   });
 
-  // Mostrar resumen de duplicados solo si hay alguno
-  if (duplicatesFound.size > 0) {
-    if (import.meta.env.DEV) console.log(`📊 ${title}: ${categoryProducts.length} productos únicos (${duplicatesFound.size} duplicados removidos de ${allProducts.length} totales)`);
-    // Solo mostrar en modo desarrollo si es necesario debuggear
-    if (import.meta.env.DEV) {
-      duplicatesFound.forEach((title, id) => {
-        console.debug(`   ↳ Duplicado: ${title}`);
-      });
-    }
-  } else {
-    console.log(`📊 ${title}: ${categoryProducts.length} productos únicos (de ${allProducts.length} totales)`);
-    console.log(`   Premium: ${premiumProducts.length}, Manual: ${manualProducts.length}, Total activeAds: ${activeAds.length}, Total premiumAds: ${premiumAds.length}`);
+  if (import.meta.env.DEV && duplicatesFound.size > 0) {
+    console.debug(`[CategoryCarousel] ${title}: ${categoryProducts.length} únicos (${duplicatesFound.size} dupes removidos)`);
   }
 
   // LIMITAR A 10 AVISOS MÁS RECIENTES (5 columnas x 2 filas)
@@ -270,10 +250,13 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 {categoryIcon && (
-                  <img 
-                    src={`/images/${categoryIcon}`} 
-                    alt={title} 
+                  <img
+                    src={`/images/${categoryIcon}`}
+                    alt=""
+                    aria-hidden="true"
                     className="w-8 h-8 object-contain"
+                    loading="lazy"
+                    decoding="async"
                   />
                 )}
                 <h2 className="text-2xl font-bold text-gray-800">{title}</h2>

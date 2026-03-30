@@ -7,6 +7,7 @@
  */
 
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import {
   HeroWithCarousel,
   HowItWorksSection,
@@ -18,9 +19,9 @@ import { DynamicHomeSections } from '../components/sections/DynamicHomeSections'
 
 interface HomePageProps {
   onShowAuthModal?: () => void;
-  onSearch?: (filters: any) => void;
+  onSearch?: (filters: unknown) => void;
   onCategoryHover?: (category: string | null) => void;
-  onBannerChange?: (banner: any) => void;
+  onBannerChange?: (banner: unknown) => void;
   onAdClick?: (adId: string) => void;
   hoveredCategory?: string | null;
 }
@@ -30,6 +31,21 @@ export const HomePage: React.FC<HomePageProps> = ({ onShowAuthModal }) => {
     <main className="flex-1">
       {/* SEO: Structured Data para buscador */}
       <SearchSEO />
+
+      {/* SEO: Organization schema */}
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'Rural24',
+            url: 'https://rural24.com.ar',
+            logo: 'https://rural24.com.ar/images/logos/rural24-dark.webp',
+            description: 'Clasificados agropecuarios de Argentina. Comprá y vendé ganado, maquinaria, insumos e inmuebles rurales.',
+            address: { '@type': 'PostalAddress', addressCountry: 'AR' },
+          })}
+        </script>
+      </Helmet>
 
       {/* Hero con banner VIP */}
       <HeroWithCarousel

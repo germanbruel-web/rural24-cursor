@@ -222,8 +222,8 @@ export function EmpleoModal({ isOpen, onClose, product }: Props) {
 
           ) : status === 'success' ? (
             <div className="flex flex-col items-center justify-center flex-1 text-center gap-3">
-              <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center">
-                <CheckCircle2 size={28} className="text-green-600" />
+              <div className="w-14 h-14 rounded-full bg-brand-50 flex items-center justify-center">
+                <CheckCircle2 size={28} className="text-brand-600" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">¡Mensaje enviado!</h3>
               <p className="text-sm text-gray-500 max-w-[260px]">

@@ -290,7 +290,7 @@ function useAds(section: HomeSection) {
           setAds(enrichedAds);
         }
       } catch (e) {
-        console.error('[DynamicHomeSections] Error cargando avisos:', e);
+        if (import.meta.env.DEV) console.warn('[DynamicHomeSections] Error cargando avisos:', e);
       } finally {
         setLoading(false);
       }
@@ -995,7 +995,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
           }
         }
       } catch (e) {
-        console.error('[CategorySection] Error:', e);
+        if (import.meta.env.DEV) console.warn('[CategorySection] Error:', e);
       } finally {
         setLoading(false);
       }
@@ -1334,7 +1334,7 @@ export function DynamicHomeSections() {
   useEffect(() => {
     getHomeComposition()
       .then(setSections)
-      .catch(e => console.error('[DynamicHomeSections] Error:', e))
+      .catch(e => { if (import.meta.env.DEV) console.warn('[DynamicHomeSections] Error:', e); })
       .finally(() => setLoading(false));
 
     // Cargar setting de countdown desde global_settings

@@ -40,7 +40,7 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
       setConfig(heroConfig);
       setImages(heroImages);
     } catch (error) {
-      console.error('Error loading hero data:', error);
+      if (import.meta.env.DEV) console.warn('[HeroWithCarousel] Error loading hero data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -119,6 +119,9 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
             src={config!.image_url}
             alt={config!.image_alt || 'Rural24 Hero'}
             className="w-full h-full object-cover"
+            // @ts-ignore — fetchpriority is a valid HTML attribute
+            fetchpriority="high"
+            decoding="async"
           />
         </div>
       )}
@@ -136,6 +139,10 @@ export const HeroWithCarousel: React.FC<HeroWithCarouselProps> = ({ children, ba
                 src={image.image_url}
                 alt={image.alt_text || `Rural24 Hero ${index + 1}`}
                 className="w-full h-full object-cover"
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                // @ts-ignore — fetchpriority is a valid HTML attribute
+                fetchpriority={index === 0 ? 'high' : undefined}
               />
             </div>
           ))}

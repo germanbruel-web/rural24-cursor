@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Sitemap: https://rural24.com.ar/sitemap.xml
+
+Disallow: /#/home-cms
+Disallow: /#/admin
+Disallow: /#/dashboard
+Disallow: /#/inbox
+Disallow: /#/checkout

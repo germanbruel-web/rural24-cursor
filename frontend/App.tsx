@@ -298,7 +298,13 @@ const AppContent: React.FC = () => {
   const [allBanners, setAllBanners] = useState<Banner[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
+  const [selectedAdId, setSelectedAdId] = useState<string | null>(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#/ad/')) return hash.replace('#/ad/', '');
+    if (hash.startsWith('#/editar/')) return hash.replace('#/editar/', '');
+    if (hash.startsWith('#/edit/')) return hash.replace('#/edit/', '');
+    return null;
+  });
   const [adToEdit, setAdToEdit] = useState<Ad | undefined>(undefined);
   const [showAuthModal, setShowAuthModal] = useState(false);
   

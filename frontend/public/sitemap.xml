@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://rural24.com.ar/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://rural24.com.ar/#/search</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://rural24.com.ar/#/search?cat=maquinarias-agricolas</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://rural24.com.ar/#/search?cat=hacienda</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://rural24.com.ar/#/search?cat=insumos</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://rural24.com.ar/#/search?cat=inmobiliaria-rural</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://rural24.com.ar/#/search?cat=servicios</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://rural24.com.ar/#/search?cat=equipamiento</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://rural24.com.ar/#/search?cat=repuestos</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://rural24.com.ar/#/search?cat=empleos</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+</urlset>

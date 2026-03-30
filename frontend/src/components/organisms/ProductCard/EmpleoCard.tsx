@@ -93,6 +93,8 @@ export const EmpleoCard: React.FC<EmpleoCardProps> = React.memo(({ product, clas
                 alt=""
                 aria-hidden="true"
                 className="w-5 h-5 flex-shrink-0"
+                loading="lazy"
+                decoding="async"
                 style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(60%) saturate(500%) hue-rotate(60deg) brightness(90%)' }}
               />
             ) : (
