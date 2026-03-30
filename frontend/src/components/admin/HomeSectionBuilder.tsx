@@ -773,6 +773,38 @@ export default function HomeSectionBuilder() {
   const queryCategorySlug = (form.query_filter?.category_slug as string) ?? '';
   const querySubcategorySlug = (form.query_filter?.subcategory_slug as string) ?? '';
   const querySubSubcategorySlug = (form.query_filter?.sub_subcategory_slug as string) ?? '';
+  const queryCategorySlugs = (form.query_filter?.category_slugs as string[]) ?? [];
+  const queryExcludeSlugs  = (form.query_filter?.exclude_category_slugs as string[]) ?? [];
+
+  const toggleCategorySlug = (slug: string, include: boolean) => {
+    if (include) {
+      // Incluir: agrega a category_slugs, limpia exclude
+      const updated = queryCategorySlugs.includes(slug)
+        ? queryCategorySlugs.filter(s => s !== slug)
+        : [...queryCategorySlugs, slug];
+      setForm(f => ({
+        ...f,
+        query_filter: {
+          ...f.query_filter,
+          category_slugs: updated.length ? updated : undefined,
+          exclude_category_slugs: undefined,
+        },
+      }));
+    } else {
+      // Excluir: agrega a exclude_category_slugs, limpia include
+      const updated = queryExcludeSlugs.includes(slug)
+        ? queryExcludeSlugs.filter(s => s !== slug)
+        : [...queryExcludeSlugs, slug];
+      setForm(f => ({
+        ...f,
+        query_filter: {
+          ...f.query_filter,
+          exclude_category_slugs: updated.length ? updated : undefined,
+          category_slugs: undefined,
+        },
+      }));
+    }
+  };
 
   const setQueryCategorySlug = async (val: string) => {
     setSubcategories([]);
@@ -970,7 +1002,11 @@ export default function HomeSectionBuilder() {
                           <>
                             {s.query_filter?.category_slug
                               ? `Cat: ${s.query_filter.category_slug}`
-                              : 'Todas las categorías'}
+                              : (s.query_filter?.category_slugs as string[] | undefined)?.length
+                                ? `Incluye: ${(s.query_filter.category_slugs as string[]).join(', ')}`
+                                : (s.query_filter?.exclude_category_slugs as string[] | undefined)?.length
+                                  ? `Excluye: ${(s.query_filter.exclude_category_slugs as string[]).join(', ')}`
+                                  : 'Todas las categorías'}
                             {s.query_filter?.subcategory_slug ? ` › ${s.query_filter.subcategory_slug}` : ''}
                             {s.query_filter?.sub_subcategory_slug ? ` › ${s.query_filter.sub_subcategory_slug}` : ''}
                             {s.query_filter?.limit ? ` · Límite: ${s.query_filter.limit}` : ''}
@@ -1228,6 +1264,83 @@ export default function HomeSectionBuilder() {
                         ))}
                       </select>
                     </div>
+
+                    {/* Multi-categoría: solo visible cuando "Todas las categorías" está seleccionada */}
+                    {!queryCategorySlug && (
+                      <div className="space-y-3 pt-2 border-t border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold text-gray-600">Filtro de categorías</p>
+                          {(queryCategorySlugs.length > 0 || queryExcludeSlugs.length > 0) && (
+                            <button
+                              type="button"
+                              onClick={() => setForm(f => ({ ...f, query_filter: { ...f.query_filter, category_slugs: undefined, exclude_category_slugs: undefined } }))}
+                              className="text-[11px] text-red-500 hover:text-red-700"
+                            >
+                              Limpiar
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Modo activo: include o exclude */}
+                        {queryCategorySlugs.length === 0 && queryExcludeSlugs.length === 0 && (
+                          <p className="text-[11px] text-gray-400">Seleccioná categorías para incluir o excluir de esta sección.</p>
+                        )}
+
+                        <div className="grid grid-cols-1 gap-1 max-h-48 overflow-y-auto">
+                          {categories.filter(c => c.value).map(c => {
+                            const isIncluded = queryCategorySlugs.includes(c.value);
+                            const isExcluded = queryExcludeSlugs.includes(c.value);
+                            const modeIsInclude = queryCategorySlugs.length > 0;
+                            const modeIsExclude = queryExcludeSlugs.length > 0;
+
+                            return (
+                              <div key={c.value} className="flex items-center gap-2 py-0.5">
+                                <span className="flex-1 text-sm text-gray-700">{c.label}</span>
+                                {/* Botón incluir — deshabilitado si modo excluir activo */}
+                                {!modeIsExclude && (
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleCategorySlug(c.value, true)}
+                                    className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${
+                                      isIncluded
+                                        ? 'bg-brand-500 text-white border-brand-500'
+                                        : 'text-gray-400 border-gray-200 hover:border-brand-400 hover:text-brand-600'
+                                    }`}
+                                  >
+                                    {isIncluded ? '✓ incluir' : '+ incluir'}
+                                  </button>
+                                )}
+                                {/* Botón excluir — deshabilitado si modo incluir activo */}
+                                {!modeIsInclude && (
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleCategorySlug(c.value, false)}
+                                    className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${
+                                      isExcluded
+                                        ? 'bg-red-500 text-white border-red-500'
+                                        : 'text-gray-400 border-gray-200 hover:border-red-400 hover:text-red-600'
+                                    }`}
+                                  >
+                                    {isExcluded ? '✗ excluir' : '− excluir'}
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {queryCategorySlugs.length > 0 && (
+                          <p className="text-[11px] text-brand-600 font-medium">
+                            Mostrando solo: {queryCategorySlugs.join(', ')}
+                          </p>
+                        )}
+                        {queryExcludeSlugs.length > 0 && (
+                          <p className="text-[11px] text-red-500 font-medium">
+                            Excluyendo: {queryExcludeSlugs.join(', ')}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     {subcategories.length > 1 && (
                       <div>

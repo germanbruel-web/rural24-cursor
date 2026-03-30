@@ -40,6 +40,8 @@ export interface Product {
   user_avatar_url?: string; // Avatar del usuario (para card de Servicios)
   // Información del vendedor (para productos de usuarios)
   user_id?: string;
+  created_at?: string; // ISO timestamp de creación del aviso
+  category_icon?: string; // Formato "url|#hexcolor" del ícono de categoría en DB
   seller?: {
     id: string;
     email: string;

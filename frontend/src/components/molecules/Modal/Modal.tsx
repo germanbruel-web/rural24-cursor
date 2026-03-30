@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { cn } from '../../../design-system/utils';
 import { X } from 'lucide-react';
@@ -90,9 +91,9 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
     if (!open) return null;
 
-    return (
+    return createPortal(
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
@@ -157,7 +158,8 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
             </div>
           )}
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 );

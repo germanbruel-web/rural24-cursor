@@ -299,70 +299,73 @@ export function WizardConfigPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Wizard de Publicación</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Configurá el orden y visibilidad de los pasos del formulario de alta.
-          </p>
-        </div>
+      <div>
+        <h2 className="text-xl font-bold text-gray-900">Wizard de Publicación</h2>
+        <p className="text-sm text-gray-500 mt-0.5">
+          Configurá el orden y visibilidad de los pasos del formulario de alta.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Lista de configs */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Configuraciones</p>
-          {configs.map((cfg) => (
+      {/* Selector de configs — tabs/pills horizontales */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-gray-200">
+        {configs.map((cfg) => {
+          const isSelected = cfg.id === selectedId;
+          const badge = cfg.name === 'default' ? 'Global' : cfg.display_name.replace('Wizard ', '');
+          return (
             <button
               key={cfg.id}
               onClick={() => setSelectedId(cfg.id)}
-              className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${
-                cfg.id === selectedId
-                  ? 'bg-brand-50 border-brand-300 text-brand-800'
-                  : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+              className={`flex-shrink-0 flex flex-col items-start px-4 py-2.5 rounded-t-lg border-b-2 transition-all text-left ${
+                isSelected
+                  ? 'border-brand-600 bg-brand-50 text-brand-800'
+                  : 'border-transparent bg-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'
               }`}
             >
-              <p className="font-semibold text-sm">{cfg.display_name}</p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {cfg.name === 'default' ? 'Global' : 'Por categoría'} · {cfg.steps.filter((s) => s.visible).length} steps
-              </p>
+              <span className="font-semibold text-sm">{cfg.display_name}</span>
+              <span className={`text-[10px] mt-0.5 ${isSelected ? 'text-brand-500' : 'text-gray-400'}`}>
+                {badge} · {cfg.steps.filter((s) => s.visible).length} pasos
+              </span>
             </button>
-          ))}
-        </div>
-
-        {/* Editor */}
-        <div className="lg:col-span-2">
-          {selectedConfig ? (
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">{selectedConfig.display_name}</h3>
-                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
-                  {selectedConfig.name === 'default' ? 'Config global' : `Categoría override`}
-                </span>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <p className="text-xs text-blue-700">
-                  <strong>Bloqueados</strong> (🔒): los steps <em>Categoría</em> y <em>Revisar y Publicar</em> son obligatorios y no pueden ocultarse ni moverse.
-                </p>
-              </div>
-
-              <ConfigEditor
-                key={selectedConfig.id}
-                config={selectedConfig}
-                onSaved={load}
-                onDeleted={() => { setSelectedId(null); load(); }}
-              />
-            </div>
-          ) : (
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center text-gray-500">
-              Seleccioná una configuración para editarla.
-            </div>
-          )}
-        </div>
+          );
+        })}
       </div>
+
+      {/* Editor */}
+      {selectedConfig ? (
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900">{selectedConfig.display_name}</h3>
+            <span className={`text-xs px-2 py-1 rounded font-medium ${
+              selectedConfig.name === 'default'
+                ? 'bg-gray-100 text-gray-500'
+                : 'bg-brand-50 text-brand-700 border border-brand-200'
+            }`}>
+              {selectedConfig.name === 'default'
+                ? 'Aplica a todas las categorías'
+                : `Solo para: ${selectedConfig.display_name.replace('Wizard ', '')}`}
+            </span>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <p className="text-xs text-blue-700">
+              <strong>Bloqueados</strong> (🔒): los steps <em>Categoría</em> y <em>Revisar y Publicar</em> son obligatorios y no pueden ocultarse ni moverse.
+            </p>
+          </div>
+
+          <ConfigEditor
+            key={selectedConfig.id}
+            config={selectedConfig}
+            onSaved={load}
+            onDeleted={() => { setSelectedId(null); load(); }}
+          />
+        </div>
+      ) : (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center text-gray-500">
+          Seleccioná una configuración para editarla.
+        </div>
+      )}
     </div>
   );
 }

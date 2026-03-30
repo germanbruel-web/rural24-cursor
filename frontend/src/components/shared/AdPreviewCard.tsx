@@ -26,9 +26,10 @@ export interface AdPreviewData {
 
 interface AdPreviewCardProps {
   data: AdPreviewData;
+  hideImageWarning?: boolean;
 }
 
-export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ data }) => {
+export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ data, hideImageWarning = false }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const hasImages = data.images && data.images.length > 0;
@@ -109,8 +110,8 @@ export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ data }) => {
             </div>
           )}
         </div>
-      ) : (
-        // Fallback cuando NO hay imágenes
+      ) : !hideImageWarning ? (
+        // Fallback cuando NO hay imágenes (solo si el wizard requiere fotos)
         <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-8 text-center">
           <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,7 +125,7 @@ export const AdPreviewCard: React.FC<AdPreviewCardProps> = ({ data }) => {
             Vuelve al Step 4 para subir imágenes
           </p>
         </div>
-      )}
+      ) : null}
 
       {/* Información principal - EXACTO A AdDetail */}
       <div className="bg-white rounded-lg shadow-md p-6">

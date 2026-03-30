@@ -1,27 +1,19 @@
 /**
- * EmpleoModal — Quick-view modal para avisos de Empleos
- * Empleos no tienen página de detalle. Este modal es su experiencia completa.
+ * EmpleoModal — Quick-view + contacto para avisos de Empleos
+ *
+ * Layout split: izquierda=info del aviso | derecha=formulario de contacto
+ * El interesado NO necesita estar registrado para contactar.
+ * Si está logueado, se pre-completan sus datos.
  */
-import { useState, useEffect } from 'react';
-import { MapPin, X, Briefcase } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { MapPin, X, Briefcase, Phone, Mail, MessageSquare, CheckCircle2, User, ShieldCheck, CalendarDays } from 'lucide-react';
 import type { Product } from '../../../../types';
 import { Modal } from '../Modal/Modal';
-import { useAdChat } from '../../../hooks/useAdChat';
-import { ChatWindow } from '../../chat/ChatWindow';
-import NewChatModal from '../../chat/NewChatModal';
-import { PlanLimitModal } from '../../chat/PlanLimitModal';
 import { supabase } from '../../../services/supabaseClient';
 import { cn } from '../../../design-system/utils';
 
-// Mapeo de price_type a etiquetas legibles
-const PRICE_TYPE_LABELS: Record<string, string> = {
-  'salario-mensual': 'Salario mensual',
-  'por-hora':        'Por hora',
-  'a-convenir':      'A convenir',
-  'no-remunerado':   'No remunerado',
-  'precio-fijo':     'Precio fijo',
-  'por-proyecto':    'Por proyecto',
-};
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface Props {
   isOpen: boolean;
@@ -29,165 +21,306 @@ interface Props {
   product: Product;
 }
 
+type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
+
+interface SellerInfo {
+  full_name: string;
+  email_verified: boolean;
+  province: string | null;
+}
+
 export function EmpleoModal({ isOpen, onClose, product }: Props) {
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [seller, setSeller] = useState<SellerInfo | null>(null);
+  const [celular, setCelular] = useState('');
+  const [email, setEmail] = useState('');
+  const [mensaje, setMensaje] = useState('');
+  const [status, setStatus] = useState<FormStatus>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
 
+  const bgColor = (product.attributes?.bg_color as string) || '#f0fdf4';
+  const isOwner = currentUser && currentUser.id === product.user_id;
+
+  // Pre-completar datos si está logueado
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUser(user));
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUser(user);
+      if (user?.email) setEmail(user.email);
+      if (user?.phone) setCelular(user.phone);
+    });
   }, []);
 
-  const {
-    chatChannel, setChatChannel,
-    showNewChatModal, setShowNewChatModal,
-    showPlanLimit, setShowPlanLimit,
-    chatLoading, handleContactar,
-  } = useAdChat(product.id, product.user_id, currentUser);
+  // Fetch perfil público del anunciante
+  useEffect(() => {
+    if (!product.user_id || !isOpen) return;
+    supabase
+      .from('users')
+      .select('full_name, email_verified, province')
+      .eq('id', product.user_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setSeller(data as SellerInfo);
+      });
+  }, [product.user_id, isOpen]);
 
-  const bgColor    = (product.attributes?.bg_color as string) || '#FFFFFF';
-  const priceType  = product.attributes?.price_type as string | undefined;
-  const priceLabel = priceType ? (PRICE_TYPE_LABELS[priceType] ?? priceType) : null;
-  const hasPrice   = product.price && product.price > 0;
-  const isTextDark = bgColor === '#333333';
+  // Limpiar formulario al cerrar
+  useEffect(() => {
+    if (!isOpen) {
+      setStatus('idle');
+      setErrorMsg('');
+      setSeller(null);
+      if (!currentUser) { setCelular(''); setEmail(''); }
+      setMensaje('');
+    }
+  }, [isOpen]);
 
-  const formatPrice = (price: number, currency: string) => {
-    const formatted = new Intl.NumberFormat('es-AR', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
-    return `${currency === 'USD' ? 'USD' : '$'} ${formatted}`;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!celular.trim() || !mensaje.trim()) return;
+
+    setStatus('submitting');
+    setErrorMsg('');
+
+    try {
+      const res = await fetch(`${API_URL}/api/empleo-contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adId:    product.id,
+          celular: celular.trim(),
+          email:   email.trim() || undefined,
+          mensaje: mensaje.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || 'Error al enviar. Intentá de nuevo.');
+        setStatus('error');
+      } else {
+        setStatus('success');
+      }
+    } catch {
+      setErrorMsg('No se pudo conectar. Verificá tu conexión.');
+      setStatus('error');
+    }
   };
 
+  const subcatBadge = product.subcategory || 'Empleo';
+  const necesidadRaw = (product.attributes?.necesidad as string) || '';
+  const NECESIDAD_LABEL: Record<string, string> = { busco: 'Busco', ofrezco: 'Ofrezco', recomiendo: 'Recomiendo' };
+  const needsLabel = NECESIDAD_LABEL[necesidadRaw] || necesidadRaw;
+  const remitenteRaw = (product.attributes?.remitente as string) || '';
+  const isEmpresa = remitenteRaw.toLowerCase().includes('empresa');
+  const contactTitle = isEmpresa ? 'Contactar a la empresa' : 'Contactar al anunciante';
+
+  // Fecha publicación formateada
+  const pubDate = product.created_at
+    ? new Date(product.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+
   return (
-    <>
-      <Modal
-        open={isOpen}
-        onClose={onClose}
-        size="lg"
-        showCloseButton={false}
-        className="overflow-hidden p-0"
-      >
-        {/* Header de color con avatar */}
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      size="4xl"
+      showCloseButton={false}
+      className="overflow-hidden p-0"
+    >
+      <div className="flex flex-col sm:flex-row min-h-[420px]">
+
+        {/* ── Panel izquierdo: info del aviso ── */}
         <div
-          className="relative flex flex-col items-center justify-center pt-8 pb-6 px-6"
+          className="relative flex flex-col sm:w-[42%] flex-shrink-0"
           style={{ backgroundColor: bgColor }}
         >
+          {/* Info */}
+          <div className="flex-1 px-6 pt-8 pb-6 space-y-3">
+            <h2 className="text-lg font-bold text-gray-900 leading-snug">
+              {product.title}
+            </h2>
+
+            {/* Badges bajo el título */}
+            <div className="flex flex-wrap gap-1.5">
+              <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-black/10 text-gray-700">
+                <Briefcase size={10} />
+                {subcatBadge}
+              </span>
+              {needsLabel && (
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-600 text-white capitalize">
+                  {needsLabel.replace(/[_-]/g, ' ')}
+                </span>
+              )}
+            </div>
+
+            {product.province && (
+              <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                <MapPin size={13} className="flex-shrink-0" />
+                <span>{product.province}</span>
+              </div>
+            )}
+
+            {product.description && (
+              <div className="border-t border-black/10 pt-3">
+                <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed line-clamp-6">
+                  {product.description}
+                </p>
+              </div>
+            )}
+
+            {/* Datos del anunciante */}
+            {(seller || pubDate) && (
+              <div className="border-t border-black/10 pt-3 space-y-1.5">
+                {seller?.full_name && (
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <User size={13} className="flex-shrink-0 text-gray-400" />
+                    <span className="font-medium">{seller.full_name}</span>
+                  </div>
+                )}
+                {seller?.email_verified && (
+                  <div className="flex items-center gap-2 text-sm text-brand-600">
+                    <ShieldCheck size={13} className="flex-shrink-0" />
+                    <span className="font-medium">Usuario Verificado</span>
+                  </div>
+                )}
+                {(seller?.province || product.province) && (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <MapPin size={13} className="flex-shrink-0" />
+                    <span>{seller?.province || product.province}</span>
+                  </div>
+                )}
+                {pubDate && (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <CalendarDays size={13} className="flex-shrink-0" />
+                    <span>Publicado el {pubDate}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Panel derecho: formulario ── */}
+        <div className="relative flex-1 flex flex-col p-6 bg-white">
+          {/* Botón cerrar — esquina superior derecha del modal */}
           <button
             onClick={onClose}
-            className={cn(
-              'absolute top-3 right-3 p-1.5 rounded-full transition-colors',
-              isTextDark
-                ? 'text-white/70 hover:text-white hover:bg-white/10'
-                : 'text-gray-500 hover:text-gray-800 hover:bg-black/10'
-            )}
+            className="absolute top-3 right-3 p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors z-10"
+            aria-label="Cerrar"
           >
             <X size={18} />
           </button>
 
-          {/* Avatar */}
-          {product.user_avatar_url ? (
-            <img
-              src={product.user_avatar_url}
-              alt={product.title}
-              className="w-20 h-20 rounded-full object-cover shadow-md border-4 border-white/80"
-            />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-white/30 border-4 border-white/60 flex items-center justify-center shadow-md">
-              <svg className="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-              </svg>
+          {isOwner ? (
+            <div className="flex flex-col items-center justify-center flex-1 text-center gap-3">
+              <div className="w-14 h-14 rounded-full bg-brand-50 flex items-center justify-center">
+                <Briefcase size={24} className="text-brand-600" />
+              </div>
+              <p className="text-gray-700 font-medium">Este es tu aviso</p>
+              <p className="text-sm text-gray-400">Los interesados te contactarán por aquí.</p>
             </div>
-          )}
 
-          {/* Badge subcategoría */}
-          <span className={cn(
-            'mt-3 flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full',
-            isTextDark ? 'bg-white/15 text-white' : 'bg-black/10 text-gray-700'
-          )}>
-            <Briefcase size={11} />
-            {product.subcategory || 'Empleo'}
-          </span>
-        </div>
-
-        {/* Cuerpo */}
-        <div className="p-6 space-y-4">
-          {/* Título */}
-          <h2 className="text-xl font-bold text-gray-900 leading-tight">
-            {product.title}
-          </h2>
-
-          {/* Precio / Modalidad */}
-          {(hasPrice || priceLabel) && (
-            <div className="flex items-baseline gap-2 flex-wrap">
-              {hasPrice && (
-                <span className="text-2xl font-black text-brand-600">
-                  {formatPrice(product.price!, product.currency)}
-                </span>
-              )}
-              {product.price_unit && hasPrice && (
-                <span className="text-sm text-brand-500">
-                  /{product.price_unit.replace(/-/g, ' ')}
-                </span>
-              )}
-              {priceLabel && (
-                <span className="text-sm font-medium px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
-                  {priceLabel}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Ubicación */}
-          {product.province && (
-            <div className="flex items-center gap-1.5 text-sm text-gray-500">
-              <MapPin size={13} className="flex-shrink-0" />
-              <span>{product.province}</span>
-            </div>
-          )}
-
-          {/* Descripción */}
-          {product.description && (
-            <div className="border-t pt-4">
-              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                {product.description}
+          ) : status === 'success' ? (
+            <div className="flex flex-col items-center justify-center flex-1 text-center gap-3">
+              <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center">
+                <CheckCircle2 size={28} className="text-green-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">¡Mensaje enviado!</h3>
+              <p className="text-sm text-gray-500 max-w-[260px]">
+                El empleador recibió tu contacto y se comunicará con vos pronto.
               </p>
-            </div>
-          )}
-
-          {/* CTA */}
-          {product.user_id && currentUser?.id !== product.user_id && (
-            <div className="pt-2">
               <button
-                onClick={handleContactar}
-                disabled={chatLoading}
-                className="w-full py-3 rounded-xl font-semibold text-white bg-brand-600 hover:bg-brand-700 disabled:opacity-60 transition-colors"
+                onClick={onClose}
+                className="mt-4 px-6 py-2.5 rounded-xl bg-brand-600 text-white font-semibold text-sm hover:bg-brand-700 transition-colors"
               >
-                {chatLoading ? 'Conectando...' : 'Contactar'}
+                Cerrar
               </button>
             </div>
+
+          ) : (
+            <>
+              <div className="mb-5">
+                <h3 className="text-base font-bold text-gray-900">{contactTitle}</h3>
+                <p className="text-xs text-gray-400 mt-0.5">Completá el formulario y aguardá unos días.</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4 flex-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                    <Phone size={10} className="inline mr-1" />
+                    Celular <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={celular}
+                    onChange={e => setCelular(e.target.value)}
+                    placeholder="Ej: 11 1234-5678"
+                    required
+                    className={cn(
+                      'w-full px-3 py-2.5 rounded-xl border text-sm',
+                      'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
+                      'border-gray-200 bg-gray-50 placeholder-gray-400'
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                    <Mail size={10} className="inline mr-1" />
+                    Email <span className="text-gray-300 font-normal normal-case">(opcional)</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="tu@email.com"
+                    className={cn(
+                      'w-full px-3 py-2.5 rounded-xl border text-sm',
+                      'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
+                      'border-gray-200 bg-gray-50 placeholder-gray-400'
+                    )}
+                  />
+                </div>
+
+                <div className="flex-1 flex flex-col">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                    <MessageSquare size={10} className="inline mr-1" />
+                    Mensaje <span className="text-red-400">*</span>
+                  </label>
+                  <textarea
+                    value={mensaje}
+                    onChange={e => setMensaje(e.target.value)}
+                    placeholder="Contá brevemente tu experiencia o consulta..."
+                    required
+                    minLength={10}
+                    rows={4}
+                    className={cn(
+                      'w-full flex-1 px-3 py-2.5 rounded-xl border text-sm resize-none',
+                      'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
+                      'border-gray-200 bg-gray-50 placeholder-gray-400'
+                    )}
+                  />
+                </div>
+
+                {errorMsg && (
+                  <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{errorMsg}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={status === 'submitting' || !celular.trim() || !mensaje.trim()}
+                  className={cn(
+                    'w-full py-3 rounded-xl font-semibold text-white text-sm transition-colors',
+                    'bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                  )}
+                >
+                  {status === 'submitting' ? 'Enviando...' : 'Enviar consulta'}
+                </button>
+              </form>
+            </>
           )}
         </div>
-      </Modal>
-
-      {/* Chat overlays */}
-      {showNewChatModal && product.user_id && (
-        <NewChatModal
-          adId={product.id}
-          adTitle={product.title}
-          sellerId={product.user_id}
-          sellerName={product.title}
-          onSuccess={(channel) => { setChatChannel(channel); setShowNewChatModal(false); }}
-          onClose={() => setShowNewChatModal(false)}
-          onPlanLimit={() => { setShowNewChatModal(false); setShowPlanLimit(true); }}
-        />
-      )}
-      {chatChannel && !showNewChatModal && currentUser && (
-        <ChatWindow
-          channel={chatChannel}
-          currentUserId={currentUser.id}
-          onClose={() => setChatChannel(null)}
-        />
-      )}
-      {showPlanLimit && <PlanLimitModal onClose={() => setShowPlanLimit(false)} />}
-    </>
+      </div>
+    </Modal>
   );
 }

@@ -17,6 +17,7 @@ import { getImageVariant } from '../../../utils/imageOptimizer';
 import { FavoriteButton } from '../../favorites/FavoriteButton';
 import { ShareModal } from '../../molecules/ShareModal/ShareModal';
 import { EmpleoModal } from '../../molecules/EmpleoModal/EmpleoModal';
+import { EmpleoCard } from './EmpleoCard';
 // ---- Countdown badge: muestra tiempo restante hasta vencimiento del destacado ----
 const THRESHOLD_MS = 48 * 60 * 60 * 1000; // 48 horas
 
@@ -66,7 +67,6 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
 }) => {
   const [imageError, setImageError] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [emploModal, setEmploModal] = useState(false);
   const imageUrl = useProductImage(product);
   const cardLabel = getProductLabel(product);
 
@@ -104,12 +104,6 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
     // Prevenir navegación si se hace click en botones
     if ((e.target as HTMLElement).closest('button')) return;
 
-    // Empleos: modal en lugar de AdDetail
-    if (catSlug === 'empleos') {
-      setEmploModal(true);
-      return;
-    }
-
     if (product.slug) {
       navigateTo(`/ad/${product.slug}`);
     } else if (product.id && product.title) {
@@ -121,6 +115,11 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
     }
   };
 
+  // Empleos: card especializada con modal de contacto sin login
+  if (catSlug === 'empleos') {
+    return <EmpleoCard product={product} className={className} />;
+  }
+
   return (
     <Card
       variant="default"
@@ -128,7 +127,9 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
       className={cn(
         'group cursor-pointer overflow-hidden',
         'transition-all duration-300 ease-out',
-        'hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600',
+        isColorCard
+          ? 'hover:scale-[1.02] hover:shadow-md'
+          : 'hover:-translate-y-[3px] hover:shadow-lg hover:border-brand-600',
         isFeatured && 'h-full',
         isCompact && 'h-auto',
         className
@@ -184,8 +185,10 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
           />
         )}
         
-        {/* Gradient overlay en hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Gradient overlay en hover — solo cards con imagen */}
+        {!isColorCard && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        )}
 
         {/* Badge countdown — top-left */}
         {product.featured_expires_at && (
@@ -194,8 +197,8 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
           </div>
         )}
 
-        {/* Favorito — top-right */}
-        {product.id && (
+        {/* Favorito — top-right, solo cards con imagen */}
+        {product.id && !isColorCard && (
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <FavoriteButton adId={product.id} />
           </div>
@@ -277,8 +280,8 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
 
         {/* Título — siempre 2 líneas reservadas */}
         <h3 className={cn(
-          'font-bold text-gray-900 dark:text-white line-clamp-2',
-          'group-hover:text-brand-600 transition-colors',
+          'font-bold text-gray-900 dark:text-white line-clamp-2 transition-colors',
+          !isColorCard && 'group-hover:text-brand-600',
           isFeatured
             ? 'text-sm sm:text-base leading-tight min-h-[2.5rem] sm:min-h-[3rem]'
             : 'text-sm leading-snug min-h-[2.5rem]'
@@ -286,33 +289,35 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
           {product.title}
         </h3>
 
-        {/* Precio — mobile: texto neutro / sm+: bloque con estilo */}
-        <div>
-          {/* Mobile */}
-          <p className="sm:hidden text-xs font-semibold text-gray-700">
-            {formatPrice(product.price, product.currency)}
-            {product.price_unit && product.price && product.price > 0 && (
-              <span className="text-[10px] text-gray-400 font-normal ml-1">
-                /{product.price_unit.replace(/-/g, ' ')}
-              </span>
-            )}
-          </p>
-          {/* Desktop */}
-          <div className={cn(
-            'hidden sm:inline-block bg-gradient-to-r from-brand-50 to-emerald-50',
-            'border-l-4 border-brand-600 rounded-lg',
-            isFeatured ? 'px-3 py-1.5' : 'px-2.5 py-1'
-          )}>
-            <p className={cn('font-black text-brand-600', isFeatured ? 'text-base' : 'text-sm')}>
+        {/* Precio — oculto para empleos/servicios */}
+        {!isColorCard && (
+          <div>
+            {/* Mobile */}
+            <p className="sm:hidden text-xs font-semibold text-gray-700">
               {formatPrice(product.price, product.currency)}
+              {product.price_unit && product.price && product.price > 0 && (
+                <span className="text-[10px] text-gray-400 font-normal ml-1">
+                  /{product.price_unit.replace(/-/g, ' ')}
+                </span>
+              )}
             </p>
-            {product.price_unit && product.price && product.price > 0 && (
-              <p className="text-[10px] text-brand-500 font-medium leading-none mt-0.5">
-                por {product.price_unit.replace(/-/g, ' ')}
+            {/* Desktop */}
+            <div className={cn(
+              'hidden sm:inline-block bg-gradient-to-r from-brand-50 to-emerald-50',
+              'border-l-4 border-brand-600 rounded-lg',
+              isFeatured ? 'px-3 py-1.5' : 'px-2.5 py-1'
+            )}>
+              <p className={cn('font-black text-brand-600', isFeatured ? 'text-base' : 'text-sm')}>
+                {formatPrice(product.price, product.currency)}
               </p>
-            )}
+              {product.price_unit && product.price && product.price > 0 && (
+                <p className="text-[10px] text-brand-500 font-medium leading-none mt-0.5">
+                  por {product.price_unit.replace(/-/g, ' ')}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Footer: solo provincia + compartir */}
         <div className={cn('flex items-center justify-between gap-1 mt-auto text-[10px] sm:text-xs')}>
@@ -323,7 +328,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
             </div>
           ) : <div />}
 
-          {product.id && (
+          {product.id && !isColorCard && (
             <button
               onClick={(e) => { e.stopPropagation(); e.preventDefault(); setShareOpen(true); }}
               aria-label="Compartir aviso"
@@ -342,13 +347,6 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
         url={shareUrl}
       />
 
-      {emploModal && (
-        <EmpleoModal
-          isOpen={emploModal}
-          onClose={() => setEmploModal(false)}
-          product={product}
-        />
-      )}
     </Card>
   );
 });

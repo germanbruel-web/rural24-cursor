@@ -423,12 +423,15 @@ export default function PublicarAviso() {
       const priceBlock = wizardSteps
         .find(s => s.key === 'caracteristicas')?.blocks
         .find(b => b.type === 'price');
-      const priceOptional = priceBlock?.config?.price_optional ?? false;
-      const noAmountValues = priceBlock?.config?.price_no_amount_values ?? [];
-      const typeHidesAmount = priceType && noAmountValues.includes(priceType);
-      if (!price && !priceOptional && !typeHidesAmount) {
-        notify.error('El precio es obligatorio');
-        return;
+      // Si no hay bloque price en este wizard (ej: empleos), no validar precio
+      if (priceBlock) {
+        const priceOptional = priceBlock.config?.price_optional ?? false;
+        const noAmountValues = priceBlock.config?.price_no_amount_values ?? [];
+        const typeHidesAmount = priceType && noAmountValues.includes(priceType);
+        if (!price && !priceOptional && !typeHidesAmount) {
+          notify.error('El precio es obligatorio');
+          return;
+        }
       }
     }
 
@@ -1014,6 +1017,7 @@ export default function PublicarAviso() {
               return (
                 <div className="space-y-6">
                   <AdPreviewCard
+                    hideImageWarning={!wizardSteps.some(s => s.blocks.some(b => b.type === 'images'))}
                     data={{
                       title,
                       description,

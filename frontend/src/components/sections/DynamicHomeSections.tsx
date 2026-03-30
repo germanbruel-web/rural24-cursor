@@ -38,8 +38,10 @@ interface AdItem {
   ad_type?: string;
   attributes?: Record<string, unknown>;
   status: string;
+  created_at?: string;
   featured_expires_at?: string;
-  categories?: { slug: string } | { slug: string }[] | null;
+  categories?: { slug: string; icon?: string | null } | { slug: string; icon?: string | null }[] | null;
+  description?: string;
   subcategories?: { display_name: string } | { display_name: string }[] | null;
   subcategory_l2?: string;
   user_id?: string;
@@ -158,18 +160,20 @@ function useAds(section: HomeSection) {
   const [featuredFallback, setFeaturedFallback] = useState(false);
   const countdownEnabled = React.useContext(CountdownEnabledCtx);
 
-  const limit             = (section.query_filter?.limit as number) ?? 8;
-  const categorySlug      = section.query_filter?.category_slug as string | undefined;
-  const subcategorySlug   = section.query_filter?.subcategory_slug as string | undefined;
-  const subSubSlug        = section.query_filter?.sub_subcategory_slug as string | undefined;
-  const featuredOnly      = !!(section.query_filter?.featured_only);
+  const limit                = (section.query_filter?.limit as number) ?? 8;
+  const categorySlug         = section.query_filter?.category_slug as string | undefined;
+  const subcategorySlug      = section.query_filter?.subcategory_slug as string | undefined;
+  const subSubSlug           = section.query_filter?.sub_subcategory_slug as string | undefined;
+  const featuredOnly         = !!(section.query_filter?.featured_only);
+  const categorySlugs        = section.query_filter?.category_slugs as string[] | undefined;
+  const excludeCategorySlugs = section.query_filter?.exclude_category_slugs as string[] | undefined;
 
   useEffect(() => {
     const load = async () => {
       try {
         let query = supabase
           .from('ads')
-          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name), categories(slug)')
+          .select('id, title, slug, price, currency, price_unit, description, images, category_id, subcategory_id, province, city, ad_type, attributes, status, created_at, user_id, users(avatar_url), subcategories(display_name), categories(slug, icon)')
           .eq('status', 'active')
           .limit(limit);
 
@@ -181,6 +185,22 @@ function useAds(section: HomeSection) {
           if (cat?.id) {
             query = query.eq('category_id', cat.id);
             resolvedCategoryId = cat.id;
+          }
+        } else if (categorySlugs?.length) {
+          // Multi-include: solo estas categorías
+          const { data: cats } = await supabase
+            .from('categories').select('id').in('slug', categorySlugs);
+          const ids = (cats ?? []).map((c: { id: string }) => c.id);
+          if (ids.length > 0) query = query.in('category_id', ids);
+        }
+
+        // Excluir categorías (aplica cuando no hay filtro de include específico)
+        if (excludeCategorySlugs?.length && !categorySlug && !categorySlugs?.length) {
+          const { data: excCats } = await supabase
+            .from('categories').select('id').in('slug', excludeCategorySlugs);
+          const excIds = (excCats ?? []).map((c: { id: string }) => c.id);
+          if (excIds.length > 0) {
+            query = query.not('category_id', 'in', `(${excIds.join(',')})`);
           }
         }
 
@@ -338,7 +358,7 @@ function resolveJoin<T>(val: T | T[] | null | undefined): T | null {
   return Array.isArray(val) ? (val[0] ?? null) : val;
 }
 
-function adToProduct(ad: AdItem): Product {
+function adToProduct(ad: AdItem, categorySlugOverride?: string): Product {
   const firstImage = ad.images?.[0];
   const imageUrl = typeof firstImage === 'string' ? firstImage : ((firstImage as AdImage)?.url ?? '');
   const cats  = resolveJoin(ad.categories);
@@ -348,7 +368,7 @@ function adToProduct(ad: AdItem): Product {
     id: ad.id,
     title: ad.title,
     slug: ad.slug,
-    description: '',
+    description: ad.description ?? '',
     price: ad.price ?? undefined,
     currency: ad.currency,
     price_unit: ad.price_unit,
@@ -364,7 +384,9 @@ function adToProduct(ad: AdItem): Product {
     ad_type: ad.ad_type as Product['ad_type'],
     attributes: ad.attributes,
     featured_expires_at: ad.featured_expires_at,
-    category_slug: cats?.slug,
+    category_slug: categorySlugOverride ?? cats?.slug,
+    category_icon: cats?.icon ?? undefined,
+    created_at: ad.created_at,
     user_id: ad.user_id,
     user_avatar_url: users?.avatar_url ?? undefined,
   };
@@ -416,7 +438,7 @@ function AdGridSection({ section }: SectionProps) {
           {ads.map(ad => (
             <ProductCard
               key={ad.id}
-              product={adToProduct(ad)}
+              product={adToProduct(ad, section.query_filter?.category_slug as string | undefined)}
               variant="featured"
               showLocation={!!(ad.city || ad.province)}
               onViewDetail={() => navigateTo(`/ad/${ad.slug || ad.id}`)}
@@ -578,8 +600,11 @@ function CarouselSection({ section }: SectionProps) {
         />
         <AdsSubLabel count={ads.length} featured={featuredOnly && !featuredFallback} />
 
-        {/* Contenedor con overflow hidden — el track se mueve con transform */}
-        <div ref={wrapRef} className="overflow-hidden">
+        {/* Contenedor: overflow visible en Y para shadows, fade derecho para ocultar card parcial */}
+        <div className="relative">
+          <div ref={wrapRef} className="overflow-x-hidden overflow-y-visible py-4 -mx-3 px-3">
+          {/* Fade derecho */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white/90 to-transparent z-10" aria-hidden="true" />
           <div
             ref={trackRef}
             className="flex"
@@ -602,13 +627,14 @@ function CarouselSection({ section }: SectionProps) {
                 }}
               >
                 <ProductCard
-                  product={adToProduct(ad)}
+                  product={adToProduct(ad, section.query_filter?.category_slug as string | undefined)}
                   variant="featured"
                   showLocation={!!(ad.city || ad.province)}
                   onViewDetail={() => navigateTo(`/ad/${ad.slug || ad.id}`)}
                 />
               </div>
             ))}
+          </div>
           </div>
         </div>
       </div>
@@ -840,7 +866,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
         // 2. Avisos destacados
         let adsQuery = supabase
           .from('ads')
-          .select('id, title, slug, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name), categories(slug)')
+          .select('id, title, slug, description, price, currency, price_unit, images, category_id, subcategory_id, province, city, ad_type, attributes, status, user_id, users(avatar_url), subcategories(display_name), categories(slug)')
           .eq('status', 'active')
           .eq('category_id', cat.id)
           .limit(featuredLimit);
@@ -1093,7 +1119,7 @@ function CategorySectionRenderer({ section }: SectionProps) {
               {featuredAds.map(ad => (
                 <ProductCard
                   key={ad.id}
-                  product={adToProduct(ad)}
+                  product={adToProduct(ad, categorySlug)}
                   variant="featured"
                   showLocation={!!(ad.city || ad.province)}
                   onViewDetail={() => navigateTo(`/ad/${ad.slug || ad.id}`)}
