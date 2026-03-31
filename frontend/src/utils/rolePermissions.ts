@@ -130,7 +130,7 @@ export const MENU_STRUCTURE: MenuItem[] = [
   },
   {
     id: 'inbox',
-    label: 'Mensajes',
+    label: 'Chat',
     allowedRoles: ALL_ROLES,
   },
   {

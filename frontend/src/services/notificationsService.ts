@@ -46,6 +46,16 @@ export async function markAsRead(userId: string, ids?: string[]): Promise<void> 
   if (error) throw error;
 }
 
+/** Eliminar una notificación específica */
+export async function deleteNotification(userId: string, id: string): Promise<void> {
+  const { error } = await supabase
+    .from('notifications')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
 /** Suscribirse a notificaciones nuevas via Realtime */
 export function subscribeToNotifications(
   userId: string,

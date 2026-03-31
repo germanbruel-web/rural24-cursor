@@ -181,12 +181,11 @@ export const BottomNav: React.FC = () => {
           </button>
 
           {bellOpen && (
-            <div className="absolute bottom-full right-0 mb-2 z-50">
-              <NotificationsPanel
-                onClose={() => setBellOpen(false)}
-                onRead={() => setBellUnread(0)}
-              />
-            </div>
+            <NotificationsPanel
+              mobile
+              onClose={() => setBellOpen(false)}
+              onRead={() => setBellUnread(0)}
+            />
           )}
         </div>
 
