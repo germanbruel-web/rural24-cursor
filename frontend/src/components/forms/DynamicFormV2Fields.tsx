@@ -27,10 +27,10 @@ type SelectOption = { value: string; label: string };
 // ─── ESTILOS COMPARTIDOS ──────────────────────────────────────
 
 const inputCls =
-  'w-full px-4 py-3 text-base bg-white border-2 border-gray-300 rounded-lg transition-all duration-200 ' +
+  'w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-sm transition-colors ' +
   'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent placeholder:text-gray-400';
 
-const labelCls = 'block text-sm font-semibold text-gray-700 mb-2';
+const labelCls = 'block text-sm font-medium text-gray-700 mb-1';
 
 const helpCls = 'mt-1.5 text-sm text-gray-500';
 
@@ -209,7 +209,7 @@ function SelectFieldV2({
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
       disabled={loading || waitingForParent}
-      className={`${inputCls} ${error ? 'border-red-400' : ''} ${waitingForParent ? 'opacity-50' : ''}`}
+      className={`${inputCls} pr-8 ${error ? 'border-red-400' : ''} ${waitingForParent ? 'opacity-50' : ''}`}
     >
       <option value="">
         {waitingForParent
@@ -247,7 +247,7 @@ function RadioFieldV2({
   }
 
   return (
-    <div className={`flex flex-wrap gap-x-6 gap-y-3 ${error ? 'p-2 border border-red-400 rounded-lg' : ''}`}>
+    <div className={`flex flex-wrap gap-x-6 gap-y-3 ${error ? 'p-2 border border-red-400 rounded-sm' : ''}`}>
       {options.map((opt) => (
         <label key={opt.value} className="flex items-center gap-2 cursor-pointer select-none">
           <input
@@ -297,7 +297,7 @@ function CheckboxGroupFieldV2({
   }
 
   return (
-    <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 ${error ? 'p-2 border border-red-400 rounded-lg' : ''}`}>
+    <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 ${error ? 'p-2 border border-red-400 rounded-sm' : ''}`}>
       {options.map((opt) => {
         const checked = selectedSet.has(opt.value);
         return (
@@ -311,7 +311,7 @@ function CheckboxGroupFieldV2({
               onChange={() => toggle(opt.value)}
             />
             <div
-              className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+              className={`w-4 h-4 rounded-sm border flex items-center justify-center flex-shrink-0 transition-colors ${
                 checked
                   ? 'bg-brand-600 border-brand-600'
                   : 'bg-white border-gray-300 group-hover:border-brand-400'
@@ -344,7 +344,7 @@ function CheckboxFieldV2({
     <label className="flex items-center gap-3 cursor-pointer select-none group">
       <div
         onClick={() => onChange(!checked)}
-        className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+        className={`w-4 h-4 rounded-sm border flex items-center justify-center flex-shrink-0 transition-colors ${
           checked
             ? 'bg-brand-600 border-brand-600'
             : 'bg-white border-gray-300 group-hover:border-brand-400'
@@ -356,7 +356,7 @@ function CheckboxFieldV2({
           </svg>
         )}
       </div>
-      <span className="text-base text-gray-700">{field.field_label}</span>
+      <span className="text-sm text-gray-700">{field.field_label}</span>
     </label>
   );
 }
@@ -536,7 +536,7 @@ export const DynamicFormV2Fields: React.FC<DynamicFormV2FieldsProps> = ({
         return (
           <div key={section.id} className="space-y-5">
             <div className="border-b border-gray-200 pb-2">
-              <h3 className="text-lg font-semibold text-gray-900">{section.label}</h3>
+              <h3 className="text-sm font-semibold text-gray-700">{section.label}</h3>
             </div>
             {renderFields(sectionFields)}
           </div>

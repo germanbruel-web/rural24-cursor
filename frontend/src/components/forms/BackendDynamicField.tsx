@@ -15,60 +15,21 @@ interface BackendDynamicFieldProps {
  * ====================================================================
  * 
  * Clases base del Design System:
- * - Input base: px-4 py-3 border-2 rounded-lg
+ * - Input base: px-4 py-3 border-2 rounded-sm
  * - Focus: focus:ring-2 focus:ring-primary-500 focus:border-transparent
  * - Error: border-error focus:ring-error
  * - Transition: transition-all duration-200
  */
 const DESIGN_SYSTEM = {
-  // Input base - Design System RURAL24
-  inputBase: `
-    w-full 
-    px-4 py-3 
-    text-base 
-    bg-white 
-    border-2 border-gray-300 
-    rounded-lg 
-    transition-all duration-200
-    focus:outline-none 
-    focus:ring-2 focus:ring-primary-500 focus:border-transparent
-    placeholder:text-gray-400
-  `.replace(/\s+/g, ' ').trim(),
-  
-  // Input con error
-  inputError: `
-    w-full 
-    px-4 py-3 
-    text-base 
-    bg-white 
-    border-2 border-error 
-    rounded-lg 
-    transition-all duration-200
-    focus:outline-none 
-    focus:ring-2 focus:ring-error focus:border-transparent
-    placeholder:text-gray-400
-  `.replace(/\s+/g, ' ').trim(),
-  
-  // Label
-  label: 'block text-sm font-semibold text-gray-700 mb-2',
-  
-  // Helper text
-  helperText: 'mt-1.5 text-sm text-gray-500',
-  
-  // Error text
-  errorText: 'mt-1.5 text-sm text-error flex items-center gap-1',
-  
-  // Checkbox container
-  checkboxContainer: 'flex items-center gap-3',
-  
-  // Checkbox
-  checkbox: 'h-5 w-5 text-primary-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all',
-  
-  // Multiselect chip - default
-  chipDefault: 'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-100',
-  
-  // Multiselect chip - selected
-  chipSelected: 'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2 bg-primary-50 border-primary-500 text-primary-800',
+  inputBase: 'w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent placeholder:text-gray-400',
+  inputError: 'w-full px-3 py-2 text-sm bg-white border border-red-400 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent placeholder:text-gray-400',
+  label: 'block text-sm font-medium text-gray-700 mb-1',
+  helperText: 'mt-1 text-xs text-gray-500',
+  errorText: 'mt-1 text-xs text-red-600 flex items-center gap-1',
+  checkboxContainer: 'flex items-center gap-2',
+  checkbox: 'h-4 w-4 text-brand-600 border border-gray-300 rounded-sm focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 transition-colors',
+  chipDefault: 'inline-flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-medium transition-colors border bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-100',
+  chipSelected: 'inline-flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-medium transition-colors border bg-brand-50 border-brand-500 text-brand-800',
 };
 
 /**
@@ -166,7 +127,7 @@ export const BackendDynamicField: React.FC<BackendDynamicFieldProps> = ({
             value={value || ''}
             onChange={handleChange}
             required={field.is_required}
-            className={inputClasses}
+            className={`${inputClasses} pr-8`}
           >
             <option value="">
               {field.placeholder || `Seleccionar ${field.field_label}...`}

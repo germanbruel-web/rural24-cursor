@@ -115,7 +115,7 @@ export interface Ad {
   image_urls?: string[];
   tags?: string[];
   contact_email?: string;
-  status: 'active' | 'paused' | 'expired' | 'deleted';
+  status: 'draft' | 'active' | 'paused' | 'expired' | 'deleted';
   approval_status?: 'pending' | 'approved' | 'rejected'; // Para usuarios free
   approved_by?: string;
   approved_at?: string;

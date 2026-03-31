@@ -16,7 +16,7 @@ export const MobileStickyBar: React.FC<MobileStickyBarProps> = ({ ad, onContacta
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-            currency === 'USD' ? 'bg-brand-100 text-brand-700' : 'bg-blue-100 text-blue-700'
+            currency === 'USD' ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-gray-600'
           }`}>
             {currency}
           </span>

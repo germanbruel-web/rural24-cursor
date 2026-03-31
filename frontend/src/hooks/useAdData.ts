@@ -13,15 +13,17 @@ export function useAdData(adId: string) {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<CompleteFormV2 | null>(null);
   const [optionLabels, setOptionLabels] = useState<OptionLabels>({});
-  const [sellerOtherAds, setSellerOtherAds] = useState<Product[]>([]);
-  const [loadingOtherAds, setLoadingOtherAds] = useState(false);
+  const [similarAds, setSimilarAds] = useState<Product[]>([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
+  const [sellerAdsCount, setSellerAdsCount] = useState<number>(0);
 
   useEffect(() => { loadAd(); }, [adId]);
 
   useEffect(() => {
     if (!ad) return;
     loadFormAndLabels(ad);
-    loadSellerOtherAds(ad.user_id, ad.id);
+    loadSimilarAds(ad.category_id, ad.subcategory_id, ad.id);
+    loadSellerAdsCount(ad.user_id);
   }, [ad?.id]);
 
   const loadAd = async () => {
@@ -35,7 +37,12 @@ export function useAdData(adId: string) {
       else query = query.eq('slug', adId);
 
       const { data, error } = await query.single();
-      if (error) throw error;
+      if (error) {
+        if (import.meta.env.DEV) {
+          console.warn('[useAdData] Ad not found. Queried:', { adId, isUuid, isShortId }, 'Error:', error.message);
+        }
+        throw error;
+      }
 
       const normalizedImages = normalizeImages(data.images);
 
@@ -47,12 +54,12 @@ export function useAdData(adId: string) {
           ? supabase.from('operation_types').select('display_name').eq('id', data.operation_type_id).single()
           : Promise.resolve({ data: null }),
         data.user_id
-          ? supabase.from('users').select('full_name, email_verified, role, created_at').eq('id', data.user_id).single()
+          ? supabase.from('users').select('full_name, email_verified, role, created_at, avatar_url').eq('id', data.user_id).single()
           : Promise.resolve({ data: null }),
       ]);
 
       let categoryData = null;
-      let parentSubcatData: { display_name: string } | null = null;
+      let parentSubcatData: { id: string; display_name: string } | null = null;
 
       const [catResult, parentSubcatResult] = await Promise.all([
         subcatResult.data?.category_id
@@ -81,45 +88,81 @@ export function useAdData(adId: string) {
     }
   };
 
-  const loadSellerOtherAds = async (sellerId: string, excludeId: string) => {
-    setLoadingOtherAds(true);
+  const loadSellerAdsCount = async (sellerId: string) => {
     try {
-      const { data } = await supabase
+      const { count } = await supabase
         .from('ads')
-        .select('*')
+        .select('id', { count: 'exact', head: true })
         .eq('user_id', sellerId)
-        .eq('status', 'active')
-        .neq('id', excludeId)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      const products: Product[] = (data || []).map((item: any) => ({
-        id: item.id,
-        slug: item.slug,
-        short_id: item.short_id,
-        title: item.title,
-        description: item.description || '',
-        price: item.price,
-        currency: item.currency || 'ARS',
-        location: item.location || '',
-        province: item.province,
-        imageUrl: getFirstImage(item.images || item.image_urls || []),
-        images: normalizeImages(item.images || item.image_urls || []),
-        category: item.category || '',
-        subcategory: item.subcategory,
-        sourceUrl: '#',
-        isSponsored: false,
-        user_id: item.user_id,
-        createdAt: item.created_at,
-      }));
-
-      setSellerOtherAds(products);
-    } catch (err) {
-      logger.error('[useAdData] Error cargando otros avisos del vendedor:', err);
-    } finally {
-      setLoadingOtherAds(false);
+        .eq('status', 'active');
+      setSellerAdsCount(count || 0);
+    } catch {
+      // non-critical, silenciar
     }
   };
+
+  const loadSimilarAds = async (categoryId: string, subcategoryId: string | undefined, excludeId: string) => {
+    setLoadingSimilar(true);
+    try {
+      // Primero: misma subcategoría
+      let items: Product[] = [];
+
+      if (subcategoryId) {
+        const { data: subData } = await supabase
+          .from('ads')
+          .select('id, slug, short_id, title, description, price, currency, location, province, images, user_id, created_at')
+          .eq('subcategory_id', subcategoryId)
+          .eq('status', 'active')
+          .neq('id', excludeId)
+          .order('created_at', { ascending: false })
+          .limit(6);
+
+        items = mapToProducts(subData || []);
+      }
+
+      // Completar con misma categoría si hay menos de 6
+      if (items.length < 6) {
+        const existingIds = [excludeId, ...items.map(i => i.id)];
+        const { data: catData } = await supabase
+          .from('ads')
+          .select('id, slug, short_id, title, description, price, currency, location, province, images, user_id, created_at')
+          .eq('category_id', categoryId)
+          .eq('status', 'active')
+          .not('id', 'in', `(${existingIds.join(',')})`)
+          .order('created_at', { ascending: false })
+          .limit(6 - items.length);
+
+        items = [...items, ...mapToProducts(catData || [])];
+      }
+
+      setSimilarAds(items);
+    } catch (err) {
+      logger.error('[useAdData] Error cargando avisos similares:', err);
+    } finally {
+      setLoadingSimilar(false);
+    }
+  };
+
+  const mapToProducts = (rows: any[]): Product[] =>
+    rows.map(item => ({
+      id: item.id,
+      slug: item.slug,
+      short_id: item.short_id,
+      title: item.title,
+      description: item.description || '',
+      price: item.price,
+      currency: item.currency || 'ARS',
+      location: item.location || '',
+      province: item.province,
+      imageUrl: getFirstImage(item.images || []),
+      images: normalizeImages(item.images || []),
+      category: '',
+      subcategory: undefined,
+      sourceUrl: '#',
+      isSponsored: false,
+      user_id: item.user_id,
+      createdAt: item.created_at,
+    }));
 
   const loadFormAndLabels = async (loadedAd: Ad) => {
     let loadedForm = await getFormForContext(loadedAd.category_id, loadedAd.subcategory_id);
@@ -143,5 +186,5 @@ export function useAdData(adId: string) {
     setOptionLabels(labels);
   };
 
-  return { ad, loading, form, optionLabels, sellerOtherAds, loadingOtherAds };
+  return { ad, loading, form, optionLabels, similarAds, loadingSimilar, sellerAdsCount };
 }

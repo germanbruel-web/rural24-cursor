@@ -162,7 +162,7 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
             <h3 className="text-xl font-semibold text-red-800">No es posible continuar</h3>
             <p className="text-red-600 max-w-md">{connectionError}</p>
           </div>
-          <div className="bg-red-100 rounded-lg p-4 mt-2">
+          <div className="bg-red-100 rounded-sm p-4 mt-2">
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-red-700 text-left">
@@ -176,7 +176,7 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
           </div>
           <button
             onClick={handleRetry}
-            className="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+            className="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-sm hover:bg-red-700 transition-colors font-medium"
           >
             <RefreshCw className="w-4 h-4" />
             Reintentar conexión
@@ -199,7 +199,7 @@ export const DynamicFormLoader: React.FC<DynamicFormLoaderProps> = ({
 
   if (backendFields.length === 0) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-sm p-4">
         <p className="text-yellow-800">
           ⚠️ No se encontraron campos para esta subcategoría.
         </p>

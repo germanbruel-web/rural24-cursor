@@ -42,7 +42,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-sm border border-gray-200 overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
@@ -51,7 +51,7 @@ function Section({
         <span className="font-semibold text-gray-900">{title}</span>
         {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
       </button>
-      {open && <div className="px-4 pb-4">{children}</div>}
+      {open && <div className="px-3 pb-3">{children}</div>}
     </div>
   );
 }
@@ -212,7 +212,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
         <p className="text-red-600 text-center">{state.error}</p>
         <button
           onClick={onBack || (() => window.history.back())}
-          className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700"
+          className="px-4 py-2 bg-brand-600 text-white rounded-sm hover:bg-brand-700"
         >
           Volver
         </button>
@@ -225,7 +225,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
       onClick={state.handleSave}
       disabled={!state.hasChanges || state.saving || hasSensitiveAny}
       title={hasSensitiveAny ? 'Hay datos de contacto en los campos' : undefined}
-      className="px-4 py-2 rounded-lg text-sm font-semibold bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      className="px-4 py-2 rounded-sm text-sm font-semibold bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
     >
       {state.saving ? 'Guardando...' : 'Guardar'}
     </button>
@@ -267,7 +267,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
     <Section title="Detalles" open={openSections.detalles} onToggle={() => toggleSection('detalles')}>
       <div className="pt-2 space-y-2">
         {attrSensitive && (
-          <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700">
+          <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-sm px-3 py-2 text-xs text-red-700">
             <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
             Uno o más campos tienen datos de contacto. Removelos antes de guardar.
           </div>
@@ -296,7 +296,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
           <select
             value={state.province}
             onChange={e => handleProvinceChange(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full border border-gray-300 rounded-sm px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="">Seleccioná una provincia</option>
             {provinces.map(p => (
@@ -310,7 +310,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
             value={state.locality}
             onChange={e => state.setLocality(e.target.value)}
             disabled={localities.length === 0 || loadingLocalities}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50"
+            className="w-full border border-gray-300 rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50"
           >
             <option value="">
               {loadingLocalities ? 'Cargando...' : localities.length === 0 ? 'Seleccioná una provincia primero' : 'Seleccioná una localidad'}
@@ -337,7 +337,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
             value={state.title}
             onChange={e => state.setTitle(e.target.value)}
             maxLength={200}
-            className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${titleSensitive ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-brand-500'}`}
+            className={`w-full border rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-2 ${titleSensitive ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-brand-500'}`}
           />
           {titleSensitive && (
             <p className="flex items-center gap-1 text-xs text-red-600 mt-1">
@@ -357,7 +357,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
             onChange={e => state.setDescription(e.target.value)}
             maxLength={2000}
             rows={5}
-            className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-none ${descSensitive ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-brand-500'}`}
+            className={`w-full border rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-none ${descSensitive ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-brand-500'}`}
           />
           {descSensitive && (
             <p className="flex items-center gap-1 text-xs text-red-600 mt-1">
@@ -375,7 +375,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
             onChange={e => state.setPriceNegotiable(e.target.checked)}
             className="accent-brand-600"
           />
-          <label htmlFor="negotiable" className="text-sm text-gray-700">Precio a convenir</label>
+          <label htmlFor="negotiable" className="text-sm font-medium text-gray-700">Precio a convenir</label>
         </div>
 
         {!state.priceNegotiable && (
@@ -387,7 +387,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
                 value={state.price}
                 onChange={e => state.setPrice(e.target.value)}
                 min={0}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full border border-gray-300 rounded-sm px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
             <div className="w-28">
@@ -395,7 +395,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
               <select
                 value={state.currency}
                 onChange={e => state.setCurrency(e.target.value as 'ARS' | 'USD')}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full border border-gray-300 rounded-sm px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="ARS">ARS</option>
                 <option value="USD">USD</option>
@@ -420,7 +420,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
         <select
           value={state.status}
           onChange={e => state.setStatus(e.target.value)}
-          className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${statusColors[state.status] || 'border-gray-300 focus:ring-brand-500'}`}
+          className={`w-full border rounded-sm px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 ${statusColors[state.status] || 'border-gray-300 focus:ring-brand-500'}`}
         >
           <option value="active">Activo</option>
           <option value="paused">Pausado</option>
@@ -457,19 +457,19 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
         </header>
 
         {state.hasChanges && (
-          <div className="sm:hidden mx-4 mt-3 text-xs font-medium bg-amber-100 text-amber-700 px-3 py-2 rounded-lg text-center">
+          <div className="sm:hidden mx-4 mt-3 text-xs font-medium bg-amber-100 text-amber-700 px-3 py-2 rounded-sm text-center">
             Cambios sin guardar
           </div>
         )}
 
         {state.saveError && (
-          <div className="mx-4 mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+          <div className="mx-4 mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-sm px-4 py-2">
             {state.saveError}
           </div>
         )}
 
-        {/* Layout mobile (< lg) */}
-        <div className="lg:hidden px-4 mt-4 space-y-3">
+        {/* Layout mobile */}
+        <div className="sm:hidden px-4 mt-4 space-y-3">
           {sectionCategoria}
           {sectionFotos}
           {sectionDetalles}
@@ -478,14 +478,14 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
           {sectionEstado}
         </div>
 
-        {/* Layout desktop (>= lg) */}
-        <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6 max-w-6xl mx-auto px-6 mt-6">
-          <div className="col-span-5 space-y-4">
+        {/* Layout 2 columnas 50/50 */}
+        <div className="hidden sm:grid sm:grid-cols-2 sm:gap-3 px-2 mt-2">
+          <div className="space-y-4">
             {sectionCategoria}
             {sectionDetalles}
             {sectionUbicacion}
           </div>
-          <div className="col-span-7 space-y-4">
+          <div className="space-y-4">
             {sectionFotos}
             {sectionPrecio}
             {sectionEstado}

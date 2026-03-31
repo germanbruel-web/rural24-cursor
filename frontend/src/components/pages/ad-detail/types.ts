@@ -5,10 +5,13 @@ export interface Seller {
   email_verified?: boolean;
   role?: string;
   created_at?: string;
+  avatar_url?: string | null;
 }
 
 export interface Ad {
   id: string;
+  short_id?: string;
+  slug?: string;
   title: string;
   description: string;
   location: string;
@@ -16,6 +19,10 @@ export interface Ad {
   price?: number;
   currency?: string;
   price_unit?: string;
+  price_negotiable?: boolean;
+  condition?: string | null;
+  year?: number | null;
+  views_count?: number;
   phone: string;
   user_id: string;
   category_id: string;

@@ -4,7 +4,8 @@ import type { User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '../../services/supabaseClient';
 import {
   MapPin, Calendar, Tag, ArrowLeft,
-  MessageCircle, User, CheckCircle, Loader2,
+  MessageCircle, CheckCircle, Loader2,
+  Share2, Eye, Store,
 } from 'lucide-react';
 import { UserFeaturedAdsBar } from '../sections/UserFeaturedAdsBar';
 import PremiumBadge from '../PremiumBadge';
@@ -23,14 +24,14 @@ import { AdFormSections } from './ad-detail/AdFormSections';
 import { MobileStickyBar } from './ad-detail/MobileStickyBar';
 import { relativeDate, formatPrice } from './ad-detail/utils';
 
-// ── Tipos ────────────────────────────────────────────────────────
+// ── Tipos ────────────────────────────────────────────────────
 
 interface AdDetailProps {
   adId: string;
   onBack?: () => void;
 }
 
-// ── Skeleton ─────────────────────────────────────────────────────
+// ── Skeleton ─────────────────────────────────────────────────
 
 const AdDetailSkeleton: React.FC = () => (
   <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -64,10 +65,74 @@ const AdDetailSkeleton: React.FC = () => (
   </div>
 );
 
-// ── Componente principal ─────────────────────────────────────────
+// ── Helper: Avatar con iniciales ──────────────────────────────
+
+const SellerAvatar: React.FC<{ avatarUrl?: string | null; fullName?: string }> = ({ avatarUrl, fullName }) => {
+  const initials = (fullName || 'V')
+    .split(' ')
+    .slice(0, 2)
+    .map(n => n[0]?.toUpperCase() || '')
+    .join('');
+
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={fullName || 'Vendedor'}
+        className="w-12 h-12 rounded-full object-cover border-2 border-brand-100"
+        loading="lazy"
+      />
+    );
+  }
+
+  return (
+    <div className="w-12 h-12 rounded-full bg-brand-500 flex items-center justify-center flex-shrink-0">
+      <span className="text-white text-sm font-bold">{initials}</span>
+    </div>
+  );
+};
+
+// ── Helper: Price badges ──────────────────────────────────────
+
+const PriceBadges: React.FC<{
+  currency?: string;
+  condition?: string | null;
+  priceNegotiable?: boolean;
+  viewsCount?: number;
+}> = ({ currency, condition, priceNegotiable, viewsCount }) => (
+  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+    {currency && (
+      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+        currency === 'USD'
+          ? 'bg-brand-100 text-brand-700'
+          : 'bg-gray-100 text-gray-600'
+      }`}>
+        {currency}
+      </span>
+    )}
+    {condition && (
+      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full capitalize">
+        {condition}
+      </span>
+    )}
+    {priceNegotiable && (
+      <span className="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-medium">
+        Precio a acordar
+      </span>
+    )}
+    {viewsCount !== undefined && viewsCount > 0 && (
+      <span className="text-xs text-gray-400 flex items-center gap-1">
+        <Eye className="w-3 h-3" />
+        {viewsCount.toLocaleString('es-AR')} vistas
+      </span>
+    )}
+  </div>
+);
+
+// ── Componente principal ──────────────────────────────────────
 
 export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
-  const { ad, loading, form, optionLabels, sellerOtherAds, loadingOtherAds } = useAdData(adId);
+  const { ad, loading, form, optionLabels, similarAds, loadingSimilar, sellerAdsCount } = useAdData(adId);
 
   const images = ad?.images || [];
   const { currentImageIndex, lightboxOpen, setCurrentImageIndex, setLightboxOpen } = useLightbox(images.length);
@@ -75,6 +140,7 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [userCheckDone, setUserCheckDone] = useState(false);
+  const [showCopied, setShowCopied] = useState(false);
 
   const mobileCTARef = useRef<HTMLDivElement>(null);
 
@@ -105,31 +171,47 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
     return () => observer.disconnect();
   }, []);
 
-  // ── Contact form (sidebar + mobile CTA) ──────────────────────
+  // ── Share ─────────────────────────────────────────────────
 
-  const renderSidebarContactForm = () => {
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: ad?.title, url });
+        return;
+      } catch {
+        // fallback al clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    } catch {
+      // silenciar errores de clipboard en contextos sin permiso
+    }
+  };
+
+  // ── Contact form (sidebar + mobile CTA) ──────────────────
+
+  const renderContactButton = () => {
     if (!userCheckDone) return null;
 
     if (!currentUser) {
       return (
-        <div className="bg-white rounded-xl shadow-sm p-5">
-          <button
-            onClick={handleContactar}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
-          >
-            <MessageCircle className="w-4 h-4" />
-            Contactar
-          </button>
-          <p className="text-xs text-gray-400 text-center mt-2">
-            Iniciá sesión para contactar al vendedor
-          </p>
-        </div>
+        <button
+          onClick={handleContactar}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
+        >
+          <MessageCircle className="w-4 h-4" />
+          Contactar vendedor
+        </button>
       );
     }
 
     if (chatChannel) {
       return (
-        <div className="bg-white rounded-xl shadow-sm p-5 space-y-2">
+        <div className="space-y-2">
           <button
             onClick={() => setChatChannel(chatChannel)}
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
@@ -148,104 +230,147 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
     }
 
     return (
+      <button
+        onClick={handleContactar}
+        disabled={chatLoading}
+        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:bg-gray-200 text-white text-sm font-semibold transition-colors"
+      >
+        {chatLoading
+          ? <><Loader2 className="w-4 h-4 animate-spin" /> Abriendo chat...</>
+          : <><MessageCircle className="w-4 h-4" /> Contactar vendedor</>
+        }
+      </button>
+    );
+  };
+
+  // ── Seller Card ───────────────────────────────────────────
+
+  const renderSellerCard = () => {
+    if (!ad) return null;
+    const seller = ad.seller;
+    const sellerName = seller?.full_name || 'Vendedor';
+
+    const memberSince = seller?.created_at
+      ? new Date(seller.created_at).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+      : null;
+
+    return (
       <div className="bg-white rounded-xl shadow-sm p-5">
-        <button
-          onClick={handleContactar}
-          disabled={chatLoading}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:bg-gray-200 text-white text-sm font-semibold transition-colors"
-        >
-          {chatLoading
-            ? <><Loader2 className="w-4 h-4 animate-spin" /> Abriendo chat...</>
-            : <><MessageCircle className="w-4 h-4" /> Contactar vendedor</>
-          }
-        </button>
+        {/* Avatar + nombre */}
+        <div className="flex items-center gap-3 mb-4">
+          <SellerAvatar avatarUrl={seller?.avatar_url} fullName={sellerName} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-sm font-semibold text-gray-900 truncate">{sellerName}</span>
+              {seller?.role === 'premium' && <PremiumBadge size="sm" />}
+            </div>
+            {memberSince && (
+              <p className="text-xs text-gray-400 mt-0.5">Miembro desde {memberSince}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Stats del vendedor */}
+        <div className="space-y-1.5 mb-4">
+          {sellerAdsCount > 0 && (
+            <div className="flex items-center gap-2">
+              <Store className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+              <span className="text-xs text-gray-500">
+                {sellerAdsCount} {sellerAdsCount === 1 ? 'aviso publicado' : 'avisos publicados'}
+              </span>
+            </div>
+          )}
+          {seller?.email_verified && (
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-3.5 h-3.5 text-brand-600 flex-shrink-0" />
+              <span className="text-xs text-brand-700 font-medium">Usuario Verificado</span>
+            </div>
+          )}
+          {(ad.province || ad.location) && (
+            <div className="flex items-center gap-2">
+              <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+              <span className="text-xs text-gray-500">{ad.province || ad.location}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-gray-100 pt-4">
+          {renderContactButton()}
+          {!currentUser && (
+            <p className="text-xs text-gray-400 text-center mt-2">
+              Iniciá sesión para contactar al vendedor
+            </p>
+          )}
+        </div>
       </div>
     );
   };
 
-  // ── Sidebar desktop ───────────────────────────────────────────
+  // ── Sidebar desktop ───────────────────────────────────────
 
   const renderSidebar = () => {
     if (!ad) return null;
     const currency = ad.currency || 'ARS';
-    const sellerName = ad.seller?.full_name || 'Vendedor';
 
     return (
       <aside className="hidden lg:block">
         <div className="sticky top-6 space-y-3">
-          <div className="bg-white rounded-xl shadow-sm p-5">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Precio</p>
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                    currency === 'USD' ? 'bg-brand-100 text-brand-700' : 'bg-blue-100 text-blue-700'
-                  }`}>
-                    {currency}
-                  </span>
-                </div>
-                {ad.price ? (
-                  <>
-                    <div className="text-3xl font-bold text-gray-900">
-                      ${formatPrice(ad.price)}
-                    </div>
-                    {ad.price_unit && (
-                      <div className="text-xs text-gray-400 mt-0.5">
-                        por {ad.price_unit.replace(/-/g, ' ')}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-lg font-semibold text-gray-400">Consultar precio</div>
-                )}
-              </div>
-            </div>
 
-            <div className="border-t border-gray-100 pt-4 space-y-2.5">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                <span className="text-sm font-semibold text-gray-900">{sellerName}</span>
-                {ad.seller?.role === 'premium' && <PremiumBadge size="sm" />}
-              </div>
-              {ad.seller?.email_verified && (
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                  <span className="text-sm text-brand-700 font-medium">Usuario Verificado</span>
+          {/* Precio */}
+          <div className="bg-white rounded-xl shadow-sm p-5">
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Precio</p>
+            {ad.price ? (
+              <>
+                <div className="text-3xl font-bold text-gray-900">
+                  ${formatPrice(ad.price)}
                 </div>
-              )}
-              {(ad.province || ad.location) && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <span className="text-sm text-gray-600">{ad.province || ad.location}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                <span className="text-sm text-gray-600">
-                  Publicado el {new Date(ad.created_at).toLocaleDateString('es-AR', {
-                    day: 'numeric', month: 'long', year: 'numeric',
-                  })}
-                </span>
+                {ad.price_unit && (
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    por {ad.price_unit.replace(/-/g, ' ')}
+                  </div>
+                )}
+              </>
+            ) : ad.price_negotiable ? (
+              <div className="text-lg font-semibold text-gray-500">Precio a acordar</div>
+            ) : (
+              <div className="text-lg font-semibold text-gray-400">Consultar precio</div>
+            )}
+
+            <PriceBadges
+              currency={currency}
+              condition={ad.condition}
+              priceNegotiable={ad.price_negotiable}
+              viewsCount={ad.views_count}
+            />
+
+            <div className="border-t border-gray-100 mt-4 pt-3">
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                Publicado {relativeDate(ad.created_at)}
               </div>
             </div>
           </div>
 
-          {renderSidebarContactForm()}
+          {/* Vendedor + contacto */}
+          {renderSellerCard()}
         </div>
       </aside>
     );
   };
 
-  // ── Estados ───────────────────────────────────────────────────
+  // ── Estados ───────────────────────────────────────────────
 
   if (loading) return <AdDetailSkeleton />;
 
   if (!ad) {
     return (
-      <div className="text-center py-16">
-        <p className="text-gray-500">Aviso no encontrado</p>
+      <div className="text-center py-16 px-4">
+        <p className="text-gray-500 font-medium mb-1">Aviso no encontrado</p>
+        {import.meta.env.DEV && (
+          <p className="text-xs text-gray-400 font-mono mt-1 mb-4">slug: {adId}</p>
+        )}
         {onBack && (
-          <button onClick={onBack} className="mt-4 text-brand-600 hover:underline text-sm">
+          <button onClick={onBack} className="mt-2 text-brand-600 hover:underline text-sm">
             Volver
           </button>
         )}
@@ -256,7 +381,7 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
   const hasImages = images.length > 0;
   const currency = ad.currency || 'ARS';
 
-  // ── Render ────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────
 
   return (
     <>
@@ -267,7 +392,7 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
           ? ad.description.slice(0, 155).replace(/\n/g, ' ')
           : `${ad.categories?.display_name || 'Aviso'} en ${ad.province || ad.location || 'Argentina'} — Rural24`;
         const firstImage = ad.images?.[0]?.url;
-        const canonicalUrl = `https://rural24.com.ar/#/ad/${ad.id}`;
+        const canonicalUrl = `https://rural24.com.ar/#/ad/${ad.slug || ad.id}`;
 
         const productSchema = {
           '@context': 'https://schema.org',
@@ -309,6 +434,13 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
 
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 pb-24 lg:pb-6">
 
+        {/* ── Toast "Enlace copiado" ── */}
+        {showCopied && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-xs px-4 py-2 rounded-full shadow-lg pointer-events-none">
+            ¡Enlace copiado!
+          </div>
+        )}
+
         {onBack && (
           <button
             onClick={onBack}
@@ -336,6 +468,7 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
 
             {/* Título + meta */}
             <div className="bg-white rounded-xl shadow-sm p-5">
+              {/* Breadcrumb */}
               <div className="flex items-center flex-wrap gap-1 text-xs text-gray-400 mb-3">
                 <Tag className="w-3 h-3 flex-shrink-0" />
                 {ad.operation_types && (
@@ -359,8 +492,20 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
                 {ad.subcategories && <span>{ad.subcategories.display_name}</span>}
               </div>
 
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">{ad.title}</h1>
+              {/* Título + share */}
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{ad.title}</h1>
+                <button
+                  onClick={handleShare}
+                  title="Compartir aviso"
+                  className="flex-shrink-0 flex items-center gap-1.5 text-xs text-gray-500 hover:text-brand-600 transition-colors border border-gray-200 hover:border-brand-300 rounded-lg px-2.5 py-1.5 mt-0.5"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Compartir</span>
+                </button>
+              </div>
 
+              {/* Meta: location, date, year */}
               <div className="flex flex-wrap gap-3 text-sm text-gray-500">
                 {(ad.province || ad.location) && (
                   <div className="flex items-center gap-1.5">
@@ -376,24 +521,26 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
 
               {/* Precio mobile */}
               <div className="lg:hidden border-t mt-4 pt-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className={`inline-flex text-xs font-semibold px-2 py-0.5 rounded-full mb-2 ${
-                      currency === 'USD' ? 'bg-brand-100 text-brand-700' : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {currency}
-                    </span>
-                    {ad.price ? (
-                      <>
-                        <div className="text-2xl font-bold text-gray-900">${formatPrice(ad.price)}</div>
-                        {ad.price_unit && (
-                          <div className="text-xs text-gray-400 mt-0.5">por {ad.price_unit.replace(/-/g, ' ')}</div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="text-lg font-semibold text-gray-400">Consultar precio</div>
-                    )}
-                  </div>
+                <div>
+                  {ad.price ? (
+                    <>
+                      <div className="text-2xl font-bold text-gray-900">${formatPrice(ad.price)}</div>
+                      {ad.price_unit && (
+                        <div className="text-xs text-gray-400 mt-0.5">por {ad.price_unit.replace(/-/g, ' ')}</div>
+                      )}
+                    </>
+                  ) : ad.price_negotiable ? (
+                    <div className="text-lg font-semibold text-gray-500">Precio a acordar</div>
+                  ) : (
+                    <div className="text-lg font-semibold text-gray-400">Consultar precio</div>
+                  )}
+
+                  <PriceBadges
+                    currency={currency}
+                    condition={ad.condition}
+                    priceNegotiable={ad.price_negotiable}
+                    viewsCount={ad.views_count}
+                  />
                 </div>
               </div>
 
@@ -407,11 +554,18 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
 
             {/* CTA mobile */}
             <div ref={mobileCTARef} id="mobile-cta" className="lg:hidden">
-              {renderSidebarContactForm()}
+              <div className="bg-white rounded-xl shadow-sm p-4">
+                {renderContactButton()}
+              </div>
             </div>
 
-            {/* Secciones dinámicas */}
+            {/* Secciones dinámicas (características) */}
             <AdFormSections form={form} ad={ad} optionLabels={optionLabels} />
+
+            {/* Vendedor — solo mobile (sidebar en desktop) */}
+            <div className="lg:hidden">
+              {renderSellerCard()}
+            </div>
 
           </div>
 
@@ -420,27 +574,24 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
 
         </div>
 
-        {/* ── Contenedor-B: Más avisos del vendedor ── */}
-        {(loadingOtherAds || sellerOtherAds.length > 0) && (
-          <div className="bg-gray-50 rounded-xl p-5 mt-4">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">
-              Más avisos de este vendedor
-            </h2>
-            {loadingOtherAds ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="aspect-[3/4] bg-gray-200 rounded-lg animate-pulse" />
+        {/* ── Avisos similares ── */}
+        {(loadingSimilar || similarAds.length >= 2) && (
+          <div className="bg-white rounded-xl shadow-sm p-5 mt-4">
+            <h2 className="text-sm font-semibold text-gray-700 mb-1">Avisos similares</h2>
+            {loadingSimilar ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="aspect-[3/4] bg-gray-100 rounded-lg animate-pulse" />
                 ))}
               </div>
             ) : (
               <>
                 <p className="text-xs text-gray-400 mb-4">
-                  {sellerOtherAds.length}{' '}
-                  {sellerOtherAds.length === 1 ? 'aviso disponible' : 'avisos disponibles'}
+                  {similarAds.length} {similarAds.length === 1 ? 'aviso encontrado' : 'avisos encontrados'}
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                  {sellerOtherAds.map(otherAd => (
-                    <ProductCard key={otherAd.id} product={otherAd} variant="compact" showProvince />
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  {similarAds.map(item => (
+                    <ProductCard key={item.id} product={item} variant="compact" showProvince />
                   ))}
                 </div>
               </>
@@ -448,7 +599,7 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
           </div>
         )}
 
-        {/* ── Contenedor-C: Avisos Destacados ── */}
+        {/* ── Avisos Destacados ── */}
         <UserFeaturedAdsBar
           categoryId={ad.category_id}
           placement="detail"

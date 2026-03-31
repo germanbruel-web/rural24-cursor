@@ -268,26 +268,34 @@ export const AdFormSections: React.FC<AdFormSectionsProps> = ({ form, ad, option
   const attrs = ad.attributes as Record<string, unknown> | undefined;
   if (!attrs || Object.keys(attrs).length === 0) return null;
 
-  // Fallback: no form template
+  // Fallback: no form template — show raw attributes with icons
   if (!form) {
+    const entries = Object.entries(attrs).filter(
+      ([key, val]) => !INTERNAL_ATTRS.has(key) && val !== null && val !== ''
+    );
+    if (entries.length === 0) return null;
+
     return (
       <div className="bg-white rounded-xl shadow-sm p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Información adicional</h2>
+        <h2 className="text-sm font-semibold text-gray-700 mb-4">Características</h2>
         <dl className="grid grid-cols-1 md:grid-cols-6 gap-x-6 gap-y-4">
-          {Object.entries(attrs)
-            .filter(([key]) => !INTERNAL_ATTRS.has(key))
-            .map(([key, val]) =>
-              val !== null && val !== '' ? (
-                <div key={key} className="md:col-span-3">
-                  <dt className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
-                    {humanizeKey(key)}
-                  </dt>
-                  <dd className="text-sm font-medium text-gray-900">
-                    {humanizeSlug(String(val))}
-                  </dd>
-                </div>
-              ) : null
-            )}
+          {entries.map(([key, val]) => {
+            const Icon = resolveIcon(undefined, key);
+            return (
+              <div key={key} className="md:col-span-3">
+                <dt className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                  {Icon && <Icon className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />}
+                  {humanizeKey(key)}
+                </dt>
+                <dd className="text-sm font-medium text-gray-900">
+                  {Array.isArray(val)
+                    ? (val as string[]).map(humanizeSlug).join(', ')
+                    : humanizeSlug(String(val))
+                  }
+                </dd>
+              </div>
+            );
+          })}
         </dl>
       </div>
     );

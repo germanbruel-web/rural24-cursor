@@ -12,13 +12,14 @@ import { isSuperAdmin as checkIsSuperAdmin } from '../../utils/rolePermissions';
 import { supabase } from '../../services/supabaseClient';
 import BulkVisibilityModal from './BulkVisibilityModal';
 import SuperAdminFeaturedPanel from './SuperAdminFeaturedPanel';
+import EditarAviso from '../pages/EditarAviso';
 
 import { cancelActiveFeaturedAd } from '../../services/userFeaturedService';
 import { navigateTo } from '../../hooks/useNavigate';
 
 /**
  * Extraer public_id de Cloudinary URL para borrado
- * https://res.cloudinary.com/xxx/image/upload/.../rural24/ads/abc123.jpg â†’ rural24/ads/abc123
+ * https://res.cloudinary.com/xxx/image/upload/.../rural24/ads/abc123.jpg → rural24/ads/abc123
  */
 function extractCloudinaryPublicId(url: string): string | null {
   try {
@@ -42,9 +43,7 @@ function calcCompleteness(ad: Ad): number {
   return done;
 }
 
-interface MyAdsPanelProps {
-  onNavigate?: (page: string) => void;
-}
+interface MyAdsPanelProps {}
 
 /** Info de un featured activo/pendiente para un aviso */
 interface FeaturedInfo {
@@ -55,7 +54,7 @@ interface FeaturedInfo {
   expires_at?: string;
 }
 
-export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
+export default function MyAdsPanel() {
   const { profile } = useAuth();
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,15 +64,16 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   const [showBulkVisibility, setShowBulkVisibility] = useState(false);
   const [featuredMap, setFeaturedMap] = useState<Record<string, FeaturedInfo[]>>({});
 
+  // Edit drawer
+  const [editingAdId, setEditingAdId] = useState<string | null>(null);
+
   // Cancel featured
   const [cancelFeaturedTarget, setCancelFeaturedTarget] = useState<{ adTitle: string; featured: FeaturedInfo } | null>(null);
   const [cancellingFeatured, setCancellingFeatured] = useState(false);
   
-  // Determinar permisos segÃºn rol
+  // Determinar permisos según rol
   const isSuperAdmin = checkIsSuperAdmin(profile?.role);
   const canUseFeaturedFlow = Boolean(profile?.id);
-  const [superAdminView, setSuperAdminView] = useState<'mine' | 'clients'>('mine');
-  
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused'>('active');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const PAGE_SIZE = 20;
@@ -185,7 +185,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     try {
       const adId = selectedAdForDelete.id;
       
-      // PASO 1: Obtener todas las imÃ¡genes asociadas (soporta ambos sistemas)
+      // PASO 1: Obtener todas las imágenes asociadas (soporta ambos sistemas)
       const imageUrls: string[] = [];
       
       // Sistema nuevo: tabla ad_images
@@ -209,7 +209,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         imageUrls.push(...adData.images);
       }
       
-      // PASO 2: Eliminar imÃ¡genes de Cloudinary (si existen)
+      // PASO 2: Eliminar imágenes de Cloudinary (si existen)
       if (imageUrls.length > 0) {
         const publicIds = imageUrls
           .map(extractCloudinaryPublicId)
@@ -225,19 +225,19 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
             });
             
             if (!response.ok) {
-              console.warn('âš ï¸ Error al eliminar imÃ¡genes de Cloudinary:', await response.text());
+              if (import.meta.env.DEV) console.warn('Error al eliminar imágenes de Cloudinary:', response.status);
             } else {
               const result = await response.json();
-              console.log(`âœ… Cloudinary cleanup: ${result.success}/${publicIds.length} imÃ¡genes eliminadas`);
+              if (import.meta.env.DEV) console.log('Cloudinary cleanup completado');
             }
           } catch (cloudinaryError) {
-            console.warn('âš ï¸ No se pudieron eliminar las imÃ¡genes de Cloudinary:', cloudinaryError);
+            if (import.meta.env.DEV) console.warn('No se pudieron eliminar las imágenes de Cloudinary:', cloudinaryError);
             // Continuamos con el delete del aviso aunque falle Cloudinary
           }
         }
       }
       
-      // PASO 3: Hard delete del aviso en Supabase (CASCADE eliminarÃ¡ ad_images automÃ¡ticamente)
+      // PASO 3: Hard delete del aviso en Supabase (CASCADE eliminará ad_images automáticamente)
       const { error: deleteError } = await supabase
         .from('ads')
         .delete()
@@ -245,7 +245,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
       
       if (deleteError) throw deleteError;
 
-      notify.success('Aviso e imÃ¡genes eliminados correctamente');
+      notify.success('Aviso e imágenes eliminados correctamente');
       setSelectedAdForDelete(null);
       loadData();
     } catch (error: any) {
@@ -280,28 +280,12 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
   const totalPages = Math.ceil(filteredAds.length / PAGE_SIZE);
   const paginatedAds = filteredAds.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  // Stats
-  const stats = {
-    total: ads.length,
-    active: ads.filter(a => a.status === 'active').length,
-    paused: ads.filter(a => a.status === 'paused').length,
-  };
-
-  /** Calcular dÃ­as restantes de un featured */
-  const getRemainingDays = (expiresAt?: string): number => {
-    if (!expiresAt) return 0;
-    const now = new Date();
-    const exp = new Date(expiresAt);
-    const diff = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, diff);
-  };
-
   /** Label corto del placement */
   const getPlacementShort = (placement: string): string => {
     const labels: Record<string, string> = {
       homepage: 'ALTO',
       results: 'MEDIO',
-      detail: 'BÃSICO',
+      detail: 'BÁSICO',
     };
     return labels[placement] || placement;
   };
@@ -325,53 +309,15 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
     );
   }
 
-  if (isSuperAdmin && superAdminView === 'clients') {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setSuperAdminView('mine')}
-            className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-          >
-            Mis Avisos
-          </button>
-          <button
-            onClick={() => setSuperAdminView('clients')}
-            className="px-4 py-2 rounded-lg text-sm font-semibold border border-brand-600 bg-brand-600 text-white"
-          >
-            Avisos Clientes
-          </button>
-        </div>
-        <SuperAdminFeaturedPanel />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {isSuperAdmin && (
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setSuperAdminView('mine')}
-            className="px-4 py-2 rounded-lg text-sm font-semibold border border-brand-600 bg-brand-600 text-white"
-          >
-            Mis Avisos
-          </button>
-          <button
-            onClick={() => setSuperAdminView('clients')}
-            className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-          >
-            Avisos Clientes
-          </button>
-        </div>
-      )}
       {/* Header simple */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-brand-950">Mis Avisos</h2>
           {!isSuperAdmin && (
             <p className="text-sm text-gray-600 mt-1">
-              EstÃ¡s usando <span className="font-bold text-brand-600">{adLimit.current}</span> de{' '}
+              Estás usando <span className="font-bold text-brand-600">{adLimit.current}</span> de{' '}
               <span className="font-bold">{adLimit.limit}</span> avisos disponibles
             </p>
           )}
@@ -400,7 +346,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
       {!isSuperAdmin && adLimit.current >= adLimit.limit && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-800 font-medium">
-            Has alcanzado el lÃ­mite de avisos de tu plan. Para publicar mÃ¡s avisos, 
+            Has alcanzado el límite de avisos de tu plan. Para publicar más avisos, 
             elimina o pausa algunos existentes.
           </p>
         </div>
@@ -617,23 +563,19 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
 
                   {/* Fila de acciones */}
                   <div className="flex items-center gap-1 flex-wrap pt-1 border-t border-gray-100">
-                    {ad.status === 'draft' ? (
-                      <button
-                        onClick={() => navigateTo(`/edit/${ad.id}`)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors bg-amber-50 text-amber-700 hover:bg-amber-100"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                        Continuar editando {calcCompleteness(ad)} de {COMPLETENESS_TOTAL}
-                      </button>
-                    ) : (
                     <button
-                      onClick={() => navigateTo(`/editar/${ad.id}`)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors text-gray-500 hover:text-brand-600 hover:bg-brand-50"
+                      onClick={() => setEditingAdId(ad.id)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        ad.status === 'draft'
+                          ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                          : 'text-gray-500 hover:text-brand-600 hover:bg-brand-50'
+                      }`}
                     >
                       <Edit className="w-3.5 h-3.5" />
-                      Modificar
+                      {ad.status === 'draft'
+                        ? `Continuar editando ${calcCompleteness(ad)} de ${COMPLETENESS_TOTAL}`
+                        : 'Modificar'}
                     </button>
-                    )}
 
                     {canUseFeaturedFlow && ad.status === 'active' && !isAdFeatured && (
                       <button
@@ -783,7 +725,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
         />
       )}
 
-      {/* Modal Confirmar EliminaciÃ³n */}
+      {/* Modal Confirmar Eliminación */}
       {selectedAdForDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
@@ -793,11 +735,11 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               </div>
               
               <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
-                Â¿Eliminar aviso?
+                ¿Eliminar aviso?
               </h3>
               
               <p className="text-gray-600 text-center mb-1">
-                EstÃ¡s por eliminar el aviso:
+                Estás por eliminar el aviso:
               </p>
               <p className="text-gray-900 font-medium text-center mb-4">
                 "{selectedAdForDelete.title}"
@@ -805,7 +747,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
                 <p className="text-red-800 text-sm text-center font-medium">
-                  Esta acciÃ³n es PERMANENTE y no se puede deshacer
+                  Esta acción es PERMANENTE y no se puede deshacer
                 </p>
               </div>
               
@@ -820,7 +762,7 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                   onClick={confirmDelete}
                   className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
                 >
-                  SÃ­, Eliminar
+                  Sí, Eliminar
                 </button>
               </div>
             </div>
@@ -838,21 +780,21 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
               </div>
               
               <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
-                Â¿Cancelar destacado?
+                ¿Cancelar destacado?
               </h3>
               
               <p className="text-gray-600 text-center mb-1">
                 Aviso: <span className="font-medium text-gray-900">"{cancelFeaturedTarget.adTitle}"</span>
               </p>
               <p className="text-gray-600 text-center mb-4">
-                Placement: <span className="font-bold text-[#169834]">
+                Placement: <span className="font-bold text-brand-700">
                   {getPlacementShort(cancelFeaturedTarget.featured.placement)}
                 </span>
               </p>
               
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
                 <p className="text-yellow-800 text-sm text-center font-medium">
-                  No hay reembolso por cancelaciÃ³n de destacado
+                  No hay reembolso por cancelación de destacado
                 </p>
               </div>
               
@@ -868,11 +810,43 @@ export default function MyAdsPanel({ onNavigate }: MyAdsPanelProps = {}) {
                   disabled={cancellingFeatured}
                   className="flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white rounded-lg transition-colors font-medium"
                 >
-                  {cancellingFeatured ? 'Cancelando...' : 'SÃ­, Cancelar'}
+                  {cancellingFeatured ? 'Cancelando...' : 'Sí, Cancelar'}
                 </button>
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* === Drawer Editar Aviso === */}
+      {editingAdId && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setEditingAdId(null)} />
+          <div className="drawer-enter fixed inset-y-0 right-0 z-50 w-[95vw] sm:w-[60vw] flex flex-col bg-gray-50 shadow-2xl overflow-y-auto">
+            <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 bg-white border-b">
+              <h3 className="text-base font-bold text-gray-900">Modificar aviso</h3>
+              <button
+                onClick={() => setEditingAdId(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 p-4">
+              <EditarAviso
+                adId={editingAdId}
+                isSuperadmin={isSuperAdmin}
+                onBack={() => { setEditingAdId(null); loadData(); }}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* SuperAdmin: panel completo de gestión de avisos y destacados */}
+      {isSuperAdmin && (
+        <div className="mt-4">
+          <SuperAdminFeaturedPanel />
         </div>
       )}
 
