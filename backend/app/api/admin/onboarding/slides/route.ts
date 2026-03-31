@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return withAuth(request, async (_user: AuthUser) => {
     const body = await request.json();
-    const { title, description, image_url, sort_order, is_active } = body;
+    const { title, description, image_url, sort_order, is_active, target_device } = body;
 
     if (!title?.trim()) {
       return NextResponse.json({ error: 'El título es obligatorio' }, { status: 400 });
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('onboarding_slides')
-      .insert({ title: title.trim(), description: description || null, image_url: image_url || null, sort_order: sort_order ?? 0, is_active: is_active ?? true })
+      .insert({ title: title.trim(), description: description || null, image_url: image_url || null, sort_order: sort_order ?? 0, is_active: is_active ?? true, target_device: target_device ?? 'both' })
       .select()
       .single();
 

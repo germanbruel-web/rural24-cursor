@@ -19,6 +19,7 @@ interface Slide {
   description: string | null;
   image_url: string | null;
   is_active: boolean;
+  target_device: 'desktop' | 'mobile' | 'both';
 }
 
 interface SlideFormData {
@@ -27,10 +28,11 @@ interface SlideFormData {
   image_url: string;
   sort_order: number;
   is_active: boolean;
+  target_device: 'desktop' | 'mobile' | 'both';
 }
 
 const EMPTY_FORM: SlideFormData = {
-  title: '', description: '', image_url: '', sort_order: 0, is_active: true,
+  title: '', description: '', image_url: '', sort_order: 0, is_active: true, target_device: 'both',
 };
 
 async function authHeaders() {
@@ -68,7 +70,7 @@ export default function OnboardingSlidesAdmin() {
   };
 
   const openEdit = (s: Slide) => {
-    setForm({ title: s.title, description: s.description ?? '', image_url: s.image_url ?? '', sort_order: s.sort_order, is_active: s.is_active });
+    setForm({ title: s.title, description: s.description ?? '', image_url: s.image_url ?? '', sort_order: s.sort_order, is_active: s.is_active, target_device: s.target_device ?? 'both' });
     setEditing(s.id);
     setError(null);
   };
@@ -133,7 +135,7 @@ export default function OnboardingSlidesAdmin() {
         <div>
           <h1 className="text-2xl font-black text-gray-900">Onboarding — Slides</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Slides del carrusel en la pantalla de login/registro (solo desktop).
+            Slides del carrusel de login/registro — desktop (panel izquierdo) y mobile (intro full-screen).
           </p>
         </div>
         <button
@@ -224,6 +226,18 @@ export default function OnboardingSlidesAdmin() {
                     Activo
                   </label>
                 </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Dispositivo</label>
+                  <select
+                    value={form.target_device}
+                    onChange={e => setForm(f => ({ ...f, target_device: e.target.value as 'desktop' | 'mobile' | 'both' }))}
+                    className="w-full text-sm border border-gray-300 rounded-sm px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-400"
+                  >
+                    <option value="both">Ambos (desktop + mobile)</option>
+                    <option value="desktop">Solo desktop</option>
+                    <option value="mobile">Solo mobile (9:16)</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
@@ -279,6 +293,8 @@ export default function OnboardingSlidesAdmin() {
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="text-xs text-gray-400 font-mono">#{s.sort_order}</span>
                   {!s.is_active && <span className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-medium">Inactivo</span>}
+                  {s.target_device === 'desktop' && <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">Desktop</span>}
+                  {s.target_device === 'mobile' && <span className="text-xs bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-medium">Mobile</span>}
                 </div>
                 <p className="font-semibold text-sm text-gray-900 truncate">{s.title}</p>
                 {s.description && <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{s.description}</p>}
@@ -305,7 +321,7 @@ export default function OnboardingSlidesAdmin() {
       )}
 
       <p className="text-xs text-gray-400 text-center">
-        Máximo recomendado: 3 slides activos · Imagen 9:16 (ej: 720×1280px)
+        Máximo recomendado: 3 slides activos · Imagen 9:16 para mobile (720×1280px) · 16:9 para desktop
       </p>
     </div>
   );

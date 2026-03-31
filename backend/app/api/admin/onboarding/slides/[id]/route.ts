@@ -12,18 +12,19 @@ import { getSupabaseClient } from '@/infrastructure/supabase/client';
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   return withAuth(request, async () => {
     const body = await request.json();
-    const { title, description, image_url, sort_order, is_active } = body;
+    const { title, description, image_url, sort_order, is_active, target_device } = body;
 
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('onboarding_slides')
       .update({
-        title:       title?.trim(),
-        description: description ?? null,
-        image_url:   image_url   ?? null,
-        sort_order:  sort_order  ?? 0,
-        is_active:   is_active   ?? true,
-        updated_at:  new Date().toISOString(),
+        title:         title?.trim(),
+        description:   description   ?? null,
+        image_url:     image_url     ?? null,
+        sort_order:    sort_order    ?? 0,
+        is_active:     is_active     ?? true,
+        target_device: target_device ?? 'both',
+        updated_at:    new Date().toISOString(),
       })
       .eq('id', params.id)
       .select()

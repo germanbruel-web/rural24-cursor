@@ -12,7 +12,10 @@ import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import ResetPasswordForm from './ResetPasswordForm';
 import OnboardingCarousel from './OnboardingCarousel';
+import MobileOnboardingScreen from './MobileOnboardingScreen';
 import { navigateTo } from '../../hooks/useNavigate';
+
+const MOBILE_ONBOARDING_KEY = 'rural24_onboarding_seen';
 
 type View = 'login' | 'register' | 'reset';
 
@@ -23,6 +26,9 @@ interface AuthPageProps {
 
 export default function AuthPage({ initialView = 'login', onSuccess }: AuthPageProps) {
   const [view, setView] = useState<View>(initialView);
+  const [showMobileIntro, setShowMobileIntro] = useState(
+    () => typeof window !== 'undefined' && !localStorage.getItem(MOBILE_ONBOARDING_KEY)
+  );
 
   const handleSuccess = () => {
     if (onSuccess) {
@@ -35,9 +41,27 @@ export default function AuthPage({ initialView = 'login', onSuccess }: AuthPageP
   const handleClose = () => navigateTo('/');
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex">
+    <>
+      {/* Mobile onboarding full-screen (solo mobile, solo 1 vez) */}
+      {showMobileIntro && (
+        <div className="lg:hidden">
+          <MobileOnboardingScreen
+            onComplete={(intent) => {
+              setShowMobileIntro(false);
+              setView(intent);
+            }}
+          />
+        </div>
+      )}
 
-      {/* ── Panel izquierdo: formulario (50% desktop, 100% mobile) ── */}
+      <div className="fixed inset-0 z-50 bg-white flex">
+
+      {/* ── Panel IZQUIERDO: carrusel onboarding (50% desktop, oculto mobile) ── */}
+      <div className="hidden lg:block lg:w-1/2 relative">
+        <OnboardingCarousel />
+      </div>
+
+      {/* ── Panel DERECHO: formulario (100% mobile, 50% desktop) ── */}
       <div className="relative flex flex-col w-full lg:w-1/2 overflow-y-auto">
 
         {/* Botón cerrar */}
@@ -77,11 +101,7 @@ export default function AuthPage({ initialView = 'login', onSuccess }: AuthPageP
         </div>
       </div>
 
-      {/* ── Panel derecho: carrusel onboarding (50% desktop, oculto mobile) ── */}
-      <div className="hidden lg:block lg:w-1/2 relative">
-        <OnboardingCarousel />
       </div>
-
-    </div>
+    </>
   );
 }

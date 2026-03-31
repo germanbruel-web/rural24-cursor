@@ -21,7 +21,7 @@ export default function OnboardingCarousel() {
   const [fading, setFading]       = useState(false);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/onboarding/slides`)
+    fetch(`${API_BASE}/api/onboarding/slides?device=desktop`)
       .then(r => r.json())
       .then(d => { if (d.slides?.length) setSlides(d.slides); })
       .catch(() => {});
