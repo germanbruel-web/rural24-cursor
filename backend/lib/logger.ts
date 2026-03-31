@@ -11,6 +11,8 @@ export const logger = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   log: (...args: any[]): void => { if (isDev) console.log(...args); },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  info: (...args: any[]): void => { if (isDev) console.info(...args); },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   warn: (...args: any[]): void => { if (isDev) console.warn(...args); },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error: (...args: any[]): void => { console.error(...args); },

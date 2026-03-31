@@ -63,7 +63,7 @@ export interface Ad {
 
 export interface AdImage {
   url: string;
-  path: string;
+  path?: string;
 }
 
 export interface AdCreate {
