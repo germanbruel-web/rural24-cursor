@@ -12,7 +12,7 @@ import { getSupabaseClient } from '@/infrastructure/supabase/client';
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   return withAuth(request, async () => {
     const body = await request.json();
-    const { title, description, image_url, sort_order, is_active, target_device } = body;
+    const { title, description, image_url, sort_order, is_active, target_device, bg_color, image_fit } = body;
 
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
@@ -24,6 +24,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         sort_order:    sort_order    ?? 0,
         is_active:     is_active     ?? true,
         target_device: target_device ?? 'both',
+        bg_color:      bg_color      ?? '#14532d',
+        image_fit:     image_fit     ?? 'cover',
         updated_at:    new Date().toISOString(),
       })
       .eq('id', params.id)

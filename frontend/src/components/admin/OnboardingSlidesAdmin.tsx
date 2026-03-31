@@ -14,6 +14,8 @@ import { invalidateSiteSetting } from '../../hooks/useSiteSetting';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+const BG_PRESETS = ['#14532d', '#1e3a5f', '#1a1a1a', '#374151', '#7f1d1d', '#f8fafc'];
+
 interface Slide {
   id: string;
   sort_order: number;
@@ -22,6 +24,8 @@ interface Slide {
   image_url: string | null;
   is_active: boolean;
   target_device: 'desktop' | 'mobile' | 'both';
+  bg_color: string;
+  image_fit: 'cover' | 'contain';
 }
 
 interface SlideFormData {
@@ -31,10 +35,13 @@ interface SlideFormData {
   sort_order: number;
   is_active: boolean;
   target_device: 'desktop' | 'mobile' | 'both';
+  bg_color: string;
+  image_fit: 'cover' | 'contain';
 }
 
 const EMPTY_FORM: SlideFormData = {
   title: '', description: '', image_url: '', sort_order: 0, is_active: true, target_device: 'both',
+  bg_color: '#14532d', image_fit: 'cover',
 };
 
 async function authHeaders() {
@@ -119,7 +126,7 @@ export default function OnboardingSlidesAdmin() {
   };
 
   const openEdit = (s: Slide) => {
-    setForm({ title: s.title, description: s.description ?? '', image_url: s.image_url ?? '', sort_order: s.sort_order, is_active: s.is_active, target_device: s.target_device ?? 'both' });
+    setForm({ title: s.title, description: s.description ?? '', image_url: s.image_url ?? '', sort_order: s.sort_order, is_active: s.is_active, target_device: s.target_device ?? 'both', bg_color: s.bg_color ?? '#14532d', image_fit: s.image_fit ?? 'cover' });
     setEditing(s.id);
     setError(null);
   };
@@ -371,6 +378,60 @@ export default function OnboardingSlidesAdmin() {
                     <option value="mobile">Solo mobile (9:16)</option>
                   </select>
                 </div>
+
+                {/* Color de fondo */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Color de fondo</label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input
+                      type="color"
+                      value={form.bg_color}
+                      onChange={e => setForm(f => ({ ...f, bg_color: e.target.value }))}
+                      className="w-9 h-7 rounded cursor-pointer border border-gray-300 p-0.5"
+                      title="Color personalizado"
+                    />
+                    {BG_PRESETS.map(hex => (
+                      <button
+                        key={hex}
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, bg_color: hex }))}
+                        style={{ backgroundColor: hex }}
+                        className={`w-6 h-6 rounded-full border-2 transition-all ${
+                          form.bg_color === hex ? 'border-brand-500 scale-110' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                        title={hex}
+                      />
+                    ))}
+                    <span className="text-xs text-gray-400 font-mono">{form.bg_color}</span>
+                  </div>
+                </div>
+
+                {/* Modo imagen */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Modo imagen</label>
+                  <div className="flex gap-2">
+                    {(['cover', 'contain'] as const).map(mode => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, image_fit: mode }))}
+                        className={`px-3 py-1.5 text-xs rounded-lg border font-medium transition-colors ${
+                          form.image_fit === mode
+                            ? 'bg-brand-500 text-white border-brand-500'
+                            : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        {mode === 'cover' ? 'Cubrir (full-bleed)' : 'Ajustar (sin recorte)'}
+                      </button>
+                    ))}
+                  </div>
+                  {form.image_fit === 'contain' && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Desktop: imagen 1:1 recomendado · Mobile: imagen 9:16
+                    </p>
+                  )}
+                </div>
+
               </div>
             </div>
           </div>
@@ -413,10 +474,10 @@ export default function OnboardingSlidesAdmin() {
               {/* Thumbnail */}
               <div className="w-12 flex-shrink-0">
                 {s.image_url ? (
-                  <img src={s.image_url} alt={s.title} className="w-12 aspect-[9/16] object-cover rounded-lg border border-gray-200" />
+                  <img src={s.image_url} alt={s.title} className={`w-12 aspect-[9/16] rounded-lg border border-gray-200 ${s.image_fit === 'contain' ? 'object-contain' : 'object-cover'}`} style={{ backgroundColor: s.bg_color ?? '#14532d' }} />
                 ) : (
-                  <div className="w-12 aspect-[9/16] bg-gray-100 rounded-lg flex items-center justify-center">
-                    <ImageIcon className="w-4 h-4 text-gray-300" />
+                  <div className="w-12 aspect-[9/16] rounded-lg flex items-center justify-center" style={{ backgroundColor: s.bg_color ?? '#14532d' }}>
+                    <ImageIcon className="w-4 h-4 text-white/50" />
                   </div>
                 )}
               </div>

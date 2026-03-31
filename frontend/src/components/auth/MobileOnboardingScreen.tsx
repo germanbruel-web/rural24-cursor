@@ -3,6 +3,7 @@
  * Intro full-screen 9:16 antes del formulario de auth.
  * Se muestra solo 1 vez por browser (localStorage 'rural24_onboarding_seen').
  * Swipe por touch + auto-avance cada 5s.
+ * bg_color e image_fit configurables por slide desde el CMS.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -11,12 +12,15 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const STORAGE_KEY = 'rural24_onboarding_seen';
 const AUTO_ADVANCE_MS = 5000;
 const SWIPE_THRESHOLD = 50;
+const DEFAULT_BG = '#14532d';
 
 interface Slide {
   id: string;
   title: string;
   description: string | null;
   image_url: string | null;
+  bg_color: string;
+  image_fit: 'cover' | 'contain';
 }
 
 interface MobileOnboardingScreenProps {
@@ -30,7 +34,6 @@ export default function MobileOnboardingScreen({ onComplete }: MobileOnboardingS
   const [loaded, setLoaded] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
-  // Cargar slides mobile
   useEffect(() => {
     fetch(`${API_BASE}/api/onboarding/slides?device=mobile`)
       .then(r => r.json())
@@ -38,7 +41,6 @@ export default function MobileOnboardingScreen({ onComplete }: MobileOnboardingS
         if (d.slides?.length) {
           setSlides(d.slides);
         } else {
-          // Sin slides → completar inmediatamente (no bloquear)
           dismiss('register');
         }
         setLoaded(true);
@@ -49,7 +51,6 @@ export default function MobileOnboardingScreen({ onComplete }: MobileOnboardingS
       });
   }, []);
 
-  // Auto-avance
   useEffect(() => {
     if (slides.length < 2) return;
     const timer = setInterval(() => advance((current + 1) % slides.length), AUTO_ADVANCE_MS);
@@ -67,7 +68,6 @@ export default function MobileOnboardingScreen({ onComplete }: MobileOnboardingS
     onComplete(intent);
   };
 
-  // Touch swipe
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -76,32 +76,41 @@ export default function MobileOnboardingScreen({ onComplete }: MobileOnboardingS
     const delta = touchStartX.current - e.changedTouches[0].clientX;
     touchStartX.current = null;
     if (Math.abs(delta) < SWIPE_THRESHOLD) return;
-    if (delta > 0) advance((current + 1) % slides.length); // swipe left → next
-    else advance((current - 1 + slides.length) % slides.length); // swipe right → prev
+    if (delta > 0) advance((current + 1) % slides.length);
+    else advance((current - 1 + slides.length) % slides.length);
   };
 
   if (!loaded || slides.length === 0) return null;
 
   const slide = slides[current];
+  const bgColor = slide?.bg_color ?? DEFAULT_BG;
+  const isCover = (slide?.image_fit ?? 'cover') === 'cover';
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black select-none"
+      className="fixed inset-0 z-[60] select-none transition-colors duration-500"
+      style={{ backgroundColor: bgColor }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Imagen full-screen */}
+      {/* Imagen — siempre visible si existe; bg_color llena el resto */}
       {slide?.image_url && (
         <img
           key={slide.id}
           src={slide.image_url}
           alt={slide.title}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
+          className={`absolute inset-0 w-full h-full transition-opacity duration-300
+            ${isCover ? 'object-cover' : 'object-contain p-8'}
+            ${fading ? 'opacity-0' : 'opacity-100'}`}
         />
       )}
 
-      {/* Overlay degradado — de transparente (centro/top) a oscuro (bottom) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/5" />
+      {/* Overlay degradado */}
+      <div className={`absolute inset-0 bg-gradient-to-t
+        ${isCover
+          ? 'from-black/90 via-black/20 to-black/5'
+          : 'from-black/70 via-black/10 to-transparent'}`}
+      />
 
       {/* Logo arriba */}
       <div className="absolute top-10 left-0 right-0 flex justify-center z-10">

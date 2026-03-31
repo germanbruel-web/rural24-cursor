@@ -1,6 +1,7 @@
 /**
  * OnboardingCarousel — Panel izquierdo de AuthPage (desktop lg+).
  * Logo + slogan configurables desde #/onboarding-cms vía site_settings.
+ * bg_color e image_fit configurables por slide desde el CMS.
  * Auto-avance cada 5 segundos.
  */
 
@@ -12,9 +13,12 @@ interface Slide {
   title: string;
   description: string | null;
   image_url: string | null;
+  bg_color: string;
+  image_fit: 'cover' | 'contain';
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const DEFAULT_BG = '#14532d';
 
 export default function OnboardingCarousel() {
   const [slides, setSlides]   = useState<Slide[]>([]);
@@ -44,22 +48,32 @@ export default function OnboardingCarousel() {
   };
 
   const slide = slides[current];
+  const bgColor = slide?.bg_color ?? DEFAULT_BG;
+  const isCover = (slide?.image_fit ?? 'cover') === 'cover';
 
   return (
-    <div className="relative w-full h-full bg-brand-700 overflow-hidden select-none">
-
+    <div
+      className="relative w-full h-full overflow-hidden select-none transition-colors duration-500"
+      style={{ backgroundColor: bgColor }}
+    >
       {/* Imagen de fondo */}
       {slide?.image_url && (
         <img
           key={slide.id}
           src={slide.image_url}
           alt={slide.title}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
+          className={`absolute inset-0 w-full h-full transition-opacity duration-300
+            ${isCover ? 'object-cover' : 'object-contain p-8'}
+            ${fading ? 'opacity-0' : 'opacity-100'}`}
         />
       )}
 
-      {/* Overlay degradado */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
+      {/* Overlay degradado — más suave en modo contain */}
+      <div className={`absolute inset-0 bg-gradient-to-t
+        ${isCover
+          ? 'from-black/80 via-black/20 to-black/10'
+          : 'from-black/60 via-black/10 to-transparent'}`}
+      />
 
       {/* Logo + slogan — arriba izquierda */}
       <div className="absolute top-8 left-8 z-10">
@@ -133,7 +147,6 @@ export default function OnboardingCarousel() {
           {slogan && <p className="text-white/70 text-base mt-1">{slogan}</p>}
         </div>
       )}
-
     </div>
   );
 }

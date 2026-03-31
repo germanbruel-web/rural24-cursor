@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from('onboarding_slides')
-    .select('id, sort_order, title, description, image_url, target_device')
+    .select('id, sort_order, title, description, image_url, target_device, bg_color, image_fit')
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
 
