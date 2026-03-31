@@ -1,10 +1,11 @@
 /**
- * OnboardingCarousel — Panel derecho de AuthPage.
- * Solo visible en desktop (lg+). Auto-avance cada 5 segundos.
- * Look & feel Rural24: verde brand, tipografía bold.
+ * OnboardingCarousel — Panel izquierdo de AuthPage (desktop lg+).
+ * Logo + slogan configurables desde #/onboarding-cms vía site_settings.
+ * Auto-avance cada 5 segundos.
  */
 
 import { useEffect, useState } from 'react';
+import { useSiteSetting } from '../../hooks/useSiteSetting';
 
 interface Slide {
   id: string;
@@ -16,9 +17,12 @@ interface Slide {
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export default function OnboardingCarousel() {
-  const [slides, setSlides]       = useState<Slide[]>([]);
-  const [current, setCurrent]     = useState(0);
-  const [fading, setFading]       = useState(false);
+  const [slides, setSlides]   = useState<Slide[]>([]);
+  const [current, setCurrent] = useState(0);
+  const [fading, setFading]   = useState(false);
+
+  const logoUrl = useSiteSetting('carousel_logo_url', '');
+  const slogan  = useSiteSetting('carousel_slogan', 'Clasificados Agrarios');
 
   useEffect(() => {
     fetch(`${API_BASE}/api/onboarding/slides?device=desktop`)
@@ -54,33 +58,43 @@ export default function OnboardingCarousel() {
         />
       )}
 
-      {/* Overlay degradado — de transparente arriba a oscuro abajo */}
+      {/* Overlay degradado */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
 
-      {/* Logo arriba a la izquierda */}
+      {/* Logo + slogan — arriba izquierda */}
       <div className="absolute top-8 left-8 z-10">
-        <span className="text-white text-xl font-black tracking-tight">
-          Rural
-          <span className="bg-white text-brand-600 rounded-md px-1.5 py-0.5 ml-0.5 text-base">
-            24
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt="Logo"
+            className="h-10 w-auto object-contain drop-shadow-md"
+          />
+        ) : (
+          <span className="text-white text-xl font-black tracking-tight">
+            Rural
+            <span className="bg-white text-brand-600 rounded-md px-1.5 py-0.5 ml-0.5 text-base">
+              24
+            </span>
           </span>
-        </span>
-        <p className="text-white/60 text-xs mt-0.5 font-medium">Clasificados Agrarios</p>
+        )}
+        {slogan && (
+          <p className="text-white/60 text-xs mt-1 font-medium">{slogan}</p>
+        )}
       </div>
 
       {/* Contenido del slide — abajo */}
       <div
-        className={`absolute bottom-0 left-0 right-0 z-10 px-10 pb-10 transition-all duration-280 ${
+        className={`absolute bottom-0 left-0 right-0 z-10 px-8 pb-10 transition-all duration-280 ${
           fading ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
         }`}
       >
         {slide && (
           <>
-            <h3 className="text-white text-2xl font-black leading-tight mb-2">
+            <h3 className="text-white text-3xl font-black leading-tight mb-3">
               {slide.title}
             </h3>
             {slide.description && (
-              <p className="text-white/75 text-sm leading-relaxed mb-6 max-w-sm">
+              <p className="text-white/80 text-base leading-relaxed mb-6 max-w-sm">
                 {slide.description}
               </p>
             )}
@@ -106,13 +120,17 @@ export default function OnboardingCarousel() {
         )}
       </div>
 
-      {/* Fallback sin slides — solo logo centrado */}
+      {/* Fallback sin slides */}
       {slides.length === 0 && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-8 text-center">
-          <span className="text-white text-4xl font-black mb-2">
-            Rural<span className="bg-white text-brand-600 rounded-lg px-2 ml-1">24</span>
-          </span>
-          <p className="text-white/70 text-base">Clasificados Agrarios de Argentina</p>
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" className="h-16 w-auto object-contain mb-4 drop-shadow-md" />
+          ) : (
+            <span className="text-white text-4xl font-black mb-2">
+              Rural<span className="bg-white text-brand-600 rounded-lg px-2 ml-1">24</span>
+            </span>
+          )}
+          {slogan && <p className="text-white/70 text-base mt-1">{slogan}</p>}
         </div>
       )}
 
