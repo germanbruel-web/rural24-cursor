@@ -229,6 +229,11 @@ export const MENU_STRUCTURE: MenuItem[] = [
     allowedRoles: ['superadmin'],
   },
   {
+    id: 'onboarding-cms',
+    label: 'Onboarding Slides',
+    allowedRoles: ['superadmin'],
+  },
+  {
     id: 'backend-settings',
     label: 'Backend CMS',
     allowedRoles: ['superadmin'],

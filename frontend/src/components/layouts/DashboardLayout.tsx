@@ -35,6 +35,7 @@ import {
   Palette,
   Building2,
   Mail,
+  MonitorSmartphone,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -116,6 +117,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     'payments-admin': <DollarSign className="w-5 h-5" />,
     // Configuración
     'hero-cms': <Sparkles className="w-5 h-5" />,
+    'onboarding-cms': <MonitorSmartphone className="w-5 h-5" />,
     'backend-settings': <SettingsIcon className="w-5 h-5" />,
     'email-templates-admin': <Mail className="w-5 h-5" />,
     'global-settings': <SettingsIcon className="w-5 h-5" />,
