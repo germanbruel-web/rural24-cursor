@@ -56,14 +56,14 @@ export async function POST(request: NextRequest) {
   try {
     // 2. Parsear body
     const body = await request.json();
-    const { ad_id, placement, tier, scheduled_start, duration_days, reason } = body;
+    const { ad_id, placement, tier, scheduled_start, duration_days, duration_minutes, force_reactivate, reason } = body;
 
-    // 3. Validar campos requeridos
-    if (!ad_id || !placement || !scheduled_start || !duration_days) {
+    // 3. Validar campos requeridos (duration_minutes es alternativa a duration_days)
+    if (!ad_id || !placement || !scheduled_start || (!duration_days && !duration_minutes)) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Campos requeridos: ad_id, placement, scheduled_start, duration_days' 
+        {
+          success: false,
+          error: 'Campos requeridos: ad_id, placement, scheduled_start, duration_days o duration_minutes'
         },
         { status: 400 }
       );
@@ -109,13 +109,20 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existing) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: `Este aviso ya está destacado en ${placement} (${existing.status})` 
-        },
-        { status: 400 }
-      );
+      if (!force_reactivate) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Este aviso ya está destacado en ${placement} (${existing.status})`
+          },
+          { status: 400 }
+        );
+      }
+      // force_reactivate: expirar el destacado activo antes de crear uno nuevo
+      await supabase
+        .from('featured_ads')
+        .update({ status: 'expired' })
+        .eq('id', existing.id);
     }
 
     // 8. Verificar slots disponibles en la categoría
@@ -142,9 +149,14 @@ export async function POST(request: NextRequest) {
     const startDate = new Date(scheduled_start);
     const now = new Date();
     const isImmediate = startDate <= now;
-    
-    const expiresAt = new Date(startDate);
-    expiresAt.setDate(expiresAt.getDate() + duration_days);
+
+    // duration_minutes tiene precedencia sobre duration_days (vencimiento forzoso en minutos)
+    const expiresAt = duration_minutes
+      ? new Date(now.getTime() + Number(duration_minutes) * 60 * 1000)
+      : (() => { const d = new Date(startDate); d.setDate(d.getDate() + duration_days); return d; })();
+    const effectiveDurationDays = duration_minutes
+      ? Number(duration_minutes) / 1440
+      : duration_days;
 
     // Derivar tier si no viene explícito (compatibilidad backward)
     const resolvedTier = tier || (
@@ -164,7 +176,7 @@ export async function POST(request: NextRequest) {
         scheduled_start: startDate.toISOString().split('T')[0],
         actual_start: isImmediate ? now.toISOString() : null,
         expires_at: expiresAt.toISOString(),
-        duration_days,
+        duration_days: effectiveDurationDays,
         status: isImmediate ? 'active' : 'pending',
         priority: 0,
         credit_consumed: false,
@@ -192,7 +204,9 @@ export async function POST(request: NextRequest) {
         reason: reason || 'Activación manual por SuperAdmin',
         metadata: {
           placement,
-          duration_days,
+          duration_days: effectiveDurationDays,
+          duration_minutes: duration_minutes || null,
+          force_reactivate: force_reactivate || false,
           scheduled_start: startDate.toISOString(),
           expires_at: expiresAt.toISOString(),
           immediate: isImmediate,

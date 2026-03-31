@@ -563,6 +563,8 @@ export interface ManualActivationParams {
   tier?: 'alta' | 'media' | 'baja';
   scheduled_start: string; // ISO date
   duration_days: number;
+  duration_minutes?: number; // alternativa a duration_days (vencimiento forzoso en minutos)
+  force_reactivate?: boolean; // sobreescribir destacado activo existente
   reason?: string;
 }
 

@@ -23,7 +23,6 @@ import { supabase } from '../../services/supabaseClient';
 import { notify } from '../../utils/notifications';
 import type { Ad } from '../../../types';
 import { QuickEditAdModal } from './QuickEditAdModal';
-import CreateFeaturedModal from './CreateFeaturedModal';
 import BulkVisibilityModal from './BulkVisibilityModal';
 
 interface Category {
@@ -444,7 +443,7 @@ export default function AllAdsTab() {
                           Modificar
                         </button>
                         <button
-                          onClick={() => setFeaturedModalAd(ad)}
+                          onClick={() => { setFeaturedModalAd(ad); setShowBulkVisibility(true); }}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition-colors"
                         >
                           <Star className="w-3.5 h-3.5" />
@@ -610,29 +609,10 @@ export default function AllAdsTab() {
         </>
       )}
 
-      {featuredModalAd && (
-        <CreateFeaturedModal
-          isOpen={true}
-          onClose={() => setFeaturedModalAd(null)}
-          onSuccess={() => {
-            setFeaturedModalAd(null);
-            void handleSearch(currentPage);
-          }}
-          preSelectedAd={{
-            id: featuredModalAd.id,
-            title: featuredModalAd.title,
-            price: featuredModalAd.price,
-            currency: featuredModalAd.currency,
-            category_name: featuredModalAd.category_name || '',
-            user_name: featuredModalAd.seller_name || 'Usuario',
-          }}
-        />
-      )}
-
       {showBulkVisibility && (
         <BulkVisibilityModal
           isOpen={true}
-          onClose={() => setShowBulkVisibility(false)}
+          onClose={() => { setShowBulkVisibility(false); setFeaturedModalAd(null); }}
           ads={ads.map((a) => ({ ...a, category: a.category_name })) as Ad[]}
           featuredMap={ads.reduce<Record<string, any[]>>((acc, a) => {
             if (a.featured_status) acc[a.id] = [{ status: a.featured_status, placement: a.featured_placement }];
@@ -640,8 +620,10 @@ export default function AllAdsTab() {
           }, {})}
           onApplied={() => {
             setShowBulkVisibility(false);
+            setFeaturedModalAd(null);
             void handleSearch(currentPage);
           }}
+          preSelectedAd={featuredModalAd ? { id: featuredModalAd.id, title: featuredModalAd.title } : null}
         />
       )}
 
