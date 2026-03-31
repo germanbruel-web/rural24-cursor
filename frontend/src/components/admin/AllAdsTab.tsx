@@ -86,11 +86,6 @@ export default function AllAdsTab() {
   const [featuredModalAd, setFeaturedModalAd] = useState<AdRow | null>(null);
   const [viewingAd, setViewingAd] = useState<AdRow | null>(null);
   const [showBulkVisibility, setShowBulkVisibility] = useState(false);
-  const [showBulkFeatured, setShowBulkFeatured] = useState(false);
-  const [bulkFeaturedLoading, setBulkFeaturedLoading] = useState(false);
-  const [bulkFeaturedPlacement, setBulkFeaturedPlacement] = useState<'homepage' | 'results' | 'detail'>('homepage');
-  const [bulkFeaturedStart, setBulkFeaturedStart] = useState(() => new Date().toISOString().slice(0, 10));
-  const [bulkFeaturedMinutes, setBulkFeaturedMinutes] = useState(60);
   const [drawerStats, setDrawerStats] = useState<{ contactos: number; favoritos: number } | null>(null);
 
   useEffect(() => {
@@ -251,54 +246,6 @@ export default function AllAdsTab() {
     [subcategories, selectedCategory]
   );
 
-  const handleBulkFeatured = async () => {
-    if (ads.length === 0) return;
-    setBulkFeaturedLoading(true);
-    try {
-      const expiresAt = new Date(Date.now() + bulkFeaturedMinutes * 60 * 1000).toISOString();
-      const tierMap: Record<string, 'alta' | 'media' | 'baja'> = {
-        homepage: 'alta',
-        results: 'media',
-        detail: 'baja',
-      };
-      const rows = ads
-        .filter((ad) => {
-          if (ad.status !== 'active') return false;
-          // Saltar ads que ya tienen destacado activo/pendiente en el mismo placement
-          const alreadyFeatured =
-            ad.featured_placement === bulkFeaturedPlacement &&
-            (ad.featured_status === 'active' || ad.featured_status === 'pending');
-          return !alreadyFeatured;
-        })
-        .map((ad) => ({
-          ad_id: ad.id,
-          user_id: ad.user_id,
-          placement: bulkFeaturedPlacement,
-          tier: tierMap[bulkFeaturedPlacement],
-          status: 'pending',
-          scheduled_start: bulkFeaturedStart,
-          expires_at: expiresAt,
-          category_id: ad.category_id,
-          is_manual: true,
-          credit_consumed: false,
-          requires_payment: false,
-          duration_days: Math.ceil(bulkFeaturedMinutes / 1440),
-        }));
-      if (rows.length === 0) {
-        notify.error('No hay avisos activos en la lista actual');
-        return;
-      }
-      const { error } = await supabase.from('featured_ads').insert(rows);
-      if (error) throw error;
-      notify.success(`${rows.length} aviso${rows.length !== 1 ? 's' : ''} destacados correctamente`);
-      setShowBulkFeatured(false);
-      void handleSearch(currentPage);
-    } catch (err: any) {
-      notify.error(err.message || 'Error al destacar avisos');
-    } finally {
-      setBulkFeaturedLoading(false);
-    }
-  };
 
   const confirmDelete = async () => {
     if (!deletingAd) return;
@@ -397,15 +344,6 @@ export default function AllAdsTab() {
           {ads.length > 0 && (
             <button
               onClick={() => setShowBulkVisibility(true)}
-              className="px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 rounded-lg text-sm inline-flex items-center gap-2"
-            >
-              <Eye className="w-4 h-4 text-gray-500" />
-              Visibilidad bulk
-            </button>
-          )}
-          {ads.length > 0 && (
-            <button
-              onClick={() => setShowBulkFeatured(true)}
               className="px-4 py-2 border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-sm inline-flex items-center gap-2 font-medium"
             >
               <Zap className="w-4 h-4" />
@@ -732,107 +670,6 @@ export default function AllAdsTab() {
         </div>
       )}
 
-      {/* Modal — Destacar Bulk */}
-      {showBulkFeatured && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-amber-500" />
-                <h3 className="text-base font-bold text-gray-900">Destacar Avisos — Bulk</h3>
-              </div>
-              <button onClick={() => setShowBulkFeatured(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                <X className="w-4 h-4 text-gray-500" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="px-6 py-5 space-y-4">
-              {/* Info */}
-              {(() => {
-                const eligible = ads.filter(a =>
-                  a.status === 'active' &&
-                  !(a.featured_placement === bulkFeaturedPlacement && (a.featured_status === 'active' || a.featured_status === 'pending'))
-                ).length;
-                const skipped = ads.filter(a => a.status === 'active').length - eligible;
-                return (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800 space-y-1">
-                    <p>Se destacarán <span className="font-bold">{eligible} avisos</span> de la lista actual.</p>
-                    {skipped > 0 && (
-                      <p className="text-xs text-amber-600">{skipped} ya destacados en este placement serán ignorados.</p>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* Placement */}
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Nivel de destacado</label>
-                <select
-                  value={bulkFeaturedPlacement}
-                  onChange={(e) => setBulkFeaturedPlacement(e.target.value as 'homepage' | 'results' | 'detail')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
-                >
-                  <option value="homepage">Homepage (Alto)</option>
-                  <option value="results">Resultados (Medio)</option>
-                  <option value="detail">Detalle (Básico)</option>
-                </select>
-              </div>
-
-              {/* Fecha de inicio */}
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Fecha de inicio</label>
-                <input
-                  type="date"
-                  value={bulkFeaturedStart}
-                  onChange={(e) => setBulkFeaturedStart(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
-                />
-              </div>
-
-              {/* Duración en minutos */}
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                  Duración (minutos)
-                  <span className="ml-2 font-normal text-gray-400">
-                    expires_at = ahora + {bulkFeaturedMinutes} min
-                  </span>
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  value={bulkFeaturedMinutes}
-                  onChange={(e) => setBulkFeaturedMinutes(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
-                  placeholder="60"
-                />
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-100">
-              <button
-                onClick={() => setShowBulkFeatured(false)}
-                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleBulkFeatured}
-                disabled={bulkFeaturedLoading || bulkFeaturedMinutes < 1}
-                className="px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 text-white text-sm font-semibold inline-flex items-center gap-2 transition-colors"
-              >
-                {bulkFeaturedLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                Destacar {ads.filter(a =>
-                  a.status === 'active' &&
-                  !(a.featured_placement === bulkFeaturedPlacement && (a.featured_status === 'active' || a.featured_status === 'pending'))
-                ).length} avisos
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

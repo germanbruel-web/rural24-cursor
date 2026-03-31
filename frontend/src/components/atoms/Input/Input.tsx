@@ -10,7 +10,7 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const inputVariants = cva(
   // Base styles
-  'flex w-full rounded-lg border font-body text-base transition-all duration-200 outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 disabled:cursor-not-allowed disabled:opacity-50',
+  'flex w-full rounded-md border font-body text-base transition-all duration-200 outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 disabled:cursor-not-allowed disabled:opacity-50',
   {
     variants: {
       variant: {

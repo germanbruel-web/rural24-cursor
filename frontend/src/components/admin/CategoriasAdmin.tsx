@@ -696,7 +696,7 @@ export const CategoriasAdmin: React.FC = () => {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="ej: maquinaria, tractores"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">Minúsculas, sin espacios</p>
@@ -711,7 +711,7 @@ export const CategoriasAdmin: React.FC = () => {
                     value={formData.display_name}
                     onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                     placeholder="ej: Maquinaria, Tractores"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                     required
                   />
                 </div>
@@ -725,7 +725,7 @@ export const CategoriasAdmin: React.FC = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descripción breve..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   rows={3}
                 />
               </div>

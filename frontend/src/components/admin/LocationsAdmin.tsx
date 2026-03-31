@@ -195,7 +195,7 @@ function ProvinceSection({ province }: { province: Province }) {
                     onChange={(e) => setNewName(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') addLocality(); if (e.key === 'Escape') setAdding(false); }}
                     placeholder="Nombre de la localidad..."
-                    className="flex-1 text-sm border border-brand-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="flex-1 text-sm border border-brand-300 rounded-sm px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     autoFocus
                   />
                   <button onClick={addLocality} disabled={saving} className="px-3 py-2 bg-brand-600 text-white text-sm rounded-lg hover:bg-brand-700 disabled:opacity-40">
@@ -267,7 +267,7 @@ export function LocationsAdmin() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Buscar provincia..."
-        className="w-full max-w-sm px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+        className="w-full max-w-sm px-3 py-1.5 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
       />
 
       <div className="space-y-2">

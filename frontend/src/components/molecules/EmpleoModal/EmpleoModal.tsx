@@ -257,7 +257,7 @@ export function EmpleoModal({ isOpen, onClose, product }: Props) {
                     placeholder="Ej: 11 1234-5678"
                     required
                     className={cn(
-                      'w-full px-3 py-2.5 rounded-xl border text-sm',
+                      'w-full px-3 py-2 rounded-md border text-sm',
                       'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
                       'border-gray-200 bg-gray-50 placeholder-gray-400'
                     )}
@@ -275,7 +275,7 @@ export function EmpleoModal({ isOpen, onClose, product }: Props) {
                     onChange={e => setEmail(e.target.value)}
                     placeholder="tu@email.com"
                     className={cn(
-                      'w-full px-3 py-2.5 rounded-xl border text-sm',
+                      'w-full px-3 py-2 rounded-md border text-sm',
                       'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
                       'border-gray-200 bg-gray-50 placeholder-gray-400'
                     )}
@@ -295,7 +295,7 @@ export function EmpleoModal({ isOpen, onClose, product }: Props) {
                     minLength={10}
                     rows={4}
                     className={cn(
-                      'w-full flex-1 px-3 py-2.5 rounded-xl border text-sm resize-none',
+                      'w-full flex-1 px-3 py-2 rounded-md border text-sm resize-none',
                       'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
                       'border-gray-200 bg-gray-50 placeholder-gray-400'
                     )}

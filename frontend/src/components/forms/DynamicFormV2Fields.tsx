@@ -27,7 +27,7 @@ type SelectOption = { value: string; label: string };
 // ─── ESTILOS COMPARTIDOS ──────────────────────────────────────
 
 const inputCls =
-  'w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-sm transition-colors ' +
+  'w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md transition-colors ' +
   'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent placeholder:text-gray-400';
 
 const labelCls = 'block text-sm font-medium text-gray-700 mb-1';
