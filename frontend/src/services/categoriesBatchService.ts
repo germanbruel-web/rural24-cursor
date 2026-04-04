@@ -52,11 +52,11 @@ export async function getCategoryBundle(categoryId: string): Promise<CategoryBun
   const cached = categoryCache.get<CategoryBundle>(cacheKey);
   
   if (cached) {
-    console.log(`✅ Bundle de ${categoryId} desde caché`);
+    if (import.meta.env.DEV) console.log(`✅ Bundle de ${categoryId} desde caché`);
     return cached;
   }
 
-  console.log(`🔍 Cargando bundle completo para ${categoryId}...`);
+  if (import.meta.env.DEV) console.log(`🔍 Cargando bundle completo para ${categoryId}...`);
 
   try {
     // UNA SOLA QUERY que trae todo
@@ -128,7 +128,7 @@ export async function getCategoryBundle(categoryId: string): Promise<CategoryBun
     // Guardar en caché por 30 minutos
     categoryCache.set(cacheKey, bundle, 1000 * 60 * 30);
 
-    console.log(`✅ Bundle cargado: ${bundle.subcategories.length} subcategorías`);
+    if (import.meta.env.DEV) console.log(`✅ Bundle cargado: ${bundle.subcategories.length} subcategorías`);
     return bundle;
 
   } catch (error) {
@@ -146,11 +146,11 @@ export async function getAllCategoriesBundle(): Promise<CategoryBundle[]> {
   const cached = categoryCache.get<CategoryBundle[]>(cacheKey);
   
   if (cached) {
-    console.log('✅ Todos los bundles desde caché');
+    if (import.meta.env.DEV) console.log('✅ Todos los bundles desde caché');
     return cached;
   }
 
-  console.log('🔍 Cargando todos los bundles...');
+  if (import.meta.env.DEV) console.log('🔍 Cargando todos los bundles...');
 
   try {
     const { data, error } = await supabase
@@ -220,7 +220,7 @@ export async function getAllCategoriesBundle(): Promise<CategoryBundle[]> {
     // Guardar en caché por 30 minutos
     categoryCache.set(cacheKey, bundles, 1000 * 60 * 30);
 
-    console.log(`✅ ${bundles.length} bundles cargados`);
+    if (import.meta.env.DEV) console.log(`✅ ${bundles.length} bundles cargados`);
     return bundles;
 
   } catch (error) {

@@ -5,7 +5,7 @@
 
 import type { FieldConfig } from '../config/adFieldsConfig';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 export interface DynamicFormField {
   id: string;
@@ -36,10 +36,12 @@ export interface FormConfigResponse {
  * Obtener configuración de formulario para una subcategoría
  */
 export async function getFormConfig(subcategoryId: string): Promise<FormConfigResponse> {
-  const url = `${API_URL}/api/config/form/${subcategoryId}`;
-  console.log(`🌐 Fetching form config from: ${url}`);
-  console.log(`🔧 API_URL configured as: ${API_URL}`);
-  
+  const url = `${API_CONFIG.BASE_URL}/api/config/form/${subcategoryId}`;
+  if (import.meta.env.DEV) {
+    console.log(`🌐 Fetching form config from: ${url}`);
+    console.log(`🔧 API_CONFIG.BASE_URL configured as: ${API_CONFIG.BASE_URL}`);
+  }
+
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -48,24 +50,21 @@ export async function getFormConfig(subcategoryId: string): Promise<FormConfigRe
       },
     });
 
-    console.log(`📡 Response status: ${response.status} ${response.statusText}`);
-    console.log(`📡 Response headers:`, Object.fromEntries(response.headers.entries()));
+    if (import.meta.env.DEV) {
+      console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+    }
 
     if (!response.ok) {
-      console.error(`❌ Form config fetch failed:`, response.status, response.statusText);
       const errorText = await response.text();
-      console.error(`❌ Error response body:`, errorText);
+      if (import.meta.env.DEV) console.error(`❌ Form config fetch failed (${response.status}):`, errorText);
       throw new Error(`Error fetching form config: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log(`✅ Form config received:`, data);
+    if (import.meta.env.DEV) console.log(`✅ Form config received:`, data);
     return data;
   } catch (error) {
-    console.error(`🔥 Fetch error:`, error);
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.error(`🔥 Network error - backend might be down or unreachable`);
-    }
+    if (import.meta.env.DEV) console.error(`🔥 Fetch error:`, error);
     throw error;
   }
 }
@@ -123,11 +122,11 @@ export async function getFormConfigCached(subcategoryId: string): Promise<FormCo
   const now = Date.now();
 
   if (cached && now - cached.timestamp < CACHE_TTL) {
-    console.log(`✅ Using cached form config for ${subcategoryId}`);
+    if (import.meta.env.DEV) console.log(`✅ Using cached form config for ${subcategoryId}`);
     return cached.data;
   }
 
-  console.log(`🔄 Fetching fresh form config for ${subcategoryId}`);
+  if (import.meta.env.DEV) console.log(`🔄 Fetching fresh form config for ${subcategoryId}`);
   const data = await getFormConfig(subcategoryId);
   formConfigCache.set(subcategoryId, { data, timestamp: now });
 
@@ -160,5 +159,5 @@ export async function getFieldsForSubcategoryLegacy(subcategoryId: string): Prom
  */
 export function clearFormConfigCache(): void {
   formConfigCache.clear();
-  console.log('🗑️ Form config cache cleared');
+  if (import.meta.env.DEV) console.log('🗑️ Form config cache cleared');
 }

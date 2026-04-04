@@ -9,7 +9,7 @@ import { getCategories, getSubcategories } from '../../services/v2/formsService'
 import type { Category, Subcategory } from '../../types/v2';
 import type { MyCompany } from '../../services/empresaService';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 interface EditarAvisoProps {
   adId: string;
@@ -138,7 +138,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
 
   async function loadProvinces() {
     try {
-      const res = await fetch(`${API_URL}/api/config/locations?type=provinces`);
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/config/locations?type=provinces`);
       const data = await res.json();
       setProvinces(data.provinces || []);
     } catch {
@@ -149,7 +149,7 @@ export default function EditarAviso({ adId, isSuperadmin = false, onBack }: Edit
   async function loadLocalitiesFor(provinceId: string) {
     setLoadingLocalities(true);
     try {
-      const res = await fetch(`${API_URL}/api/config/locations?type=localities&province_id=${provinceId}`);
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/config/locations?type=localities&province_id=${provinceId}`);
       const data = await res.json();
       setLocalities(data.localities || []);
     } catch {

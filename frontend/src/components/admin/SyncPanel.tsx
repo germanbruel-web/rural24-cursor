@@ -12,7 +12,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../services/supabaseClient';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 const POLL_INTERVAL_MS = 30_000;
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ async function getAuthToken(): Promise<string> {
 
 async function fetchStatus(): Promise<SyncStatus> {
   const token = await getAuthToken();
-  const res = await fetch(`${API_BASE}/api/admin/sync/status`, {
+  const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/sync/status`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const json = await res.json();
@@ -76,7 +76,7 @@ async function callSyncAction(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(`${API_CONFIG.BASE_URL}${path}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -95,7 +95,7 @@ async function callSyncAction(
 
 async function downloadBackup(target: 'dev' | 'prod') {
   const token = await getAuthToken();
-  const res = await fetch(`${API_BASE}/api/admin/sync/backup?target=${target}`, {
+  const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/sync/backup?target=${target}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) {
@@ -285,7 +285,7 @@ export default function SyncPanel() {
     setCommitResult({ state: 'loading' });
     try {
       const token = await getAuthToken();
-      const res = await fetch(`${API_BASE}/api/admin/sync/git-commit`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/sync/git-commit`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: msg }),
@@ -755,7 +755,7 @@ export default function SyncPanel() {
                   <button
                     onClick={async () => {
                       const token = await getAuthToken();
-                      const r = await fetch(`${API_BASE}/api/admin/sync/config-debug`, { headers: { Authorization: `Bearer ${token}` } });
+                      const r = await fetch(`${API_CONFIG.BASE_URL}/api/admin/sync/config-debug`, { headers: { Authorization: `Bearer ${token}` } });
                       const data = await r.json();
                       const diffs = data.diff?.filter((d: { match: boolean }) => !d.match) ?? [];
                       console.log('[config-debug] Filas diferentes:', JSON.stringify(diffs, null, 2));

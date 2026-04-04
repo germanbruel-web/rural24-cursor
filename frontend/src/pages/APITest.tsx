@@ -18,6 +18,8 @@ interface TestResult {
 }
 
 export default function APITestPage() {
+  if (!import.meta.env.DEV) return null;
+
   const [results, setResults] = useState<TestResult[]>([]);
   const migrationStatus = getMigrationStatus();
 

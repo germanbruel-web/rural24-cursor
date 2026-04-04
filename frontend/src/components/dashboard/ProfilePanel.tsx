@@ -22,7 +22,7 @@ import {
   EyeOff, FileText, Calendar,
 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 interface StreetSuggestion {
   nombre:        string;
@@ -364,7 +364,7 @@ export const ProfilePanel: React.FC = () => {
           province: locationForm.province,
           locality: locationForm.location,
         });
-        const res  = await fetch(`${API_URL}/api/config/address/streets?${params}`);
+        const res  = await fetch(`${API_CONFIG.BASE_URL}/api/config/address/streets?${params}`);
         const data = await res.json() as { streets?: StreetSuggestion[] };
         setStreetSuggestions(data.streets ?? []);
         setStreetOpen((data.streets ?? []).length > 0);

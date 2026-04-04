@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient';
 import { logger } from '../utils/logger';
 import type { UserRole, UserType } from '../../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 /**
  * Helper: Obtener headers con autenticación Bearer
@@ -86,7 +86,7 @@ export const getAllUsers = async (): Promise<{ data: UserData[] | null; error: E
     }
 
     // Fetch con autenticación
-    const response = await fetch(`${API_BASE}/api/admin/users`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/admin/users`, {
       method: 'GET',
       headers,
     });
@@ -214,7 +214,7 @@ export const updateUserRole = async (userId: string, newRole: UserRole): Promise
     }
 
     // Llamar API del backend
-    const response = await fetch(`${API_BASE}/api/admin/users`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/admin/users`, {
       method: 'PATCH',
       headers,
       body: JSON.stringify({
@@ -255,7 +255,7 @@ export const verifyUserEmail = async (userId: string): Promise<{ error: Error | 
     }
 
     // Llamar API del backend
-    const response = await fetch(`${API_BASE}/api/admin/users`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/admin/users`, {
       method: 'PATCH',
       headers,
       body: JSON.stringify({
@@ -292,7 +292,7 @@ export const deleteUser = async (userId: string): Promise<{ error: Error | null 
       return { error: new Error('No hay sesión activa') };
     }
 
-    const res = await fetch(`${API_BASE}/api/admin/users/${userId}`, {
+    const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/users/${userId}`, {
       method: 'DELETE',
       headers,
     });

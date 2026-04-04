@@ -13,7 +13,7 @@ import { Modal } from '../Modal/Modal';
 import { supabase } from '../../../services/supabaseClient';
 import { cn } from '../../../design-system/utils';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 interface Props {
   isOpen: boolean;
@@ -82,7 +82,7 @@ export function EmpleoModal({ isOpen, onClose, product }: Props) {
     setErrorMsg('');
 
     try {
-      const res = await fetch(`${API_URL}/api/empleo-contact`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/empleo-contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

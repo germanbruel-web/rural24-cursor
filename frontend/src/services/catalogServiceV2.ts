@@ -13,13 +13,6 @@ import { catalogApi } from './api/catalog';
 import { categoriesApi } from './api/categories';
 import { adapters } from './api/adapters';
 
-// Legacy imports (Supabase directo)
-import {
-  getDynamicCatalog as getDynamicCatalogSupabase,
-  type DynamicCatalog,
-  type DynamicCategory,
-} from './catalogService';
-
 import type {
   CategoryWithSubcategories,
   Brand,
@@ -187,84 +180,6 @@ export async function getFormConfig(subcategoryId: string): Promise<any> {
   throw new Error('Legacy mode not adapted yet');
 }
 
-// =====================================================
-// DYNAMIC CATALOG (Legacy compatible)
-// =====================================================
-
-/**
- * Obtener catálogo dinámico completo (formato legacy)
- * Esta función mantiene compatibilidad con código existente
- */
-export async function getDynamicCatalog(): Promise<DynamicCatalog> {
-  debugLog('CatalogServiceV2', 'getDynamicCatalog() - Legacy format');
-
-  if (FEATURES.USE_API_BACKEND) {
-    try {
-      // Construir catálogo dinámico desde endpoints del backend
-      const categoriesResponse = await categoriesApi.getAll();
-      
-      const dynamicCategories = await Promise.all(
-        categoriesResponse.categories.map(async (cat) => {
-          const dynamicSubcategories = await Promise.all(
-            cat.subcategories.map(async (sub) => {
-              try {
-                const formConfig = await catalogApi.getFormConfig(sub.id);
-                
-                return {
-                  id: sub.id,
-                  slug: sub.slug,
-                  name: sub.name,
-                  description: undefined,
-                  icon: undefined,
-                  attributes: Object.values(formConfig.attributes)
-                    .flat()
-                    .map(adapters.dynamicAttribute),
-                };
-              } catch (error) {
-                console.warn(`[CatalogServiceV2] Could not load form config for ${sub.slug}:`, error);
-                return {
-                  id: sub.id,
-                  slug: sub.slug,
-                  name: sub.name,
-                  description: undefined,
-                  icon: undefined,
-                  attributes: [],
-                };
-              }
-            })
-          );
-          
-          return {
-            id: cat.id,
-            slug: cat.slug,
-            name: cat.name,
-            description: undefined,
-            icon: cat.icon || undefined,
-            subcategories: dynamicSubcategories,
-          };
-        })
-      );
-      
-      return {
-        version: '2.0',
-        generatedAt: new Date().toISOString(),
-        categories: dynamicCategories as any,
-      };
-    } catch (error) {
-      console.error('[CatalogServiceV2] Backend getDynamicCatalog failed:', error);
-      
-      if (FEATURES.FALLBACK_TO_SUPABASE) {
-        console.warn('[CatalogServiceV2] Falling back to Supabase for dynamic catalog');
-        return getDynamicCatalogSupabase();
-      }
-      
-      throw error;
-    }
-  }
-
-  // Modo legacy: usar Supabase directo
-  return getDynamicCatalogSupabase();
-}
 
 // =====================================================
 // EXPORTS
@@ -276,5 +191,4 @@ export const catalogServiceV2 = {
   getAllBrands,
   getModelsByBrand,
   getFormConfig,
-  getDynamicCatalog,
 };

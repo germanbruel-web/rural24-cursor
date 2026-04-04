@@ -4,6 +4,7 @@ import type { Ad, CreateAdInput, UpdateAdInput } from '../../types';
 import type { Product } from '../../types';
 import { DEFAULT_PLACEHOLDER_IMAGE } from '../constants/defaultImages';
 import { logger } from '../utils/logger';
+import { API_CONFIG } from '@/config/api';
 
 /**
  * Transformar Ad (de Supabase) a Product (para UI)
@@ -981,7 +982,6 @@ export async function updateAdToHybrid(adId: string): Promise<{ error: any }> {
 // BÚSQUEDA CON FILTROS DESDE BACKEND API
 // ====================================================================
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export interface SearchFiltersParams {
   cat?: string;           // Categoría slug
@@ -1067,7 +1067,7 @@ export async function searchAdsFromBackend(filters: SearchFiltersParams): Promis
     
     console.log('🔍 searchAdsFromBackend - URL params:', params.toString());
 
-    const response = await fetch(`${API_URL}/api/ads/search?${params.toString()}`);
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/ads/search?${params.toString()}`);
     
     if (!response.ok) {
       console.error('❌ Error en searchAdsFromBackend:', response.status, response.statusText);

@@ -8,7 +8,7 @@
 
 import { supabase } from './supabaseClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 export interface SiteSetting {
   id: string;
@@ -181,7 +181,7 @@ export async function uploadCMSImage(
 
     onProgress?.(20);
 
-    const res = await fetch(`${API_URL}/api/admin/site-settings/upload-image`, {
+    const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/site-settings/upload-image`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${session.access_token}` },
       body: formData,
@@ -257,7 +257,7 @@ export async function deleteCMSImage(publicId: string): Promise<boolean> {
       return false;
     }
 
-    const res = await fetch(`${API_URL}/api/admin/site-settings/delete-image`, {
+    const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/site-settings/delete-image`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${session.access_token}`,
@@ -290,7 +290,7 @@ export async function listCMSImages(): Promise<Array<{ name: string; url: string
       return [];
     }
 
-    const res = await fetch(`${API_URL}/api/admin/site-settings/list-images`, {
+    const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/site-settings/list-images`, {
       headers: { 'Authorization': `Bearer ${session.access_token}` },
     });
 

@@ -8,7 +8,7 @@
 
 import { supabase } from './supabaseClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 // ============================================================================
 // TIPOS
@@ -173,7 +173,7 @@ export async function requestAccountDeletion(
       return { success: false, error: 'No autenticado.' };
     }
 
-    const res = await fetch(`${API_URL}/api/user/deletion-request`, {
+    const res = await fetch(`${API_CONFIG.BASE_URL}/api/user/deletion-request`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -209,7 +209,7 @@ export async function getActiveDeletionRequest(): Promise<{
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return { exists: false };
 
-    const res = await fetch(`${API_URL}/api/user/deletion-request`, {
+    const res = await fetch(`${API_CONFIG.BASE_URL}/api/user/deletion-request`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
 

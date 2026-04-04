@@ -4,7 +4,7 @@ import { supabase } from '../../services/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 
 const RESEND_COOLDOWN = 120; // segundos
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 interface EmailGatePageProps {
   email: string;
@@ -68,7 +68,7 @@ export const EmailGatePage: React.FC<EmailGatePageProps> = ({ email }) => {
     setError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch(`${API_URL}/api/auth/resend-verification`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/resend-verification`, {
         method:  'POST',
         headers: {
           'Content-Type': 'application/json',

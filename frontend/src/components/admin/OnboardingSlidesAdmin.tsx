@@ -12,7 +12,7 @@ import { uploadsApi } from '../../services/api/uploads';
 import { updateSetting, updateImageSetting, getSetting } from '../../services/siteSettingsService';
 import { invalidateSiteSetting } from '../../hooks/useSiteSetting';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 const BG_PRESETS = ['#14532d', '#1e3a5f', '#1a1a1a', '#374151', '#7f1d1d', '#f8fafc'];
 
@@ -73,7 +73,7 @@ export default function OnboardingSlidesAdmin() {
   const load = async () => {
     setLoading(true);
     const headers = await authHeaders();
-    const res = await fetch(`${API_BASE}/api/admin/onboarding/slides`, { headers });
+    const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/onboarding/slides`, { headers });
     const data = await res.json();
     setSlides(data.slides ?? []);
     setLoading(false);
@@ -153,8 +153,8 @@ export default function OnboardingSlidesAdmin() {
       const headers = await authHeaders();
       const isNew = editing === 'new';
       const url = isNew
-        ? `${API_BASE}/api/admin/onboarding/slides`
-        : `${API_BASE}/api/admin/onboarding/slides/${editing}`;
+        ? `${API_CONFIG.BASE_URL}/api/admin/onboarding/slides`
+        : `${API_CONFIG.BASE_URL}/api/admin/onboarding/slides/${editing}`;
       const res = await fetch(url, { method: isNew ? 'POST' : 'PUT', headers, body: JSON.stringify(form) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Error al guardar');
@@ -169,7 +169,7 @@ export default function OnboardingSlidesAdmin() {
 
   const toggleActive = async (s: Slide) => {
     const headers = await authHeaders();
-    await fetch(`${API_BASE}/api/admin/onboarding/slides/${s.id}`, {
+    await fetch(`${API_CONFIG.BASE_URL}/api/admin/onboarding/slides/${s.id}`, {
       method: 'PUT', headers,
       body: JSON.stringify({ ...s, is_active: !s.is_active }),
     });
@@ -179,7 +179,7 @@ export default function OnboardingSlidesAdmin() {
   const deleteSlide = async (id: string) => {
     if (!window.confirm('¿Eliminar este slide?')) return;
     const headers = await authHeaders();
-    await fetch(`${API_BASE}/api/admin/onboarding/slides/${id}`, { method: 'DELETE', headers });
+    await fetch(`${API_CONFIG.BASE_URL}/api/admin/onboarding/slides/${id}`, { method: 'DELETE', headers });
     await load();
   };
 

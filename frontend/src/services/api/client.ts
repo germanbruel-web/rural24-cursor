@@ -5,7 +5,7 @@
 
 import { supabase } from '@/services/supabaseClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -41,7 +41,7 @@ async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_URL}${endpoint}`;
+  const url = `${API_CONFIG.BASE_URL}${endpoint}`;
 
   const { data: { session } } = await supabase.auth.getSession();
   const authHeaders: Record<string, string> = {};
@@ -78,5 +78,6 @@ async function fetchApi<T>(
   }
 }
 
-export { API_URL, fetchApi, ApiError };
+export const API_URL = API_CONFIG.BASE_URL;
+export { fetchApi, ApiError };
 export type { ApiResponse, PaginatedResponse };

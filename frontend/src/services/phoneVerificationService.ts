@@ -5,7 +5,7 @@
 
 import { supabase } from './supabaseClient';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 async function getAuthHeaders(): Promise<HeadersInit> {
   const {
@@ -42,7 +42,7 @@ export interface VerifyCodeResponse {
 export async function sendVerificationCode(mobile: string): Promise<SendCodeResponse> {
   const headers = await getAuthHeaders();
   
-  const response = await fetch(`${API_BASE}/api/phone/send-code`, {
+  const response = await fetch(`${API_CONFIG.BASE_URL}/api/phone/send-code`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ mobile }),
@@ -67,7 +67,7 @@ export async function sendVerificationCode(mobile: string): Promise<SendCodeResp
 export async function verifyCode(mobile: string, code: string): Promise<VerifyCodeResponse> {
   const headers = await getAuthHeaders();
   
-  const response = await fetch(`${API_BASE}/api/phone/verify`, {
+  const response = await fetch(`${API_CONFIG.BASE_URL}/api/phone/verify`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ mobile, code }),

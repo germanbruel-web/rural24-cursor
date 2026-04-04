@@ -17,7 +17,7 @@ interface Slide {
   image_fit: 'cover' | 'contain';
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 const DEFAULT_BG = '#14532d';
 
 export default function OnboardingCarousel() {
@@ -29,7 +29,7 @@ export default function OnboardingCarousel() {
   const slogan  = useSiteSetting('carousel_slogan', 'Clasificados Agrarios');
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/onboarding/slides?device=desktop`)
+    fetch(`${API_CONFIG.BASE_URL}/api/onboarding/slides?device=desktop`)
       .then(r => r.json())
       .then(d => { if (d.slides?.length) setSlides(d.slides); })
       .catch(() => {});

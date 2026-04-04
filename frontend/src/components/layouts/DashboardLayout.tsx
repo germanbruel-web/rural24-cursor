@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG } from '@/config/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSiteSetting } from '../../hooks/useSiteSetting';
 import { getMenuItems } from '../../utils/rolePermissions';
@@ -69,7 +70,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   useEffect(() => {
     if (!import.meta.env.DEV || profile?.role !== 'superadmin') return;
 
-    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
     let cancelled = false;
 
     const check = async () => {
@@ -77,7 +77,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token;
         if (!token) return;
-        const res = await fetch(`${API_BASE}/api/admin/sync/status`, {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/sync/status`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) return;

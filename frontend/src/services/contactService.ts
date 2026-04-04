@@ -228,7 +228,7 @@ export async function sendContactMessage(
     clearCachedLimits(input.ad_owner_id);
     const updatedLimits = await getUserContactLimits(user.id);
 
-    console.log('✅ Mensaje enviado correctamente');
+    if (import.meta.env.DEV) console.log('✅ Mensaje enviado correctamente');
     return { 
       success: true, 
       contactId: data.id,
@@ -270,7 +270,7 @@ export async function getMyReceivedMessages(): Promise<{
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { messages: [], error: 'No autenticado' };
 
-    console.log('🔍 Fetching received messages for user:', user.id);
+    if (import.meta.env.DEV) console.log('🔍 Fetching received messages for user:', user.id);
 
     const { data: messages, error } = await supabase
       .from('contact_messages')
@@ -286,7 +286,7 @@ export async function getMyReceivedMessages(): Promise<{
     // Enriquecer con datos de avisos
     const enrichedMessages = await enrichMessagesWithAds(messages || []);
 
-    console.log('✅ Received messages:', enrichedMessages?.length);
+    if (import.meta.env.DEV) console.log('✅ Received messages:', enrichedMessages?.length);
     return { messages: enrichedMessages };
   } catch (error) {
     console.error('❌ Exception fetching messages:', error);
@@ -362,7 +362,7 @@ export async function getMySentMessages(): Promise<{
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { messages: [], error: 'No autenticado' };
 
-    console.log('🔍 Fetching sent messages for user:', user.id);
+    if (import.meta.env.DEV) console.log('🔍 Fetching sent messages for user:', user.id);
 
     const { data: messages, error } = await supabase
       .from('contact_messages')
@@ -378,7 +378,7 @@ export async function getMySentMessages(): Promise<{
     // Enriquecer con datos de avisos
     const enrichedMessages = await enrichMessagesWithAds(messages || []);
 
-    console.log('✅ Sent messages:', enrichedMessages?.length);
+    if (import.meta.env.DEV) console.log('✅ Sent messages:', enrichedMessages?.length);
     return { messages: enrichedMessages };
   } catch (error) {
     console.error('❌ Exception fetching sent messages:', error);

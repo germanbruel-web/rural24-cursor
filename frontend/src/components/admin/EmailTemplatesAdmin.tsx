@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -481,7 +481,7 @@ export default function EmailTemplatesAdmin() {
     setLoading(true);
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/api/admin/email-templates`, { headers });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/email-templates`, { headers });
       if (!res.ok) throw new Error();
       const { data } = await res.json();
       const list: EmailTemplate[] = (data ?? []).map((t: any) => ({
@@ -540,7 +540,7 @@ export default function EmailTemplatesAdmin() {
     setSaving(true);
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/api/admin/email-templates/${selected.type}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/email-templates/${selected.type}`, {
         method: 'PUT',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject: editSubject, html_content: editHtml }),
@@ -564,7 +564,7 @@ export default function EmailTemplatesAdmin() {
     setSendingTest(true);
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/api/admin/email-templates/${selected.type}/test`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/email-templates/${selected.type}/test`, {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ to: testEmail.trim() }),
@@ -586,7 +586,7 @@ export default function EmailTemplatesAdmin() {
     setMediaLoading(true);
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/api/admin/email-templates/media`, { headers });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/email-templates/media`, { headers });
       if (!res.ok) throw new Error();
       const { data } = await res.json();
       setMediaImages(data ?? []);
@@ -603,7 +603,7 @@ export default function EmailTemplatesAdmin() {
       const headers = await authHeaders();
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch(`${API_BASE}/api/admin/email-templates/media`, { method: 'POST', headers, body: fd });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/email-templates/media`, { method: 'POST', headers, body: fd });
       if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error); }
       const { data } = await res.json();
       setMediaImages(prev => [data, ...prev]);
@@ -619,7 +619,7 @@ export default function EmailTemplatesAdmin() {
     if (!window.confirm('¿Eliminar esta imagen?')) return;
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/api/admin/email-templates/media/${id}`, { method: 'DELETE', headers });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/api/admin/email-templates/media/${id}`, { method: 'DELETE', headers });
       if (!res.ok) throw new Error();
       setMediaImages(prev => prev.filter(m => m.id !== id));
       showToast('Imagen eliminada.', true);

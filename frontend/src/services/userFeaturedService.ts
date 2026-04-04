@@ -11,7 +11,7 @@
  */
 
 import { supabase } from './supabaseClient';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 // ============================================================================
 // TIPOS
@@ -306,7 +306,7 @@ export async function cancelUserFeaturedAd(
       return { success: false, error: new Error('No autenticado') };
     }
 
-    const response = await fetch(`${API_URL}/api/featured-ads/${featuredId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/featured-ads/${featuredId}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${session.access_token}`,
@@ -340,7 +340,7 @@ export async function cancelActiveFeaturedAd(
       return { success: false, error: new Error('No autenticado') };
     }
 
-    const response = await fetch(`${API_URL}/api/featured-ads/${featuredId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/featured-ads/${featuredId}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${session.access_token}`,

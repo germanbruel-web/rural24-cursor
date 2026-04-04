@@ -13,7 +13,7 @@
 import { supabase } from './supabaseClient';
 import type { FeaturedPlacement, FeaturedStatus } from './userFeaturedService';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 // ============================================================================
 // TIPOS
@@ -594,7 +594,7 @@ export async function manualActivateFeatured(
       throw new Error('No autenticado');
     }
 
-    const response = await fetch(`${API_URL}/api/admin/featured-ads/manual`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/admin/featured-ads/manual`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -656,7 +656,7 @@ export async function editFeatured(
 
     const { id, ...body } = params;
 
-    const response = await fetch(`${API_URL}/api/admin/featured-ads/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/admin/featured-ads/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -718,7 +718,7 @@ export async function cancelFeaturedWithRefund(
 
     const { id, ...body } = params;
 
-    const response = await fetch(`${API_URL}/api/admin/featured-ads/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/admin/featured-ads/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -765,7 +765,7 @@ export async function getFeaturedAuditHistory(
       throw new Error('No autenticado');
     }
 
-    const response = await fetch(`${API_URL}/api/admin/featured-ads/audit/${featuredId}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/admin/featured-ads/audit/${featuredId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${session.access_token}`

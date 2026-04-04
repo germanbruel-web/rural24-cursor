@@ -27,8 +27,9 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { API_CONFIG } from '@/config/api';
 
-const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api`;
+const API_BASE = `${API_CONFIG.BASE_URL}/api`;
 
 interface Ad {
   id: string;
@@ -396,7 +397,7 @@ export default function SitemapSeoPanel() {
                           {ad.in_sitemap ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                         </button>
                         <a
-                          href={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/aviso/${ad.slug || ad.short_id}`}
+                          href={`${API_CONFIG.BASE_URL}/aviso/${ad.slug || ad.short_id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"

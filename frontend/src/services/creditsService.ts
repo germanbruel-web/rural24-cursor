@@ -5,6 +5,7 @@
  */
 
 import { supabase } from './supabaseClient';
+import { API_CONFIG } from '@/config/api';
 
 // ============================================
 // TIPOS
@@ -441,8 +442,8 @@ export async function redeemCoupon(
       return { success: false, error: 'Debes estar autenticado para canjear cupones' };
     }
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/api/coupons/redeem`, {
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/coupons/redeem`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabaseClient';
 import type { UploadedImage } from '../components/SimpleImageUploader/SimpleImageUploader';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -13,7 +13,7 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   if (session?.access_token) {
     headers['Authorization'] = `Bearer ${session.access_token}`;
   }
-  return fetch(`${API_URL}${endpoint}`, { ...options, headers });
+  return fetch(`${API_CONFIG.BASE_URL}${endpoint}`, { ...options, headers });
 }
 
 export interface EditarAvisoState {

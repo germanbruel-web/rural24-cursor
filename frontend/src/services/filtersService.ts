@@ -2,7 +2,7 @@
 // FILTERS SERVICE - Obtener filtros dinámicos desde Backend BFF
 // ====================================================================
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 
 // ====================================================================
 // TIPOS V2 - Con contadores y estructura jerárquica
@@ -67,7 +67,7 @@ export async function getFiltersConfig(params: {
     if (params.subcategorySlug) searchParams.set('sub', params.subcategorySlug);
     if (params.provinceSlug) searchParams.set('prov', params.provinceSlug);
 
-    const response = await fetch(`${API_URL}/api/config/filters?${searchParams.toString()}`);
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/config/filters?${searchParams.toString()}`);
     
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);

@@ -8,7 +8,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '@/config/api';
 const STORAGE_KEY = 'rural24_onboarding_seen';
 const AUTO_ADVANCE_MS = 5000;
 const SWIPE_THRESHOLD = 50;
@@ -35,7 +35,7 @@ export default function MobileOnboardingScreen({ onComplete }: MobileOnboardingS
   const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/onboarding/slides?device=mobile`)
+    fetch(`${API_CONFIG.BASE_URL}/api/onboarding/slides?device=mobile`)
       .then(r => r.json())
       .then(d => {
         if (d.slides?.length) {

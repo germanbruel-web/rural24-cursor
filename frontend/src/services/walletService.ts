@@ -10,6 +10,7 @@
  */
 
 import { supabase } from './supabaseClient';
+import { API_CONFIG } from '@/config/api';
 
 // ============================================================
 // TIPOS
@@ -195,8 +196,8 @@ export async function redeemCoupon(code: string): Promise<{
       return { success: false, error: 'Debés estar autenticado para canjear cupones' };
     }
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/api/coupons/redeem`, {
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/coupons/redeem`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -407,8 +408,8 @@ export async function createMPPreference(
       return { error: 'Debés estar autenticado para pagar' };
     }
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const res = await fetch(`${apiUrl}/api/payments/mercadopago/preference`, {
+
+    const res = await fetch(`${API_CONFIG.BASE_URL}/api/payments/mercadopago/preference`, {
       method: 'POST',
       headers: {
         'Content-Type':  'application/json',
@@ -462,8 +463,8 @@ export async function validateCouponForCheckout(
       return { valid: false, error: 'Debés estar autenticado' };
     }
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const res = await fetch(`${apiUrl}/api/coupons/validate-for-checkout`, {
+
+    const res = await fetch(`${API_CONFIG.BASE_URL}/api/coupons/validate-for-checkout`, {
       method: 'POST',
       headers: {
         'Content-Type':  'application/json',
@@ -494,10 +495,10 @@ export async function activateFeaturedWithCoupon(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'No autenticado' };
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
     const { data: { session } } = await supabase.auth.getSession();
 
-    const res = await fetch(`${apiUrl}/api/coupons/activate-with-coupon`, {
+    const res = await fetch(`${API_CONFIG.BASE_URL}/api/coupons/activate-with-coupon`, {
       method: 'POST',
       headers: {
         'Content-Type':  'application/json',

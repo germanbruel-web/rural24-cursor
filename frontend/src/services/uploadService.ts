@@ -1,5 +1,6 @@
 // src/services/uploadService.ts
 import { supabase } from './supabaseClient';
+import { API_CONFIG } from '@/config/api';
 import { ImageOptimizer } from './imageOptimizer';
 
 /**
@@ -37,7 +38,7 @@ export const uploadService = {
       }
 
       // Subir vía backend API (Cloudinary)
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/uploads`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/uploads`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,

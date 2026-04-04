@@ -164,7 +164,7 @@ export async function registerPersona(input: RegisterPersonaInput): Promise<Regi
       console.error('Error actualizando perfil:', profileError);
     }
 
-    console.log('Usuario PERSONA registrado:', authData.user.id);
+    if (import.meta.env.DEV) console.log('Usuario PERSONA registrado:', authData.user.id);
     return {
       success: true,
       userId: authData.user.id,
@@ -266,7 +266,7 @@ export async function registerEmpresa(input: RegisterEmpresaInput): Promise<Regi
       console.error('Error actualizando perfil empresa:', profileError);
     }
 
-    console.log('Usuario EMPRESA registrado:', authData.user.id);
+    if (import.meta.env.DEV) console.log('Usuario EMPRESA registrado:', authData.user.id);
     return {
       success: true,
       userId: authData.user.id,
@@ -379,7 +379,7 @@ export async function registerUser(input: RegisterUserInput): Promise<RegisterRe
       console.error('Error actualizando perfil:', profileError);
     }
 
-    console.log(`✅ Usuario registrado (${input.activity}):`, authData.user.id);
+    if (import.meta.env.DEV) console.log(`✅ Usuario registrado (${input.activity}):`, authData.user.id);
     return {
       success: true,
       userId: authData.user.id,

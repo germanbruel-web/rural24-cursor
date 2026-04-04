@@ -7,7 +7,6 @@
 export { useProducts } from './useProducts';
 export { useAds } from './useAds';
 export { useCategories, useCategory, useSubcategory } from './useCategories';
-export { useCatalog } from './useCatalog';
 
 // Feature hooks
 export { useDynamicFilters } from './useDynamicFilters';

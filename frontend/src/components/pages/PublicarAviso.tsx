@@ -4,6 +4,7 @@
 // ====================================================================
 
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG } from '@/config/api';
 import {
   ChevronLeft,
   ChevronRight,
@@ -322,7 +323,7 @@ export default function PublicarAviso() {
         locality,
       };
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/ads/generate-content`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/ads/generate-content`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(context),

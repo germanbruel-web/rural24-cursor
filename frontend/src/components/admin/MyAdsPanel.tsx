@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { API_CONFIG } from '@/config/api';
 import {
   getMyAds,
   getUserAdLimit,
@@ -218,7 +219,7 @@ export default function MyAdsPanel() {
         if (publicIds.length > 0) {
           try {
             // Llamar al backend API para eliminar de Cloudinary
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/uploads/delete`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/api/uploads/delete`, {
               method: 'DELETE',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ urls: imageUrls })
