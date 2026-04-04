@@ -573,7 +573,8 @@ export async function getFeaturedForDetail(
         return true;
       })
       .slice(0, limit)
-      .map(item => item.ad);
+      .map(item => item.ad)
+      .filter(Boolean);
 
     return { data: uniqueAds, error: null };
   } catch (error) {
@@ -616,7 +617,8 @@ async function getFeaturedFallback(
         return true;
       })
       .slice(0, limit)
-      .map(item => item.ad);
+      .map(item => item.ad)
+      .filter(Boolean);
 
     return { data: uniqueAds, error: null };
   } catch (error) {

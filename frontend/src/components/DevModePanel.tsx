@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Code, LogOut } from 'lucide-react';
 import { navigateTo } from '../hooks/useNavigate';
 
 export const DevModePanel: React.FC = () => {
-  const { user, userRole, isLoading, signOut } = useAuth();
+  const { user, profile, loading } = useAuth();
+  const userRole = profile?.role;
   const [isVisible, setIsVisible] = useState(false);
 
   if (!isVisible) {
@@ -36,7 +36,7 @@ export const DevModePanel: React.FC = () => {
       <div className="space-y-2 text-sm">
         {/* Estado de autenticación */}
         <div className="bg-purple-800 p-2 rounded">
-          <strong>Auth Status:</strong> {isLoading ? 'Loading...' : user ? '✅ Logged In' : '❌ Not Logged'}
+          <strong>Auth Status:</strong> {loading ? 'Loading...' : user ? '✅ Logged In' : '❌ Not Logged'}
         </div>
 
         {/* Usuario actual */}

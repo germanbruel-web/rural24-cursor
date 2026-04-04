@@ -190,7 +190,7 @@ function renderField(field: FormFieldV2, optionLabels: OptionLabels, attrs: Reco
     const strVal = String(rawValue);
     if (!strVal) return null;
     return (
-      <div key={field.field_name} className={widthCls}>
+      <div key={field.field_name} className={`${widthCls} border-l-2 border-brand-500 pl-3`}>
         <TextareaDisplay field={field} value={strVal} />
       </div>
     );
@@ -201,7 +201,7 @@ function renderField(field: FormFieldV2, optionLabels: OptionLabels, attrs: Reco
     const formatted = resolveRangeValue(field, rawValue);
     if (!formatted) return null;
     return (
-      <div key={field.field_name} className={widthCls}>
+      <div key={field.field_name} className={`${widthCls} border-l-2 border-brand-500 pl-3`}>
         <FieldLabel field={field} />
         <dd className="text-sm font-medium text-gray-900">{formatted}</dd>
       </div>
@@ -213,7 +213,7 @@ function renderField(field: FormFieldV2, optionLabels: OptionLabels, attrs: Reco
   if (!displayValue) return null;
 
   return (
-    <div key={field.field_name} className={widthCls}>
+    <div key={field.field_name} className={`${widthCls} border-l-2 border-brand-500 pl-3`}>
       <FieldLabel field={field} />
       <dd className="text-sm font-medium text-gray-900">{displayValue}</dd>
     </div>
@@ -282,7 +282,7 @@ export const AdFormSections: React.FC<AdFormSectionsProps> = ({ form, ad, option
           {entries.map(([key, val]) => {
             const Icon = resolveIcon(undefined, key);
             return (
-              <div key={key} className="md:col-span-3">
+              <div key={key} className="md:col-span-3 border-l-2 border-brand-500 pl-3">
                 <dt className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
                   {Icon && <Icon className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />}
                   {humanizeKey(key)}

@@ -54,7 +54,7 @@ export function useAdData(adId: string) {
           ? supabase.from('operation_types').select('display_name').eq('id', data.operation_type_id).single()
           : Promise.resolve({ data: null }),
         data.user_id
-          ? supabase.from('users').select('full_name, email_verified, role, created_at, avatar_url').eq('id', data.user_id).single()
+          ? supabase.from('users').select('full_name, email_verified, role, created_at, avatar_url').eq('id', data.user_id).maybeSingle()
           : Promise.resolve({ data: null }),
       ]);
 

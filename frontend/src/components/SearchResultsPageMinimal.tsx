@@ -655,7 +655,6 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                         <ProductCard
                           product={product}
                           variant="compact"
-                          showBadges={false}
                           showLocation={true}
                           showProvince={true}
                           onViewDetail={onViewDetail}

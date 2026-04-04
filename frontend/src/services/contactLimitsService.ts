@@ -46,14 +46,21 @@ export async function getUserContactLimits(userId?: string): Promise<ContactLimi
     throw error;
   }
 
+  const row = data as {
+    max_received: number; max_sent: number;
+    current_received: number; current_sent: number;
+    can_receive_more: boolean; can_send_more: boolean;
+    plan_name: string;
+  };
+
   return {
-    maxReceived: data.max_received,
-    maxSent: data.max_sent,
-    currentReceived: data.current_received,
-    currentSent: data.current_sent,
-    canReceiveMore: data.can_receive_more,
-    canSendMore: data.can_send_more,
-    planName: data.plan_name,
+    maxReceived: row.max_received,
+    maxSent: row.max_sent,
+    currentReceived: row.current_received,
+    currentSent: row.current_sent,
+    canReceiveMore: row.can_receive_more,
+    canSendMore: row.can_send_more,
+    planName: row.plan_name,
   };
 }
 

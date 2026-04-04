@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Mail, Phone, MessageSquare, AlertTriangle, Lock, CheckCircle } from 'lucide-react';
+import { X, Mail, AlertTriangle, Lock, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { sendContactMessage } from '../../services/contactService';
 import { getUserContactLimits, getContactLimitWarnings, type ContactLimits } from '../../services/contactLimitsService';
@@ -82,7 +82,7 @@ export default function ContactModal({ isOpen, onClose, adId, adOwnerId, adTitle
     const result = await sendContactMessage(input);
 
     if (!result.success) {
-      if (result.error?.code === 'LIMIT_REACHED') {
+      if (result.error?.code === 'SENDER_LIMIT_REACHED' || result.error?.code === 'RECEIVER_LIMIT_REACHED') {
         setShowUpgradeModal(true);
       } else {
         setError(result.error?.message || 'Error al enviar el mensaje');

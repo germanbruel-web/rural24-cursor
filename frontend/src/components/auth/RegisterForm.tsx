@@ -21,6 +21,7 @@ import FormField from '../molecules/FormField';
 
 interface RegisterFormProps {
   onSuccess?: () => void;
+  onClose?: () => void;
   onSwitchToLogin?: () => void;
 }
 
@@ -34,7 +35,7 @@ const ACTIVITY_OPTIONS: { value: Activity; label: string }[] = [
   { value: 'usuario_general', label: 'Usuario General' },
 ];
 
-export default function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) {
+export default function RegisterForm({ onSuccess, onClose, onSwitchToLogin }: RegisterFormProps) {
   const headerLogo = useSiteSetting('header_logo', 'https://res.cloudinary.com/ruralcloudinary/image/upload/v1774475353/zf3ls8uf4ssazypsdtnb.webp');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');

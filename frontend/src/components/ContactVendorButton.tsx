@@ -81,11 +81,13 @@ export const ContactVendorButton: React.FC<ContactVendorButtonProps> = ({
 
     try {
       await sendContactMessage({
-        adId,
-        adOwnerId,
-        senderName: formData.name,
-        senderEmail: formData.email,
-        senderPhone: formData.phone,
+        ad_id: adId,
+        ad_owner_id: adOwnerId,
+        sender_user_id: currentUser?.id || '',
+        sender_name: formData.name,
+        sender_last_name: '',
+        sender_email: formData.email,
+        sender_phone: formData.phone,
         message: formData.message
       });
 
@@ -106,7 +108,7 @@ export const ContactVendorButton: React.FC<ContactVendorButtonProps> = ({
     }
   };
 
-  const canSendContact = !currentUser || (limits?.can_send_more ?? true);
+  const canSendContact = !currentUser || (limits?.canSendMore ?? true);
 
   return (
     <>
@@ -128,20 +130,20 @@ export const ContactVendorButton: React.FC<ContactVendorButtonProps> = ({
         {/* Indicador de límites para usuarios autenticados */}
         {currentUser && limits && (
           <div className="text-xs text-center">
-            {limits.can_send_more ? (
+            {limits.canSendMore ? (
               <span className="text-gray-600">
-                {limits.max_sent === 999999 ? (
+                {limits.maxSent === 999999 ? (
                   <span className="text-brand-600 font-medium">✓ Contactos ilimitados</span>
                 ) : (
                   <span>
-                    Enviados: <span className="font-medium">{limits.current_sent}</span> de{' '}
-                    <span className="font-medium">{limits.max_sent}</span>
+                    Enviados: <span className="font-medium">{limits.currentSent}</span> de{' '}
+                    <span className="font-medium">{limits.maxSent}</span>
                   </span>
                 )}
               </span>
             ) : (
               <span className="text-red-600 font-medium">
-                ⚠️ Límite alcanzado ({limits.current_sent}/{limits.max_sent})
+                ⚠️ Límite alcanzado ({limits.currentSent}/{limits.maxSent})
               </span>
             )}
           </div>

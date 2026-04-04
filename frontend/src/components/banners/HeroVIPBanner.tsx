@@ -69,7 +69,7 @@ export default function HeroVIPBanner({ currentCategory = 'all' }: HeroVIPBanner
       {banner.desktop_image_url && (
         <img
           src={optimizeCloudinaryUrl(banner.desktop_image_url, { width: 1100, height: 200, quality: 'auto', format: 'auto' })}
-          alt={banner.title}
+          alt={banner.client_name}
           className="hidden md:block w-full object-cover"
           width={1100}
           height={200}
@@ -81,7 +81,7 @@ export default function HeroVIPBanner({ currentCategory = 'all' }: HeroVIPBanner
       {banner.mobile_image_url && (
         <img
           src={optimizeCloudinaryUrl(banner.mobile_image_url, { width: 600, height: 100, quality: 'auto', format: 'auto' })}
-          alt={banner.title}
+          alt={banner.client_name}
           className="md:hidden w-full object-cover"
           width={600}
           height={100}

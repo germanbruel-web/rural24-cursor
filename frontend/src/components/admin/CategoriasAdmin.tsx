@@ -226,20 +226,21 @@ export const CategoriasAdmin: React.FC = () => {
     
     // Si estoy editando una subcategoría, buscar su categoría padre
     let parentCategoryId = '';
+    const itemAny = item as any;
     if (type === 'subcategory') {
-      parentCategoryId = item.category_id || '';
+      parentCategoryId = itemAny.category_id || '';
     } else if (type === 'type') {
       // Si estoy editando un tipo, buscar su subcategoría y categoría
-      const parentSub = subcategories.find(s => s.id === item.subcategory_id);
+      const parentSub = subcategories.find(s => s.id === itemAny.subcategory_id);
       parentCategoryId = parentSub?.category_id || '';
     }
-    
+
     setFormData({
       name: item.name,
       display_name: item.display_name,
       description: item.description || '',
-      parent_category_id: parentCategoryId || item.category_id || '',
-      parent_subcategory_id: item.subcategory_id || '',
+      parent_category_id: parentCategoryId || itemAny.category_id || '',
+      parent_subcategory_id: itemAny.subcategory_id || '',
     });
     setShowForm(true);
   };

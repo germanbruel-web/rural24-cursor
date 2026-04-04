@@ -39,7 +39,7 @@ export function DragDropUploader({
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Validación básica de imágenes (sin ML)
-  const { validateImage, isValidating } = useImageValidation();
+  const { validateImage } = useImageValidation();
 
   const handleDragEnter = (e: DragEvent) => {
     e.preventDefault();
@@ -94,7 +94,7 @@ export function DragDropUploader({
       const validation = await validateImage(file);
       
       if (!validation.isValid) {
-        notify.error(`${file.name}: ${validation.errors[0]}`, 6000);
+        notify.error(`${file.name}: ${validation.errors[0]}`);
         console.log(`[DragDropUploader] ❌ Validación fallida:`, {
           file: file.name,
           errors: validation.errors
@@ -104,7 +104,7 @@ export function DragDropUploader({
 
       // Mostrar warnings (no bloquean)
       if (validation.warnings.length > 0) {
-        notify.warning(validation.warnings[0], 3000);
+        notify.warning(validation.warnings[0]);
       }
 
       // Archivo válido
@@ -180,12 +180,11 @@ export function DragDropUploader({
           const result = await uploadsApi.uploadImage(file, folder);
           console.log(`[DragDropUploader] ✅ Upload successful:`, {
             url: result.url,
-            path: result.path,
             attempt
           });
 
           updateImageProgress(imageIndex, 100);
-          updateImageStatus(imageIndex, 'success', result.url, result.path);
+          updateImageStatus(imageIndex, 'success', result.url, '');
           
           uploadSuccess = true;
           break; // Salir del loop de retry
@@ -211,7 +210,7 @@ export function DragDropUploader({
           if (isNetworkError && !isLastAttempt) {
             const delay = baseDelay * attempt; // 2s, 4s, 6s
             console.log(`[DragDropUploader] ⏳ Esperando ${delay}ms antes de reintentar...`);
-            notify.warning(`🔄 Reintentando ${file.name}... (${attempt}/${maxRetries})`, 3000);
+            notify.warning(`🔄 Reintentando ${file.name}... (${attempt}/${maxRetries})`);
             
             await new Promise(resolve => setTimeout(resolve, delay));
             continue; // Reintentar
@@ -222,11 +221,11 @@ export function DragDropUploader({
           
           // Notificación específica según tipo de error
           if (error.message?.includes('vertical') || error.message?.includes('proporción') || error.message?.includes('GIRA')) {
-            notify.error(`📱 ${file.name}: ${error.message}`, 8000);
+            notify.error(`📱 ${file.name}: ${error.message}`);
           } else if (isNetworkError) {
-            notify.error(`🔌 Error de conexión subiendo ${file.name}. Intentamos ${maxRetries} veces sin éxito.`, 6000);
+            notify.error(`🔌 Error de conexión subiendo ${file.name}. Intentamos ${maxRetries} veces sin éxito.`);
           } else {
-            notify.error(`Error subiendo ${file.name}: ${error.message || 'Unknown error'}`, 5000);
+            notify.error(`Error subiendo ${file.name}: ${error.message || 'Unknown error'}`);
           }
           
           break; // Salir del loop de retry
@@ -235,9 +234,9 @@ export function DragDropUploader({
       
       if (uploadSuccess && maxRetries > 1) {
         // Solo notificar si fue exitoso después de retry
-        const retriesUsed = Array.from({length: maxRetries}, (_, i) => i + 1).find((_, idx) => uploadSuccess) || 1;
+        const retriesUsed = Array.from({length: maxRetries}, (_, i) => i + 1).find(() => uploadSuccess) || 1;
         if (retriesUsed > 1) {
-          notify.success(`${file.name} subido exitosamente (después de ${retriesUsed} intentos)`, 4000);
+          notify.success(`${file.name} subido exitosamente (después de ${retriesUsed} intentos)`);
         }
       }
     }

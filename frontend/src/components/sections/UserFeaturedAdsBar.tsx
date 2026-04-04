@@ -163,9 +163,10 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
                   className="w-full flex-shrink-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
                 >
                   {featuredAds
+                    .filter(Boolean)
                     .slice(pageIdx * CARDS_PER_PAGE, (pageIdx + 1) * CARDS_PER_PAGE)
                     .map((ad) => {
-                      const firstImage = ad.images?.[0];
+                      const firstImage = ad?.images?.[0];
                       const imageUrl = typeof firstImage === 'string'
                         ? firstImage
                         : ((firstImage as { url?: string })?.url || '');
@@ -187,7 +188,6 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
                               isSponsored: true,
                             }}
                             variant="compact"
-                            showBadges={false}
                             showLocation={true}
                             onViewDetail={() => onViewDetail?.(ad.id)}
                           />

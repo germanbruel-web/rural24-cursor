@@ -368,25 +368,33 @@ export async function GET(request: NextRequest) {
         synonymSlug 
       });
       
-      // Construir query con sinónimos incluidos
-      let orConditions = `slug.eq.${searchSlug},slug.eq.${searchSingular},slug.eq.${searchPlural},name.ilike.%${searchSingular}%,display_name.ilike.%${searchSingular}%`;
+      // Construir query — slug exact primero, luego starts-with (NO contains para evitar falsos positivos)
+      // Ej: "tractor" NO debe matchear "Extractores de miel" vía ilike.%tractor%
+      let orConditions = `slug.eq.${searchSlug},slug.eq.${searchSingular},slug.eq.${searchPlural},display_name.ilike.${searchSingular}%,display_name.ilike.${searchPlural}%`;
       if (synonymSlug) {
         orConditions += `,slug.eq.${synonymSlug}`;
       }
-      
-      // Buscar subcategoría que coincida con el texto de búsqueda (flexible singular/plural + sinónimos)
+
+      // Buscar subcategoría que coincida con el texto de búsqueda
       const { data: matchingSubcats } = await supabase
         .from('subcategories')
         .select('id, name, display_name, slug, category_id')
         .or(orConditions)
-        .limit(3);
-      
+        .limit(5);
+
       if (matchingSubcats && matchingSubcats.length > 0) {
-        // Preferir match por sinónimo si existe
+        // Prioridad: 1) synonym slug exacto  2) slug exacto  3) starts-with display_name
         let matchedSub = matchingSubcats[0];
         if (synonymSlug) {
           const synonymMatch = matchingSubcats.find(s => s.slug === synonymSlug);
           if (synonymMatch) matchedSub = synonymMatch;
+        }
+        // Si no hay synonym match, preferir slug exacto sobre starts-with
+        if (!synonymSlug || matchedSub.slug !== synonymSlug) {
+          const slugExact = matchingSubcats.find(
+            s => s.slug === searchSlug || s.slug === searchSingular || s.slug === searchPlural
+          );
+          if (slugExact) matchedSub = slugExact;
         }
         
         subcategoryId = matchedSub.id;
@@ -793,7 +801,8 @@ export async function GET(request: NextRequest) {
     // y necesitamos el nombre del padre (L2) para mostrar en el card.
     // ============================================================
     const subcatIdSet = [...new Set((ads || []).map((a: any) => a.subcategory_id).filter(Boolean))] as string[];
-    const subcatL2Map = new Map<string, string>(); // subcategory_id → L2 display_name
+    const subcatL2Map = new Map<string, string>();       // subcategory_id → L2 display_name
+    const subcatSelfNameMap = new Map<string, string>(); // subcategory_id → own display_name
 
     if (subcatIdSet.length > 0) {
       const { data: subcatRows } = await supabase
@@ -801,28 +810,57 @@ export async function GET(request: NextRequest) {
         .select('id, display_name, parent_id')
         .in('id', subcatIdSet);
 
-      const parentIdSet = [...new Set((subcatRows || []).map((s: any) => s.parent_id).filter(Boolean))] as string[];
+      // Self-name map for accurate per-ad subcategory field
+      (subcatRows || []).forEach((s: any) => subcatSelfNameMap.set(s.id, s.display_name));
 
-      if (parentIdSet.length > 0) {
-        const { data: parentRows } = await supabase
+      const parentIdSet1 = [...new Set((subcatRows || [])
+        .map((s: any) => s.parent_id).filter(Boolean))] as string[];
+
+      let parentRows1: any[] = [];
+      let parentIdSet2: string[] = [];
+      if (parentIdSet1.length > 0) {
+        const { data } = await supabase
+          .from('subcategories')
+          .select('id, display_name, parent_id')
+          .in('id', parentIdSet1);
+        parentRows1 = data || [];
+        parentIdSet2 = [...new Set(parentRows1.map((s: any) => s.parent_id).filter(Boolean))] as string[];
+      }
+
+      let parentRows2: any[] = [];
+      if (parentIdSet2.length > 0) {
+        const { data } = await supabase
           .from('subcategories')
           .select('id, display_name')
-          .in('id', parentIdSet);
-
-        const parentNameMap = new Map<string, string>(
-          (parentRows || []).map((p: any) => [p.id, p.display_name])
-        );
-
-        (subcatRows || []).forEach((s: any) => {
-          if (s.parent_id && parentNameMap.has(s.parent_id)) {
-            subcatL2Map.set(s.id, parentNameMap.get(s.parent_id)!);
-          } else {
-            subcatL2Map.set(s.id, s.display_name);
-          }
-        });
-      } else {
-        (subcatRows || []).forEach((s: any) => subcatL2Map.set(s.id, s.display_name));
+          .in('id', parentIdSet2);
+        parentRows2 = data || [];
       }
+
+      const parentNameMap1 = new Map<string, { name: string; parent_id: string | null }>(
+        parentRows1.map((p: any) => [p.id, { name: p.display_name, parent_id: p.parent_id }])
+      );
+      const parentNameMap2 = new Map<string, string>(
+        parentRows2.map((p: any) => [p.id, p.display_name])
+      );
+
+      (subcatRows || []).forEach((s: any) => {
+        if (!s.parent_id) {
+          // Es L2 en sí mismo
+          subcatL2Map.set(s.id, s.display_name);
+        } else {
+          const parent = parentNameMap1.get(s.parent_id);
+          if (!parent) {
+            subcatL2Map.set(s.id, s.display_name);
+          } else if (!parent.parent_id) {
+            // Parent es L2
+            subcatL2Map.set(s.id, parent.name);
+          } else {
+            // Parent es L3, grandparent es L2
+            const grandparentName = parentNameMap2.get(parent.parent_id);
+            subcatL2Map.set(s.id, grandparentName || parent.name);
+          }
+        }
+      });
     }
 
     // ============================================================
@@ -865,7 +903,9 @@ export async function GET(request: NextRequest) {
         user_avatar_url: ad.user_id ? (userAvatarMap.get(ad.user_id) ?? null) : null,
         // Usar los nombres resueltos previamente (sin JOINs)
         category: categoryName || 'Sin categoría',
-        subcategory: subcategoryName || '',
+        subcategory: ad.subcategory_id
+          ? (subcatSelfNameMap.get(ad.subcategory_id) || subcategoryName || '')
+          : (subcategoryName || ''),
         subcategory_l2: ad.subcategory_id ? (subcatL2Map.get(ad.subcategory_id) || subcategoryName || '') : (subcategoryName || ''),
         category_slug: categorySlug || ((ad as any).categories?.slug) || '',
         subcategory_slug: subcategorySlug || '',

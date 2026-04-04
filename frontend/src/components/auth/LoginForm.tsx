@@ -11,6 +11,7 @@ import { useBrowserStorage } from '../../hooks/useBrowserStorage';
 
 interface LoginFormProps {
   onSuccess?: () => void;
+  onClose?: () => void;
   onSwitchToRegister?: () => void;
   onSwitchToReset?: () => void;
 }

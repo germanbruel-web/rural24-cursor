@@ -246,7 +246,7 @@ export async function sendContactMessage(
       return { success: false, error: { code: 'EMAIL_NOT_VERIFIED', message: error.message } };
     }
     if (error.message?.includes('LIMIT_REACHED')) {
-      return { success: false, error: { code: 'LIMIT_REACHED', message: error.message } };
+      return { success: false, error: { code: 'SENDER_LIMIT_REACHED', message: error.message } };
     }
     
     return { 
