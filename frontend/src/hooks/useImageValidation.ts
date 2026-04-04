@@ -137,6 +137,7 @@ export function useImageValidation() {
         isValid: false,
         errors: ['Error al validar la imagen. Intenta con otra.'],
         warnings: [],
+        needsCompression: false,
       };
     } finally {
       setIsValidating(false);

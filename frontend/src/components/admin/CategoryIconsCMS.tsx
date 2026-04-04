@@ -107,11 +107,11 @@ export const CategoryIconsCMS: React.FC = () => {
   // Cargar iconos legacy desde /public/images/icons/
   const loadLegacyIcons = async () => {
     const legacyIcons: CategoryIcon[] = [
-      { id: 'legacy-1', name: 'Maquinarias', url_light: '/images/icons/icon-1.png', url_dark: null, storage_path: null, created_at: '', updated_at: '' },
-      { id: 'legacy-2', name: 'Ganadería', url_light: '/images/icons/icon-2.png', url_dark: null, storage_path: null, created_at: '', updated_at: '' },
-      { id: 'legacy-3', name: 'Insumos', url_light: '/images/icons/icon-3.png', url_dark: null, storage_path: null, created_at: '', updated_at: '' },
-      { id: 'legacy-4', name: 'Inmuebles', url_light: '/images/icons/icon-4.png', url_dark: null, storage_path: null, created_at: '', updated_at: '' },
-      { id: 'legacy-5', name: 'Servicios', url_light: '/images/icons/icon-6.png', url_dark: null, storage_path: null, created_at: '', updated_at: '' },
+      { id: 'legacy-1', name: 'Maquinarias', url_light: '/images/icons/icon-1.png', url_dark: null, storage_path: null, created_at: '', updated_at: '', title: '', paragraph: '' },
+      { id: 'legacy-2', name: 'Ganadería', url_light: '/images/icons/icon-2.png', url_dark: null, storage_path: null, created_at: '', updated_at: '', title: '', paragraph: '' },
+      { id: 'legacy-3', name: 'Insumos', url_light: '/images/icons/icon-3.png', url_dark: null, storage_path: null, created_at: '', updated_at: '', title: '', paragraph: '' },
+      { id: 'legacy-4', name: 'Inmuebles', url_light: '/images/icons/icon-4.png', url_dark: null, storage_path: null, created_at: '', updated_at: '', title: '', paragraph: '' },
+      { id: 'legacy-5', name: 'Servicios', url_light: '/images/icons/icon-6.png', url_dark: null, storage_path: null, created_at: '', updated_at: '', title: '', paragraph: '' },
     ];
     setIcons(legacyIcons);
   };

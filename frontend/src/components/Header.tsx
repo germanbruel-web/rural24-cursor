@@ -45,12 +45,12 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => onNavigate('home')}
             className="flex-shrink-0 hover:opacity-80 transition"
           >
-            <img 
+            <img
               src={LOGO_PATH}
-              alt="RURAL24" 
+              alt="RURAL24"
               className="h-8 sm:h-9 lg:h-10 w-auto"
               loading="eager"
-              fetchpriority="high"
+              {...{ fetchpriority: 'high' } as any}
             />
           </button>
           

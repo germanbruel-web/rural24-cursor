@@ -119,14 +119,14 @@ export const SimpleImageUploader: React.FC<Props> = ({
       
       if (!validation.isValid) {
         // Mostrar primer error
-        notify.error(validation.errors[0], 5000);
+        notify.error(validation.errors[0]);
         if (import.meta.env.DEV) console.log(`[SimpleUploader] ❌ Validación falló:`, { file: file.name, errors: validation.errors });
         continue;
       }
 
       // Mostrar warnings (no bloquean)
       if (validation.warnings.length > 0) {
-        notify.warning(validation.warnings[0], 3000);
+        notify.warning(validation.warnings[0]);
       }
       
       validFiles.push(file);
@@ -162,7 +162,7 @@ export const SimpleImageUploader: React.FC<Props> = ({
         const originalSize = file.size;
         if (originalSize > 2 * 1024 * 1024) { // >2MB
           if (import.meta.env.DEV) console.log(`[SimpleUploader] 🗜️ Comprimiendo imagen ${i + 1}...`);
-          notify.info('Optimizando imagen...', 2000);
+          notify.info('Optimizando imagen...');
           
           const compressionResult = await compressImage(file);
           

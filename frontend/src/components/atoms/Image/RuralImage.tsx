@@ -63,7 +63,7 @@ type Variant = keyof typeof VARIANTS;
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
-interface RuralImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+interface RuralImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> {
   /** MediaInfo JSONB de la DB, o string URL legacy */
   src: MediaInfo | string | null | undefined;
   alt: string;

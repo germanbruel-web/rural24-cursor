@@ -27,8 +27,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-empresa',
     tags: ['tractor', 'john deere', '4x4', 'pala frontal'],
-    approvalStatus: 'approved',
-    scrapingSource: 'mercadolibre',
     updatedAt: new Date('2025-11-15').toISOString(),
   },
   {
@@ -47,8 +45,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-particular',
     tags: ['vaquillonas', 'angus', 'ganado', 'preñadas'],
-    approvalStatus: 'approved',
-    scrapingSource: 'agrofy',
     updatedAt: new Date('2025-11-14').toISOString(),
   },
   {
@@ -67,8 +63,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: false,
     userType: 'free',
     tags: ['semillas', 'soja', 'don mario'],
-    approvalStatus: 'approved',
-    scrapingSource: 'agroads',
     updatedAt: new Date('2025-11-13').toISOString(),
   },
   {
@@ -87,8 +81,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-empresa',
     tags: ['campo', 'hectáreas', 'la pampa', 'venta'],
-    approvalStatus: 'approved',
-    scrapingSource: 'zonaprop',
     updatedAt: new Date('2025-11-16').toISOString(),
   },
   {
@@ -107,8 +99,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-particular',
     tags: ['cosechadora', 'case', 'maquinaria', 'mapeo'],
-    approvalStatus: 'approved',
-    scrapingSource: 'mercadolibre',
     updatedAt: new Date('2025-11-12').toISOString(),
   },
   {
@@ -126,8 +116,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: false,
     userType: 'free',
     tags: ['asesoramiento', 'agronomía', 'consultoría'],
-    approvalStatus: 'approved',
-    scrapingSource: 'agroempresarial',
     updatedAt: new Date('2025-11-11').toISOString(),
   },
   {
@@ -146,8 +134,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-empresa',
     tags: ['toros', 'hereford', 'ganado', 'genética'],
-    approvalStatus: 'approved',
-    scrapingSource: 'agrofy',
     updatedAt: new Date('2025-11-15').toISOString(),
   },
   {
@@ -166,8 +152,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: false,
     userType: 'free',
     tags: ['fertilizante', 'urea', 'insumos'],
-    approvalStatus: 'approved',
-    scrapingSource: 'agroads',
     updatedAt: new Date('2025-11-10').toISOString(),
   },
   {
@@ -186,8 +170,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-empresa',
     tags: ['pulverizadora', 'new holland', 'autopropulsada', 'gps'],
-    approvalStatus: 'approved',
-    scrapingSource: 'mercadolibre',
     updatedAt: new Date('2025-11-16').toISOString(),
   },
   {
@@ -206,8 +188,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-particular',
     tags: ['ovejas', 'hampshire', 'lana', 'ganado'],
-    approvalStatus: 'approved',
-    scrapingSource: 'agrofy',
     updatedAt: new Date('2025-11-14').toISOString(),
   },
   {
@@ -226,8 +206,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: false,
     userType: 'free',
     tags: ['agroquímicos', 'glifosato', 'herbicida'],
-    approvalStatus: 'approved',
-    scrapingSource: 'agroads',
     updatedAt: new Date('2025-11-13').toISOString(),
   },
   {
@@ -246,8 +224,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-empresa',
     tags: ['chacra', 'hectáreas', 'venta', 'productiva'],
-    approvalStatus: 'approved',
-    scrapingSource: 'zonaprop',
     updatedAt: new Date('2025-11-15').toISOString(),
   },
   {
@@ -266,8 +242,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-particular',
     tags: ['sembradora', 'crucianelli', 'siembra directa'],
-    approvalStatus: 'approved',
-    scrapingSource: 'mercadolibre',
     updatedAt: new Date('2025-11-12').toISOString(),
   },
   {
@@ -286,8 +260,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-empresa',
     tags: ['porcinos', 'cerdos', 'cabaña', 'producción'],
-    approvalStatus: 'approved',
-    scrapingSource: 'agrofy',
     updatedAt: new Date('2025-11-16').toISOString(),
   },
   {
@@ -306,8 +278,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: false,
     userType: 'free',
     tags: ['alimento', 'balanceado', 'bovinos', 'engorde'],
-    approvalStatus: 'approved',
-    scrapingSource: 'agroads',
     updatedAt: new Date('2025-11-11').toISOString(),
   },
   {
@@ -325,8 +295,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: false,
     userType: 'free',
     tags: ['transporte', 'hacienda', 'camión', 'jaula'],
-    approvalStatus: 'approved',
-    scrapingSource: 'agroempresarial',
     updatedAt: new Date('2025-11-10').toISOString(),
   },
   {
@@ -345,8 +313,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-particular',
     tags: ['mixer', 'alimentación', 'feedlot', 'balanza'],
-    approvalStatus: 'approved',
-    scrapingSource: 'mercadolibre',
     updatedAt: new Date('2025-11-13').toISOString(),
   },
   {
@@ -365,8 +331,6 @@ export const DUMMY_PRODUCTS: Product[] = [
     isPremium: true,
     userType: 'premium-empresa',
     tags: ['estancia', 'campo', 'ganadería', 'agricultura'],
-    approvalStatus: 'approved',
-    scrapingSource: 'zonaprop',
     updatedAt: new Date('2025-11-16').toISOString(),
   },
 ];

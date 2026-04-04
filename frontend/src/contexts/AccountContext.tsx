@@ -19,7 +19,7 @@ interface AccountContextValue {
   companies: MyCompany[];
   loadingCompanies: boolean;
   switchTo: (account: ActiveAccount) => void;
-  refreshCompanies: () => Promise<void>;
+  refreshCompanies: () => Promise<MyCompany[] | void>;
 }
 
 // ── Context ────────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import { Tractor, Beef, ChevronRight, Sprout, Home, BookOpen } from 'lucide-react';
 
 interface PublicarSeleccionCategoriaProps {
-  onSelect: (categoria: 'maquinarias' | 'ganaderia' | 'insumos' | 'inmuebles' | 'guia') => void;
+  onSelect: (categoria: 'maquinarias' | 'ganaderia' | 'insumos' | 'inmuebles' | 'guia' | 'servicios') => void;
   onBack: () => void;
 }
 

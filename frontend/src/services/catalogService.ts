@@ -141,7 +141,7 @@ export async function getDynamicCatalog(): Promise<DynamicCatalog> {
         attributesBySubcategory[item.subcategory_id] = [];
       }
 
-      const attr = item.attributes;
+      const attr = item.attributes as any;
       attributesBySubcategory[item.subcategory_id].push({
         id: attr.id,
         slug: attr.slug,
@@ -305,7 +305,7 @@ export async function getSubcategoryWithBrands(
 
   const brands = (relations || [])
     .map(r => r.brands)
-    .filter(Boolean) as Brand[];
+    .filter(Boolean) as unknown as Brand[];
 
   return { ...subcategory, brands };
 }
@@ -345,7 +345,7 @@ export async function getBrandsBySubcategory(subcategoryId: string): Promise<Bra
 
   return (data || [])
     .map(r => r.brands)
-    .filter(Boolean) as Brand[];
+    .filter(Boolean) as unknown as Brand[];
 }
 
 /**
@@ -545,7 +545,7 @@ export async function getMaquinariasBrandsBySubcategory(subcategoryId: string) {
   type ItemWithBrand = { maquinarias_marcas: { id: string; display_name: string } | null };
   const uniqueBrands = new Map();
   data?.forEach(item => {
-    const brand = (item as ItemWithBrand).maquinarias_marcas;
+    const brand = (item as unknown as ItemWithBrand).maquinarias_marcas;
     if (brand && !uniqueBrands.has(brand.id)) {
       uniqueBrands.set(brand.id, brand);
     }

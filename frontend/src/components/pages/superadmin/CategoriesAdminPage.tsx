@@ -123,8 +123,8 @@ export default function CategoriesAdminPage() {
 
   const loadSubcategories = async () => {
     try {
-      const data = await getSubcategories();
-      setSubcategories(data);
+      const data = await getSubcategories('');
+      setSubcategories(data as any[]);
     } catch (error: any) {
       notify.error('Error al cargar subcategorías: ' + error.message);
     }
@@ -132,8 +132,8 @@ export default function CategoriesAdminPage() {
 
   const loadModels = async () => {
     try {
-      const data = await getModels(selectedBrandFilter || undefined);
-      setModels(data);
+      const data = await getModels(selectedBrandFilter || '');
+      setModels(data as any[]);
     } catch (error: any) {
       notify.error('Error al cargar modelos: ' + error.message);
     }

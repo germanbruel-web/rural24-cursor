@@ -231,7 +231,7 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
         ? form.cultivos_input.split(',').map(s => s.trim()).filter(Boolean)
         : [];
 
-      const payload: UpdateEmpresaData = {
+      const payload = {
         company_name: form.company_name.trim(),
         tagline: form.tagline.trim() || undefined,
         description: form.description.trim() || undefined,
@@ -263,7 +263,7 @@ export const EmpresaForm: React.FC<EmpresaFormProps> = ({ empresa, onClose, onSa
       };
 
       if (isEdit && empresa) {
-        await updateEmpresa(empresa.id, payload);
+        await updateEmpresa(empresa.id, payload as UpdateEmpresaData);
         onSaved({ ...empresa, ...payload, logo_url: logoUrl, cover_url: coverUrl, role: empresa.role, ads_count: empresa.ads_count });
       } else {
         const created = await createEmpresa(payload as CreateEmpresaData);

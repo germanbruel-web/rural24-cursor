@@ -100,7 +100,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
       location: ad.location || 'Sin ubicación',
       province: ad.province,
       imageUrl: extractImageUrl(ad.images, ad.image_urls),
-      sourceUrl: ad.external_url || '',
+      sourceUrl: (ad as any).external_url || '',
       category: ad.category || category,
       subcategory: ad.subcategory,
       isSponsored: false,
@@ -137,7 +137,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
       location: ad.location || 'Sin ubicación',
       province: ad.province,
       imageUrl: extractImageUrl(ad.images, ad.image_urls),
-      sourceUrl: ad.external_url || '',
+      sourceUrl: (ad as any).external_url || '',
       category: ad.category || category,
       subcategory: ad.subcategory,
       isSponsored: false,
@@ -267,7 +267,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
               className="rounded-xl p-12 text-center border-2 border-dashed"
               style={{
                 backgroundColor: colors.bg,
-                borderColor: colors.primary
+                borderColor: colors.border
               }}
             >
               <div className="max-w-2xl mx-auto">
@@ -293,7 +293,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ title, categ
                   }}
                   className="px-6 py-3 rounded-lg font-semibold transition-colors"
                   style={{
-                    backgroundColor: colors.primary,
+                    backgroundColor: colors.border,
                     color: 'white'
                   }}
                 >

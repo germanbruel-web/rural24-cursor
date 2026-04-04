@@ -89,15 +89,15 @@ export function useCategoriesAdmin(nav: NavigationState) {
 
     switch (nav.mode) {
       case 'categories':
-        return categories.filter(c => c.display_name.toLowerCase().includes(term));
+        return categories.filter(c => (c.display_name as string).toLowerCase().includes(term));
       case 'subcategories':
-        return subcategories.filter(s => s.display_name.toLowerCase().includes(term));
+        return subcategories.filter(s => (s.display_name as string).toLowerCase().includes(term));
       case 'category_types':
-        return categoryTypes.filter(t => t.display_name.toLowerCase().includes(term));
+        return categoryTypes.filter(t => (t.display_name as string).toLowerCase().includes(term));
       case 'brands':
-        return brands.filter(b => b.display_name.toLowerCase().includes(term));
+        return brands.filter(b => (b.display_name as string).toLowerCase().includes(term));
       case 'models':
-        return models.filter(m => m.display_name.toLowerCase().includes(term));
+        return models.filter(m => (m.display_name as string).toLowerCase().includes(term));
       default:
         return [];
     }
@@ -169,7 +169,7 @@ export function useCategoriesAdmin(nav: NavigationState) {
             name,
           };
           if (import.meta.env.DEV) console.log('📝 Actualizando categoría:', updateData);
-          await updateCategory(editingCategory.id, updateData);
+          await updateCategory(editingCategory.id as string, updateData);
           alert('✅ Categoría actualizada');
         } else {
           // Create new category - Necesita operation_type_id
@@ -208,7 +208,7 @@ export function useCategoriesAdmin(nav: NavigationState) {
 
         if (editingSubcategory) {
           // Update existing subcategory
-          await updateSubcategory(editingSubcategory.id, {
+          await updateSubcategory(editingSubcategory.id as string, {
             ...subcategoryFormData,
             name,
           });
@@ -242,7 +242,7 @@ export function useCategoriesAdmin(nav: NavigationState) {
         const name = slug;
 
         if (editingCategoryType) {
-          await updateCategoryType(editingCategoryType.id, {
+          await updateCategoryType(editingCategoryType.id as string, {
             display_name: categoryTypeFormData.display_name,
             name,
             slug,
@@ -274,7 +274,7 @@ export function useCategoriesAdmin(nav: NavigationState) {
       } else if (nav.mode === 'models') {
         if (editingModel) {
           // Update existing model
-          await updateModel(editingModel.id, formData);
+          await updateModel(editingModel.id as string, formData);
         } else {
           // Create new model
           if (!nav.brandId) {
@@ -303,7 +303,7 @@ export function useCategoriesAdmin(nav: NavigationState) {
       } else if (nav.mode === 'brands') {
         if (editingBrand) {
           // Update existing brand
-          await updateBrand(editingBrand.id, brandFormData);
+          await updateBrand(editingBrand.id as string, brandFormData);
         } else {
           // Create new brand or link existing one
           if (!nav.subcategoryId) {

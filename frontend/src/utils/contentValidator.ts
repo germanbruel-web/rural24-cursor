@@ -170,7 +170,7 @@ export function validateNoContactInfo(text: string): ValidationResult {
   const result = validateContent(text);
   return {
     isValid: result.isValid,
-    reason: result.error,
+    error: result.error,
   };
 }
 

@@ -20,7 +20,7 @@ export const getCategoryIcons = async (): Promise<CategoryIcon[]> => {
   
   if (cached) {
     logger.debug('[categoriesService] Iconos desde caché');
-    return cached;
+    return cached as any;
   }
 
   logger.debug('[categoriesService] Cargando iconos...');
@@ -700,7 +700,7 @@ export const getBrandsForForm = async (subcategoryName?: string) => {
   
   if (subError || !subcategories) return [];
   
-  const brands = await getBrandsBySubcategory(subcategories.id);
+  const brands = await getBrandsBySubcategory(subcategories.id) as any[];
   return brands.map(brand => brand.display_name);
 };
 
@@ -715,6 +715,6 @@ export const getModelsForForm = async (brandName: string) => {
   
   if (brandError || !brands) return [];
   
-  const models = await getModels(brands.id);
+  const models = await getModels(brands.id) as any[];
   return models.map(model => model.display_name);
 };

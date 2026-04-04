@@ -88,7 +88,7 @@ export default function CategoryCarousel({ category }: CategoryCarouselProps) {
       >
         <img
           src={currentBanner.carousel_image_url || ''}
-          alt={currentBanner.title}
+          alt={currentBanner.client_name}
           className="w-full h-auto object-cover"
           style={{ maxHeight: '120px' }}
           loading="lazy"

@@ -8,7 +8,7 @@ import { uploadsApi } from '@/services/api';
 
 export interface UploadedImage {
   url: string;
-  path: string;
+  path?: string;
   file: File;
 }
 

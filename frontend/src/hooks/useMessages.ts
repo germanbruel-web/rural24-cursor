@@ -109,6 +109,7 @@ export function useMessages(
       sender_id: currentUserId,
       message: text.trim(),
       is_read: false,
+      was_masked: false,
       created_at: new Date().toISOString(),
     };
 

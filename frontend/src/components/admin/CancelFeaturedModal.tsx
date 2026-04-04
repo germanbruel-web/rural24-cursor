@@ -51,7 +51,7 @@ export default function CancelFeaturedModal({ isOpen, onClose, featured, onSucce
     const expiry = new Date(featured.expires_at);
     const daysRemaining = Math.max(0, Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
     const totalDays = featured.duration_days || 15;
-    const creditsSpent = featured.credit_consumed ? (featured.credits_spent || 1) : 0;
+    const creditsSpent = featured.credit_consumed ? ((featured as any).credits_spent || 1) : 0;
 
     // Calcular reembolso proporcional (redondeo hacia arriba)
     const refundAmount = daysRemaining > 0 
@@ -205,7 +205,7 @@ export default function CancelFeaturedModal({ isOpen, onClose, featured, onSucce
                         <div>
                           <span className="text-blue-700">Créditos consumidos:</span>
                           <p className="font-medium text-blue-900">
-                            {featured.credits_spent || 1} créditos
+                            {(featured as any).credits_spent || 1} créditos
                           </p>
                         </div>
                         <div>

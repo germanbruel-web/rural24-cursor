@@ -5,7 +5,6 @@
  * Servicio para manejar configuración del footer
  */
 
-import { supabase } from './supabaseClient';
 import { getSetting, updateSetting } from './siteSettingsService';
 import { getCategories } from './categoriesService';
 
@@ -269,9 +268,8 @@ export async function addLink(
 ): Promise<string | null> {
   try {
     const currentConfig = await getFooterConfig();
-    const column = columnNumber === 2 ? currentConfig.column2 : currentConfig.column4;
-    const items = columnNumber === 2 ? column.items : column.links;
-    
+    const items = columnNumber === 2 ? currentConfig.column2.items : currentConfig.column4.links;
+
     const maxOrder = items.length > 0 ? Math.max(...items.map(i => i.order)) : 0;
     
     const newLink: FooterLinkItem = {
@@ -299,9 +297,8 @@ export async function addLink(
 export async function removeLink(columnNumber: ColumnNumber, linkId: string): Promise<boolean> {
   try {
     const currentConfig = await getFooterConfig();
-    const column = columnNumber === 2 ? currentConfig.column2 : currentConfig.column4;
-    const items = columnNumber === 2 ? column.items : column.links;
-    
+    const items = columnNumber === 2 ? currentConfig.column2.items : currentConfig.column4.links;
+
     // No permitir eliminar el último link
     if (items.length === 1) {
       console.warn(`⚠️ No se puede eliminar el último link de columna ${columnNumber}`);
@@ -330,11 +327,10 @@ export async function removeLink(columnNumber: ColumnNumber, linkId: string): Pr
 export async function reorderLinks(columnNumber: ColumnNumber, linkIds: string[]): Promise<boolean> {
   try {
     const currentConfig = await getFooterConfig();
-    const column = columnNumber === 2 ? currentConfig.column2 : currentConfig.column4;
-    const items = columnNumber === 2 ? column.items : column.links;
-    
+    const items = columnNumber === 2 ? currentConfig.column2.items : currentConfig.column4.links;
+
     const itemsMap = new Map(items.map(item => [item.id, item]));
-    
+
     const reorderedItems = linkIds.map((id, index) => {
       const item = itemsMap.get(id);
       if (!item) throw new Error(`Link ${id} no encontrado`);
@@ -365,9 +361,8 @@ export async function updateLink(
 ): Promise<boolean> {
   try {
     const currentConfig = await getFooterConfig();
-    const column = columnNumber === 2 ? currentConfig.column2 : currentConfig.column4;
-    const items = columnNumber === 2 ? column.items : column.links;
-    
+    const items = columnNumber === 2 ? currentConfig.column2.items : currentConfig.column4.links;
+
     const itemIndex = items.findIndex(item => item.id === linkId);
     if (itemIndex === -1) {
       console.error(`❌ Link ${linkId} no encontrado`);
@@ -418,7 +413,7 @@ export async function updateColumn3(
  */
 export async function getDynamicCategories(limit: number): Promise<Category[]> {
   try {
-    const categories = await getCategories();
+    const categories = await getCategories() as any[];
     
     if (!categories || categories.length === 0) {
       console.warn('⚠️ No hay categorías en BD, usando fallback');

@@ -20,7 +20,7 @@ export function useAdChat(adId: string | undefined, adUserId: string | undefined
     setChatLoading(false);
 
     if (!result.success) {
-      if (result.error === 'PLAN_LIMIT_REACHED') { setShowPlanLimit(true); return; }
+      if ((result as any).error === 'PLAN_LIMIT_REACHED') { setShowPlanLimit(true); return; }
       return;
     }
 

@@ -241,9 +241,7 @@ export const DashboardPanel: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Mi Dashboard</h1>
           <p className="text-gray-600 mt-1">Plan: {
-            profile?.role === 'superadmin' ? 'SuperAdmin'
-            : profile?.role === 'premium' ? 'Premium'
-            : 'Free'
+            profile?.role === 'premium' ? 'Premium' : 'Free'
           }</p>
         </div>
         <button

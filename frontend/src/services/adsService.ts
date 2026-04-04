@@ -41,13 +41,13 @@ export function transformAdToProduct(ad: Ad): Product {
 
   // Extraer nombre de categoría si es objeto con name
   let categoryName = ad.category || 'Sin categoría';
-  if (typeof ad.category === 'object' && ad.category !== null && 'name' in ad.category) {
+  if (typeof ad.category === 'object' && ad.category !== null && 'name' in (ad.category as object)) {
     categoryName = (ad.category as any).name;
   }
   
   // Extraer nombre de subcategoría si es objeto con name
   let subcategoryName = ad.subcategory;
-  if (typeof ad.subcategory === 'object' && ad.subcategory !== null && 'name' in ad.subcategory) {
+  if (typeof ad.subcategory === 'object' && ad.subcategory !== null && 'name' in (ad.subcategory as object)) {
     subcategoryName = (ad.subcategory as any).name;
   }
 
@@ -580,8 +580,7 @@ export async function getAdById(id: string): Promise<Ad | null> {
       .from('ads')
       .update({ views_count: (basicData.views_count || 0) + 1 })
       .eq('id', id)
-      .then(() => {})
-      .catch((err) => console.error('Error updating view count:', err));
+      .then(() => {}, (err) => console.error('Error updating view count:', err));
 
     return basicData as Ad;
   } catch (error) {

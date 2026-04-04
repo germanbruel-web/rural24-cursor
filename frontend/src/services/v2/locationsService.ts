@@ -22,6 +22,7 @@ export interface Locality {
   name: string;
   slug: string;
   sort_order: number;
+  is_active?: boolean;
 }
 
 // ─── CACHE ────────────────────────────────────────────────────

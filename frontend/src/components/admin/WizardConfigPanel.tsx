@@ -43,6 +43,8 @@ const BLOCK_META: Record<WizardBlockType, { label: string; icon: React.FC<any>; 
   images:           { label: 'Fotos',                icon: Image,          color: 'bg-amber-100 text-amber-700' },
   title_description:{ label: 'Título y descripción', icon: LayoutTemplate, color: 'bg-sky-100 text-sky-700' },
   empresa_selector: { label: 'Empresa',              icon: Building2,      color: 'bg-brand-100 text-brand-700' },
+  color_picker:     { label: 'Color',                 icon: Settings,       color: 'bg-pink-100 text-pink-700' },
+  avatar_upload:    { label: 'Avatar',                icon: Image,          color: 'bg-orange-100 text-orange-700' },
 };
 
 // ─── STEP ROW ─────────────────────────────────────────────────

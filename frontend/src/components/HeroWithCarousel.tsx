@@ -6,7 +6,7 @@ import { getActiveHeroImages, type HeroImage } from '../services/heroImagesServi
 import { getHeroConfig, buildYouTubeEmbedUrl, extractYouTubeId, onHeroConfigChanged, clearHeroCache, type HeroConfig } from '../services/heroCmsService';
 
 interface HeroWithCarouselProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   bannerSlot?: React.ReactNode;
 }
 

@@ -20,8 +20,8 @@ import type {
   Model as FrontendModel,
   Category as FrontendCategory,
   Subcategory as FrontendSubcategory,
-  DynamicAttribute as FrontendDynamicAttribute,
 } from '../../../types/catalog';
+import type { DynamicAttribute as FrontendDynamicAttribute } from '../../../types/api-contracts';
 
 // =====================================================
 // BRAND ADAPTER
@@ -173,7 +173,7 @@ export function adaptDynamicAttribute(
     isFilterable: true, // Default
     isFeatured: false, // Default
     options: backend.field_options.map((value) => ({ value, label: value })),
-  };
+  } as unknown as FrontendDynamicAttribute;
 }
 
 function mapFieldTypeToDataType(

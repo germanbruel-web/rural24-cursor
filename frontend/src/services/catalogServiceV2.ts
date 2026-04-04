@@ -203,7 +203,7 @@ export async function getDynamicCatalog(): Promise<DynamicCatalog> {
       // Construir catálogo dinámico desde endpoints del backend
       const categoriesResponse = await categoriesApi.getAll();
       
-      const dynamicCategories: DynamicCategory[] = await Promise.all(
+      const dynamicCategories = await Promise.all(
         categoriesResponse.categories.map(async (cat) => {
           const dynamicSubcategories = await Promise.all(
             cat.subcategories.map(async (sub) => {
@@ -248,7 +248,7 @@ export async function getDynamicCatalog(): Promise<DynamicCatalog> {
       return {
         version: '2.0',
         generatedAt: new Date().toISOString(),
-        categories: dynamicCategories,
+        categories: dynamicCategories as any,
       };
     } catch (error) {
       console.error('[CatalogServiceV2] Backend getDynamicCatalog failed:', error);

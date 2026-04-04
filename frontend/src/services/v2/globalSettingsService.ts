@@ -88,7 +88,7 @@ export async function getSettingNumber(key: string, defaultValue: number = 0): P
 export async function getSettingBool(key: string, defaultValue: boolean = false): Promise<boolean> {
   const value = await getSetting<boolean>(key, defaultValue);
   if (typeof value === 'boolean') return value;
-  if (typeof value === 'string') return value.toLowerCase() === 'true';
+  if (typeof value === 'string') return (value as string).toLowerCase() === 'true';
   return Boolean(value);
 }
 

@@ -15,11 +15,11 @@ import { parseFilterParams, buildFilterUrl, toSlug } from '../utils/urlFilterUti
 import { searchAdsFromBackend, type SearchFiltersParams } from '../services/adsService';
 
 interface SearchResultsPageMinimalProps {
-  results: Product[]; // Solo para fallback legacy
-  onBack: () => void;
-  onSearch: (filters: SearchFilters) => void;
-  filterOptions: FilterOptions;
-  onFilter: (filters: any) => void;
+  results?: Product[]; // Solo para fallback legacy
+  onBack?: () => void;
+  onSearch?: (filters: SearchFilters) => void;
+  filterOptions?: FilterOptions;
+  onFilter?: (filters: any) => void;
   onViewDetail?: (adId: string) => void;
 }
 
