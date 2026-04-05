@@ -282,7 +282,7 @@ export async function getFeaturedDurations(): Promise<FeaturedDuration[]> {
 
   try {
     const { data, error } = await supabase
-      .from('global_config')
+      .from('global_settings')
       .select('value')
       .eq('key', 'featured_durations')
       .single();
@@ -309,7 +309,7 @@ export async function getTierConfig(): Promise<TierOption[]> {
 
   try {
     const { data, error } = await supabase
-      .from('global_config')
+      .from('global_settings')
       .select('value')
       .eq('key', 'tier_config')
       .single();

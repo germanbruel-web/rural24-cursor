@@ -52,7 +52,7 @@ export interface CreditsConfig {
 export async function getCreditsConfig(): Promise<CreditsConfig> {
   try {
     const { data, error } = await supabase
-      .from('global_config')
+      .from('global_settings')
       .select('key, value, value_type')
       .in('category', ['credits', 'featured', 'promo']);
 
@@ -60,12 +60,16 @@ export async function getCreditsConfig(): Promise<CreditsConfig> {
 
     const config: any = {};
     data?.forEach(row => {
-      if (row.value_type === 'json') {
-        config[row.key] = JSON.parse(row.value);
-      } else if (row.value_type === 'integer') {
-        config[row.key] = parseInt(row.value);
+      // global_settings.value es JSONB: llega pre-parseado desde Supabase.
+      // Los casos string/integer/decimal son por compatibilidad con datos legacy.
+      if (typeof row.value === 'object' && row.value !== null) {
+        config[row.key] = row.value;
+      } else if (row.value_type === 'json' || row.value_type === 'array') {
+        config[row.key] = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+      } else if (row.value_type === 'number' || row.value_type === 'integer') {
+        config[row.key] = Number(row.value);
       } else if (row.value_type === 'boolean') {
-        config[row.key] = row.value === 'true';
+        config[row.key] = row.value === true || row.value === 'true';
       } else if (row.value_type === 'decimal') {
         config[row.key] = parseFloat(row.value);
       } else {

@@ -148,7 +148,7 @@ export default function GlobalSettingsPanel() {
   const [tierEditPrices, setTierEditPrices] = useState<Record<string, string>>({});
 
   const loadTierConfig = async () => {
-    const { data } = await supabase.from('global_config').select('value').eq('key', 'tier_config').single();
+    const { data } = await supabase.from('global_settings').select('value').eq('key', 'tier_config').single();
     if (!data) return;
     try {
       const parsed: TierPrice[] = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
@@ -165,7 +165,7 @@ export default function GlobalSettingsPanel() {
       ...t,
       price_ars: Number(tierEditPrices[t.tier] ?? t.price_ars),
     }));
-    await supabase.from('global_config')
+    await supabase.from('global_settings')
       .update({ value: JSON.stringify(updated) })
       .eq('key', 'tier_config');
     setTierPrices(updated);

@@ -37,9 +37,9 @@ export const SuperAdminCreditsConfig: React.FC = () => {
 
     try {
       const { data, error: err } = await supabase
-        .from('global_config')
-        .select('*')
-        .in('config_key', [
+        .from('global_settings')
+        .select('key, value')
+        .in('key', [
           'credit_base_price',
           'featured_durations',
           'promo_credits_for_new_users',
@@ -50,13 +50,8 @@ export const SuperAdminCreditsConfig: React.FC = () => {
 
       const configObj: any = {};
       data?.forEach(item => {
-        if (item.config_key === 'featured_durations') {
-          configObj.featured_durations = JSON.parse(item.config_value);
-        } else if (item.config_key === 'credit_base_price') {
-          configObj.credit_base_price = parseFloat(item.config_value);
-        } else {
-          configObj[item.config_key] = parseInt(item.config_value);
-        }
+        // global_settings.value es JSONB: llega pre-parseado
+        configObj[item.key] = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
       });
 
       setConfig(configObj);
@@ -146,14 +141,9 @@ export const SuperAdminCreditsConfig: React.FC = () => {
 
       for (const update of updates) {
         const { error: err } = await supabase
-          .from('global_config')
-          .upsert({
-            config_key: update.key,
-            config_value: update.value,
-            last_modified: new Date().toISOString()
-          }, {
-            onConflict: 'config_key'
-          });
+          .from('global_settings')
+          .update({ value: JSON.stringify(update.value) })
+          .eq('key', update.key);
 
         if (err) throw err;
       }
