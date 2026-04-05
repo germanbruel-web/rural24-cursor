@@ -213,9 +213,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
             ...(product.attributes || {}),
             ...((product as any).dynamic_fields || {})
           };
-          const isHacienda = (product as any).category_slug === 'hacienda'
-            || product.category?.toLowerCase().includes('ganader')
-            || product.category?.toLowerCase().includes('hacienda');
+          const isHacienda = product.category_slug === 'hacienda';
 
           // INMOBILIARIA: mostrar tipo de operación (Venta, Alquiler, etc.)
           const isInmobiliaria = (product as any).category_slug === 'inmobiliaria-rural';
@@ -248,8 +246,8 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
             );
           }
           
-          // OTROS: mostrar Nuevo/Usado
-          const condition = (product as any).condition || attrs.condicion || attrs.estado || attrs.condition;
+          // OTROS: mostrar Nuevo/Usado (normalizado por adaptAdToProduct)
+          const condition = product.condition;
           if (!condition) return null;
           
           const condLower = String(condition).toLowerCase();

@@ -13,7 +13,7 @@ import { SmartBreadcrumb } from './SmartBreadcrumb';
 import { UserFeaturedAdsBar } from './sections/UserFeaturedAdsBar';
 import { useDynamicFilters, type FilterConfig, type FilterOption } from '../hooks/useDynamicFilters';
 import { useCategories } from '../hooks/useCategories';
-import { parseFilterParams, buildFilterUrl, toSlug } from '../utils/urlFilterUtils';
+import { parseFilterParams, buildFilterUrl, toSlug, type FilterParams } from '../utils/urlFilterUtils';
 import { searchAdsFromBackend, type SearchFiltersParams } from '../services/adsService';
 
 interface SearchResultsPageMinimalProps {
@@ -48,6 +48,33 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
   // Leer filtros activos desde la URL (GET params)
   const urlFilters = useMemo(() => parseFilterParams(), [hash]);
   
+  // ============================================================
+  // ESTADO: Price range filter (debounced)
+  // ============================================================
+  const [priceMin, setPriceMin] = useState(urlFilters.priceMin || '');
+  const [priceMax, setPriceMax] = useState(urlFilters.priceMax || '');
+
+  // Sync estado local cuando la URL cambia externamente (ej: limpiar filtros)
+  useEffect(() => {
+    setPriceMin(urlFilters.priceMin || '');
+    setPriceMax(urlFilters.priceMax || '');
+  }, [urlFilters.priceMin, urlFilters.priceMax]);
+
+  // Debounce: actualiza la URL 400ms después del último keystroke
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const currentMin = urlFilters.priceMin || '';
+      const currentMax = urlFilters.priceMax || '';
+      if (priceMin === currentMin && priceMax === currentMax) return;
+      const newFilters: FilterParams = { ...urlFilters, priceMin: priceMin || undefined, priceMax: priceMax || undefined };
+      Object.keys(newFilters).forEach(k => { if (!newFilters[k]) delete newFilters[k]; });
+      const url = buildFilterUrl('#/search', newFilters);
+      window.history.replaceState(null, '', url);
+      setHash(url);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [priceMin, priceMax]);
+
   // ============================================================
   // ESTADO: Ads cargados desde Backend
   // ============================================================
@@ -578,11 +605,37 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                           const priceFilter = backendFilters.find(f => f.field_name === 'price');
                           if (!priceFilter?.range) return null;
                           return (
-                            <div className="px-2 space-y-1">
-                              <p className="text-xs text-gray-500">
-                                Rango disponible: ${priceFilter.range.min.toLocaleString()} — ${priceFilter.range.max.toLocaleString()}
+                            <div className="px-2 space-y-2">
+                              <p className="text-[11px] text-gray-400">
+                                Rango disponible: ${priceFilter.range.min.toLocaleString('es-AR')} — ${priceFilter.range.max.toLocaleString('es-AR')}
                               </p>
-                              <p className="text-[11px] text-gray-400">Filtro por precio próximamente</p>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  placeholder="Mín"
+                                  value={priceMin}
+                                  onChange={e => setPriceMin(e.target.value)}
+                                  className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-500"
+                                />
+                                <span className="text-gray-400 text-xs shrink-0">—</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  placeholder="Máx"
+                                  value={priceMax}
+                                  onChange={e => setPriceMax(e.target.value)}
+                                  className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-500"
+                                />
+                              </div>
+                              {(priceMin || priceMax) && (
+                                <button
+                                  onClick={() => { setPriceMin(''); setPriceMax(''); }}
+                                  className="text-[11px] text-brand-600 hover:underline"
+                                >
+                                  Limpiar precio
+                                </button>
+                              )}
                             </div>
                           );
                         })()}

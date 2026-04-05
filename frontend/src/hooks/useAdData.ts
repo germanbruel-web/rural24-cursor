@@ -50,7 +50,7 @@ export function useAdData(adId: string) {
 
       const normalizedImages = normalizeImages(data.images);
 
-      const [subcatResult, opTypeResult, sellerResult] = await Promise.all([
+      const [subcatR, opTypeR, sellerR] = await Promise.allSettled([
         data.subcategory_id
           ? supabase.from('subcategories').select('name, display_name, category_id, parent_id').eq('id', data.subcategory_id).single()
           : Promise.resolve({ data: null }),
@@ -61,11 +61,14 @@ export function useAdData(adId: string) {
           ? supabase.from('users').select('full_name, email_verified, role, created_at, avatar_url').eq('id', data.user_id).maybeSingle()
           : Promise.resolve({ data: null }),
       ]);
+      const subcatResult = subcatR.status === 'fulfilled' ? subcatR.value : { data: null };
+      const opTypeResult = opTypeR.status === 'fulfilled' ? opTypeR.value : { data: null };
+      const sellerResult = sellerR.status === 'fulfilled' ? sellerR.value : { data: null };
 
       let categoryData = null;
       let parentSubcatData: { id: string; display_name: string } | null = null;
 
-      const [catResult, parentSubcatResult] = await Promise.all([
+      const [catR, parentSubcatR] = await Promise.allSettled([
         subcatResult.data?.category_id
           ? supabase.from('categories').select('name, display_name').eq('id', subcatResult.data.category_id).single()
           : Promise.resolve({ data: null }),
@@ -73,8 +76,8 @@ export function useAdData(adId: string) {
           ? supabase.from('subcategories').select('id, display_name').eq('id', subcatResult.data.parent_id).single()
           : Promise.resolve({ data: null }),
       ]);
-      categoryData = catResult.data;
-      parentSubcatData = parentSubcatResult.data;
+      categoryData = catR.status === 'fulfilled' ? catR.value.data : null;
+      parentSubcatData = parentSubcatR.status === 'fulfilled' ? parentSubcatR.value.data : null;
 
       setAd({
         ...data,

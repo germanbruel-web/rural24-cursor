@@ -276,6 +276,11 @@ export function adaptAdToProduct(ad: RawAdRow, overrides?: Partial<Product>): Pr
     subcategory_l2: ad.subcategory_l2 ?? subs?.display_name,
     isSponsored: false,
     ad_type: (ad.ad_type as Product['ad_type']) ?? undefined,
+    condition: (ad as any).condition
+      || ad.attributes?.condicion
+      || ad.attributes?.estado
+      || ad.attributes?.condition
+      || undefined,
     attributes: ad.attributes ?? undefined,
     user_id: ad.user_id ?? undefined,
     user_avatar_url: users?.avatar_url ?? undefined,
