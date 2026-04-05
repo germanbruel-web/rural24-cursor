@@ -158,10 +158,10 @@ export const SubscriptionPanel: React.FC = () => {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (silent = false) => {
+    if (!silent) setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
+    if (!user) { if (!silent) setLoading(false); return; }
 
     const { count } = await supabase
       .from('ads')
@@ -170,7 +170,7 @@ export const SubscriptionPanel: React.FC = () => {
       .in('status', ['active', 'pending']);
 
     setMyAdsCount(count ?? 0);
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
   const isPremium     = plan.planName !== 'free';
@@ -345,7 +345,7 @@ export const SubscriptionPanel: React.FC = () => {
             <p className="text-sm text-gray-500 mb-3">
               Activá membresía Premium o sumá crédito para adicionales.
             </p>
-            <CouponSection onRedeemed={loadData} />
+            <CouponSection onRedeemed={() => loadData(true)} />
           </Card>
 
         </div>

@@ -209,7 +209,7 @@ describe('CouponSection', () => {
     });
   });
 
-  it('ejecuta redeem con el código correcto y llama al callback', async () => {
+  it('ejecuta redeem y muestra mensaje de éxito (sin desmontar el panel)', async () => {
     mockValidateCoupon.mockResolvedValue({
       valid: true,
       description: 'Cupón válido',
@@ -225,9 +225,8 @@ describe('CouponSection', () => {
     fireEvent.click(screen.getByText('Validar'));
     await waitFor(() => screen.getByText('Confirmar canje'));
     fireEvent.click(screen.getByText('Confirmar canje'));
-    // El componente llama onRedeemed → loadData() que remonta el panel
-    // Verificamos que redeemCoupon fue llamado con el código correcto
-    await waitFor(() => expect(mockRedeemCoupon).toHaveBeenCalledWith('EXITOSO'));
+    // El re-fetch es silent — el panel no se desmonta y el mensaje persiste
+    await waitFor(() => expect(screen.getByText('¡Cupón canjeado con éxito!')).toBeInTheDocument());
   });
 
   it('muestra error si redeemCoupon falla', async () => {
