@@ -1297,7 +1297,11 @@ class SectionErrorBoundary extends React.Component<
     console.error(`[DynamicHomeSections] Sección ${this.props.sectionId} falló:`, error);
   }
   render() {
-    if (this.state.hasError) return null; // sección en error → invisible, no rompe las demás
+    if (this.state.hasError) return (
+      <div className="py-2 text-center text-xs text-gray-300 select-none">
+        Sección no disponible
+      </div>
+    );
     return this.props.children;
   }
 }

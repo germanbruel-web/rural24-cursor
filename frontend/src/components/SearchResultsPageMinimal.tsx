@@ -6,6 +6,7 @@ import { useGlobalSetting } from '../hooks/useGlobalSetting';
 import { X, Loader2, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import type { Product, FilterOptions, SearchFilters } from '../../types';
 import { ProductCard } from './organisms/ProductCard';
+import { CardErrorBoundary } from './common/CardErrorBoundary';
 import { ResultsBannerIntercalated } from './banners/ResultsBannerIntercalated';
 import { ResultsBannerBelowFilter } from './banners/ResultsBannerBelowFilter';
 import { SmartBreadcrumb } from './SmartBreadcrumb';
@@ -645,13 +646,15 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                   <div className={`grid gap-3 sm:gap-4 ${{1:'grid-cols-1',2:'grid-cols-2',3:'grid-cols-3',4:'grid-cols-4',5:'grid-cols-5'}[gridColsMobile]??'grid-cols-2'} ${{1:'sm:grid-cols-1',2:'sm:grid-cols-2',3:'sm:grid-cols-3',4:'sm:grid-cols-4',5:'sm:grid-cols-5'}[gridColsTablet]??'sm:grid-cols-3'} ${{1:'lg:grid-cols-1',2:'lg:grid-cols-2',3:'lg:grid-cols-3',4:'lg:grid-cols-4',5:'lg:grid-cols-5',6:'lg:grid-cols-6'}[gridColsDesktop]??'lg:grid-cols-5'}`}>
                     {paginatedResults.map((product, index) => (
                       <React.Fragment key={product.id}>
-                        <ProductCard
-                          product={product}
-                          variant="compact"
-                          showLocation={true}
-                          showProvince={true}
-                          onViewDetail={onViewDetail}
-                        />
+                        <CardErrorBoundary>
+                          <ProductCard
+                            product={product}
+                            variant="compact"
+                            showLocation={true}
+                            showProvince={true}
+                            onViewDetail={onViewDetail}
+                          />
+                        </CardErrorBoundary>
                         {/* Banner intercalado (frecuencia configurable desde global_settings) */}
                         {(index + 1) % bannerFreq === 0 && (
                           <ResultsBannerIntercalated 

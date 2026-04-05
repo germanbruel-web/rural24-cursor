@@ -22,6 +22,7 @@ import { useAdChat } from '../../hooks/useAdChat';
 import { AdGallery } from './ad-detail/AdGallery';
 import { Lightbox } from './ad-detail/Lightbox';
 import { AdFormSections } from './ad-detail/AdFormSections';
+import { PageErrorBoundary } from '../common/PageErrorBoundary';
 import { MobileStickyBar } from './ad-detail/MobileStickyBar';
 import { relativeDate, formatPrice } from './ad-detail/utils';
 
@@ -563,7 +564,9 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
             </div>
 
             {/* Secciones dinámicas (características) */}
-            <AdFormSections form={form} ad={ad} optionLabels={optionLabels} />
+            <PageErrorBoundary pageName="secciones del aviso">
+              <AdFormSections form={form} ad={ad} optionLabels={optionLabels} />
+            </PageErrorBoundary>
 
             {/* Vendedor — solo mobile (sidebar en desktop) */}
             <div className="lg:hidden">

@@ -11,6 +11,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Megaphone, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductCard } from '../organisms/ProductCard';
+import { CardErrorBoundary } from '../common/CardErrorBoundary';
 import { getFeaturedForResults, getFeaturedForDetail } from '../../services/userFeaturedService';
 import { useGlobalSetting } from '../../hooks/useGlobalSetting';
 
@@ -173,7 +174,7 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
                         : ((firstImage as { url?: string })?.url || '');
 
                       return (
-                        <div key={ad.id}>
+                        <CardErrorBoundary key={ad.id}>
                           <ProductCard
                             product={{
                               ...ad,
@@ -192,7 +193,7 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
                             showLocation={true}
                             onViewDetail={() => onViewDetail?.(ad.id)}
                           />
-                        </div>
+                        </CardErrorBoundary>
                       );
                     })}
                 </div>
