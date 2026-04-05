@@ -46,6 +46,9 @@ export interface UserData {
   created_at: string;
   updated_at: string;
   ads_count?: number;
+  subscription_plan_id?: string | null;
+  custom_max_ads?: number | null;
+  subscription_plans?: { id: string; name: string; display_name: string } | null;
 }
 
 export interface CreateUserData {
@@ -235,6 +238,35 @@ export const updateUserRole = async (userId: string, newRole: UserRole): Promise
     return { error: null };
   } catch (error) {
     logger.error('[usersService] Error en updateUserRole:', error);
+    return { error: error as Error };
+  }
+};
+
+/**
+ * Asignar plan de suscripción manualmente a un usuario (SuperAdmin)
+ * Sincroniza role automáticamente según el plan asignado.
+ */
+export const adminAssignPlan = async (
+  userId: string,
+  opts: { subscription_plan_id: string | null; custom_max_ads?: number | null }
+): Promise<{ error: Error | null }> => {
+  try {
+    const headers = await getAuthHeaders();
+    if (!headers) return { error: new Error('No autenticado') };
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/admin/users`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ user_id: userId, ...opts }),
+    });
+
+    const json = await response.json();
+    if (!response.ok || !json.success) {
+      return { error: new Error(json.error || 'Error al asignar plan') };
+    }
+    return { error: null };
+  } catch (error) {
+    logger.error('[usersService] Error en updateUserPlan:', error);
     return { error: error as Error };
   }
 };

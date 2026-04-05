@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     // Obtener usuarios
     const { data: users, error: usersError } = await supabaseAdmin
       .from('users')
-      .select('id, email, full_name, first_name, last_name, phone, mobile, role, user_type, email_verified, created_at, updated_at')
+      .select('id, email, full_name, first_name, last_name, phone, mobile, role, user_type, email_verified, created_at, updated_at, subscription_plan_id, custom_max_ads, subscription_plans(id, name, display_name)')
       .order('created_at', { ascending: false });
 
     if (usersError) {
@@ -87,7 +87,8 @@ export async function PATCH(request: NextRequest) {
     // Whitelist de campos permitidos para evitar escrituras arbitrarias
     const ALLOWED_FIELDS = [
       'full_name', 'first_name', 'last_name', 'phone', 'mobile',
-      'role', 'is_verified', 'email_verified', 'is_active', 'user_type'
+      'role', 'is_verified', 'email_verified', 'is_active', 'user_type',
+      'subscription_plan_id', 'custom_max_ads',
     ];
     const updates: Record<string, any> = {};
     for (const key of ALLOWED_FIELDS) {
@@ -103,11 +104,33 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Sincronizar plan_name con role para mantener consistencia
-    if (updates.role) {
-      updates.plan_name = updates.role === 'premium' ? 'premium'
-                        : updates.role === 'superadmin' ? 'superadmin'
-                        : 'free';
+    // Si se asigna un plan, sincronizar role según el plan (salvo que el usuario sea superadmin)
+    if (updates.subscription_plan_id) {
+      const { data: planData } = await supabaseAdmin
+        .from('subscription_plans')
+        .select('name, is_active')
+        .eq('id', updates.subscription_plan_id)
+        .single();
+
+      if (!planData?.is_active) {
+        return NextResponse.json(
+          { success: false, error: 'Plan no encontrado o inactivo' },
+          { status: 400 }
+        );
+      }
+
+      // Solo sincronizar role si no se está cambiando explícitamente y el usuario no es superadmin
+      if (!updates.role) {
+        const { data: currentUser } = await supabaseAdmin
+          .from('users')
+          .select('role')
+          .eq('id', user_id)
+          .single();
+
+        if (currentUser?.role !== 'superadmin') {
+          updates.role = planData.name === 'free' ? 'free' : 'premium';
+        }
+      }
     }
 
     const { data, error } = await supabaseAdmin
