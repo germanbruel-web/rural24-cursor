@@ -5,10 +5,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  CreditCard, Plus, Edit2, Eye, EyeOff, Save, X, RefreshCw, 
+import {
+  CreditCard, Plus, Edit2, Eye, EyeOff, Save, X, RefreshCw,
   Gift, Zap, Sparkles, Building2, Users, AlertCircle, Check,
-  ExternalLink, Trash2, GripVertical
+  ExternalLink, Trash2, GripVertical, LayoutGrid, List,
+  MessageCircle, Building, BarChart2, Headphones, Phone, Tag
 } from 'lucide-react';
 import {
   getAllPlansAdmin,
@@ -22,6 +23,7 @@ import {
   type SubscriptionPlan,
   type PlanCreateInput,
 } from '../../services/subscriptionService';
+import { supabase } from '../../services/supabaseClient';
 
 // Iconos disponibles para planes
 const PLAN_ICONS: Record<string, React.ReactNode> = {
@@ -59,9 +61,15 @@ interface EditingPlan {
   max_ads: number | null;
   max_contacts_per_month: number | null;
   max_featured_ads: number;
+  max_company_profiles: number;
+  can_have_company_profile: boolean;
   has_public_profile: boolean;
   has_catalog: boolean;
   has_analytics: boolean;
+  has_priority_support: boolean;
+  can_show_whatsapp: boolean;
+  has_virtual_office: boolean;
+  extra_ad_price_ars: number;
   price_monthly: number;
   price_yearly: number;
   is_active: boolean;
@@ -73,6 +81,16 @@ interface EditingPlan {
   is_featured: boolean;
 }
 
+interface LinkedCoupon {
+  id: string;
+  code: string;
+  name: string;
+  is_active: boolean;
+  expires_at: string;
+  current_redemptions: number;
+  max_redemptions: number;
+}
+
 const emptyPlan: EditingPlan = {
   name: '',
   display_name: '',
@@ -80,9 +98,15 @@ const emptyPlan: EditingPlan = {
   max_ads: 1,
   max_contacts_per_month: 5,
   max_featured_ads: 0,
+  max_company_profiles: 0,
+  can_have_company_profile: false,
   has_public_profile: false,
   has_catalog: false,
-  has_analytics: true,
+  has_analytics: false,
+  has_priority_support: false,
+  can_show_whatsapp: false,
+  has_virtual_office: false,
+  extra_ad_price_ars: 2500,
   price_monthly: 0,
   price_yearly: 0,
   is_active: true,
@@ -103,6 +127,9 @@ export default function PlansAdmin() {
   const [newFeature, setNewFeature] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [view, setView] = useState<'list' | 'matrix'>('list');
+  const [matrixSaving, setMatrixSaving] = useState<string | null>(null); // planId guardándose
+  const [linkedCoupons, setLinkedCoupons] = useState<LinkedCoupon[]>([]);
 
   // Cargar planes
   const loadPlans = async () => {
@@ -130,7 +157,7 @@ export default function PlansAdmin() {
   }, []);
 
   // Abrir modal de edición
-  const handleEdit = (plan: PlanWithStats) => {
+  const handleEdit = async (plan: PlanWithStats) => {
     setEditingPlan({
       id: plan.id,
       name: plan.name,
@@ -138,10 +165,16 @@ export default function PlansAdmin() {
       description: plan.description || '',
       max_ads: plan.max_ads,
       max_contacts_per_month: plan.max_contacts_per_month,
-      max_featured_ads: plan.max_featured_ads || 0,
+      max_featured_ads: (plan as any).max_featured_ads || 0,
+      max_company_profiles: (plan as any).max_company_profiles || 0,
+      can_have_company_profile: (plan as any).can_have_company_profile || false,
       has_public_profile: plan.has_public_profile || false,
       has_catalog: plan.has_catalog || false,
       has_analytics: plan.has_analytics !== false,
+      has_priority_support: (plan as any).has_priority_support || false,
+      can_show_whatsapp: (plan as any).can_show_whatsapp || false,
+      has_virtual_office: (plan as any).has_virtual_office || false,
+      extra_ad_price_ars: (plan as any).extra_ad_price_ars ?? 2500,
       price_monthly: plan.price_monthly || 0,
       price_yearly: plan.price_yearly || 0,
       is_active: plan.is_active,
@@ -153,12 +186,43 @@ export default function PlansAdmin() {
       is_featured: plan.is_featured || false,
     });
     setIsCreating(false);
+
+    // Cargar cupones vinculados a este plan
+    const { data } = await supabase
+      .from('coupons')
+      .select('id, code, name, is_active, expires_at, current_redemptions, max_redemptions')
+      .eq('gives_membership', true)
+      .contains('membership_plan_ids', [plan.id])
+      .order('created_at', { ascending: false })
+      .limit(10);
+    setLinkedCoupons(data || []);
   };
 
   // Abrir modal de creación
   const handleCreate = () => {
     setEditingPlan({ ...emptyPlan });
     setIsCreating(true);
+    setLinkedCoupons([]);
+  };
+
+  // Cerrar modal
+  const handleCloseModal = () => {
+    setEditingPlan(null);
+    setLinkedCoupons([]);
+  };
+
+  // Guardar una celda de la matriz directamente
+  const handleMatrixSave = async (planId: string, field: string, value: any) => {
+    setMatrixSaving(planId);
+    const result = await updatePlan({ id: planId, [field]: value });
+    if (result.success) {
+      setPlans(prev => prev.map(p => p.id === planId ? { ...p, [field]: value } : p));
+      setSuccess('Guardado');
+      setTimeout(() => setSuccess(null), 1500);
+    } else {
+      setError(result.error || 'Error guardando');
+    }
+    setMatrixSaving(null);
   };
 
   // Guardar plan
@@ -293,6 +357,27 @@ export default function PlansAdmin() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Toggle vista */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setView('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                view === 'list' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              Lista
+            </button>
+            <button
+              onClick={() => setView('matrix')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                view === 'matrix' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              Matriz
+            </button>
+          </div>
           <button
             onClick={() => window.open('#/pricing', '_blank')}
             className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
@@ -327,7 +412,8 @@ export default function PlansAdmin() {
         </div>
       )}
 
-      {/* Plans List */}
+      {/* ===== VISTA LISTA ===== */}
+      {view === 'list' && (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
@@ -464,6 +550,105 @@ export default function PlansAdmin() {
         </table>
       </div>
 
+      )} {/* end view === 'list' */}
+
+      {/* ===== VISTA MATRIZ ===== */}
+      {view === 'matrix' && plans.filter(p => p.is_active).length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[200px]">
+                  Función / Plan
+                </th>
+                {plans.filter(p => p.is_active).map(plan => (
+                  <th key={plan.id} className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[140px]">
+                    <div className="flex flex-col items-center gap-1">
+                      <span>{plan.display_name}</span>
+                      {matrixSaving === plan.id && (
+                        <RefreshCw className="w-3 h-3 animate-spin text-brand-600" />
+                      )}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {/* ── LÍMITES ── */}
+              <tr className="bg-gray-50">
+                <td colSpan={plans.filter(p => p.is_active).length + 1} className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Límites
+                </td>
+              </tr>
+              {[
+                { label: 'Máx. avisos', field: 'max_ads', type: 'number' },
+                { label: 'Máx. empresas', field: 'max_company_profiles', type: 'number' },
+                { label: 'Precio aviso extra (ARS)', field: 'extra_ad_price_ars', type: 'number' },
+                { label: 'Precio mensual (ARS)', field: 'price_monthly', type: 'number' },
+                { label: 'Precio anual (ARS)', field: 'price_yearly', type: 'number' },
+              ].map(row => (
+                <tr key={row.field} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-gray-700 font-medium">{row.label}</td>
+                  {plans.filter(p => p.is_active).map(plan => (
+                    <td key={plan.id} className="px-4 py-3 text-center">
+                      <input
+                        type="number"
+                        defaultValue={(plan as any)[row.field] ?? 0}
+                        onBlur={(e) => {
+                          const val = parseFloat(e.target.value) || 0;
+                          if (val !== ((plan as any)[row.field] ?? 0)) {
+                            handleMatrixSave(plan.id, row.field, val);
+                          }
+                        }}
+                        className="w-24 px-2 py-1 text-center border border-gray-300 rounded focus:ring-1 focus:ring-brand-600 focus:border-transparent text-sm"
+                        min="0"
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+
+              {/* ── PERMISOS ── */}
+              <tr className="bg-gray-50">
+                <td colSpan={plans.filter(p => p.is_active).length + 1} className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Permisos y Funciones
+                </td>
+              </tr>
+              {[
+                { label: 'Botón WhatsApp', field: 'can_show_whatsapp', icon: <Phone className="w-4 h-4" /> },
+                { label: 'Oficina Virtual', field: 'has_virtual_office', icon: <Building className="w-4 h-4" /> },
+                { label: 'Perfil de Empresa', field: 'can_have_company_profile', icon: <Building2 className="w-4 h-4" /> },
+                { label: 'Analytics', field: 'has_analytics', icon: <BarChart2 className="w-4 h-4" /> },
+                { label: 'Soporte prioritario', field: 'has_priority_support', icon: <Headphones className="w-4 h-4" /> },
+                { label: 'Perfil público', field: 'has_public_profile', icon: <Eye className="w-4 h-4" /> },
+              ].map(row => (
+                <tr key={row.field} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-gray-700 font-medium flex items-center gap-2">
+                    <span className="text-gray-400">{row.icon}</span>
+                    {row.label}
+                  </td>
+                  {plans.filter(p => p.is_active).map(plan => (
+                    <td key={plan.id} className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => handleMatrixSave(plan.id, row.field, !(plan as any)[row.field])}
+                        className={`w-10 h-6 rounded-full transition-colors ${
+                          (plan as any)[row.field] ? 'bg-brand-600' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span className={`block w-4 h-4 bg-white rounded-full shadow transition-transform mx-1 ${
+                          (plan as any)[row.field] ? 'translate-x-4' : 'translate-x-0'
+                        }`} />
+                      </button>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="px-4 py-2 text-xs text-gray-400">Los inputs de número se guardan al perder el foco. Los toggles se guardan al hacer click.</p>
+        </div>
+      )}
+
       {/* Edit Modal */}
       {editingPlan && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -474,7 +659,7 @@ export default function PlansAdmin() {
                 {isCreating ? 'Crear Nuevo Plan' : `Editar: ${editingPlan.display_name}`}
               </h3>
               <button
-                onClick={() => setEditingPlan(null)}
+                onClick={handleCloseModal}
                 className="p-2 hover:bg-gray-100 rounded-lg"
               >
                 <X className="w-5 h-5" />
@@ -579,9 +764,9 @@ export default function PlansAdmin() {
                     <input
                       type="number"
                       value={editingPlan.max_ads ?? ''}
-                      onChange={(e) => setEditingPlan({ 
-                        ...editingPlan, 
-                        max_ads: e.target.value === '' ? null : parseInt(e.target.value) 
+                      onChange={(e) => setEditingPlan({
+                        ...editingPlan,
+                        max_ads: e.target.value === '' ? null : parseInt(e.target.value)
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
                       min="0"
@@ -595,9 +780,9 @@ export default function PlansAdmin() {
                     <input
                       type="number"
                       value={editingPlan.max_contacts_per_month ?? ''}
-                      onChange={(e) => setEditingPlan({ 
-                        ...editingPlan, 
-                        max_contacts_per_month: e.target.value === '' ? null : parseInt(e.target.value) 
+                      onChange={(e) => setEditingPlan({
+                        ...editingPlan,
+                        max_contacts_per_month: e.target.value === '' ? null : parseInt(e.target.value)
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
                       min="0"
@@ -616,6 +801,31 @@ export default function PlansAdmin() {
                       min="0"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Máx. Empresas
+                    </label>
+                    <input
+                      type="number"
+                      value={editingPlan.max_company_profiles}
+                      onChange={(e) => setEditingPlan({ ...editingPlan, max_company_profiles: parseInt(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Precio aviso extra (ARS)
+                    </label>
+                    <input
+                      type="number"
+                      value={editingPlan.extra_ad_price_ars}
+                      onChange={(e) => setEditingPlan({ ...editingPlan, extra_ad_price_ars: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
+                      min="0"
+                      step="100"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -623,36 +833,28 @@ export default function PlansAdmin() {
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <span className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center text-xs">4</span>
-                  Permisos
+                  Permisos y Funciones
                 </h4>
-                <div className="flex flex-wrap gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={editingPlan.has_public_profile}
-                      onChange={(e) => setEditingPlan({ ...editingPlan, has_public_profile: e.target.checked })}
-                      className="w-4 h-4 text-brand-600 rounded focus:ring-brand-600"
-                    />
-                    <span className="text-sm text-gray-700">Perfil Público</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={editingPlan.has_catalog}
-                      onChange={(e) => setEditingPlan({ ...editingPlan, has_catalog: e.target.checked })}
-                      className="w-4 h-4 text-brand-600 rounded focus:ring-brand-600"
-                    />
-                    <span className="text-sm text-gray-700">Catálogo</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={editingPlan.has_analytics}
-                      onChange={(e) => setEditingPlan({ ...editingPlan, has_analytics: e.target.checked })}
-                      className="w-4 h-4 text-brand-600 rounded focus:ring-brand-600"
-                    />
-                    <span className="text-sm text-gray-700">Analytics</span>
-                  </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { field: 'can_have_company_profile', label: 'Perfil de empresa', key: 'can_have_company_profile' as keyof EditingPlan },
+                    { field: 'can_show_whatsapp', label: 'Botón WhatsApp', key: 'can_show_whatsapp' as keyof EditingPlan },
+                    { field: 'has_virtual_office', label: 'Oficina Virtual', key: 'has_virtual_office' as keyof EditingPlan },
+                    { field: 'has_public_profile', label: 'Perfil público', key: 'has_public_profile' as keyof EditingPlan },
+                    { field: 'has_analytics', label: 'Analytics', key: 'has_analytics' as keyof EditingPlan },
+                    { field: 'has_priority_support', label: 'Soporte prioritario', key: 'has_priority_support' as keyof EditingPlan },
+                    { field: 'has_catalog', label: 'Catálogo', key: 'has_catalog' as keyof EditingPlan },
+                  ].map(({ field, label, key }) => (
+                    <label key={field} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editingPlan[key] as boolean}
+                        onChange={(e) => setEditingPlan({ ...editingPlan, [key]: e.target.checked })}
+                        className="w-4 h-4 text-brand-600 rounded focus:ring-brand-600"
+                      />
+                      <span className="text-sm text-gray-700">{label}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -766,12 +968,52 @@ export default function PlansAdmin() {
                   />
                 </div>
               </div>
+
+              {/* Cupones vinculados — solo en modo edición */}
+              {!isCreating && editingPlan.id && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center text-xs">7</span>
+                    Cupones que otorgan este plan
+                  </h4>
+                  {linkedCoupons.length === 0 ? (
+                    <p className="text-sm text-gray-400 italic">Sin cupones vinculados a este plan.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {linkedCoupons.map(coupon => (
+                        <div key={coupon.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm">
+                          <div>
+                            <span className="font-mono font-bold text-gray-900">{coupon.code}</span>
+                            <span className="ml-2 text-gray-500">{coupon.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span>{coupon.current_redemptions}/{coupon.max_redemptions} canjes</span>
+                            <span className={`px-2 py-0.5 rounded-full ${coupon.is_active ? 'bg-brand-100 text-brand-600' : 'bg-gray-200 text-gray-500'}`}>
+                              {coupon.is_active ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      handleCloseModal();
+                      window.location.hash = '#/coupons';
+                    }}
+                    className="mt-3 flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700"
+                  >
+                    <Tag className="w-4 h-4" />
+                    Crear cupón para este plan
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}
             <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
               <button
-                onClick={() => setEditingPlan(null)}
+                onClick={handleCloseModal}
                 className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
                 Cancelar
