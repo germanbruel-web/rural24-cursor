@@ -16,8 +16,9 @@ BEGIN
   END IF;
 END $$;
 
--- 2. Nuevas columnas de features
+-- 2. Nuevas columnas de features (incluyendo max_company_profiles que puede faltar en PROD)
 ALTER TABLE public.subscription_plans
+  ADD COLUMN IF NOT EXISTS max_company_profiles integer       NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS can_show_whatsapp    boolean      NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS has_virtual_office   boolean      NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS extra_ad_price_ars   numeric(10,2) NOT NULL DEFAULT 2500;
