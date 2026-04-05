@@ -53,6 +53,11 @@ interface AdItem {
 type FeaturedRow = { ad_id: string; expires_at?: string };
 type SubcatRow   = { id: string };
 
+// Cache de módulo para resolveSubcatL2Map.
+// Key: IDs de subcategorías ordenados y concatenados (ej: "id1,id2,id3").
+// Dos secciones con los mismos subcatIds no re-fetchean la DB.
+const _subcatL2Cache = new Map<string, Record<string, string>>();
+
 // Resuelve subcategoría L2 (padre) para un array de ads.
 // Si el ad está en L3, retorna el display_name del L2 padre.
 // Si está en L2 (sin padre), retorna su propio display_name.
@@ -61,6 +66,9 @@ async function resolveSubcatL2Map(
 ): Promise<Record<string, string>> {
   const subcatIds = [...new Set(adsData.map(a => a.subcategory_id).filter(Boolean))] as string[];
   if (subcatIds.length === 0) return {};
+
+  const cacheKey = [...subcatIds].sort().join(',');
+  if (_subcatL2Cache.has(cacheKey)) return _subcatL2Cache.get(cacheKey)!;
 
   const { data: subcatRows } = await supabase
     .from('subcategories').select('id, display_name, parent_id').in('id', subcatIds);
@@ -79,6 +87,7 @@ async function resolveSubcatL2Map(
       ? parentNameMap[s.parent_id]
       : s.display_name;
   });
+  _subcatL2Cache.set(cacheKey, map);
   return map;
 }
 
@@ -1251,18 +1260,24 @@ function SectionRenderer({ section }: SectionProps) {
 // ---- Error boundary para secciones individuales ----
 
 class SectionErrorBoundary extends React.Component<
-  { children: React.ReactNode; sectionId: string },
+  {
+    children: React.ReactNode;
+    sectionId: string;
+    /** Callback opcional para error reporting (ej: Sentry.captureException) */
+    onError?: (error: Error, info: React.ErrorInfo) => void;
+  },
   { hasError: boolean }
 > {
-  constructor(props: { children: React.ReactNode; sectionId: string }) {
+  constructor(props: { children: React.ReactNode; sectionId: string; onError?: (error: Error, info: React.ErrorInfo) => void }) {
     super(props);
     this.state = { hasError: false };
   }
   static getDerivedStateFromError() {
     return { hasError: true };
   }
-  componentDidCatch(error: Error) {
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error(`[DynamicHomeSections] Sección ${this.props.sectionId} falló:`, error);
+    this.props.onError?.(error, info);
   }
   render() {
     if (this.state.hasError) return (

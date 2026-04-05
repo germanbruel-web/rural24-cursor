@@ -289,6 +289,18 @@ function parseValue(value: any, valueType: string): any {
 }
 
 /**
+ * Lectura síncrona del cache de módulo.
+ * Retorna el valor cacheado si existe y el TTL no venció, undefined si no.
+ * Usado por useGlobalSetting para inicializar useState sin re-render extra.
+ */
+export function getCachedSetting<T = any>(key: string): T | undefined {
+  if (settingsCache.data.has(key) && Date.now() - settingsCache.timestamp < CACHE_TTL) {
+    return settingsCache.data.get(key) as T;
+  }
+  return undefined;
+}
+
+/**
  * Limpiar cache (útil para testing)
  */
 export function clearSettingsCache() {

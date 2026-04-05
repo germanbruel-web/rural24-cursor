@@ -13,10 +13,15 @@
  */
 
 import { useState, useEffect } from 'react';
-import { getSetting } from '../services/v2/globalSettingsService';
+import { getSetting, getCachedSetting } from '../services/v2/globalSettingsService';
 
 export function useGlobalSetting<T>(key: string, defaultValue: T): T {
-  const [value, setValue] = useState<T>(defaultValue);
+  // Inicializar con el cache de módulo si ya fue resuelto por otro componente.
+  // Evita el re-render extra cuando 10+ componentes montan el mismo setting.
+  const [value, setValue] = useState<T>(() => {
+    const cached = getCachedSetting<T>(key);
+    return cached !== undefined ? cached : defaultValue;
+  });
 
   useEffect(() => {
     let cancelled = false;
