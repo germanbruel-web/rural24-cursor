@@ -9,19 +9,26 @@ export interface SubscriptionPlan {
   name: string; // 'free', 'starter', 'pro', 'empresa'
   display_name: string;
   description?: string;
+  slug?: string;
   max_ads: number | null; // null = ilimitado
   max_contacts_per_month: number | null; // null = ilimitado
   max_contacts_received?: number | null;
   max_contacts_sent?: number | null;
   max_featured_ads: number;
   max_highlighted_ads?: number;
+  max_company_profiles?: number;
   can_publish_immediately?: boolean;
+  can_have_company_profile?: boolean;
   has_inbox?: boolean;
   has_analytics: boolean;
   has_priority_support?: boolean;
   has_public_profile: boolean;
   has_catalog: boolean;
   has_multiuser?: boolean;
+  // Nuevas columnas de features (Sprint Plans)
+  can_show_whatsapp?: boolean;
+  has_virtual_office?: boolean;
+  extra_ad_price_ars?: number;
   price_monthly: number;
   price_yearly: number;
   currency?: string;

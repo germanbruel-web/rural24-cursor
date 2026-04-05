@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useGlobalSetting } from '../../hooks/useGlobalSetting';
 import { Helmet } from 'react-helmet-async';
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '../../services/supabaseClient';
@@ -21,6 +22,7 @@ import { useAdChat } from '../../hooks/useAdChat';
 import { AdGallery } from './ad-detail/AdGallery';
 import { Lightbox } from './ad-detail/Lightbox';
 import { AdFormSections } from './ad-detail/AdFormSections';
+import { PageErrorBoundary } from '../common/PageErrorBoundary';
 import { MobileStickyBar } from './ad-detail/MobileStickyBar';
 import { relativeDate, formatPrice } from './ad-detail/utils';
 
@@ -133,6 +135,8 @@ const PriceBadges: React.FC<{
 
 export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
   const { ad, loading, form, optionLabels, similarAds, loadingSimilar, sellerAdsCount } = useAdData(adId);
+  const seoDescMaxChars = useGlobalSetting<number>('seo_description_max_chars', 155);
+  const canonicalBase   = useGlobalSetting<string>('site_canonical_url', 'https://rural24.com.ar');
 
   const images = ad?.images || [];
   const { currentImageIndex, lightboxOpen, setCurrentImageIndex, setLightboxOpen } = useLightbox(images.length);
@@ -389,10 +393,10 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
       {(() => {
         const pageTitle = `${ad.title} | Rural24`;
         const pageDescription = ad.description
-          ? ad.description.slice(0, 155).replace(/\n/g, ' ')
+          ? ad.description.slice(0, seoDescMaxChars).replace(/\n/g, ' ')
           : `${ad.categories?.display_name || 'Aviso'} en ${ad.province || ad.location || 'Argentina'} — Rural24`;
         const firstImage = ad.images?.[0]?.url;
-        const canonicalUrl = `https://rural24.com.ar/#/ad/${ad.slug || ad.id}`;
+        const canonicalUrl = `${canonicalBase}/#/ad/${ad.slug || ad.id}`;
 
         const productSchema = {
           '@context': 'https://schema.org',
@@ -560,7 +564,9 @@ export const AdDetail: React.FC<AdDetailProps> = ({ adId, onBack }) => {
             </div>
 
             {/* Secciones dinámicas (características) */}
-            <AdFormSections form={form} ad={ad} optionLabels={optionLabels} />
+            <PageErrorBoundary pageName="secciones del aviso">
+              <AdFormSections form={form} ad={ad} optionLabels={optionLabels} />
+            </PageErrorBoundary>
 
             {/* Vendedor — solo mobile (sidebar en desktop) */}
             <div className="lg:hidden">

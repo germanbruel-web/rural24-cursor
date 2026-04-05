@@ -11,7 +11,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Megaphone, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductCard } from '../organisms/ProductCard';
+import { CardErrorBoundary } from '../common/CardErrorBoundary';
 import { getFeaturedForResults, getFeaturedForDetail } from '../../services/userFeaturedService';
+import { adaptAdToProduct } from '../../services/api/adapters';
+import { useGlobalSetting } from '../../hooks/useGlobalSetting';
 
 interface UserFeaturedAdsBarProps {
   categoryId?: string;
@@ -21,10 +24,6 @@ interface UserFeaturedAdsBarProps {
   excludeAdId?: string;
 }
 
-const CARDS_PER_PAGE = 5;
-const LOAD_BATCH = 10;
-const MAX_ADS = 30;
-
 export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
   categoryId,
   onViewDetail,
@@ -32,13 +31,17 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
   placement = 'results',
   excludeAdId,
 }) => {
+  const cardsPerPage = useGlobalSetting<number>('featured_bar_cards_per_page', 5);
+  const loadBatch    = useGlobalSetting<number>('featured_bar_load_batch', 10);
+  const maxAds       = useGlobalSetting<number>('featured_bar_max_ads', 30);
+
   const [allAds, setAllAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(LOAD_BATCH);
+  const [visibleCount, setVisibleCount] = useState(loadBatch);
   const [currentPage, setCurrentPage] = useState(0);
 
   const featuredAds = allAds.slice(0, visibleCount);
-  const totalPages = Math.ceil(featuredAds.length / CARDS_PER_PAGE);
+  const totalPages = Math.ceil(featuredAds.length / cardsPerPage);
 
   useEffect(() => {
     const loadFeatured = async () => {
@@ -50,8 +53,8 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
 
       setLoading(true);
       const { data, error } = placement === 'detail' && excludeAdId
-        ? await getFeaturedForDetail(categoryId, excludeAdId, MAX_ADS)
-        : await getFeaturedForResults(categoryId, MAX_ADS, 0);
+        ? await getFeaturedForDetail(categoryId, excludeAdId, maxAds)
+        : await getFeaturedForResults(categoryId, maxAds, 0);
 
       if (error) {
         console.error('Error loading featured ads bar:', error);
@@ -63,7 +66,7 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
     };
 
     loadFeatured();
-    setVisibleCount(LOAD_BATCH);
+    setVisibleCount(loadBatch);
     setCurrentPage(0);
   }, [categoryId, placement, excludeAdId]);
 
@@ -81,7 +84,7 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
   }, [totalPages]);
 
   const handleLoadMore = () => {
-    setVisibleCount(prev => Math.min(prev + LOAD_BATCH, MAX_ADS));
+    setVisibleCount(prev => Math.min(prev + loadBatch, maxAds));
   };
 
   if (!categoryId) return null;
@@ -107,8 +110,8 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
 
   if (allAds.length === 0) return null;
 
-  const showArrows = featuredAds.length > CARDS_PER_PAGE;
-  const canLoadMore = visibleCount < Math.min(allAds.length, MAX_ADS);
+  const showArrows = featuredAds.length > cardsPerPage;
+  const canLoadMore = visibleCount < Math.min(allAds.length, maxAds);
 
   return (
     <div className={`mb-6 ${className}`}>
@@ -164,34 +167,17 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
                 >
                   {featuredAds
                     .filter(Boolean)
-                    .slice(pageIdx * CARDS_PER_PAGE, (pageIdx + 1) * CARDS_PER_PAGE)
+                    .slice(pageIdx * cardsPerPage, (pageIdx + 1) * cardsPerPage)
                     .map((ad) => {
-                      const firstImage = ad?.images?.[0];
-                      const imageUrl = typeof firstImage === 'string'
-                        ? firstImage
-                        : ((firstImage as { url?: string })?.url || '');
-
                       return (
-                        <div key={ad.id}>
+                        <CardErrorBoundary key={ad.id}>
                           <ProductCard
-                            product={{
-                              ...ad,
-                              id: ad.id,
-                              title: ad.title,
-                              price: ad.price,
-                              currency: ad.currency || 'ARS',
-                              category: ad.categories?.name || '',
-                              location: ad.province || ad.location || '',
-                              imageUrl,
-                              images: ad.images,
-                              sourceUrl: '',
-                              isSponsored: true,
-                            }}
+                            product={adaptAdToProduct(ad, { isSponsored: true })}
                             variant="compact"
                             showLocation={true}
                             onViewDetail={() => onViewDetail?.(ad.id)}
                           />
-                        </div>
+                        </CardErrorBoundary>
                       );
                     })}
                 </div>

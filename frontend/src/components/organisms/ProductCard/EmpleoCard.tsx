@@ -10,6 +10,8 @@ import type { Product } from '../../../../types';
 import { Card } from '../../molecules/Card';
 import { cn } from '../../../design-system/utils';
 import { EmpleoModal } from '../../molecules/EmpleoModal/EmpleoModal';
+import { useGlobalSetting } from '../../../hooks/useGlobalSetting';
+import { useOptionListLabels } from '../../../hooks/useOptionListLabels';
 
 // URL del ícono de Empleos subido a Cloudinary (app/icons)
 const EMPLEO_ICON_URL = 'https://res.cloudinary.com/ruralcloudinary/image/upload/v1774375739/rural24/app/icons/fadd0359-ae43-4cad-9612-cbd639583196_mn4xi3p5_ct1mk.png';
@@ -27,6 +29,8 @@ function resolveCategoryIcon(icon?: string | null): string {
 
 export const EmpleoCard: React.FC<EmpleoCardProps> = React.memo(({ product, className }) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const descMaxChars = useGlobalSetting<number>('card_description_max_chars', 100);
+  const necesidadLabels = useOptionListLabels('necesidad-empleos');
 
   // Fecha publicación
   const dateStr = product.created_at
@@ -47,17 +51,12 @@ export const EmpleoCard: React.FC<EmpleoCardProps> = React.memo(({ product, clas
   const necesidad  = (product.attributes?.necesidad as string) || '';
 
   // Labels row: "Empleos · {remitente} · {necesidad label}"
-  const NECESIDAD_LABEL: Record<string, string> = {
-    busco:      'Busco',
-    ofrezco:    'Ofrezco',
-    recomiendo: 'Recomiendo',
-  };
-  const necesidadLabel = NECESIDAD_LABEL[necesidad] || necesidad;
+  const necesidadLabel = necesidadLabels[necesidad] || necesidad;
   const labelParts = ['Empleos', remitente, necesidadLabel].filter(Boolean);
 
-  // Descripción truncada a 100 chars
+  // Descripción truncada (largo configurable desde global_settings)
   const desc = product.description || '';
-  const descTrunc = desc.length > 100 ? desc.slice(0, 100) + '…' : desc;
+  const descTrunc = desc.length > descMaxChars ? desc.slice(0, descMaxChars) + '…' : desc;
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();

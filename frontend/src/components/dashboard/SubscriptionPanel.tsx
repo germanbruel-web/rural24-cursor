@@ -1,79 +1,197 @@
 /**
  * SubscriptionPanel - Mi Plan
- * Gestión de Suscripción + Créditos de Publicidad
- * Design System RURAL24 - Mobile First
+ * Flujos: Membresía · Adicionales · Cupones
+ * Sin wallet / sin cargar saldo — pagos solo vía MP o cupón
  */
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  Sparkles, 
-  Coins, 
-  ShoppingCart, 
-  Gift, 
-  CheckCircle,
-  Clock,
-  Zap,
-  Loader2,
-  Info,
-  Star,
-  Image,
-  LayoutGrid,
-  TrendingUp,
-  AlertCircle
-} from 'lucide-react';
 import {
-  getUserCredits,
-  getCreditsConfig,
-  getCreditTransactions
-} from '../../services/creditsService';
+  CheckCircle,
+  XCircle,
+  Loader2,
+  ArrowRight,
+  Ticket,
+  AlertCircle,
+  Crown,
+  RefreshCw,
+  Plus,
+  Minus,
+  Building2,
+} from 'lucide-react';
+import { validateCoupon, redeemCoupon } from '../../services/creditsService';
 import { supabase } from '../../services/supabaseClient';
-import BuyCreditsModal from '../modals/BuyCreditsModal';
-import RedeemCouponModal from '../modals/RedeemCouponModal';
-
-// Design System Components
-import { Button } from '../atoms/Button';
+import { usePlanFeatures } from '../../hooks/usePlanFeatures';
+import { Card } from '../molecules/Card';
 import { Badge } from '../atoms/Badge';
-import { Card, CardHeader, CardBody } from '../molecules/Card';
+import { Button } from '../atoms/Button';
 
+// ── helpers ──────────────────────────────────────────────────────────────────
+function formatARS(n: number) {
+  return `$${n.toLocaleString('es-AR')}`;
+}
+
+const BADGE_GRADIENT: Record<string, string> = {
+  gray:   'from-gray-500 to-gray-600',
+  green:  'from-brand-600 to-brand-700',
+  blue:   'from-blue-500 to-blue-600',
+  purple: 'from-purple-500 to-purple-600',
+  gold:   'from-yellow-500 to-yellow-600',
+};
+
+// ── componente cupón inline ───────────────────────────────────────────────────
+function CouponSection({ onRedeemed }: { onRedeemed: () => void }) {
+  const [code, setCode]           = useState('');
+  const [validating, setValidating] = useState(false);
+  const [redeeming, setRedeeming] = useState(false);
+  const [preview, setPreview]     = useState<any>(null);
+  const [error, setError]         = useState<string | null>(null);
+  const [done, setDone]           = useState(false);
+  const [doneMsg, setDoneMsg]     = useState('');
+
+  const handleValidate = async () => {
+    if (!code.trim()) return;
+    setValidating(true);
+    setError(null);
+    setPreview(null);
+    const result = await validateCoupon(code.trim().toUpperCase());
+    setValidating(false);
+    if (!result.valid) {
+      setError(result.error || 'Cupón inválido');
+    } else {
+      setPreview(result);
+    }
+  };
+
+  const handleRedeem = async () => {
+    setRedeeming(true);
+    setError(null);
+    const result = await redeemCoupon(code.trim().toUpperCase());
+    setRedeeming(false);
+    if (!result.success) {
+      setError(result.error || 'Error al canjear');
+    } else {
+      setDoneMsg(result.message || '¡Cupón canjeado!');
+      setDone(true);
+      onRedeemed();
+    }
+  };
+
+  if (done) {
+    return (
+      <div className="flex items-center gap-2 p-3 bg-brand-50 border border-brand-200 rounded-lg text-sm text-brand-700">
+        <CheckCircle className="w-4 h-4 flex-shrink-0" />
+        {doneMsg}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={code}
+          onChange={(e) => {
+            setCode(e.target.value.toUpperCase());
+            setPreview(null);
+            setError(null);
+          }}
+          onKeyDown={(e) => e.key === 'Enter' && handleValidate()}
+          placeholder="CÓDIGO DE CUPÓN"
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono uppercase focus:ring-2 focus:ring-brand-600 focus:border-transparent"
+        />
+        <button
+          onClick={handleValidate}
+          disabled={!code.trim() || validating}
+          className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-40 transition-colors"
+        >
+          {validating ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Validar'}
+        </button>
+      </div>
+
+      {error && (
+        <p className="flex items-center gap-1.5 text-sm text-red-600">
+          <AlertCircle className="w-4 h-4" />
+          {error}
+        </p>
+      )}
+
+      {preview && (
+        <div className="p-3 bg-brand-50 border border-brand-200 rounded-lg space-y-2">
+          <p className="text-sm text-gray-700">{preview.description}</p>
+          <div className="flex flex-wrap gap-2">
+            {preview.arsAmount > 0 && (
+              <span className="px-2 py-0.5 bg-brand-100 text-brand-700 text-xs rounded-full font-medium">
+                +{formatARS(preview.arsAmount)} para adicionales
+              </span>
+            )}
+            {preview.membershipPlanName && (
+              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium flex items-center gap-1">
+                <Crown className="w-3 h-3" />
+                {preview.membershipPlanName} · {preview.membershipDays} días
+              </span>
+            )}
+          </div>
+          <button
+            onClick={handleRedeem}
+            disabled={redeeming}
+            className="w-full py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-500 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+          >
+            {redeeming ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Confirmar canje'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── panel principal ───────────────────────────────────────────────────────────
 export const SubscriptionPanel: React.FC = () => {
   const { profile } = useAuth();
-  const [credits, setCredits] = useState<any>(null);
-  const [config, setConfig] = useState<any>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  
-  // Modales
-  const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
-  const [showRedeemCouponModal, setShowRedeemCouponModal] = useState(false);
+  const { plan, loading: planLoading } = usePlanFeatures();
+
+  const [myAdsCount, setMyAdsCount]       = useState(0);
+  const [myCompaniesCount, setMyCompaniesCount] = useState(0);
+  const [loading, setLoading]             = useState(true);
+  const [extraAds, setExtraAds]           = useState(1);
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (!authUser) {
-      setLoading(false);
-      return;
-    }
-    setUser(authUser);
+  const loadData = async (silent = false) => {
+    if (!silent) setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { if (!silent) setLoading(false); return; }
 
-    const [creditsData, configData, transData] = await Promise.all([
-      getUserCredits(authUser.id),
-      getCreditsConfig(),
-      getCreditTransactions(authUser.id, 5)
+    const [{ count: adsCount }, { count: companiesCount }] = await Promise.all([
+      supabase
+        .from('ads')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .in('status', ['active', 'pending']),
+      supabase
+        .from('business_profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('owner_id', user.id),
     ]);
 
-    setCredits(creditsData);
-    setConfig(configData);
-    setTransactions(transData);
-    setLoading(false);
+    setMyAdsCount(adsCount ?? 0);
+    setMyCompaniesCount(companiesCount ?? 0);
+    if (!silent) setLoading(false);
   };
 
-  if (loading) {
+  const isPremium          = plan.planName !== 'free';
+  const hasCompanySlot     = plan.canHaveCompanyProfile && plan.maxCompanyProfiles > 0;
+  const canCreateCompany   = hasCompanySlot && myCompaniesCount < plan.maxCompanyProfiles;
+  const adsMax        = plan.maxAds;
+  const adsProgress   = adsMax ? Math.min((myAdsCount / adsMax) * 100, 100) : 0;
+  const adsOverLimit  = adsMax !== null && myAdsCount >= adsMax;
+  const gradientClass = BADGE_GRADIENT[plan.badgeColor] ?? BADGE_GRADIENT.green;
+  const extraTotal    = extraAds * plan.extraAdPriceArs;
+
+  if (loading || planLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-10 h-10 text-brand-600 animate-spin" />
@@ -82,253 +200,188 @@ export const SubscriptionPanel: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6">
-      {/* ============================================
-          HEADER MINIMALISTA
-          ============================================ */}
-      <div className="mb-6">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6">
+
+      {/* HEADER */}
+      <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Plan</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Gestiona tu suscripción y créditos
-        </p>
+        <p className="text-sm text-gray-500 mt-1">Membresía, adicionales y cupones</p>
       </div>
 
-      {/* ============================================
-          GRID PRINCIPAL - 2 COLUMNAS
-          ============================================ */}
       <div className="grid lg:grid-cols-5 gap-4 sm:gap-6">
-        
-        {/* ============================================
-            COLUMNA IZQUIERDA: PLAN + CRÉDITOS (3/5)
-            ============================================ */}
-        <div className="lg:col-span-3 space-y-4 sm:space-y-6">
-          
-          {/* MI PLAN ACTUAL - Card Minimalista */}
+
+        {/* ── COL IZQUIERDA: PLAN ACTUAL (3/5) ── */}
+        <div className="lg:col-span-3 space-y-4">
+
           <Card variant="outlined" padding="lg" className="hover:shadow-lg transition-shadow">
-            <div className="flex items-center justify-between mb-6">
+            {/* Badge + nombre */}
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-brand-600 to-brand-700 rounded-lg flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-white" />
+                <div className={`w-10 h-10 bg-gradient-to-br ${gradientClass} rounded-lg flex items-center justify-center`}>
+                  <Crown className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">Plan Starter</h2>
-                  <Badge variant="success" size="sm" className="mt-1">
-                    Activo
-                  </Badge>
+                  <h2 className="text-lg font-bold text-gray-900">{plan.displayName}</h2>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="success" size="sm">Activo</Badge>
+                    {plan.badgeText && (
+                      <span className="px-2 py-0.5 text-xs rounded-full font-medium bg-gray-100 text-gray-600">
+                        {plan.badgeText}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled
-                className="text-gray-400 cursor-not-allowed"
-              >
-                Próximamente
-              </Button>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            {/* Contador de avisos */}
+            {adsMax !== null ? (
+              <div className="mb-5">
+                <div className="flex justify-between mb-1 text-sm">
+                  <span className="text-gray-600">Avisos activos</span>
+                  <span className={`font-semibold ${adsOverLimit ? 'text-red-600' : 'text-gray-900'}`}>
+                    {myAdsCount} / {adsMax}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all ${adsOverLimit ? 'bg-red-500' : 'bg-brand-600'}`}
+                    style={{ width: `${adsProgress}%` }}
+                  />
+                </div>
+                {adsOverLimit && (
+                  <p className="text-xs text-red-500 mt-1">Límite alcanzado. Eliminá un aviso o sumá adicionales.</p>
+                )}
+              </div>
+            ) : (
+              <div className="mb-5 flex items-center gap-2 text-sm text-brand-600">
+                <CheckCircle className="w-4 h-4" />
+                <span>{myAdsCount} avisos activos — sin límite</span>
+              </div>
+            )}
+
+            {/* Feature flags */}
+            <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
               {[
-                { label: 'Avisos', value: '∞', icon: <CheckCircle className="w-4 h-4" /> },
-                { label: 'Mensajes', value: '∞', icon: <CheckCircle className="w-4 h-4" /> },
-                { label: 'Categorías', value: '∞', icon: <CheckCircle className="w-4 h-4" /> },
-                { label: 'Soporte', value: '24/7', icon: <CheckCircle className="w-4 h-4" /> }
-              ].map((item, idx) => (
-                <div key={idx} className="flex flex-col items-center gap-1">
-                  <div className="text-brand-600">{item.icon}</div>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900">{item.value}</p>
-                  <p className="text-xs text-gray-500">{item.label}</p>
+                { label: `Hasta ${adsMax ?? '∞'} avisos`, active: true },
+                { label: 'Chat con compradores',            active: plan.hasInbox },
+                { label: 'Botón WhatsApp',                  active: plan.canShowWhatsapp },
+                { label: 'Oficina Virtual',                 active: plan.hasVirtualOffice },
+                { label: 'Analytics',                       active: plan.hasAnalytics },
+                { label: 'Soporte prioritario',             active: plan.hasPrioritySupport },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  {item.active
+                    ? <CheckCircle className="w-4 h-4 text-brand-600 flex-shrink-0" />
+                    : <XCircle    className="w-4 h-4 text-gray-300 flex-shrink-0" />}
+                  <span className={item.active ? 'text-gray-700' : 'text-gray-400'}>{item.label}</span>
                 </div>
               ))}
             </div>
-
-            {/* Banner lanzamiento compacto */}
-            <Card variant="ghost" padding="sm" className="mt-4 bg-amber-50 border border-amber-200">
-              <div className="flex items-center gap-2 text-xs sm:text-sm">
-                <Info className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                <p className="text-gray-700">
-                  <strong>Etapa de lanzamiento:</strong> Acceso gratuito para todos
-                </p>
-              </div>
-            </Card>
           </Card>
 
-          {/* BALANCE DE CRÉDITOS - Estilo Fintech */}
-          <Card variant="elevated" padding="none" className="overflow-hidden bg-gradient-to-br from-cyan-500 to-blue-600">
-            <div className="p-6 sm:p-8">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-cyan-100 text-xs sm:text-sm font-medium uppercase tracking-wide">
-                  Balance de Créditos
-                </p>
-                <Coins className="w-5 h-5 text-white/60" />
-              </div>
-              
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-4xl sm:text-6xl font-black text-white leading-none">
-                  {credits?.balance || 0}
-                </span>
-                <span className="text-lg sm:text-xl text-cyan-100 font-medium">
-                  créditos
-                </span>
-              </div>
-
-              <p className="text-cyan-100 text-xs sm:text-sm">
-                1 crédito = 7 días de visibilidad destacada
-              </p>
-
-              <div className="mt-6 pt-6 border-t border-white/20 grid grid-cols-2 gap-3">
-                <Button
-                  variant="primary"
-                  size="md"
-                  fullWidth
-                  onClick={() => setShowBuyCreditsModal(true)}
-                  className="bg-white text-cyan-600 hover:bg-cyan-50"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  Comprar
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="md"
-                  fullWidth
-                  onClick={() => setShowRedeemCouponModal(true)}
-                  className="border-white/40 text-white hover:bg-white/10"
-                >
-                  <Gift className="w-4 h-4" />
-                  Cupón
-                </Button>
-              </div>
-            </div>
-          </Card>
         </div>
 
-        {/* ============================================
-            COLUMNA DERECHA: PAQUETES + HISTORIAL (2/5)
-            ============================================ */}
-        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-          
-          {/* PAQUETES DE CRÉDITOS - Grid compacto */}
-          <Card variant="outlined" padding="md">
-            <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-brand-600" />
-              Paquetes
-            </h3>
+        {/* ── COL DERECHA: ACCIONES (2/5) ── */}
+        <div className="lg:col-span-2 space-y-4">
 
-            <div className="grid grid-cols-2 gap-2">
-              {config && [1, 2, 3, 4].map(qty => {
-                const price = config.credit_base_price * qty;
-                const isPopular = qty === 3;
-                return (
-                  <Card
-                    key={qty}
-                    variant="ghost"
-                    padding="sm"
-                    className={`cursor-pointer transition-all hover:scale-105 text-center border-2 ${
-                      isPopular
-                        ? 'border-brand-600 bg-brand-50'
-                        : 'border-gray-200 hover:border-green-300'
-                    }`}
-                    onClick={() => setShowBuyCreditsModal(true)}
-                  >
-                    {isPopular && (
-                      <Badge variant="success" size="sm" className="mb-1 w-full justify-center text-xs">
-                        Popular
-                      </Badge>
-                    )}
-                    <div className="text-2xl font-black text-brand-600">{qty}</div>
-                    <div className="text-xs text-gray-500 mb-1">
-                      {qty === 1 ? 'crédito' : 'créditos'}
-                    </div>
-                    <div className="text-sm font-bold text-gray-900">
-                      ${price.toLocaleString('es-AR')}
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </Card>
-
-          {/* ÚLTIMOS MOVIMIENTOS - Lista compacta */}
-          {transactions.length > 0 && (
+          {/* MEMBRESÍA */}
+          {!isPremium && (
             <Card variant="outlined" padding="md">
-              <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-gray-600" />
-                Movimientos
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Crown className="w-4 h-4 text-brand-600" />
+                Membresía Premium
               </h3>
-              
-              <div className="space-y-2">
-                {transactions.slice(0, 4).map(tx => (
-                  <div
-                    key={tx.id}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex-1 min-w-0 mr-3">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {tx.description}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(tx.created_at).toLocaleDateString('es-AR', { 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </p>
-                    </div>
-                    <Badge 
-                      variant={tx.amount > 0 ? 'success' : 'danger'} 
-                      size="sm"
-                    >
-                      {tx.amount > 0 ? '+' : ''}{tx.amount}
-                    </Badge>
-                  </div>
-                ))}
+              <p className="text-sm text-gray-500 mb-4">
+                10 avisos · Servicios · WhatsApp · Oficina Virtual
+              </p>
+              <div className="flex items-baseline gap-1 mb-4">
+                <span className="text-2xl font-black text-gray-900">{formatARS(plan.priceMonthly || 9900)}</span>
+                <span className="text-sm text-gray-500">/mes</span>
               </div>
+              <button
+                disabled
+                className="w-full py-2.5 bg-brand-600 text-white rounded-lg text-sm font-medium opacity-60 cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <ArrowRight className="w-4 h-4" />
+                Próximamente
+              </button>
+              <p className="text-xs text-gray-400 mt-2 text-center">Podés activar Premium con un cupón ahora mismo</p>
             </Card>
           )}
 
-          {/* INFO RÁPIDA - Equivalencias */}
-          <Card variant="ghost" padding="sm" className="bg-blue-50 border border-blue-200">
-            <div className="flex items-start gap-2">
-              <TrendingUp className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="text-xs text-gray-700 space-y-1">
-                <p className="font-semibold text-blue-900">Equivalencias:</p>
-                {config && [
-                  { credits: 1, days: 7 },
-                  { credits: 2, days: 15 },
-                  { credits: 3, days: 30 },
-                  { credits: 4, days: 60 }
-                ].map(({ credits, days }) => (
-                  <p key={credits}>
-                    <span className="font-medium">{credits} {credits === 1 ? 'crédito' : 'créditos'}</span> = {days} días
-                  </p>
-                ))}
+          {/* ADICIONALES */}
+          {isPremium && (
+            <Card variant="outlined" padding="md">
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Plus className="w-4 h-4 text-brand-600" />
+                Avisos adicionales
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                {formatARS(plan.extraAdPriceArs)} por aviso extra
+              </p>
+              {/* Selector cantidad */}
+              <div className="flex items-center gap-3 mb-4">
+                <button
+                  onClick={() => setExtraAds(v => Math.max(1, v - 1))}
+                  className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <span className="text-2xl font-black text-gray-900 w-8 text-center">{extraAds}</span>
+                <button
+                  onClick={() => setExtraAds(v => v + 1)}
+                  className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+                <span className="text-lg font-bold text-gray-700 ml-2">{formatARS(extraTotal)}</span>
               </div>
-            </div>
+              <button
+                disabled
+                className="w-full py-2.5 bg-brand-600 text-white rounded-lg text-sm font-medium opacity-60 cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <ArrowRight className="w-4 h-4" />
+                Próximamente
+              </button>
+            </Card>
+          )}
+
+          {/* SIGUIENTE DESBLOQUEO — empresa */}
+          {isPremium && canCreateCompany && (
+            <Card variant="outlined" padding="md" className="border-brand-200 bg-brand-50/40">
+              <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-brand-600" />
+                Crear tu empresa
+              </h3>
+              <p className="text-sm text-gray-500 mb-3">
+                Tu plan incluye hasta {plan.maxCompanyProfiles} perfil{plan.maxCompanyProfiles > 1 ? 'es' : ''} de empresa.
+                {myCompaniesCount > 0 && ` Tenés ${myCompaniesCount} creado${myCompaniesCount > 1 ? 's' : ''}.`}
+              </p>
+              <a
+                href="#/mis-empresas"
+                className="w-full py-2.5 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-500 flex items-center justify-center gap-2 transition-colors"
+              >
+                <ArrowRight className="w-4 h-4" />
+                Ir a Mis Empresas
+              </a>
+            </Card>
+          )}
+
+          {/* CUPONES */}
+          <Card variant="outlined" padding="md">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Ticket className="w-4 h-4 text-brand-600" />
+              Canjear cupón
+            </h3>
+            <p className="text-sm text-gray-500 mb-3">
+              Activá membresía Premium o sumá crédito para adicionales.
+            </p>
+            <CouponSection onRedeemed={() => loadData(true)} />
           </Card>
+
         </div>
       </div>
-
-      {/* ============================================
-          MODALES
-          ============================================ */}
-      <BuyCreditsModal
-        isOpen={showBuyCreditsModal}
-        onClose={() => setShowBuyCreditsModal(false)}
-        onSuccess={() => {
-          setShowBuyCreditsModal(false);
-          loadData();
-        }}
-      />
-
-      <RedeemCouponModal
-        isOpen={showRedeemCouponModal}
-        onClose={() => setShowRedeemCouponModal(false)}
-        onSuccess={(creditsGranted, newBalance) => {
-          setShowRedeemCouponModal(false);
-          loadData();
-        }}
-      />
     </div>
   );
 };

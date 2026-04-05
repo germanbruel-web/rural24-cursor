@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  Search, 
+import {
+  Users,
+  Search,
   MoreVertical,
   Award,
   User as UserIcon,
@@ -10,17 +10,27 @@ import {
   Trash2,
   Crown,
   Shield,
-  ChevronDown
+  ChevronDown,
+  Package,
+  X,
 } from 'lucide-react';
 import { notify } from '../../utils/notifications';
 import type { UserRole, UserType } from '../../../types';
-import { 
-  getAllUsers, 
-  updateUserRole, 
-  verifyUserEmail, 
+import {
+  getAllUsers,
+  updateUserRole,
+  adminAssignPlan,
+  verifyUserEmail,
   deleteUser,
-  type UserData 
+  type UserData
 } from '../../services/usersService';
+import { supabase } from '../../services/supabaseClient';
+
+interface SubscriptionPlanOption {
+  id: string;
+  name: string;
+  display_name: string;
+}
 
 // Roles disponibles para asignar
 const AVAILABLE_ROLES: { value: UserRole; label: string; color: string; icon: React.ReactNode }[] = [
@@ -40,8 +50,16 @@ export const UsersPanel: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 20;
 
+  // Plan assignment modal
+  const [planModalUser, setPlanModalUser] = useState<UserData | null>(null);
+  const [availablePlans, setAvailablePlans] = useState<SubscriptionPlanOption[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+  const [customMaxAds, setCustomMaxAds] = useState<string>('');
+  const [savingPlan, setSavingPlan] = useState(false);
+
   useEffect(() => {
     loadUsers();
+    loadPlans();
   }, []);
 
   // Cerrar dropdowns al hacer click fuera
@@ -53,6 +71,40 @@ export const UsersPanel: React.FC = () => {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
+
+  const loadPlans = async () => {
+    const { data } = await supabase
+      .from('subscription_plans')
+      .select('id, name, display_name')
+      .eq('is_active', true)
+      .order('sort_order');
+    if (data) setAvailablePlans(data as SubscriptionPlanOption[]);
+  };
+
+  const openPlanModal = (user: UserData) => {
+    setPlanModalUser(user);
+    setSelectedPlanId(user.subscription_plan_id || '');
+    setCustomMaxAds(user.custom_max_ads != null ? String(user.custom_max_ads) : '');
+    setShowUserMenu(null);
+  };
+
+  const handleAssignPlan = async () => {
+    if (!planModalUser) return;
+    setSavingPlan(true);
+    const customAdsVal = customMaxAds.trim() !== '' ? parseInt(customMaxAds) : null;
+    const { error } = await adminAssignPlan(planModalUser.id, {
+      subscription_plan_id: selectedPlanId || null,
+      custom_max_ads: customAdsVal,
+    });
+    setSavingPlan(false);
+    if (error) {
+      notify.error('Error al asignar plan: ' + error.message);
+      return;
+    }
+    notify.success('Plan asignado correctamente');
+    setPlanModalUser(null);
+    loadUsers();
+  };
 
   const loadUsers = async () => {
     setLoading(true);
@@ -285,6 +337,9 @@ export const UsersPanel: React.FC = () => {
                   Rol
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Plan
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Estado
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -375,6 +430,29 @@ export const UsersPanel: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
+                    {(() => {
+                      const plan = Array.isArray(user.subscription_plans)
+                        ? user.subscription_plans[0]
+                        : user.subscription_plans;
+                      const planName = plan?.display_name;
+                      const hasCustom = user.custom_max_ads != null;
+                      return (
+                        <div className="flex flex-col gap-1">
+                          {planName ? (
+                            <span className="text-xs font-medium text-gray-700">{planName}</span>
+                          ) : (
+                            <span className="text-xs text-gray-400">Por rol</span>
+                          )}
+                          {hasCustom && (
+                            <span className="text-xs text-brand-600">
+                              {user.custom_max_ads} avisos (custom)
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </td>
+                  <td className="px-6 py-4">
                     {user.email_verified ? (
                       <span className="px-2 py-1 bg-brand-100 text-brand-700 text-xs font-semibold rounded-full">
                         Verificado
@@ -436,6 +514,14 @@ export const UsersPanel: React.FC = () => {
                           >
                             <Shield className="w-4 h-4" />
                             Cambiar Rol
+                          </button>
+
+                          <button
+                            onClick={() => openPlanModal(user)}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <Package className="w-4 h-4" />
+                            Asignar Plan
                           </button>
 
                           <div className="border-t border-gray-200 my-1"></div>
@@ -500,6 +586,87 @@ export const UsersPanel: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal — Asignar Plan */}
+      {planModalUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Package className="w-5 h-5 text-brand-600" />
+                Asignar Plan
+              </h2>
+              <button onClick={() => setPlanModalUser(null)} className="p-1 hover:bg-gray-100 rounded">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-5">
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Usuario</p>
+                <p className="font-medium text-gray-900">
+                  {planModalUser.first_name && planModalUser.last_name
+                    ? `${planModalUser.first_name} ${planModalUser.last_name}`
+                    : planModalUser.full_name || planModalUser.email}
+                </p>
+                <p className="text-sm text-gray-500">{planModalUser.email}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Plan de suscripción
+                </label>
+                <select
+                  value={selectedPlanId}
+                  onChange={(e) => setSelectedPlanId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-transparent"
+                >
+                  <option value="">— Usar plan según rol —</option>
+                  {availablePlans.map(p => (
+                    <option key={p.id} value={p.id}>{p.display_name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">
+                  Al asignar un plan, el rol se sincroniza automáticamente (free / premium).
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Límite de avisos personalizado
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={customMaxAds}
+                  onChange={(e) => setCustomMaxAds(e.target.value)}
+                  placeholder={`Dejar vacío para usar el límite del plan`}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-600 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Override manual — útil para planes personalizados o pruebas.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+              <button
+                onClick={() => setPlanModalUser(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAssignPlan}
+                disabled={savingPlan}
+                className="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-500 disabled:opacity-50 flex items-center gap-2"
+              >
+                {savingPlan ? 'Guardando...' : 'Guardar plan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

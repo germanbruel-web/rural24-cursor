@@ -144,6 +144,11 @@ export const MENU_STRUCTURE: MenuItem[] = [
     allowedRoles: ['superadmin', 'premium'],
   },
   {
+    id: 'subscription',
+    label: 'Mi Plan',
+    allowedRoles: ALL_ROLES,
+  },
+  {
     id: 'profile',
     label: 'Mi Cuenta',
     allowedRoles: ALL_ROLES,

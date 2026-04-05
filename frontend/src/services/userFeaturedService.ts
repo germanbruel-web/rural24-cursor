@@ -574,7 +574,8 @@ export async function getFeaturedForDetail(
       })
       .slice(0, limit)
       .map(item => item.ad)
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((ad: any) => ad?.status === 'active');
 
     return { data: uniqueAds, error: null };
   } catch (error) {
@@ -618,7 +619,8 @@ async function getFeaturedFallback(
       })
       .slice(0, limit)
       .map(item => item.ad)
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((ad: any) => ad?.status === 'active');
 
     return { data: uniqueAds, error: null };
   } catch (error) {

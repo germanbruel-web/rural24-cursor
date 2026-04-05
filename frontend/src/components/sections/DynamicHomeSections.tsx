@@ -5,9 +5,11 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useGlobalSetting } from '@/hooks/useGlobalSetting';
 import { BarChart2, Image as ImageIcon, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { getImageVariant } from '@/utils/imageOptimizer';
 import type { Product } from '../../../types';
+import { adaptAdToProduct } from '../../services/api/adapters';
 import { getHomeComposition } from '@/services/v2/homeSectionsService';
 import type { HomeSection } from '@/services/v2/homeSectionsService';
 import { supabase } from '@/services/supabaseClient';
@@ -51,6 +53,11 @@ interface AdItem {
 type FeaturedRow = { ad_id: string; expires_at?: string };
 type SubcatRow   = { id: string };
 
+// Cache de módulo para resolveSubcatL2Map.
+// Key: IDs de subcategorías ordenados y concatenados (ej: "id1,id2,id3").
+// Dos secciones con los mismos subcatIds no re-fetchean la DB.
+const _subcatL2Cache = new Map<string, Record<string, string>>();
+
 // Resuelve subcategoría L2 (padre) para un array de ads.
 // Si el ad está en L3, retorna el display_name del L2 padre.
 // Si está en L2 (sin padre), retorna su propio display_name.
@@ -59,6 +66,9 @@ async function resolveSubcatL2Map(
 ): Promise<Record<string, string>> {
   const subcatIds = [...new Set(adsData.map(a => a.subcategory_id).filter(Boolean))] as string[];
   if (subcatIds.length === 0) return {};
+
+  const cacheKey = [...subcatIds].sort().join(',');
+  if (_subcatL2Cache.has(cacheKey)) return _subcatL2Cache.get(cacheKey)!;
 
   const { data: subcatRows } = await supabase
     .from('subcategories').select('id, display_name, parent_id').in('id', subcatIds);
@@ -77,6 +87,7 @@ async function resolveSubcatL2Map(
       ? parentNameMap[s.parent_id]
       : s.display_name;
   });
+  _subcatL2Cache.set(cacheKey, map);
   return map;
 }
 
@@ -159,8 +170,9 @@ function useAds(section: HomeSection) {
   const [loading, setLoading] = useState(true);
   const [featuredFallback, setFeaturedFallback] = useState(false);
   const countdownEnabled = React.useContext(CountdownEnabledCtx);
+  const sectionDefaultLimit = useGlobalSetting<number>('home_section_default_limit', 8);
 
-  const limit                = (section.query_filter?.limit as number) ?? 8;
+  const limit                = (section.query_filter?.limit as number) ?? sectionDefaultLimit;
   const categorySlug         = section.query_filter?.category_slug as string | undefined;
   const subcategorySlug      = section.query_filter?.subcategory_slug as string | undefined;
   const subSubSlug           = section.query_filter?.sub_subcategory_slug as string | undefined;
@@ -353,43 +365,10 @@ function AdsSubLabel({ count, featured = false }: { count: number; featured?: bo
 
 // ---- Helper: AdItem → product prop de ProductCard ----
 
-function resolveJoin<T>(val: T | T[] | null | undefined): T | null {
-  if (!val) return null;
-  return Array.isArray(val) ? (val[0] ?? null) : val;
-}
-
 function adToProduct(ad: AdItem, categorySlugOverride?: string): Product {
-  const firstImage = ad.images?.[0];
-  const imageUrl = typeof firstImage === 'string' ? firstImage : ((firstImage as AdImage)?.url ?? '');
-  const cats  = resolveJoin(ad.categories);
-  const subs  = resolveJoin(ad.subcategories) as { display_name: string } | null;
-  const users = resolveJoin(ad.users);
-  return {
-    id: ad.id,
-    title: ad.title,
-    slug: ad.slug,
-    description: ad.description ?? '',
-    price: ad.price ?? undefined,
-    currency: ad.currency,
-    price_unit: ad.price_unit,
-    location: [ad.city, ad.province].filter(Boolean).join(', '),
-    province: ad.province,
-    imageUrl,
-    images: ad.images as Product['images'],
-    sourceUrl: '',
-    category: '',
-    subcategory: subs?.display_name,
-    subcategory_l2: ad.subcategory_l2 ?? subs?.display_name,
-    isSponsored: false,
-    ad_type: ad.ad_type as Product['ad_type'],
-    attributes: ad.attributes,
-    featured_expires_at: ad.featured_expires_at,
-    category_slug: categorySlugOverride ?? cats?.slug,
-    category_icon: cats?.icon ?? undefined,
-    created_at: ad.created_at,
-    user_id: ad.user_id,
-    user_avatar_url: users?.avatar_url ?? undefined,
-  };
+  const base = adaptAdToProduct(ad);
+  if (!categorySlugOverride) return base;
+  return { ...base, category_slug: categorySlugOverride };
 }
 
 // ---- Section: Grid de Avisos (featured_grid, ad_list) ----
@@ -398,6 +377,7 @@ function AdGridSection({ section }: SectionProps) {
   const { ads, loading, featuredFallback } = useAds(section);
   const featuredOnly = !!(section.query_filter?.featured_only);
   const columns = (dc(section).columns as number) ?? 4;
+  const sectionDefaultLimit = useGlobalSetting<number>('home_section_default_limit', 8);
 
   const colClass = ({
     2: 'grid-cols-2',
@@ -407,7 +387,7 @@ function AdGridSection({ section }: SectionProps) {
     6: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6',
   } as Record<number, string>)[columns] ?? 'grid-cols-2 md:grid-cols-4';
 
-  const limit = (section.query_filter?.limit as number) ?? 8;
+  const limit = (section.query_filter?.limit as number) ?? sectionDefaultLimit;
   const bg    = sectionBg(section);
   const bord  = sectionBorder(section);
 
@@ -1280,21 +1260,31 @@ function SectionRenderer({ section }: SectionProps) {
 // ---- Error boundary para secciones individuales ----
 
 class SectionErrorBoundary extends React.Component<
-  { children: React.ReactNode; sectionId: string },
+  {
+    children: React.ReactNode;
+    sectionId: string;
+    /** Callback opcional para error reporting (ej: Sentry.captureException) */
+    onError?: (error: Error, info: React.ErrorInfo) => void;
+  },
   { hasError: boolean }
 > {
-  constructor(props: { children: React.ReactNode; sectionId: string }) {
+  constructor(props: { children: React.ReactNode; sectionId: string; onError?: (error: Error, info: React.ErrorInfo) => void }) {
     super(props);
     this.state = { hasError: false };
   }
   static getDerivedStateFromError() {
     return { hasError: true };
   }
-  componentDidCatch(error: Error) {
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error(`[DynamicHomeSections] Sección ${this.props.sectionId} falló:`, error);
+    this.props.onError?.(error, info);
   }
   render() {
-    if (this.state.hasError) return null; // sección en error → invisible, no rompe las demás
+    if (this.state.hasError) return (
+      <div className="py-2 text-center text-xs text-gray-300 select-none">
+        Sección no disponible
+      </div>
+    );
     return this.props.children;
   }
 }

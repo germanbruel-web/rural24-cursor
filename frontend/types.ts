@@ -42,6 +42,7 @@ export interface Product {
   user_id?: string;
   created_at?: string; // ISO timestamp de creación del aviso
   category_icon?: string; // Formato "url|#hexcolor" del ícono de categoría en DB
+  condition?: string; // Condición normalizada (nuevo/usado/etc.) — producida por adaptAdToProduct
   seller?: {
     id: string;
     email: string;
