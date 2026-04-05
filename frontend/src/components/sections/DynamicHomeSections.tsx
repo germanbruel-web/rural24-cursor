@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useGlobalSetting } from '@/hooks/useGlobalSetting';
 import { BarChart2, Image as ImageIcon, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { getImageVariant } from '@/utils/imageOptimizer';
 import type { Product } from '../../../types';
@@ -159,8 +160,9 @@ function useAds(section: HomeSection) {
   const [loading, setLoading] = useState(true);
   const [featuredFallback, setFeaturedFallback] = useState(false);
   const countdownEnabled = React.useContext(CountdownEnabledCtx);
+  const sectionDefaultLimit = useGlobalSetting<number>('home_section_default_limit', 8);
 
-  const limit                = (section.query_filter?.limit as number) ?? 8;
+  const limit                = (section.query_filter?.limit as number) ?? sectionDefaultLimit;
   const categorySlug         = section.query_filter?.category_slug as string | undefined;
   const subcategorySlug      = section.query_filter?.subcategory_slug as string | undefined;
   const subSubSlug           = section.query_filter?.sub_subcategory_slug as string | undefined;
@@ -398,6 +400,7 @@ function AdGridSection({ section }: SectionProps) {
   const { ads, loading, featuredFallback } = useAds(section);
   const featuredOnly = !!(section.query_filter?.featured_only);
   const columns = (dc(section).columns as number) ?? 4;
+  const sectionDefaultLimit = useGlobalSetting<number>('home_section_default_limit', 8);
 
   const colClass = ({
     2: 'grid-cols-2',
@@ -407,7 +410,7 @@ function AdGridSection({ section }: SectionProps) {
     6: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6',
   } as Record<number, string>)[columns] ?? 'grid-cols-2 md:grid-cols-4';
 
-  const limit = (section.query_filter?.limit as number) ?? 8;
+  const limit = (section.query_filter?.limit as number) ?? sectionDefaultLimit;
   const bg    = sectionBg(section);
   const bord  = sectionBorder(section);
 

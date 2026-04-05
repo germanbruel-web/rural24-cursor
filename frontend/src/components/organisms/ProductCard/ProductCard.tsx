@@ -18,16 +18,17 @@ import { FavoriteButton } from '../../favorites/FavoriteButton';
 import { ShareModal } from '../../molecules/ShareModal/ShareModal';
 import { EmpleoModal } from '../../molecules/EmpleoModal/EmpleoModal';
 import { EmpleoCard } from './EmpleoCard';
-// ---- Countdown badge: muestra tiempo restante hasta vencimiento del destacado ----
-const THRESHOLD_MS = 48 * 60 * 60 * 1000; // 48 horas
+import { useGlobalSetting } from '../../../hooks/useGlobalSetting';
 
 function CountdownBadge({ expiresAt }: { expiresAt: string }) {
   const [label, setLabel] = useState<string | null>(null);
+  const thresholdHours = useGlobalSetting<number>('card_countdown_threshold_hours', 48);
+  const thresholdMs = thresholdHours * 60 * 60 * 1000;
 
   useEffect(() => {
     const update = () => {
       const diff = new Date(expiresAt).getTime() - Date.now();
-      if (diff <= 0 || diff > THRESHOLD_MS) { setLabel(null); return; }
+      if (diff <= 0 || diff > thresholdMs) { setLabel(null); return; }
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
@@ -36,7 +37,7 @@ function CountdownBadge({ expiresAt }: { expiresAt: string }) {
     update();
     const timer = setInterval(update, 1000);
     return () => clearInterval(timer);
-  }, [expiresAt]);
+  }, [expiresAt, thresholdMs]);
 
   if (!label) return null;
   return (
@@ -69,15 +70,16 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({
   const [shareOpen, setShareOpen] = useState(false);
   const imageUrl = useProductImage(product);
   const cardLabel = getProductLabel(product);
+  const colorCategorySlugs = useGlobalSetting<string[]>('card_color_category_slugs', ['servicios', 'empleos']);
 
   const isFeatured = variant === 'featured';
   const isCompact = variant === 'compact';
 
   const shareUrl = `${window.location.origin}${window.location.pathname}#/ad/${product.slug || product.id}`;
 
-  // Detectar categorías sin foto de portada
+  // Detectar categorías sin foto de portada (configurable desde global_settings)
   const catSlug = product.category_slug?.toLowerCase() ?? '';
-  const isColorCard = catSlug === 'servicios' || catSlug === 'empleos';
+  const isColorCard = colorCategorySlugs.includes(catSlug);
   const bgColor = isColorCard ? ((product.attributes?.bg_color as string) || '#FFFFFF') : null;
 
   // Optimizar imagen con crop inteligente por variante

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useGlobalSetting } from './useGlobalSetting';
 import { supabase } from '../services/supabaseClient';
 import { normalizeImages, getFirstImage } from '../utils/imageHelpers';
 import { getFormForContext } from '../services/v2/formsService';
@@ -9,6 +10,8 @@ import type { Ad, OptionLabels } from '../components/pages/ad-detail/types';
 import { logger } from '../utils/logger';
 
 export function useAdData(adId: string) {
+  const similarAdsLimit = useGlobalSetting<number>('similar_ads_limit', 6);
+
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<CompleteFormV2 | null>(null);
@@ -115,13 +118,13 @@ export function useAdData(adId: string) {
           .eq('status', 'active')
           .neq('id', excludeId)
           .order('created_at', { ascending: false })
-          .limit(6);
+          .limit(similarAdsLimit);
 
         items = mapToProducts(subData || []);
       }
 
-      // Completar con misma categoría si hay menos de 6
-      if (items.length < 6) {
+      // Completar con misma categoría si hay menos del límite
+      if (items.length < similarAdsLimit) {
         const existingIds = [excludeId, ...items.map(i => i.id)];
         const { data: catData } = await supabase
           .from('ads')
@@ -130,7 +133,7 @@ export function useAdData(adId: string) {
           .eq('status', 'active')
           .not('id', 'in', `(${existingIds.join(',')})`)
           .order('created_at', { ascending: false })
-          .limit(6 - items.length);
+          .limit(similarAdsLimit - items.length);
 
         items = [...items, ...mapToProducts(catData || [])];
       }

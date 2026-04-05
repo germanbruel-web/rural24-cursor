@@ -2,6 +2,7 @@
 // Página de resultados con FILTROS DINÁMICOS desde Backend
 // ====================================================================
 import React, { useState, useMemo, useEffect } from 'react';
+import { useGlobalSetting } from '../hooks/useGlobalSetting';
 import { X, Loader2, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import type { Product, FilterOptions, SearchFilters } from '../../types';
 import { ProductCard } from './organisms/ProductCard';
@@ -114,11 +115,16 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
   
   // Estado para mostrar/ocultar filtros en mobile
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  
+
+  // Configuración desde global_settings
+  const resultsPerPage  = useGlobalSetting<number>('search_results_per_page', 20);
+  const bannerFreq      = useGlobalSetting<number>('search_banner_intercalated_freq', 8);
+  const gridColsMobile  = useGlobalSetting<number>('search_grid_cols_mobile', 2);
+  const gridColsTablet  = useGlobalSetting<number>('search_grid_cols_tablet', 3);
+  const gridColsDesktop = useGlobalSetting<number>('search_grid_cols_desktop', 5);
+
   // Estado de paginación
   const [currentPage, setCurrentPage] = useState(1);
-  // 20 resultados = mejor balance entre carga y UX
-  const RESULTS_PER_PAGE = 20;
   
   // Resetear página cuando cambian los filtros (excepto la primera carga)
   useEffect(() => {
@@ -134,7 +140,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
       const params: SearchFiltersParams = {
         ...urlFilters, // Incluye atributos dinámicos como marca, modelo, etc.
         page: currentPage, // Usar paginación por página
-        limit: RESULTS_PER_PAGE, // 16 resultados por página
+        limit: resultsPerPage, // 16 resultados por página
       };
       
       const result = await searchAdsFromBackend(params);
@@ -275,7 +281,7 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
 
   // Paginación server-side: el backend ya envía la página correcta
   const paginatedResults = sortedResults;
-  const totalPages = Math.ceil(totalFromBackend / RESULTS_PER_PAGE);
+  const totalPages = Math.ceil(totalFromBackend / resultsPerPage);
 
   const goToPage = (page: number) => {
     setCurrentPage(page);
@@ -571,24 +577,11 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                           const priceFilter = backendFilters.find(f => f.field_name === 'price');
                           if (!priceFilter?.range) return null;
                           return (
-                            <div className="px-2 space-y-2">
+                            <div className="px-2 space-y-1">
                               <p className="text-xs text-gray-500">
-                                Rango: ${priceFilter.range.min.toLocaleString()} - ${priceFilter.range.max.toLocaleString()}
+                                Rango disponible: ${priceFilter.range.min.toLocaleString()} — ${priceFilter.range.max.toLocaleString()}
                               </p>
-                              <div className="flex gap-2">
-                                <input
-                                  type="number"
-                                  placeholder="Mín"
-                                  className="w-1/2 px-2 py-1 text-sm border rounded focus:ring-1 focus:ring-brand-600 focus:border-brand-600"
-                                  defaultValue={urlFilters.priceMin}
-                                />
-                                <input
-                                  type="number"
-                                  placeholder="Máx"
-                                  className="w-1/2 px-2 py-1 text-sm border rounded focus:ring-1 focus:ring-brand-600 focus:border-brand-600"
-                                  defaultValue={urlFilters.priceMax}
-                                />
-                              </div>
+                              <p className="text-[11px] text-gray-400">Filtro por precio próximamente</p>
                             </div>
                           );
                         })()}
@@ -645,11 +638,11 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
 
                   {/* Info de paginacion - debajo de destacados */}
                   <div className="text-sm text-gray-500 mb-4">
-                    Mostrando {((currentPage - 1) * RESULTS_PER_PAGE) + 1}-{Math.min(currentPage * RESULTS_PER_PAGE, totalFromBackend)} de {totalFromBackend} resultados
+                    Mostrando {((currentPage - 1) * resultsPerPage) + 1}-{Math.min(currentPage * resultsPerPage, totalFromBackend)} de {totalFromBackend} resultados
                   </div>
                   
-                  {/* Grid Responsive: Mobile 2, Tablet 3, Desktop 5 - Variante Compact */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+                  {/* Grid Responsive: columnas configurables desde global_settings */}
+                  <div className={`grid gap-3 sm:gap-4 ${{1:'grid-cols-1',2:'grid-cols-2',3:'grid-cols-3',4:'grid-cols-4',5:'grid-cols-5'}[gridColsMobile]??'grid-cols-2'} ${{1:'sm:grid-cols-1',2:'sm:grid-cols-2',3:'sm:grid-cols-3',4:'sm:grid-cols-4',5:'sm:grid-cols-5'}[gridColsTablet]??'sm:grid-cols-3'} ${{1:'lg:grid-cols-1',2:'lg:grid-cols-2',3:'lg:grid-cols-3',4:'lg:grid-cols-4',5:'lg:grid-cols-5',6:'lg:grid-cols-6'}[gridColsDesktop]??'lg:grid-cols-5'}`}>
                     {paginatedResults.map((product, index) => (
                       <React.Fragment key={product.id}>
                         <ProductCard
@@ -659,8 +652,8 @@ export const SearchResultsPageMinimal: React.FC<SearchResultsPageMinimalProps> =
                           showProvince={true}
                           onViewDetail={onViewDetail}
                         />
-                        {/* Banner intercalado cada 8 productos */}
-                        {(index + 1) % 8 === 0 && (
+                        {/* Banner intercalado (frecuencia configurable desde global_settings) */}
+                        {(index + 1) % bannerFreq === 0 && (
                           <ResultsBannerIntercalated 
                             category={urlFilters.cat || detectedMeta?.detected_category_slug} 
                             position={index + 1}
