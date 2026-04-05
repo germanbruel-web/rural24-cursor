@@ -38,7 +38,7 @@ export interface PlanFeatures {
 }
 
 // Plan FREE por defecto — se usa antes de cargar o si no hay plan asignado
-const FREE_PLAN_FALLBACK: PlanFeatures = {
+export const FREE_PLAN_FALLBACK: PlanFeatures = {
   planId: '',
   planName: 'free',
   displayName: 'Plan Gratuito',
@@ -64,7 +64,7 @@ const FREE_PLAN_FALLBACK: PlanFeatures = {
   features: ['Hasta 3 avisos activos', 'Chat con compradores'],
 };
 
-function mapRowToPlanFeatures(row: Record<string, any>): PlanFeatures {
+export function mapRowToPlanFeatures(row: Record<string, any>): PlanFeatures {
   return {
     planId: row.id ?? '',
     planName: row.name ?? 'free',
