@@ -27,6 +27,7 @@ import { BottomNav } from "./src/components/BottomNav";
 // ============================================================
 import { useProducts, useCategoryPrefetch, useRealtimeCategories, OfflineBanner } from "./src/hooks";
 import { PWAInstallBanner } from "./src/components/PWAInstallBanner";
+import { PWAUpdateToast } from "./src/components/PWAUpdateToast";
 import { useAuth, CategoryProvider, ToastProvider, AccountProvider } from "./src/contexts";
 import { useProfileNudge } from './src/hooks/useProfileNudge';
 import { ProfileCompleteModal } from './src/components/modals/ProfileCompleteModal';
@@ -129,6 +130,7 @@ const App: React.FC = () => {
           <AccountProvider>
             <OfflineBanner />
             <PWAInstallBanner />
+            <PWAUpdateToast />
             <AppContent />
             <BottomNav />
           </AccountProvider>
