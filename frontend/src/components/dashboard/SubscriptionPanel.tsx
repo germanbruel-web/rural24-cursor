@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Plus,
   Minus,
+  Building2,
 } from 'lucide-react';
 import { validateCoupon, redeemCoupon } from '../../services/creditsService';
 import { supabase } from '../../services/supabaseClient';
@@ -150,9 +151,10 @@ export const SubscriptionPanel: React.FC = () => {
   const { profile } = useAuth();
   const { plan, loading: planLoading } = usePlanFeatures();
 
-  const [myAdsCount, setMyAdsCount] = useState(0);
-  const [loading, setLoading]       = useState(true);
-  const [extraAds, setExtraAds]     = useState(1);
+  const [myAdsCount, setMyAdsCount]       = useState(0);
+  const [myCompaniesCount, setMyCompaniesCount] = useState(0);
+  const [loading, setLoading]             = useState(true);
+  const [extraAds, setExtraAds]           = useState(1);
 
   useEffect(() => {
     loadData();
@@ -163,17 +165,26 @@ export const SubscriptionPanel: React.FC = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { if (!silent) setLoading(false); return; }
 
-    const { count } = await supabase
-      .from('ads')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .in('status', ['active', 'pending']);
+    const [{ count: adsCount }, { count: companiesCount }] = await Promise.all([
+      supabase
+        .from('ads')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .in('status', ['active', 'pending']),
+      supabase
+        .from('business_profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('owner_id', user.id),
+    ]);
 
-    setMyAdsCount(count ?? 0);
+    setMyAdsCount(adsCount ?? 0);
+    setMyCompaniesCount(companiesCount ?? 0);
     if (!silent) setLoading(false);
   };
 
-  const isPremium     = plan.planName !== 'free';
+  const isPremium          = plan.planName !== 'free';
+  const hasCompanySlot     = plan.canHaveCompanyProfile && plan.maxCompanyProfiles > 0;
+  const canCreateCompany   = hasCompanySlot && myCompaniesCount < plan.maxCompanyProfiles;
   const adsMax        = plan.maxAds;
   const adsProgress   = adsMax ? Math.min((myAdsCount / adsMax) * 100, 100) : 0;
   const adsOverLimit  = adsMax !== null && myAdsCount >= adsMax;
@@ -333,6 +344,27 @@ export const SubscriptionPanel: React.FC = () => {
                 <ArrowRight className="w-4 h-4" />
                 Próximamente
               </button>
+            </Card>
+          )}
+
+          {/* SIGUIENTE DESBLOQUEO — empresa */}
+          {isPremium && canCreateCompany && (
+            <Card variant="outlined" padding="md" className="border-brand-200 bg-brand-50/40">
+              <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-brand-600" />
+                Crear tu empresa
+              </h3>
+              <p className="text-sm text-gray-500 mb-3">
+                Tu plan incluye hasta {plan.maxCompanyProfiles} perfil{plan.maxCompanyProfiles > 1 ? 'es' : ''} de empresa.
+                {myCompaniesCount > 0 && ` Tenés ${myCompaniesCount} creado${myCompaniesCount > 1 ? 's' : ''}.`}
+              </p>
+              <a
+                href="#/mis-empresas"
+                className="w-full py-2.5 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-500 flex items-center justify-center gap-2 transition-colors"
+              >
+                <ArrowRight className="w-4 h-4" />
+                Ir a Mis Empresas
+              </a>
             </Card>
           )}
 
