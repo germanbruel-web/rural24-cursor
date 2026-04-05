@@ -12,8 +12,9 @@ import type {
   Category as BackendCategory,
   Subcategory as BackendSubcategory,
   DynamicAttribute as BackendDynamicAttribute,
-  Ad as BackendAd,
 } from '../../../types/api-contracts';
+import type { Product } from '../../../../types';
+import { normalizeImages, getFirstImage } from '../../../utils/imageHelpers';
 
 import type {
   Brand as FrontendBrand,
@@ -193,39 +194,97 @@ function mapFieldTypeToDataType(
 }
 
 // =====================================================
-// AD ADAPTER (para Product UI)
+// AD ADAPTER (para Product UI) — CANÓNICO
 // =====================================================
 
-export function adaptAdToProduct(ad: BackendAd): any {
-  // Extraer primera imagen
-  const imageUrl = ad.images?.[0]?.url || 'https://via.placeholder.com/400x300';
-  const imageUrls = ad.images?.map((img) => img.url) || [];
+/**
+ * Resuelve un join de Supabase que puede llegar como objeto, array o null.
+ * Supabase JS v2 retorna FK joins como arrays en runtime aunque el esquema
+ * diga que es uno solo. Usar siempre este helper para leer joins.
+ */
+export function resolveJoin<T>(val: T | T[] | null | undefined): T | null {
+  if (!val) return null;
+  return Array.isArray(val) ? (val[0] ?? null) : val;
+}
 
-  return {
+/**
+ * Tipo para filas crudas de Supabase con joins opcionales.
+ * Cubre los 3 orígenes de datos: DynamicHomeSections, useAdData, UserFeaturedAdsBar.
+ */
+export interface RawAdRow {
+  id: string;
+  title: string;
+  slug?: string | null;
+  short_id?: string | null;
+  description?: string | null;
+  price?: number | null;
+  currency?: string | null;
+  price_unit?: string | null;
+  location?: string | null;
+  province?: string | null;
+  city?: string | null;
+  images?: any;
+  category_id?: string | null;
+  subcategory_id?: string | null;
+  ad_type?: string | null;
+  attributes?: Record<string, any> | null;
+  user_id?: string | null;
+  created_at?: string;
+  featured_expires_at?: string;
+  subcategory_l2?: string;
+  // Supabase joins: pueden llegar como objeto o array
+  categories?: { slug?: string; name?: string; icon?: string | null } | { slug?: string; name?: string; icon?: string | null }[] | null;
+  subcategories?: { display_name?: string } | { display_name?: string }[] | null;
+  users?: { avatar_url?: string | null } | { avatar_url?: string | null }[] | null;
+}
+
+/**
+ * Transforma cualquier fila cruda de Supabase en el tipo Product del frontend.
+ * Función canónica: único punto de transformación de datos de aviso.
+ *
+ * @param ad    Fila cruda de Supabase (con o sin joins)
+ * @param overrides  Campos que sobreescriben el resultado (ej: isSponsored: true)
+ */
+export function adaptAdToProduct(ad: RawAdRow, overrides?: Partial<Product>): Product {
+  const cats  = resolveJoin(ad.categories);
+  const subs  = resolveJoin(ad.subcategories);
+  const users = resolveJoin(ad.users);
+
+  const imageUrl = getFirstImage(ad.images);
+  const normalizedImages = normalizeImages(ad.images);
+  const location = [ad.city, ad.province].filter(Boolean).join(', ') || ad.location || '';
+
+  const base: Product = {
     id: ad.id,
     title: ad.title,
-    description: ad.description,
-    price: ad.price,
-    currency: ad.currency,
-    location: ad.location || ad.province || 'Sin ubicación',
-    province: ad.province,
+    slug: ad.slug ?? undefined,
+    short_id: ad.short_id ?? undefined,
+    description: ad.description ?? '',
+    price: ad.price ?? undefined,
+    currency: ad.currency || 'ARS',
+    price_unit: ad.price_unit ?? undefined,
+    location,
+    province: ad.province ?? undefined,
     imageUrl,
-    imageUrls,
-    sourceUrl: `/ad/${ad.id}`,
-    category: ad.category_id, // TODO: Resolver nombre si viene populated
-    subcategory: ad.subcategory_id,
+    images: normalizedImages as Product['images'],
+    sourceUrl: '',
+    category: cats?.name || cats?.slug || '',
+    category_id: ad.category_id ?? undefined,
+    category_slug: cats?.slug ?? undefined,
+    category_icon: cats?.icon ?? undefined,
+    subcategory: subs?.display_name,
+    subcategory_l2: ad.subcategory_l2 ?? subs?.display_name,
     isSponsored: false,
-    isPremium: ad.is_premium || false,
-    featured: ad.featured,
-    tags: [],
+    ad_type: (ad.ad_type as Product['ad_type']) ?? undefined,
+    attributes: ad.attributes ?? undefined,
+    user_id: ad.user_id ?? undefined,
+    user_avatar_url: users?.avatar_url ?? undefined,
+    created_at: ad.created_at,
     createdAt: ad.created_at,
-    updatedAt: ad.updated_at,
-    attributes: ad.attributes || {},
-    brand: ad.brand_id,
-    model: ad.model_id,
-    user_id: ad.user_id,
-    seller: undefined, // No viene del backend actual
+    featured_expires_at: ad.featured_expires_at,
   };
+
+  return overrides ? { ...base, ...overrides } : base;
 }
 
 // =====================================================

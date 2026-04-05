@@ -9,6 +9,7 @@ import { useGlobalSetting } from '@/hooks/useGlobalSetting';
 import { BarChart2, Image as ImageIcon, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { getImageVariant } from '@/utils/imageOptimizer';
 import type { Product } from '../../../types';
+import { adaptAdToProduct } from '../../services/api/adapters';
 import { getHomeComposition } from '@/services/v2/homeSectionsService';
 import type { HomeSection } from '@/services/v2/homeSectionsService';
 import { supabase } from '@/services/supabaseClient';
@@ -355,43 +356,10 @@ function AdsSubLabel({ count, featured = false }: { count: number; featured?: bo
 
 // ---- Helper: AdItem → product prop de ProductCard ----
 
-function resolveJoin<T>(val: T | T[] | null | undefined): T | null {
-  if (!val) return null;
-  return Array.isArray(val) ? (val[0] ?? null) : val;
-}
-
 function adToProduct(ad: AdItem, categorySlugOverride?: string): Product {
-  const firstImage = ad.images?.[0];
-  const imageUrl = typeof firstImage === 'string' ? firstImage : ((firstImage as AdImage)?.url ?? '');
-  const cats  = resolveJoin(ad.categories);
-  const subs  = resolveJoin(ad.subcategories) as { display_name: string } | null;
-  const users = resolveJoin(ad.users);
-  return {
-    id: ad.id,
-    title: ad.title,
-    slug: ad.slug,
-    description: ad.description ?? '',
-    price: ad.price ?? undefined,
-    currency: ad.currency,
-    price_unit: ad.price_unit,
-    location: [ad.city, ad.province].filter(Boolean).join(', '),
-    province: ad.province,
-    imageUrl,
-    images: ad.images as Product['images'],
-    sourceUrl: '',
-    category: '',
-    subcategory: subs?.display_name,
-    subcategory_l2: ad.subcategory_l2 ?? subs?.display_name,
-    isSponsored: false,
-    ad_type: ad.ad_type as Product['ad_type'],
-    attributes: ad.attributes,
-    featured_expires_at: ad.featured_expires_at,
-    category_slug: categorySlugOverride ?? cats?.slug,
-    category_icon: cats?.icon ?? undefined,
-    created_at: ad.created_at,
-    user_id: ad.user_id,
-    user_avatar_url: users?.avatar_url ?? undefined,
-  };
+  const base = adaptAdToProduct(ad);
+  if (!categorySlugOverride) return base;
+  return { ...base, category_slug: categorySlugOverride };
 }
 
 // ---- Section: Grid de Avisos (featured_grid, ad_list) ----

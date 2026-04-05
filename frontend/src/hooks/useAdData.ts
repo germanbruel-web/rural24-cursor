@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useGlobalSetting } from './useGlobalSetting';
 import { supabase } from '../services/supabaseClient';
-import { normalizeImages, getFirstImage } from '../utils/imageHelpers';
+import { normalizeImages } from '../utils/imageHelpers';
+import { adaptAdToProduct } from '../services/api/adapters';
 import { getFormForContext } from '../services/v2/formsService';
 import { getOptionListItemsForSelect } from '../services/v2/optionListsService';
 import type { CompleteFormV2 } from '../types/v2';
@@ -147,25 +148,7 @@ export function useAdData(adId: string) {
   };
 
   const mapToProducts = (rows: any[]): Product[] =>
-    rows.map(item => ({
-      id: item.id,
-      slug: item.slug,
-      short_id: item.short_id,
-      title: item.title,
-      description: item.description || '',
-      price: item.price,
-      currency: item.currency || 'ARS',
-      location: item.location || '',
-      province: item.province,
-      imageUrl: getFirstImage(item.images || []),
-      images: normalizeImages(item.images || []),
-      category: '',
-      subcategory: undefined,
-      sourceUrl: '#',
-      isSponsored: false,
-      user_id: item.user_id,
-      createdAt: item.created_at,
-    }));
+    rows.map(item => adaptAdToProduct(item));
 
   const loadFormAndLabels = async (loadedAd: Ad) => {
     let loadedForm = await getFormForContext(loadedAd.category_id, loadedAd.subcategory_id);

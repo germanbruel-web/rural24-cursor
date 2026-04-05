@@ -13,6 +13,7 @@ import { Megaphone, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductCard } from '../organisms/ProductCard';
 import { CardErrorBoundary } from '../common/CardErrorBoundary';
 import { getFeaturedForResults, getFeaturedForDetail } from '../../services/userFeaturedService';
+import { adaptAdToProduct } from '../../services/api/adapters';
 import { useGlobalSetting } from '../../hooks/useGlobalSetting';
 
 interface UserFeaturedAdsBarProps {
@@ -168,27 +169,10 @@ export const UserFeaturedAdsBar: React.FC<UserFeaturedAdsBarProps> = ({
                     .filter(Boolean)
                     .slice(pageIdx * cardsPerPage, (pageIdx + 1) * cardsPerPage)
                     .map((ad) => {
-                      const firstImage = ad?.images?.[0];
-                      const imageUrl = typeof firstImage === 'string'
-                        ? firstImage
-                        : ((firstImage as { url?: string })?.url || '');
-
                       return (
                         <CardErrorBoundary key={ad.id}>
                           <ProductCard
-                            product={{
-                              ...ad,
-                              id: ad.id,
-                              title: ad.title,
-                              price: ad.price,
-                              currency: ad.currency || 'ARS',
-                              category: ad.categories?.name || '',
-                              location: ad.province || ad.location || '',
-                              imageUrl,
-                              images: ad.images,
-                              sourceUrl: '',
-                              isSponsored: true,
-                            }}
+                            product={adaptAdToProduct(ad, { isSponsored: true })}
                             variant="compact"
                             showLocation={true}
                             onViewDetail={() => onViewDetail?.(ad.id)}
