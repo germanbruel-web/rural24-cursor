@@ -196,7 +196,7 @@ const AppContent: React.FC = () => {
     if (hash === '#/payment-result') return 'payment-result';
     if (hash === '#/featured-checkout') return 'featured-checkout';
     if (hash === '#/profile') return 'profile';
-    if (hash === '#/subscription') return 'profile'; // Subscription integrada en profile
+    if (hash === '#/subscription') return 'subscription';
     if (hash === '#/mis-empresas') return 'mis-empresas';
     if (hash === '#/dashboard') return 'dashboard';
     
@@ -713,7 +713,7 @@ const AppContent: React.FC = () => {
             {!authLoading && (
               <Suspense fallback={<LoadingFallback />}>
                 {currentPage === 'profile' && <ProfilePanel />}
-                {currentPage === 'subscription' && <ProfilePanel />}
+                {currentPage === 'subscription' && <SubscriptionPanel />}
                 {currentPage === 'contacts' && <ReceivedContactsView />}
                 {currentPage === 'users' && canAccessPage('users', profile?.role) && <UsersPanel />}
                 {currentPage === 'my-ads' && <MyAdsPanel />}
